@@ -1,0 +1,73 @@
+# Coding Standards
+
+Language is **C++** (DEC-013). Physics is Box2D behind the Physics Adapter (DEC-014); graphics is Raylib behind the rendering abstraction (DEC-015); 2D only (DEC-016). Box2D v3.1.1 (DEC-020). ECS is custom (DEC-018). **Proposed, not decided (DEC-019, Q-007):** C++20, development on Windows and macOS, Windows-only target. Still open and decided by the human: C++ standard, compilers/toolchain, formatter, build system and test framework (Q-007, Q-009), whether macOS must build/run the engine — do not pick them yourself.
+
+## 1. Universal rules
+
+1. **Respect the invariants** in `agents/rules.md` section A (layers, ECS hub, adapter, fixed timestep, headless).
+2. **Components are plain data.** No behaviour, no references to systems, adapters or framework types.
+3. **Systems are small** and declare `reads / writes / emits` (comment block or registration metadata).
+4. **No global mutable state** in the simulation. Pass the `World` (or needed parts) explicitly.
+5. **No wall-clock time in simulation.** Only the fixed `dt`. Randomness only from a seeded RNG owned by the World.
+6. **Deterministic iteration**: queries iterate in ascending entity ID; never depend on hash-map order.
+7. **No allocations in per-frame hot paths** where avoidable (allocation spikes show up in frame-time telemetry). Pre-size buffers.
+8. **Library types stay behind seams**: physics types only in the adapter implementation; graphics-framework types only in the rendering implementation.
+9. **Fail loudly in dev**: assert invariants (entity↔body mapping, valid entity handles, component exists before access).
+10. **Comments explain why**, not what. Public interfaces get a short doc comment: purpose, units, ownership, threading assumptions.
+11. **Units are explicit** in names or docs: `positionMeters`, `dtSeconds`, or documented per type (open, TASK-008).
+12. **Errors**: engine code does not swallow errors. Return a result/throw per language convention; log with context (frame, entity).
+
+## 2. Naming (language-neutral)
+
+| Thing | Convention | Example |
+| --- | --- | --- |
+| Component types | `<Name>Component` | `PositionComponent` |
+| Systems | `<Name>System` | `MovementSystem` |
+| Events | `<Name>Event` (past tense) | `DoorOpenedEvent` |
+| Tags | `<Name>Tag` | `PlayerControlledTag` (or `PlayerControlledComponent`, be consistent once chosen) |
+| Interfaces | purpose-based, not `Manager` | `IPhysicsAdapter` |
+| Tests | `<Unit>_<Condition>_<Expected>` | `MovementSystem_RightPressed_SetsPositiveVx` |
+| Branches | see git-workflow | `task/TASK-012-physics-step` |
+
+Avoid vague names: `Manager`, `Helper`, `Util`, `Data`, `Handler` unless truly generic.
+
+## 3. File and module organisation
+
+See [repository-structure.md](repository-structure.md). One concept per file; header/implementation pairing per language convention. Layer folders must not include each other's headers (Engine never includes Semantic/AI).
+
+## 4. C++ rules
+
+- Standard: `[PROPOSED]` C++20 (DEC-019, not decided). Until the human decides, write conservative modern C++ and do not rely on C++23 features; keep platform-specific APIs out of engine code and ask before adding any (Q-007).
+- Ownership: `std::unique_ptr` by default; no owning raw pointers; IDs or references for non-owning links. Entities are IDs, not pointers — this avoids dangling pointers.
+- RAII for every resource (physics bodies/worlds, Raylib textures/shaders/fonts, windows). Raylib resources must be unloaded before `CloseWindow`.
+- Components are trivially copyable structs where possible.
+- Prefer `enum class`, `std::span`/`string_view`, `constexpr`; avoid macros.
+- Box2D and Raylib headers are included **only** in the adapter implementation and the rendering implementation respectively (R-3, R-4). Wrap C-style handles (Box2D v3 ids, Raylib structs) in our own types.
+- Raylib is a C API: its functions need a window/GL context for textures, shaders and fonts. Never call them from simulation code or in headless mode.
+- No exceptions across the adapter boundary unless the adapter documents it `[open]`.
+- Formatting: `clang-format` with a checked-in config `[open — ask]`.
+- Warnings on, treated as errors where practical; sanitisers (ASan/UBSan) on debug test builds if the toolchain supports them.
+
+## 5. 2D only
+
+No 3D types, cameras, models or physics (DEC-016). Use 2D vector/transform types of our own (`Vec2`, …) at the engine boundary so a future 3D extension can add types rather than rewrite existing ones.
+
+## 6. Dependencies
+
+- Every new dependency needs a decision entry (S-5) with: purpose, license, version pinned, maintenance status, size.
+- Pin versions. Do not use "latest".
+- Prefer fewer, well-documented dependencies (documentation quality is a selection criterion).
+
+## 7. Security and hygiene
+
+- No secrets in the repo; `.env`/API keys git-ignored (S-1).
+- AI layer: no outbound calls without explicit configuration (ip.nfr.2.1).
+- Validate any file loaded from disk (level, telemetry import) — fail with a clear message.
+
+## 8. Change table
+
+| Date | Change | By |
+| --- | --- | --- |
+| 2026-10-12 | Created | claude-code/sonnet-5.5/012r |
+| 2026-10-13 | C++ decided (DEC-013); C# section removed; Box2D/Raylib rules added | claude-code/sonnet-5.5/012r |
+| 2026-10-13 | C++20/platforms proposed, not decided (DEC-019) | claude-code/sonnet-5.5/012r |
