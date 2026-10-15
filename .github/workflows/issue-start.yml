@@ -1,4 +1,4 @@
-# When a backlog issue is created from ClickUp ("PB-<nnn> <title>"), create its branch and
+# When a backlog issue is created from ClickUp (title carries "PB-<nnn>"), create its branch and
 # a draft PR so the developer only has to check out the branch. tools/start_task.py
 #
 # Needs: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   start:
-    if: startsWith(github.event.issue.title, 'PB-')
+    if: contains(github.event.issue.title, 'pb-')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

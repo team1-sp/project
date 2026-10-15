@@ -1,7 +1,8 @@
 """Create the branch and draft PR for a backlog issue opened from ClickUp.
 
 Runs from .github/workflows/issue-start.yml when an issue is opened or assigned.
-Only issues titled "PB-<nnn> <title>" are handled; anything else is skipped.
+Handles issues whose title carries a backlog id, e.g. "PB-025 Define the physics adapter
+interface" or "ci: pb-001-set-up-repository"; anything else is skipped.
 Rules: docs/guidelines/git-workflow.md
 """
 import json
@@ -11,7 +12,8 @@ import subprocess
 import sys
 import unicodedata
 
-TITLE = re.compile(r"^PB-(\d{3})\s+(.+)$")
+PB_ID = re.compile(r"\bpb-?(\d{3})\b", re.IGNORECASE)
+TYPE_PREFIX = re.compile(r"^(feat|fix|test|refactor|docs|ci|chore|research)(\([^)]*\))?:\s*", re.IGNORECASE)
 CLICKUP_URL = re.compile(r"https://app\.clickup\.com/t/[A-Za-z0-9/_-]+")
 TURKISH = str.maketrans("ıİşŞğĞüÜöÖçÇ", "iIsSgGuUoOcC")
 MAX_SLUG = 40
@@ -39,6 +41,21 @@ def slugify(text):
             break
         slug = candidate
     return slug or "task"
+
+
+def parse_title(raw):
+    """Return (pb id, type from a Conventional prefix or None, readable title)."""
+    pb = PB_ID.search(raw)
+    if not pb:
+        return None, None, None
+    prefix = TYPE_PREFIX.match(raw)
+    kind = prefix.group(1).lower() if prefix else None
+    rest = raw[prefix.end():] if prefix else raw
+    rest = PB_ID.sub(" ", rest).strip(" :-_")
+    if " " not in rest:  # slug-style title such as "set-up-repository"
+        rest = re.sub(r"[_-]+", " ", rest)
+    rest = re.sub(r"\s+", " ", rest).strip()
+    return pb.group(1), kind, rest or raw.strip()
 
 
 def branch_type(labels):
@@ -87,18 +104,17 @@ def main():
     with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as f:
         issue = json.load(f)["issue"]
 
-    match = TITLE.match(issue["title"].strip())
-    if not match:
-        print(f"Skipping #{issue['number']}: title does not start with PB-<nnn>.")
+    pb, kind, title = parse_title(issue["title"].strip())
+    if not pb:
+        print(f"Skipping #{issue['number']}: title has no PB-<nnn> id.")
         return
-    pb, title = match.group(1), match.group(2).strip()
     labels = {label["name"] for label in issue.get("labels", [])}
-    kind = branch_type(labels)
+    kind = kind or branch_type(labels)
     branch = f"{kind}/pb-{pb}-{slugify(title)}"
 
     # One PR per backlog item: skip if a PR for this PB id already exists.
     for pr in gh(f"repos/{repo}/pulls?state=all&per_page=100", "--paginate"):
-        if re.search(rf"\(PB-{pb}\)\s*$", pr["title"]) or pr["head"]["ref"].startswith(f"{kind}/pb-{pb}-"):
+        if re.search(rf"\bpb-?{pb}\b", pr["title"] + " " + pr["head"]["ref"], re.IGNORECASE):
             print(f"Skipping #{issue['number']}: PB-{pb} already has PR #{pr['number']}.")
             return
 

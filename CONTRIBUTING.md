@@ -4,7 +4,7 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
 
 ## Starting a task
 
-1. In ClickUp, set the task to **in progress** and press **Create GitHub issue** on it. Keep the task name as the issue title (it starts with the PB id).
+1. In ClickUp, set the task to **in progress** and press **Create GitHub issue** on it. Keep the PB id in the issue title (for example `PB-025 Define the physics adapter interface`).
 2. Within a minute, the **Issue start** workflow creates the branch and a draft pull request for the issue, and comments on the issue with the checkout command:
 
    ```
