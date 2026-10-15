@@ -5,15 +5,16 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
 ## Starting a task
 
 1. In ClickUp, set the task to **in progress** and press **Create GitHub issue** on it. Keep the task name as the issue title (it starts with the PB id).
-2. Create a branch from the latest `main`:
+2. Within a minute, the **Issue start** workflow creates the branch and a draft pull request for the issue, and comments on the issue with the checkout command:
 
    ```
-   <type>/pb-<nnn>-<short-description>     e.g. feat/pb-025-physics-adapter-interface
-   fix/<issue>-<short-description>         for bugs without a PB item
+   git fetch origin
+   git switch feat/pb-025-define-the-physics-adapter-interface
    ```
 
+   Branch names follow `<type>/pb-<nnn>-<short-description>`. For a bug without a PB item, create the branch yourself: `fix/<issue>-<short-description>`.
    Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`. Lowercase, words joined with `-`.
-3. Open a **draft pull request** early. The body says `Closes #<issue>`.
+3. Commit and push to that branch. The draft PR already says `Closes #<issue>`.
 
 ## Pull requests
 

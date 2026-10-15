@@ -26,6 +26,8 @@ Branch names: `<type>/pb-<nnn>-<short-description>`, lowercase, words joined wit
 
 The `pr-hygiene` CI job rejects other names (`tools/check_pr.py`).
 
+**Starting a task:** create the GitHub issue from the ClickUp task (DEC-028). The `Issue start` workflow (`tools/start_task.py`) then creates the branch from `main` with one empty start commit and opens a draft PR that closes the issue, assigned to the issue's assignee (or creator) with Işık Dönger as reviewer. The type comes from the issue labels: `type:research` gives `research/`, `type:bug` gives `fix/`, `area:devops` gives `ci/`, docs-only gives `docs/`, otherwise `feat/`.
+
 **Agents** push a branch only after a human approves that push; a human approves and merges every agent PR (DEC-025, S-2). Agents never push to `main`, force-push or rewrite history.
 
 ## 2. Commits and PR titles
@@ -63,3 +65,4 @@ Increment deliverables get an annotated tag `inc-1`, `inc-2`, `final` on `main`,
 | --- | --- | --- |
 | 2026-10-12 | Proposed | claude-code/sonnet-5.5/012r |
 | 2026-10-15 | Rewritten to the accepted repo plan: trunk-based, PB branch names, Conventional Commit PR titles, CODEOWNERS review, main guard | claude-code (session 0171) |
+| 2026-10-15 | Issue start automation (branch and draft PR from ClickUp issues) | claude-code (session 0171) |
