@@ -1,0 +1,30 @@
+# Branch protection is not available on this plan yet, so this flags any commit that
+# reached main without a merged pull request. Remove once protection is switched on.
+name: Main guard
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every commit on main came from a merged PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          status=0
+          for sha in $(jq -r '.commits[].id' "$GITHUB_EVENT_PATH"); do
+            merged=$(gh api "repos/$REPO/commits/$sha/pulls" --jq 'map(select(.merged_at != null)) | length')
+            if [ "$merged" = "0" ]; then
+              echo "::error::Commit $sha was pushed to main directly, not through a merged pull request."
+              status=1
+            fi
+          done
+          exit $status

@@ -216,3 +216,31 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- C++ / CMake / IDEs ---
+out/
+cmake-build-*/
+CMakeUserPresets.json
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+*.o
+*.obj
+*.lib
+*.a
+*.dll
+*.exe
+*.pdb
+*.ilk
+.vs/
+*.vcxproj.user
+*.suo
+.vscode/
+.idea/
+.DS_Store
+.cache/
+
+# --- Local secrets and engine output ---
+.env
+*.env
+telemetry-out/

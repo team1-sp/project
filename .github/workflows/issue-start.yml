@@ -1,0 +1,29 @@
+# When a backlog issue is created from ClickUp (title carries "PB-<nnn>"), create its branch and
+# a draft PR so the developer only has to check out the branch. tools/start_task.py
+#
+# Needs: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
+name: Issue start
+
+on:
+  issues:
+    types: [opened, assigned]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: issue-start-${{ github.event.issue.number }}
+
+jobs:
+  start:
+    if: contains(github.event.issue.title, 'pb-')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Create branch and draft PR
+        run: python3 tools/start_task.py
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_REVIEWERS: isikdonger

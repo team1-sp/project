@@ -1,0 +1,24 @@
+name: Research or spike
+description: A time-boxed question to answer, ending in a decision entry or a doc
+labels: ["type:research"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+    validations:
+      required: true
+  - type: input
+    id: timebox
+    attributes:
+      label: Time box
+      placeholder: e.g. 6 hours
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Expected output
+      placeholder: A decision entry in docs/history/decision-log.md, a design doc, a notebook...
+    validations:
+      required: true

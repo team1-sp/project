@@ -1,0 +1,22 @@
+# Applies .github/labels.yml to the repository's labels, so labels are reviewed like code.
+name: Label sync
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/labels.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: python3 -m pip install --quiet pyyaml
+      - run: python3 tools/sync_labels.py "${{ github.repository }}" --prune
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

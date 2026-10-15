@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-10-13
-updated_by: claude-code/sonnet-5.5/012r
+last_updated: 2026-10-15
+updated_by: claude-code (session 0171)
 ---
 
 # Open Questions
@@ -41,12 +41,6 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 - **Still unclear:** (0) Which of the proposals will the team adopt, and by when? (1) Compilers/toolchain per OS (e.g. MSVC on Windows, Clang on macOS?). (2) Must the engine **build and run** on macOS during development, or is macOS only for editing/docs? (3) What would settle C++20, the platform split and Raylib v6.0 (e.g. a team check, a build test)? Say "decided" for any of them and I will record it.
 - **Answer:** —
 
-### Q-009 — Build system and test framework?
-- **To:** human:isik
-- **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-13
-- **Status:** Open — **deferred by the human** ("to be decided later", 2026-10-13). Blocks TASK-005; agents must not choose. If the proposed Windows+macOS development (DEC-019) is adopted, it must work on both.
-- **Answer:** —
-
 ### Q-013 — What should "LLM-instructive components" contain?
 - **To:** human:isik
 - **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-13
@@ -55,16 +49,15 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 - **Options (not decisions):** (A) minimal: component name + per-field name/type; (B) plus human-readable purpose and per-field description/unit/range; (C) plus declared owner/readers and example values. Declared in C++20 by a registration function per component vs macro/table. I lean (B)/(C) because the assistant must cite meaning, not just values — your call.
 - **Answer:** —
 
-### Q-006 — Should agents be allowed to commit to feature branches?
-- **To:** human:isik
-- **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-12
-- **Status:** Open
-- **Context:** `guidelines/git-workflow.md` proposes: agents may commit to `task/*` branches, never to `main`; humans merge.
-- **Answer:** —
-
 ---
 
 ## Answered
+
+### Q-006 — Should agents be allowed to commit to feature branches?
+- **Status:** Answered 2026-10-15: agents push only after a human approves that push; humans approve and merge every PR (DEC-025).
+
+### Q-009 — Build system and test framework?
+- **Status:** Answered 2026-10-15 → **CMake + GoogleTest** (DEC-023).
 
 ### Q-003 — Status of the benchmark?
 - **Status:** Answered 2026-10-13: finished; no notable difference, as expected; team decided on code complexity and ease of use (DEC-015 amendment). TASK-001 Done.

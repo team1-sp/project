@@ -1,0 +1,32 @@
+name: Backlog item
+description: A product backlog item (normally created from its ClickUp task)
+title: "PB-000 "
+labels: ["type:feature"]
+body:
+  - type: input
+    id: clickup
+    attributes:
+      label: ClickUp task
+      description: Link to the ClickUp task.
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      placeholder: As a ..., I want ... so that ...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: subitems
+    attributes:
+      label: Sub-items
+      description: The PB-xxx.n sub-items as a checklist.
+      placeholder: "- [ ] PB-000.1 ..."
