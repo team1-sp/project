@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-10-15
-updated_by: claude-code (session 0171)
+last_updated: 2026-10-16
+updated_by: claude-code/sonnet-5.5/012r
 ---
 
 # Open Questions
@@ -27,6 +27,26 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 - **Context:** These were extracted from the guide and Initial Plan, not individually voted.
 - **Answer:** —
 
+### Q-014 — Left over from the GitHub repository setup
+- **To:** human:isik (consult the team)
+- **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-15; reduced 2026-10-16 after reconciling with GitHub main
+- **Status:** Open — most items were answered on 2026-10-15 (DEC-022…028). Still open:
+  1. **Visibility and branch protection.** `team1-sp/project` is now **public** (clone works without sign-in), but DEC-027 and `CONTRIBUTING.md` say branch protection is unavailable (private repo, free plan). Public repositories can use branch protection/rulesets on the free plan `[ASSUMPTION — check GitHub docs/settings]`. Is the repo meant to stay public? If yes, should protection be switched on now (same rules as DEC-027)? Also: everything in `docs/` (names, decisions, course context) is now publicly readable.
+  2. **License.** No `LICENSE` file exists. A public repository without a license is "all rights reserved" by default. Which license (or none on purpose)? Raylib is zlib and Box2D is MIT, so any choice works.
+  3. **Access.** GitHub usernames/roles of the 5 members and read access for the advisor (Leyla Sezer), if the repo goes private again.
+  4. **Git LFS** for assets: yes or no? [no until needed]
+  5. **Windows and macOS in CI.** `.github/workflows/ci.yml` runs every job on `ubuntu-latest` only, and the layout lists Windows presets only. Once code exists, builds must run on Windows and macOS (DEC-029). Add them with PB-002, or earlier? [with PB-002]
+- **Answered by:** project name → Q-005 (still open); branch rules → DEC-027; agent permissions → DEC-025; task tracking → DEC-028; layout/hygiene/CI/naming → DEC-022, `git-workflow.md`, PB-001.
+- **Answer:** —
+
+### Q-015 — Task IDs: TASK-### (docs) or PB-### (ClickUp)?
+- **To:** human:isik
+- **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-16
+- **Status:** Open
+- **Context:** GitHub branches, PR titles and issues use ClickUp's `PB-###` ids (DEC-028, `git-workflow.md`). The agent docs still use `TASK-###` on `agents/state/task-board.md`, in commit trailers (`Refs: TASK-###`) and in playbooks. Two id systems for the same work will drift.
+- **Options (not decisions):** (A) ClickUp is the only task list; `task-board.md` keeps only a short pointer plus a `PB` column mapping; agent docs say `PB-###`. (B) Keep `task-board.md` as an agent-facing mirror, each `TASK-###` carries its `PB-###`. (C) Leave as is. I lean (B) now (smallest change, agents keep a file they can read offline) and (A) later.
+- **Answer:** —
+
 ### Q-005 — Project / product name?
 - **To:** human:team
 - **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-12
@@ -34,17 +54,10 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 - **Context:** Needed for namespaces, binary names and repo naming.
 - **Answer:** —
 
-### Q-007 — C++ standard, platforms, Raylib version, compilers
-- **To:** human:isik
-- **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-13
-- **Status:** Open — the human answered with propositions and clarified "still open" covers all of it (2026-10-13): C++20, development on Windows+macOS with Windows-only target (DEC-019, Proposed), Raylib v6.0 (DEC-021, Proposed).
-- **Still unclear:** (0) Which of the proposals will the team adopt, and by when? (1) Compilers/toolchain per OS (e.g. MSVC on Windows, Clang on macOS?). (2) Must the engine **build and run** on macOS during development, or is macOS only for editing/docs? (3) What would settle C++20, the platform split and Raylib v6.0 (e.g. a team check, a build test)? Say "decided" for any of them and I will record it.
-- **Answer:** —
-
 ### Q-013 — What should "LLM-instructive components" contain?
 - **To:** human:isik
 - **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-13
-- **Status:** Open → blocks TASK-010 only
+- **Status:** Open — **deferred by the human** ("too early", 2026-10-15). Do not raise until a human does. Blocks TASK-010 only.
 - **Context:** DEC-018: the custom ECS exists so components are more LLM-instructive via the semantic layer.
 - **Options (not decisions):** (A) minimal: component name + per-field name/type; (B) plus human-readable purpose and per-field description/unit/range; (C) plus declared owner/readers and example values. Declared in C++20 by a registration function per component vs macro/table. I lean (B)/(C) because the assistant must cite meaning, not just values — your call.
 - **Answer:** —
@@ -70,6 +83,9 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 
 ### Q-012 — ECS: custom or library?
 - **Status:** Answered 2026-10-13 → **custom ECS**, so components are LLM-instructive via the semantic layer (DEC-018). Follow-up: Q-013.
+
+### Q-007 — C++ standard, platforms, compilers, Raylib version
+- **Status:** Answered 2026-10-13…15 → platforms DEC-029, compilers DEC-030, C++20 DEC-019, Raylib v6.0 DEC-021 (the last two accepted 2026-10-15).
 
 ### Q-001 — Is C++ or C# the implementation language?
 - **Status:** Answered 2026-10-13 → **C++** (DEC-013). Also decided: Box2D (DEC-014), Raylib (DEC-015), 2D only (DEC-016).

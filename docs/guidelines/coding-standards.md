@@ -1,6 +1,6 @@
 # Coding Standards
 
-Language is **C++** (DEC-013). Physics is Box2D behind the Physics Adapter (DEC-014); graphics is Raylib behind the rendering abstraction (DEC-015); 2D only (DEC-016). Box2D v3.1.1 (DEC-020). ECS is custom (DEC-018). **Proposed, not decided (DEC-019, Q-007):** C++20, development on Windows and macOS, Windows-only target. Build system CMake and test framework GoogleTest are decided (DEC-023). Still open and decided by the human: C++ standard, compilers/toolchain, formatter (Q-007), whether macOS must build/run the engine — do not pick them yourself.
+Language is **C++** (DEC-013). Physics is Box2D v3.1.1 behind the Physics Adapter (DEC-014, DEC-020); graphics is Raylib behind the rendering abstraction (DEC-015); 2D only (DEC-016); ECS is custom (DEC-018). **Platforms (DEC-029):** the project is developed on Windows and macOS, Windows has priority; games are built for Windows only for now. **Standard: C++20 (DEC-019). Raylib v6.0 (DEC-021).** **Compilers (DEC-030):** whatever each platform needs, none pinned — no compiler-specific extensions. **Build system CMake and test framework GoogleTest (DEC-023).** Still open and decided by the human: formatter — do not pick it yourself.
 
 ## 1. Universal rules
 
@@ -37,7 +37,7 @@ See [repository-structure.md](repository-structure.md). One concept per file; he
 
 ## 4. C++ rules
 
-- Standard: `[PROPOSED]` C++20 (DEC-019, not decided). Until the human decides, write conservative modern C++ and do not rely on C++23 features; keep platform-specific APIs out of engine code and ask before adding any (Q-007).
+- Standard: **C++20** (DEC-019); do not use C++23 features; the project must build on Windows and macOS (Windows priority, DEC-029), so keep platform-specific APIs out of engine code and ask before adding any.
 - Ownership: `std::unique_ptr` by default; no owning raw pointers; IDs or references for non-owning links. Entities are IDs, not pointers — this avoids dangling pointers.
 - RAII for every resource (physics bodies/worlds, Raylib textures/shaders/fonts, windows). Raylib resources must be unloaded before `CloseWindow`.
 - Components are trivially copyable structs where possible.
@@ -71,3 +71,4 @@ No 3D types, cameras, models or physics (DEC-016). Use 2D vector/transform types
 | 2026-10-12 | Created | claude-code/sonnet-5.5/012r |
 | 2026-10-13 | C++ decided (DEC-013); C# section removed; Box2D/Raylib rules added | claude-code/sonnet-5.5/012r |
 | 2026-10-13 | C++20/platforms proposed, not decided (DEC-019) | claude-code/sonnet-5.5/012r |
+| 2026-10-15 | C++20 (DEC-019), Raylib v6.0 (DEC-021) accepted; platforms/compilers decided | claude-code/sonnet-5.5/012r |

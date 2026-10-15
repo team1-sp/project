@@ -16,9 +16,9 @@ One repository for all code and engineering docs (DEC-022); `team1-sp/docs` hold
 
 ```
 project/
-├── CMakeLists.txt            root build, C++20 (proposed, DEC-019), options (ENGINE_WITH_RAYLIB, ENGINE_BUILD_TESTS)
-├── CMakePresets.json         windows-debug, windows-release, headless (no raylib)
-├── cmake/                    FetchContent pins (raylib, Box2D v3.1.1, GoogleTest), warning flags
+├── CMakeLists.txt            root build, C++20 (DEC-019), options (ENGINE_WITH_RAYLIB, ENGINE_BUILD_TESTS)
+├── CMakePresets.json         windows-debug, windows-release, headless (no raylib); macOS presets required (DEC-029)
+├── cmake/                    FetchContent pins (raylib v6.0 — DEC-021, Box2D v3.1.1 — DEC-020, GoogleTest — DEC-023), warning flags
 ├── engine/                   LAYER 1, C++ static libraries, one CMake target per folder
 │   ├── core/                 game loop, time, config, run modes, logging
 │   ├── ecs/                  world, entities, storage, queries, scheduler, component metadata

@@ -21,7 +21,7 @@ These are **anticipated** (well-known in engine/ECS/physics work) and **not yet 
 | E-015 | ~~GC pauses in hot paths~~ | — | **obsolete:** language is C++ (DEC-013). Equivalent C++ risk: per-frame heap allocation → see E-019 | n/a |
 | E-016 | **Dangling pointers/references to components** | Crash after add/remove | Store entity IDs, not pointers; re-query | no |
 | E-017 | **Texture wrap mode differences between frameworks** | Edge artefacts with shaders | Set clamp-to-edge explicitly — **PRB-001** | **yes** |
-| E-018 | **Library version mismatch** (Box2D v2.4 tutorials vs our v3.1.1 C API; Raylib version differences) | Missing/changed functions, doesn't compile | Versions pinned: Box2D v3.1.1 (DEC-020), Raylib v6.0 proposed (DEC-021); copy examples only for the pinned version; compile a smoke test early | no |
+| E-018 | **Library version mismatch** (Box2D v2.4 tutorials vs our v3.1.1 C API; Raylib version differences) | Missing/changed functions, doesn't compile | Versions pinned: Box2D v3.1.1 (DEC-020), Raylib v6.0 (DEC-021); copy examples only for the pinned version; compile a smoke test early | no |
 | E-019 | **Telemetry too expensive** | FPS/step rate misses ip.nfr.1.* | Record deltas, pre-allocate, async/ring buffer; measure with telemetry off/on | no |
 | E-020 | **Window created in tests** | CI/headless crash, slow tests | Tests use headless entry point only | no |
 | E-023 | **Raylib called in headless mode or from simulation code** (`InitWindow`, `LoadTexture`, `LoadShader`, `LoadFont` need a window/GL context) | Crash or hang without a display; headless ≠ normal | Only the rendering implementation calls Raylib; simulation uses asset IDs; headless never initialises it (R-4) | no |

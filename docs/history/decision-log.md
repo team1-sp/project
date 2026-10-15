@@ -27,9 +27,9 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-016 | Product scope is 2D only; 3D is future work, architecture keeps it possible | Accepted | 2026-10-13 |
 | DEC-017 | Decision authority: humans decide, agents consult; decision log is the single truth; course docs are not authoritative | Accepted | 2026-10-13 |
 | DEC-018 | ECS is custom-built (so components can be LLM-instructive via the semantic layer) | Accepted | 2026-10-13 |
-| DEC-019 | C++20; development on Windows and macOS; engine app and games target Windows only (for now) | Proposed (human: "still open") | 2026-10-13 |
+| DEC-019 | C++20 (its platform part was decided in DEC-029) | Accepted | 2026-10-13 |
 | DEC-020 | Box2D version is v3.1.1 (C API) | Accepted | 2026-10-13 |
-| DEC-021 | Raylib version is v6.0 | Proposed (human said "still open") | 2026-10-13 |
+| DEC-021 | Raylib version is v6.0 | Accepted | 2026-10-13 |
 | DEC-022 | One repository for code and engineering docs; `team1-sp/docs` holds course deliverables only | Accepted | 2026-10-15 |
 | DEC-023 | Build system CMake, test framework GoogleTest | Accepted | 2026-10-15 |
 | DEC-024 | Işık Dönger reviews every PR; area owners are second code owners | Accepted | 2026-10-15 |
@@ -37,10 +37,12 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-026 | The semantic layer lives in its own top-level folder, separate from engine and ai-services | Accepted | 2026-10-15 |
 | DEC-027 | Trunk-based git workflow; branch protection deferred, rules kept as a team agreement | Accepted | 2026-10-15 |
 | DEC-028 | GitHub issues are created from ClickUp tasks with ClickUp's GitHub integration | Accepted | 2026-10-15 |
+| DEC-029 | Platforms: develop on Windows and macOS (Windows priority); the engine application and the development tool must run on both; games are built for Windows only for now | Accepted | 2026-10-15 |
+| DEC-030 | Compilers: whatever each platform needs; none pinned now | Accepted | 2026-10-15 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
-C++ standard, platforms and Raylib version (DEC-019, DEC-021: Proposed) · compilers/toolchain · whether the engine must build/run on macOS or only be developed there · Raylib version confirmation (DEC-021) · what "LLM-instructive components" means concretely (Q-013) · world units / coordinate convention · project name · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
+what "LLM-instructive components" means concretely (Q-013, deferred by the human) · AI service language and protocol (DEC-011, deferred) · world units / coordinate convention · project name (Q-005) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
 
 ---
 
@@ -118,6 +120,7 @@ C++ standard, platforms and Raylib version (DEC-019, DEC-021: Proposed) · compi
 - **Decision (proposed):** Build order: local script → retrieval/graph queries → structured checks → engine↔AI integration → optional MCP server.
 - **Rationale:** Avoid spending time on protocol plumbing before the core works.
 - **Revisit when:** Phase 12 (AI Assistant Layer) starts.
+- **Amendments:** 2026-10-15 — Işık Dönger: too early to decide; stays Proposed, agents must not raise it until a human does.
 
 ### DEC-011 — AI orchestration in Python; engine-facing contract via gRPC/protobuf
 - **Date:** 2026-10-12
@@ -125,6 +128,7 @@ C++ standard, platforms and Raylib version (DEC-019, DEC-021: Proposed) · compi
 - **Context:** The guide says the assistant "may use an LLM via gRPC to a Python AI service" (ip.fr.11.8).
 - **Decision (proposed):** Keep model orchestration/experiments in Python; define a strongly-typed protobuf contract between engine-side exporter and AI service. The engine side is C++ (DEC-013); the AI service language is still open.
 - **Consequences:** Privacy rule ip.nfr.2.1 (no source/telemetry leaves the machine unless enabled).
+- **Amendments:** 2026-10-15 — Işık Dönger: too early to decide; stays Proposed, agents must not raise it until a human does.
 
 ### DEC-012 — Graphics framework selection is decided by the shader benchmark
 - **Date:** 2026-10-12 (extracted from Initial Plan §4.2 and `shader-test/test-guideline.md`)
@@ -218,15 +222,15 @@ C++ standard, platforms and Raylib version (DEC-019, DEC-021: Proposed) · compi
 
 ### DEC-019 — C++20; development on Windows and macOS; engine app and games target Windows only (for now)
 - **Date:** 2026-10-13
-- **Status:** Proposed (corrected from Accepted, see Amendments)
-- **Proposed by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code/sonnet-5.5/012r
+- **Status:** Accepted (2026-10-15, see Amendments)
+- **Decided by:** Işık Dönger (Project Manager) on 2026-10-15; first proposed 2026-10-13  **Recorded by:** claude-code/sonnet-5.5/012r
 - **Human's words:** "C++20, Development will be done on Windows and MacOS but engine app and games are for now only Windows targeted , Raylib v6.0, still open" — clarified later: "still open" covers the whole answer; these are propositions, not decisions.
-- **Decision (proposed, binds nobody):** Language standard C++20. Team members develop on Windows and macOS. The shipped engine application and games only target Windows for now.
-- **Consequences:** If adopted: code must not require anything newer than C++20, and Windows is the only run target; **open (Q-007, remaining):** does the code have to *build and run* on macOS for development, or is macOS only for editing/docs? That decides whether platform-specific APIs are forbidden and affects the build system (Q-009, deferred). Compiler/toolchain also open.
+- **Decision:** Language standard is C++20. (The platform statements in this entry were decided separately in DEC-029.)
+- **Consequences:** Code must not require anything newer than C++20, and every compiler used on a supported platform (DEC-030) must support C++20. Platform questions are answered in DEC-029 and DEC-030.
 - **Docs updated:** `guidelines/coding-standards.md`, `troubleshooting/environment-setup.md`, `architecture/tech-stack.md`, `agents/state/*`.
 - **Course documents affected (for humans):** any platform statement in the Initial Plan's required software/hardware.
 - **Related:** DEC-013, Q-007, Q-009.
-- **Amendments:** 2026-10-13 — recording error by claude-code/sonnet-5.5/012r: I first logged this as Accepted. Işık Dönger clarified that "still open" covered the entire Q-007 answer (C++20, platforms, Raylib v6.0). It stays Proposed until a human decides. C++ itself (DEC-013) is unaffected.
+- **Amendments:** 2026-10-15 — the platform part (develop on Windows and macOS, Windows-only game builds) was decided in DEC-029; only the C++20 standard remains proposed here. 2026-10-13 — recording error by claude-code/sonnet-5.5/012r: I first logged this as Accepted. Işık Dönger clarified that "still open" covered the entire Q-007 answer (C++20, platforms, Raylib v6.0). C++ itself (DEC-013) is unaffected. 2026-10-15 — Işık Dönger: "all decisions are decided" (2026-10-15, said after the open points were listed: C++20 and Raylib v6.0). C++20 is now Accepted.
 
 ### DEC-020 — Box2D version is v3.1.1 (C API)
 - **Date:** 2026-10-13
@@ -240,11 +244,15 @@ C++ standard, platforms and Raylib version (DEC-019, DEC-021: Proposed) · compi
 
 ### DEC-021 — Raylib version is v6.0
 - **Date:** 2026-10-13
-- **Status:** Proposed — the human wrote "Raylib v6.0, still open"; unclear whether "still open" refers to the version or to the rest of Q-007 (compilers etc.). Not binding until confirmed.
-- **Proposed by:** claude-code/sonnet-5.5/012r from Işık Dönger's answer
+- **Status:** Accepted (2026-10-15)
+- **Decided by:** Işık Dönger (Project Manager) on 2026-10-15; first proposed 2026-10-13 from their answer  **Recorded by:** claude-code/sonnet-5.5/012r
+- **Human's words:** "all decisions are decided" (2026-10-15, said after the open points were listed: C++20 and Raylib v6.0)
 - **Context:** Q-007. `[ASSUMPTION — a Raylib v6.0 release exists and matches the API you expect; verify before pinning.]`
-- **Decision (proposed):** Pin Raylib v6.0.
+- **Decision:** Pin Raylib v6.0.
+- **Consequences:** `[VERIFIED 2026-10-15]` Raylib 6.0 exists (GitHub release tag `6.0`, marked Latest). Still to do at TASK-005: pin the exact version in the build (Q-009) and check the API against the 6.0 headers/CHANGELOG — 6.0 changed fullscreen/High-DPI handling (High-DPI needs `FLAG_WINDOW_HIGHDPI`) and the model/skeletal-animation API, so 5.5-era tutorials may not match.
+- **Docs updated:** `architecture/tech-stack.md`, `guidelines/repository-structure.md`, `troubleshooting/*`, `agents/state/*`.
 - **Related:** DEC-015, Q-007.
+- **Amendments:** 2026-10-15 — Işık Dönger asked to confirm v6.0; claude-code/sonnet-5.5/012r checked the Raylib GitHub releases page and release notes: 6.0 is the latest release (previous: 5.5). Observation only, not a decision: 6.0 adds a software renderer and a headless "Memory" platform backend, which may matter for headless mode (DEC-003 area) — to be evaluated when headless mode is designed.
 
 ### DEC-022 — One repository for code and engineering docs
 - **Date:** 2026-10-15
@@ -268,6 +276,7 @@ C++ standard, platforms and Raylib version (DEC-019, DEC-021: Proposed) · compi
 - **Consequences:** Unblocks TASK-005 / PB-002 except for the still-open C++ standard and toolchain (Q-007).
 - **Docs updated:** `guidelines/coding-standards.md`, `guidelines/repository-structure.md`, `agents/state/open-questions.md`.
 - **Related:** Q-009, DEC-019, PB-002.
+- **Amendments:** 2026-10-16 — the "still-open C++ standard and toolchain" in Consequences is resolved: C++20 Accepted (DEC-019), compilers per platform need (DEC-030), platforms (DEC-029). TASK-005 / PB-002 is no longer blocked by Q-007.
 
 ### DEC-024 — Işık Dönger reviews every PR; area owners are second code owners
 - **Date:** 2026-10-15
@@ -319,5 +328,34 @@ C++ standard, platforms and Raylib version (DEC-019, DEC-021: Proposed) · compi
 - **Consequences:** ClickUp stays the planning tool; setting the task to done after a merge is manual (ClickUp's automatic status changes are a paid feature).
 - **Docs updated:** `CONTRIBUTING.md`.
 - **Related:** DEC-027, PB-001.5.
+
+### DEC-029 — Platforms: develop on Windows and macOS (Windows priority); games are built for Windows only for now
+- **Date:** 2026-10-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code/sonnet-5.5/012r
+- **Human's words:** "our final decision is that project needs to be able to developed on windows and mac, windows being priority. the games need to be able to built for windows only for now. supports for other platforms and builds will be delayed."
+- **Context:** Q-007; DEC-019 (platform part). Human asked whether other compilers/platforms are easy to add later.
+- **Options considered:** (1) Windows only; (2) Windows and macOS development, Windows-only game builds; (3) also web or other game targets now.
+- **Decision:** The project is developed on Windows and macOS, with Windows the priority (when they conflict, Windows wins). Games are built for Windows only for now. Support for other platforms and other game build targets (e.g. web) is delayed.
+- **Rationale:** `[rationale not given beyond the words above]`
+- **Consequences:** The engine and tooling must build and run on macOS too, at lower priority than Windows (confirmed by the human 2026-10-15, see Amendments); no work on other game targets now. Engine code must not depend on Windows-only or macOS-only APIs without asking. Compilers: DEC-030. The build system must support both OSes (Q-009, deferred).
+- **Docs updated:** `architecture/tech-stack.md`, `guidelines/coding-standards.md`, `troubleshooting/environment-setup.md`, `agents/state/*`.
+- **Course documents affected (for humans):** platform/hardware statements in the Initial Plan, if any.
+- **Related:** DEC-019, DEC-013, Q-007, Q-009.
+- **Amendments:** 2026-10-16 — renumbered by claude-code/sonnet-5.5/012r: recorded locally on 2026-10-15 as DEC-022, but `team1-sp/project` main had already used DEC-022…028; to avoid two meanings for one ID this entry became DEC-029. 2026-10-15 — Işık Dönger: "2 of our team members will be using mac for the project. so both the development tool and the engine application must run on mac." Rationale: two team members work on macOS. This confirms that the engine application and the development tool must run on macOS ("development tool" read by the recording agent as the engine's editor/dev tooling `[ASSUMPTION]`).
+
+### DEC-030 — Compilers: whatever each platform needs; none pinned now
+- **Date:** 2026-10-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code/sonnet-5.5/012r
+- **Human's words:** "compilers are whatever is needed based on the current platform needs"
+- **Context:** Q-007 (compilers); DEC-029 (platforms).
+- **Decision:** No compiler is pinned. Each platform uses the compiler that platform needs. Code must therefore compile with the compilers each supported platform needs, and must not rely on compiler-specific extensions.
+- **Rationale:** Two team members use macOS and the rest Windows (DEC-029); the platform decides the toolchain.
+- **Consequences:** The compiler and version per OS are written into `environment-setup.md` when TASK-005 sets up the build. Which compiler that is on each OS was not named by the human; do not assume (`[ASSUMPTION]` MSVC on Windows and Apple Clang on macOS — to be confirmed when the skeleton is built). The chosen C++ standard (DEC-019, Proposed) must be supported by all of them.
+- **Docs updated:** `architecture/tech-stack.md`, `guidelines/coding-standards.md`, `troubleshooting/environment-setup.md`, `agents/state/*`, `process/roadmap.md`.
+- **Course documents affected (for humans):** none known.
+- **Related:** DEC-029, DEC-019, Q-007, Q-009.
+- **Amendments:** 2026-10-16 — renumbered by claude-code/sonnet-5.5/012r: recorded locally on 2026-10-15 as DEC-023 (collision with the build-system decision on main). —
 
 ---

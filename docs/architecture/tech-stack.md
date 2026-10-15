@@ -12,18 +12,18 @@
 | ECS | **Custom-built** (so components can be LLM-instructive through the semantic layer) | DEC-018 |
 | Box2D version | **v3.1.1** (C API with id handles) | DEC-020 |
 | Build system / tests | **CMake** (presets, FetchContent pins) / **GoogleTest** | DEC-023 |
+| Platforms | **Development on Windows and macOS, Windows priority; games built for Windows only for now; other platforms/builds delayed** | DEC-029 |
+| C++ standard | **C++20** | DEC-019 |
+| Raylib version | **v6.0** `[VERIFIED 2026-10-15: release exists, latest]` | DEC-021 |
+| Compilers | **Whatever each platform needs; none pinned now** (exact compiler per OS recorded when the build is set up) | DEC-030 |
 | Scope | **2D only.** 3D is future work; keep the seams (adapter, rendering abstraction, ECS) so it stays possible, build nothing 3D | DEC-016 |
 
 ## 2. Still open (ask the human; do not decide)
 
 | Area | Candidates / notes | Question |
 | --- | --- | --- |
-| C++ standard / platforms | `[PROPOSED]` C++20; development on Windows and macOS; engine app and games target Windows only for now — human: "still open" | DEC-019, Q-007 |
-| Compilers / toolchain | Not given | Q-007 |
-| Does the engine have to build and run on macOS, or is macOS dev-only (editing/docs)? | Not given; affects platform-specific code and build system | Q-007 |
-| Raylib version | `[PROPOSED]` v6.0 (DEC-021) — human wrote "still open"; confirm | Q-007 |
-| What "LLM-instructive components" means concretely (metadata schema) | Not decided | Q-013 |
-| AI service language / protocol | `[PROPOSED]` Python + gRPC/protobuf (DEC-011) | open |
+| What "LLM-instructive components" means concretely (metadata schema) | Deferred by the human ("too early") | Q-013 |
+| AI service language / protocol | `[PROPOSED]` Python + gRPC/protobuf (DEC-011) — human: too early to decide | open |
 | World units / coordinate convention | Meters vs pixels; y-up vs y-down | TASK-008 |
 
 ## 3. What the decisions mean in practice
@@ -58,5 +58,6 @@ The engine is not directly coupled to Box2D or Raylib. The Physics Adapter and t
 | --- | --- | --- |
 | 2026-10-12 | Created from guide §6 and Initial Plan | claude-code/sonnet-5.5/012r |
 | 2026-10-13 | Rewritten after the human decided the stack (DEC-013…016) | claude-code/sonnet-5.5/012r |
-| 2026-10-13 | Custom ECS, Box2D v3.1.1 recorded (DEC-018, DEC-020); C++20/platforms and Raylib v6.0 proposed only (DEC-019, DEC-021) | claude-code/sonnet-5.5/012r |
+| 2026-10-13 | Custom ECS, Box2D v3.1.1 recorded (DEC-018, DEC-020); platforms (DEC-029) and compilers (DEC-030) decided; C++20 and Raylib v6.0 accepted 2026-10-15 (DEC-019, DEC-021) | claude-code/sonnet-5.5/012r |
 | 2026-10-15 | CMake + GoogleTest decided (DEC-023) | claude-code (session 0171) |
+| 2026-10-16 | Reconciled with GitHub main; platforms and compilers renumbered DEC-029/DEC-030 (collision with DEC-022/023) | claude-code/sonnet-5.5/012r |

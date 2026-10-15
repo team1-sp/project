@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-10-13
+last_updated: 2026-10-16
 updated_by: claude-code/sonnet-5.5/012r
 ---
 
@@ -18,23 +18,26 @@ Exit criteria (all must be true):
 - [x] Scope fixed: 2D only (DEC-016)
 - [x] ECS approach: custom (DEC-018)
 - [x] Box2D v3.1.1 (DEC-020)
-- [ ] C++ standard (C++20 proposed, DEC-019), platforms (dev Windows+macOS, Windows-only target proposed), Raylib version (v6.0 proposed, DEC-021), compilers — Q-007, still open
-- [ ] Build system and test framework — deferred by the human (Q-009)
-- [ ] Repo layout finalised (`guidelines/repository-structure.md`)
-- [ ] Version control conventions confirmed (`guidelines/git-workflow.md`, Q-006)
+- [x] Platforms: develop on Windows+macOS (Windows priority), games Windows-only for now (DEC-029)
+- [x] C++20 (DEC-019), Raylib v6.0 (DEC-021)
+- [x] Compilers: whatever each platform needs (DEC-030)
+- [x] Build system and test framework: CMake + GoogleTest (DEC-023)
+- [x] Repo layout accepted (`guidelines/repository-structure.md`, DEC-022, DEC-026)
+- [x] Version control conventions accepted (`guidelines/git-workflow.md`, DEC-024/025/027/028)
+
+All criteria are met; the human confirms closing phase 1.
 
 ## Next 3 steps
-
-1. Human answers the Q-007, Q-013, and Q-009 when ready.
-2. Record each answer as `Accepted` and propagate (`playbooks/record-decision.md`).
-3. Bootstrap the repo skeleton (TASK-005), then the window + game loop (TASK-006).
+1. Build the repo skeleton: TASK-005 / ClickUp PB-002 (with macOS support, DEC-029).
+2. Human answers the Q-014 leftovers and Q-015 (task ids).
+3. Window + game loop (TASK-006), then the basic ECS (phase 3). Deferred by the human: Q-013, DEC-010, DEC-011.
 
 ## Phase overview
 
 | Phase | Name | Status |
 | --- | --- | --- |
 | 0 | Docs scaffold & agent protocol | Done 2026-10-12 |
-| 1 | Project and technology decisions | **Active** (core stack decided; details open) |
+| 1 | Project and technology decisions | **Criteria met**, awaiting human confirmation |
 | 2 | Engine window and game loop | Not started |
 | 3 | Basic ECS World | Not started |
 | 4 | First ECS systems (Input, Movement, Render; no physics) | Not started |

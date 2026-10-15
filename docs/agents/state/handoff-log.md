@@ -58,4 +58,44 @@
 - **Lesson:** when an answer contains a hedge, confirm its scope before recording `Accepted` (record-decision.md: "If you are not sure the human decided, ask once more").
 - **Records:** DEC-013, DEC-014, DEC-016, DEC-019, DEC-021, Q-007.
 
+### HND-005 — Platforms decided (DEC-029)
+- **Date:** 2026-10-15
+- **Agent:** claude-code/sonnet-5.5/012r
+- **Recorded:** DEC-029 Accepted: develop on Windows and macOS (Windows priority); games built for Windows only; other platforms/builds delayed. DEC-019 now covers only C++20 (still Proposed). Q-007 narrowed to C++ standard, Raylib version, compilers.
+- **Updated:** decision log, tech-stack, coding-standards, environment-setup, current-status, plan, task-board, open-questions.
+- **Not decided:** my reading that the engine must build and run on macOS (marked `[ASSUMPTION]` in DEC-029). I did not turn my earlier suggestions (platform layer, single tick function) into rules — only the human's words were recorded.
+- **Next:** human answers Q-007 rest, Q-013; Q-009 when ready.
+
+### HND-006 — macOS requirement confirmed; compilers decided
+- **Date:** 2026-10-15
+- **Agent:** claude-code/sonnet-5.5/012r
+- **Recorded:** Amendment on DEC-029 (two team members use macOS; engine application and development tool must run on macOS — assumption confirmed). DEC-030 Accepted: compilers are whatever each platform needs; none pinned. Q-007 narrowed to C++ standard and Raylib version.
+- **Updated:** decision log, tech-stack, coding-standards, environment-setup, roadmap, current-status, plan, task-board, open-questions.
+- **Not verified:** which compiler runs on each OS (the human did not name one); what "development tool" means precisely (read as the engine's editor/dev tooling).
+- **Next:** human answers C++20 and Raylib v6.0 (Q-007), Q-013, Q-009 when ready.
+
+### HND-007 — C++20 and Raylib v6.0 accepted
+- **Date:** 2026-10-15
+- **Agent:** claude-code/sonnet-5.5/012r
+- **Recorded:** DEC-019 (C++20) and DEC-021 (Raylib v6.0) Accepted on Işık Dönger's "all decisions are decided". Q-007 closed. I read "all decisions" as covering these two open proposals only.
+- **Not covered / still open:** Q-009 (deferred by the human), Q-013 (LLM-instructive metadata), TASK-008 (world units), Q-002/005/006; DEC-010 and DEC-011 are still Proposed (I did not treat the statement as accepting them).
+- **Not verified:** that a Raylib v6.0 release exists and fits our API assumptions — check before pinning (TASK-005).
+- **Next:** TASK-005 still blocked by Q-009.
+
+### HND-008 — Raylib v6.0 verified; priority is GitHub repository setup
+- **Date:** 2026-10-15
+- **Agent:** claude-code/sonnet-5.5/012r
+- **Verified:** Raylib 6.0 exists (GitHub release tag `6.0`, latest; 5.5 before it). DEC-021 amended; `[ASSUMPTION]` replaced by `[VERIFIED]`. API changes to check at TASK-005: High-DPI flag, fullscreen, skeletal animation. 6.0 also has a software renderer and a headless Memory backend — noted for headless mode, not decided.
+- **Recorded:** Q-009, Q-013, DEC-010, DEC-011 deferred by the human ("too early") — do not raise. New Q-014 (11 repo-setup items) and TASK-012; TASK-010 deferred.
+- **Next:** human answers Q-014 → TASK-012.
+
+### HND-009 — Reconciled local docs with GitHub main
+- **Date:** 2026-10-16
+- **Agent:** claude-code/sonnet-5.5/012r
+- **Task:** TASK-013
+- **Found:** `team1-sp/project` main (`69670b0`) had moved on from the docs commit `95cb8d9`: another agent session (0171) and the team added the repo foundation, CI, CODEOWNERS and decisions DEC-022…028 on 2026-10-15. My local, uncommitted edits (platforms, compilers, C++20/Raylib accepted, deferrals, Q-014) collided: five files carried merge-conflict markers, and my DEC-022/DEC-023 reused IDs already taken on main.
+- **Done:** three-way merge (base `95cb8d9`, upstream `69670b0`, mine). My platform and compiler decisions are now DEC-029 and DEC-030 (amendments say so). Upstream DEC-022…028 kept as written; DEC-023 got an amendment. DEC-019 and DEC-021 are Accepted. Q-009 and Q-006 follow upstream (answered). Q-014 reduced to its leftovers; new Q-015 (TASK vs PB ids). State files updated: TASK-005 is Ready, TASK-012 Done.
+- **Not verified:** that the macOS requirement (DEC-029) is covered by the CI workflow and presets — the layout lists Windows presets only. Whether the repo should stay public (Q-014).
+- **Next:** human reviews, commits the merged docs on a `docs/` branch and opens a PR (DEC-025, DEC-027); answers Q-014, Q-015. Then TASK-005.
+
 ---
