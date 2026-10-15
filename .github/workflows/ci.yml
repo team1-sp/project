@@ -77,7 +77,8 @@ jobs:
           extra_args: --results=verified,unknown
 
   ci-ok:
-    if: always()
+    # Skipped when a newer push cancels this run, so superseded runs don't report a failure.
+    if: ${{ always() && !cancelled() }}
     needs: [changes, pr-hygiene, docs, secrets]
     runs-on: ubuntu-latest
     steps:
