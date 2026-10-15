@@ -78,7 +78,7 @@ Several agents may work at the same time in different tools. There is no lock se
 2. **Append-only files:** append at the end; never reorder.
 3. **IDs:** take the next number by reading the highest existing ID in the file right before writing. If two agents collide on an ID, the later writer renumbers *its own* entry and fixes its references.
 4. **One task = one owner.** Different tasks should touch different files. If two tasks must touch the same file, note it in both tasks (`Touches:`) and sequence them.
-5. **Git:** work on a branch named after the task (`task/TASK-012-short-name`, see `guidelines/git-workflow.md`). Resolve merge conflicts in state files by keeping *both* sides' entries.
+5. **Git:** work on a branch named after the backlog item (`feat/pb-026-short-name`, see `guidelines/git-workflow.md`). Resolve merge conflicts in state files by keeping *both* sides' entries.
 6. **If state files disagree with the repo**, trust the repo, then fix the state file and note it in your handoff.
 
 ## 7. Entry formats

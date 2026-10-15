@@ -1,0 +1,42 @@
+# Contributing
+
+The short version of how we work. Details and reasons: [docs/guidelines/git-workflow.md](docs/guidelines/git-workflow.md).
+
+## Starting a task
+
+1. In ClickUp, set the task to **in progress** and press **Create GitHub issue** on it. Keep the task name as the issue title (it starts with the PB id).
+2. Create a branch from the latest `main`:
+
+   ```
+   <type>/pb-<nnn>-<short-description>     e.g. feat/pb-025-physics-adapter-interface
+   fix/<issue>-<short-description>         for bugs without a PB item
+   ```
+
+   Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`. Lowercase, words joined with `-`.
+3. Open a **draft pull request** early. The body says `Closes #<issue>`.
+
+## Pull requests
+
+- The PR title is a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/) and becomes the commit on `main`:
+  `feat(phys): define the physics adapter interface (PB-025)`. The scope is the area label without `area:`.
+- Keep PRs under about 400 changed lines.
+- Fill in the PR template, including how you verified the change.
+- Mark the PR **ready for review** when CI is green. Reviewers come from [.github/CODEOWNERS](.github/CODEOWNERS).
+- One approval from a code owner is needed. Reviews happen within 1 working day; comments are labelled `blocker`, `should`, `nit` or `question`, and only `blocker` holds up approval.
+- The author squash-merges. Afterwards, set the ClickUp task to **done**.
+
+## Rules for `main`
+
+- No direct pushes, no force pushes. Every change goes through a squash-merged PR with an approval and a green `ci-ok` check.
+- Branch protection is not available on our GitHub plan yet, so these rules are a team agreement. The **Main guard** workflow marks any commit that reached `main` without a merged PR.
+
+## AI agents
+
+An agent pushes a branch only after a human approves that push. A human approves and merges every PR an agent opens. See `docs/agents/rules.md` (S-2).
+
+## Issues
+
+- One issue per top-level ClickUp backlog item, titled like the task (`PB-025 Define the physics adapter interface`); sub-items are a checklist inside it.
+- Every issue has one assignee, `area:*` labels, a `priority:*` label and a milestone (Increment 1, Increment 2, Final Product).
+- Bugs you find along the way get their own issue (use the Bug form).
+- Close issues through a merged PR, or as "not planned" with a one-line reason.

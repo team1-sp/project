@@ -30,10 +30,17 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-019 | C++20; development on Windows and macOS; engine app and games target Windows only (for now) | Proposed (human: "still open") | 2026-10-13 |
 | DEC-020 | Box2D version is v3.1.1 (C API) | Accepted | 2026-10-13 |
 | DEC-021 | Raylib version is v6.0 | Proposed (human said "still open") | 2026-10-13 |
+| DEC-022 | One repository for code and engineering docs; `team1-sp/docs` holds course deliverables only | Accepted | 2026-10-15 |
+| DEC-023 | Build system CMake, test framework GoogleTest | Accepted | 2026-10-15 |
+| DEC-024 | Işık Dönger reviews every PR; area owners are second code owners | Accepted | 2026-10-15 |
+| DEC-025 | AI agents push only after a human approves; humans approve and merge every PR | Accepted | 2026-10-15 |
+| DEC-026 | The semantic layer lives in its own top-level folder, separate from engine and ai-services | Accepted | 2026-10-15 |
+| DEC-027 | Trunk-based git workflow; branch protection deferred, rules kept as a team agreement | Accepted | 2026-10-15 |
+| DEC-028 | GitHub issues are created from ClickUp tasks with ClickUp's GitHub integration | Accepted | 2026-10-15 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
-build system and test framework (human: "to be decided later", Q-009) · C++ standard, platforms and Raylib version (DEC-019, DEC-021: Proposed) · compilers/toolchain · whether the engine must build/run on macOS or only be developed there · Raylib version confirmation (DEC-021) · what "LLM-instructive components" means concretely (Q-013) · world units / coordinate convention · project name · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
+C++ standard, platforms and Raylib version (DEC-019, DEC-021: Proposed) · compilers/toolchain · whether the engine must build/run on macOS or only be developed there · Raylib version confirmation (DEC-021) · what "LLM-instructive components" means concretely (Q-013) · world units / coordinate convention · project name · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
 
 ---
 
@@ -238,5 +245,79 @@ build system and test framework (human: "to be decided later", Q-009) · C++ sta
 - **Context:** Q-007. `[ASSUMPTION — a Raylib v6.0 release exists and matches the API you expect; verify before pinning.]`
 - **Decision (proposed):** Pin Raylib v6.0.
 - **Related:** DEC-015, Q-007.
+
+### DEC-022 — One repository for code and engineering docs
+- **Date:** 2026-10-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
+- **Human's words:** "One repo, with docs only as course deliverables."
+- **Context:** Backlog item PB-001.1 planned separate engine, ai-services and docs repositories. Cross-cutting changes (adapter interface + its users, the engine/Python contract) would then need several PRs merged in order.
+- **Options considered:** (A) one repo with modules (CMake targets, Python packages) and per-area CI and owners; (B) one repo per part; (C) git submodules. A chosen.
+- **Decision:** All code and the engineering docs live in `team1-sp/project`. `team1-sp/docs` holds course deliverables only.
+- **Consequences:** Modularity comes from build targets, CODEOWNERS and path-filtered CI (`guidelines/repository-structure.md`). PB-001.1's acceptance criterion ("repos engine, ai-services and docs exist") needs updating in ClickUp.
+- **Docs updated:** `guidelines/repository-structure.md`.
+- **Related:** DEC-023, DEC-026.
+
+### DEC-023 — Build system CMake, test framework GoogleTest
+- **Date:** 2026-10-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
+- **Human's words:** "CMake+GoogleTest is fine."
+- **Context:** Q-009 (deferred until now). The ClickUp backlog (PB-002) already assumed CMake with FetchContent and GoogleTest.
+- **Decision:** CMake (with presets) builds everything; third-party code comes in through FetchContent at pinned versions; C++ tests use GoogleTest.
+- **Consequences:** Unblocks TASK-005 / PB-002 except for the still-open C++ standard and toolchain (Q-007).
+- **Docs updated:** `guidelines/coding-standards.md`, `guidelines/repository-structure.md`, `agents/state/open-questions.md`.
+- **Related:** Q-009, DEC-019, PB-002.
+
+### DEC-024 — Işık Dönger reviews every PR; area owners are second code owners
+- **Date:** 2026-10-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
+- **Human's words:** "I think I should be the reviewer for every pr because I am the project manager but we can discuss this." Owners: "physics+rendering adapter is Zeynep Ertürk, ecs+engine core Işık Dönger and Arda Karabulut, semantics layer is Elifnur Özçelik and Arda Sarıtaş".
+- **Decision:** `.github/CODEOWNERS` makes Işık Dönger the default owner of every path and adds area owners as second owners: physics and rendering adapters Zeynep Ertürk; ECS and engine core Arda Karabulut; semantic layer Elifnur Özçelik and Arda Sarıtaş. One approval from any owner of a path counts.
+- **Consequences:** Işık's own PRs and days he cannot review within 1 working day are covered by the area owner. Paths without an area owner (editor, game, ai-services, tooling) currently depend on Işık alone, and his own PRs there need a teammate's review by agreement. Revisit at the Increment 1 review.
+- **Docs updated:** `guidelines/git-workflow.md`, `.github/CODEOWNERS`.
+- **Related:** DEC-027.
+
+### DEC-025 — AI agents push only after a human approves
+- **Date:** 2026-10-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
+- **Human's words:** "AI agents should only push from a human aprrovement."
+- **Context:** Q-006.
+- **Decision:** An AI agent pushes a branch only after a human approves that push. A human approves and merges every PR an agent opens. Agents never push to `main`.
+- **Docs updated:** `guidelines/git-workflow.md`, `agents/state/open-questions.md`, `CONTRIBUTING.md`.
+- **Related:** S-2, Q-006.
+
+### DEC-026 — The semantic layer has its own top-level folder
+- **Date:** 2026-10-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
+- **Human's words:** "Semantic-layer should live in seperate from engine and ai-services if possible."
+- **Decision:** `semantic/` is a top-level folder with its own package, tests and CI job. It reads only what the engine exports; `ai-services/` may use it; `engine/` never depends on it (DEC-001).
+- **Consequences:** Language is still open; Python is assumed for the skeleton. If it becomes C++, `semantic/` becomes its own CMake target under the same rule.
+- **Docs updated:** `guidelines/repository-structure.md`.
+- **Related:** DEC-001, DEC-022.
+
+### DEC-027 — Trunk-based git workflow; branch protection deferred
+- **Date:** 2026-10-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
+- **Human's words:** "for now we can defer branch-protection, I will talk with our instructor."
+- **Context:** GitHub does not offer branch protection or rulesets for private repositories on the organization's free plan (the API answers "Upgrade to GitHub Pro or make this repository public"). Options: GitHub Team through GitHub Education, a public repo, or a team agreement.
+- **Decision:** Trunk-based workflow with squash-merged PRs, PB-numbered branch names and Conventional Commit PR titles (`guidelines/git-workflow.md`). Until protection is available the rules are a team agreement, checked by CI (`ci-ok`) and the `Main guard` workflow.
+- **Consequences:** Once the instructor's answer allows it, protection is switched on with the same rules; nothing else changes.
+- **Docs updated:** `guidelines/git-workflow.md`, `CONTRIBUTING.md`.
+- **Related:** DEC-024, PB-001.2.
+
+### DEC-028 — GitHub issues are created from ClickUp tasks
+- **Date:** 2026-10-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
+- **Human's words:** "Clickup lets issue creation directly from a task. I think we will use that."; "pr should be created from clickup when a task is about to be started."
+- **Decision:** When a task is started, the developer creates its GitHub issue from the ClickUp task with ClickUp's GitHub integration. One issue per top-level backlog item, titled like the task. A GitHub Action is planned to add the branch and a draft PR for each new `PB-` issue.
+- **Consequences:** ClickUp stays the planning tool; setting the task to done after a merge is manual (ClickUp's automatic status changes are a paid feature).
+- **Docs updated:** `CONTRIBUTING.md`.
+- **Related:** DEC-027, PB-001.5.
 
 ---

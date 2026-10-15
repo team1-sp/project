@@ -1,0 +1,33 @@
+# Repository labels. Edit here and merge; the label-sync workflow applies the file.
+# Area labels mirror the ClickUp tags with an "area:" prefix.
+- {name: "area:core", color: "1d76db", description: "Game loop, time, config, logging"}
+- {name: "area:ecs", color: "1d76db", description: "World, entities, components, systems"}
+- {name: "area:phys", color: "1d76db", description: "Physics adapter and Box2D"}
+- {name: "area:render", color: "1d76db", description: "Renderer abstraction and raylib"}
+- {name: "area:input", color: "1d76db", description: "Action input layer and replay"}
+- {name: "area:headless", color: "1d76db", description: "Headless runner"}
+- {name: "area:telemetry", color: "1d76db", description: "Telemetry recording and export"}
+- {name: "area:editor", color: "1d76db", description: "Editor application"}
+- {name: "area:game", color: "1d76db", description: "Demo game"}
+- {name: "area:bridge", color: "1d76db", description: "Engine <-> Python bridge and proto"}
+- {name: "area:semantic-graph", color: "5319e7", description: "Semantic layer"}
+- {name: "area:ai-services", color: "5319e7", description: "Python services"}
+- {name: "area:rl", color: "5319e7", description: "Reinforcement learning and playtest agents"}
+- {name: "area:bug-detection", color: "5319e7", description: "Bug detectors and evaluation"}
+- {name: "area:ai-assistant", color: "5319e7", description: "LLM assistant"}
+- {name: "area:narrative", color: "5319e7", description: "Narrative consistency checking"}
+- {name: "area:ai-research", color: "5319e7", description: "AI research tasks"}
+- {name: "area:devops", color: "0e8a16", description: "Build, CI, repo tooling"}
+- {name: "area:qa", color: "0e8a16", description: "Testing, benchmarks, evaluation"}
+- {name: "area:docs", color: "0e8a16", description: "Documentation"}
+- {name: "type:feature", color: "a2eeef", description: "New behaviour"}
+- {name: "type:bug", color: "d73a4a", description: "Something is broken"}
+- {name: "type:research", color: "c5def5", description: "Research or spike"}
+- {name: "type:chore", color: "ededed", description: "Maintenance, docs or tooling"}
+- {name: "priority:urgent", color: "b60205", description: "ClickUp priority: urgent"}
+- {name: "priority:high", color: "d93f0b", description: "ClickUp priority: high"}
+- {name: "priority:normal", color: "fbca04", description: "ClickUp priority: normal"}
+- {name: "priority:low", color: "c2e0c6", description: "ClickUp priority: low"}
+- {name: "blocked", color: "000000", description: "Waiting on something outside this issue"}
+- {name: "needs-decision", color: "f9d0c4", description: "Needs a team decision before work continues"}
+- {name: "no-issue", color: "ededed", description: "PR without a linked issue (chore/ci only)"}

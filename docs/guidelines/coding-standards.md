@@ -1,6 +1,6 @@
 # Coding Standards
 
-Language is **C++** (DEC-013). Physics is Box2D behind the Physics Adapter (DEC-014); graphics is Raylib behind the rendering abstraction (DEC-015); 2D only (DEC-016). Box2D v3.1.1 (DEC-020). ECS is custom (DEC-018). **Proposed, not decided (DEC-019, Q-007):** C++20, development on Windows and macOS, Windows-only target. Still open and decided by the human: C++ standard, compilers/toolchain, formatter, build system and test framework (Q-007, Q-009), whether macOS must build/run the engine — do not pick them yourself.
+Language is **C++** (DEC-013). Physics is Box2D behind the Physics Adapter (DEC-014); graphics is Raylib behind the rendering abstraction (DEC-015); 2D only (DEC-016). Box2D v3.1.1 (DEC-020). ECS is custom (DEC-018). **Proposed, not decided (DEC-019, Q-007):** C++20, development on Windows and macOS, Windows-only target. Build system CMake and test framework GoogleTest are decided (DEC-023). Still open and decided by the human: C++ standard, compilers/toolchain, formatter (Q-007), whether macOS must build/run the engine — do not pick them yourself.
 
 ## 1. Universal rules
 
@@ -27,7 +27,7 @@ Language is **C++** (DEC-013). Physics is Box2D behind the Physics Adapter (DEC-
 | Tags | `<Name>Tag` | `PlayerControlledTag` (or `PlayerControlledComponent`, be consistent once chosen) |
 | Interfaces | purpose-based, not `Manager` | `IPhysicsAdapter` |
 | Tests | `<Unit>_<Condition>_<Expected>` | `MovementSystem_RightPressed_SetsPositiveVx` |
-| Branches | see git-workflow | `task/TASK-012-physics-step` |
+| Branches | see git-workflow | `feat/pb-026-box2d-world-fixed-step` |
 
 Avoid vague names: `Manager`, `Helper`, `Util`, `Data`, `Handler` unless truly generic.
 

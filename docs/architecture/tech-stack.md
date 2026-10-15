@@ -11,14 +11,13 @@
 | Graphics framework | **Raylib** — only behind the rendering abstraction | DEC-015, DEC-007 |
 | ECS | **Custom-built** (so components can be LLM-instructive through the semantic layer) | DEC-018 |
 | Box2D version | **v3.1.1** (C API with id handles) | DEC-020 |
+| Build system / tests | **CMake** (presets, FetchContent pins) / **GoogleTest** | DEC-023 |
 | Scope | **2D only.** 3D is future work; keep the seams (adapter, rendering abstraction, ECS) so it stays possible, build nothing 3D | DEC-016 |
 
 ## 2. Still open (ask the human; do not decide)
 
 | Area | Candidates / notes | Question |
 | --- | --- | --- |
-| Build system | Not chosen — human: "to be decided later" (must work for dev on Windows and macOS) | Q-009 |
-| Test framework | Not chosen — same, later | Q-009 |
 | C++ standard / platforms | `[PROPOSED]` C++20; development on Windows and macOS; engine app and games target Windows only for now — human: "still open" | DEC-019, Q-007 |
 | Compilers / toolchain | Not given | Q-007 |
 | Does the engine have to build and run on macOS, or is macOS dev-only (editing/docs)? | Not given; affects platform-specific code and build system | Q-007 |
@@ -60,3 +59,4 @@ The engine is not directly coupled to Box2D or Raylib. The Physics Adapter and t
 | 2026-10-12 | Created from guide §6 and Initial Plan | claude-code/sonnet-5.5/012r |
 | 2026-10-13 | Rewritten after the human decided the stack (DEC-013…016) | claude-code/sonnet-5.5/012r |
 | 2026-10-13 | Custom ECS, Box2D v3.1.1 recorded (DEC-018, DEC-020); C++20/platforms and Raylib v6.0 proposed only (DEC-019, DEC-021) | claude-code/sonnet-5.5/012r |
+| 2026-10-15 | CMake + GoogleTest decided (DEC-023) | claude-code (session 0171) |
