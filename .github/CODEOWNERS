@@ -1,5 +1,5 @@
 # Who must approve. The `main` ruleset requires one approval from a code owner, so
-# only the people below can approve a PR (DEC-032). Işık Dönger's own PRs need no
+# only Işık Dönger or the advisor, Leyla Sezer, can approve a PR (DEC-032). Işık Dönger's own PRs need no
 # approval: repository admins may merge through the ruleset's PR bypass.
 # Plan: docs/guidelines/git-workflow.md
 #
@@ -9,4 +9,4 @@
 #   engine/physics*, engine/rendering*               Zeynep Ertürk (@zeyneperturk)
 #   semantic/                                        Elifnur Özçelik (@elifnur-ozcelik), Arda Sarıtaş (@ardasaritas)
 
-*    @isikdonger
+*    @isikdonger @leylasezer196
