@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       docs: ${{ steps.filter.outputs.docs }}
+      cpp: ${{ steps.filter.outputs.cpp }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: filter
@@ -29,6 +30,9 @@ jobs:
           filters: |
             docs:
               - '**/*.md'
+            cpp:
+              - '**/*.{c,cc,cpp,cxx,h,hh,hpp,hxx,inl}'
+              - '.clang-format'
 
   pr-hygiene:
     if: github.event_name == 'pull_request'
@@ -65,6 +69,20 @@ jobs:
       - name: Relative links point to existing files
         run: python3 tools/check_md_links.py .
 
+  format:
+    needs: changes
+    if: needs.changes.outputs.cpp == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install clang-format 19 (DEC-031)
+        run: python3 -m pip install --user clang-format==19.1.7
+      - name: C++ files match .clang-format
+        run: |
+          git ls-files -z -- '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' '*.inl' \
+            ':!:third_party/**' ':!:external/**' \
+            | xargs -0 -r "$HOME/.local/bin/clang-format" --dry-run -Werror
+
   secrets:
     runs-on: ubuntu-latest
     steps:
@@ -79,7 +97,7 @@ jobs:
   ci-ok:
     # Skipped when a newer push cancels this run, so superseded runs don't report a failure.
     if: ${{ always() && !cancelled() }}
-    needs: [changes, pr-hygiene, docs, secrets]
+    needs: [changes, pr-hygiene, docs, format, secrets]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped

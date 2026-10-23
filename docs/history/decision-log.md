@@ -39,6 +39,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-028 | GitHub issues are created from ClickUp tasks with ClickUp's GitHub integration | Accepted | 2026-10-15 |
 | DEC-029 | Platforms: develop on Windows and macOS (Windows priority); the engine application and the development tool must run on both; games are built for Windows only for now | Accepted | 2026-10-15 |
 | DEC-030 | Compilers: whatever each platform needs; none pinned now | Accepted | 2026-10-15 |
+| DEC-031 | Coding standards, Definition of Done and clang-format 19 accepted | Accepted | 2026-10-23 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -359,3 +360,16 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Amendments:** 2026-10-16 — renumbered by claude-code/sonnet-5.5/012r: recorded locally on 2026-10-15 as DEC-023 (collision with the build-system decision on main). —
 
 ---
+
+### DEC-031 — Coding standards, Definition of Done and clang-format 19 accepted
+- **Date:** 2026-10-23
+- **Status:** Accepted
+- **Decided by:** the team, approved by the advisor; reported by Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
+- **Human's words:** "everything in PB-005 is team decided and advisor approved."
+- **Context:** PB-005 (coding standards and Definition of Done). The formatter was the last open item in `coding-standards.md`.
+- **Decision:** `guidelines/coding-standards.md` and `process/definition-of-done.md` are accepted as written on 2026-10-23. C++ is formatted with clang-format 19 using the repo's `.clang-format` (LLVM base, 4-space indent, 100 columns, braces always inserted); other files follow `.editorconfig`. The DoD is pinned in the PR template.
+- **Rationale:** `[rationale not given beyond the words above]` clang-format is the formatter the standards already named; the version is pinned because different clang-format versions format the same code differently.
+- **Consequences:** CI fails a PR with unformatted C++ files. Everyone installs the same version (`pip install clang-format==19.1.7`). Changing a rule needs a PR and a new decision entry. The style options in `.clang-format` were picked by the recording agent to match `.editorconfig` `[ASSUMPTION — change them in a PR if the team wants different ones]`.
+- **Docs updated:** `guidelines/coding-standards.md`, `process/definition-of-done.md`, `troubleshooting/environment-setup.md`, `architecture/tech-stack.md`, `CONTRIBUTING.md`, `.github/pull_request_template.md`.
+- **Course documents affected (for humans):** none known.
+- **Related:** DEC-019, DEC-023, PB-005.

@@ -26,6 +26,11 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
 - One approval from a code owner is needed. Reviews happen within 1 working day; comments are labelled `blocker`, `should`, `nit` or `question`, and only `blocker` holds up approval.
 - The author squash-merges. Afterwards, set the ClickUp task to **done**.
 
+## Code style and Definition of Done
+
+- C++ follows [docs/guidelines/coding-standards.md](docs/guidelines/coding-standards.md) and is formatted with **clang-format 19** using [.clang-format](.clang-format). Install it with `pip install clang-format==19.1.7` and turn on format-on-save; CI rejects unformatted C++.
+- A task is done when it meets [docs/process/definition-of-done.md](docs/process/definition-of-done.md). The PR template carries the short version.
+
 ## Rules for `main`
 
 - No direct pushes, no force pushes. Every change goes through a squash-merged PR with an approval and a green `ci-ok` check.

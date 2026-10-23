@@ -17,7 +17,7 @@ A new team member (or agent with shell access) can build, run and test from a cl
 
 | Section | Content | Depends on |
 | --- | --- | --- |
-| Prerequisites | A compiler per OS that supports C++20 (DEC-019, DEC-030; record here when the build is set up), IDE (optional), git | Q-007 |
+| Prerequisites | A compiler per OS that supports C++20 (DEC-019, DEC-030; record here when the build is set up), IDE (optional), git, clang-format 19 (`pip install clang-format==19.1.7`, DEC-031) | Q-007 |
 | Dependencies | Box2D v3.1.1, Raylib v6.0, GoogleTest — pinned with CMake FetchContent | DEC-020, DEC-021, DEC-023 |
 | Build | Exact commands (CMake presets: configure, build, test, clean), Windows and macOS | DEC-023, DEC-029 |
 | Run | Normal mode and headless mode commands/flags | TASK-006 |
