@@ -23,13 +23,13 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
 - Keep PRs under about 400 changed lines.
 - Fill in the PR template, including how you verified the change.
 - Mark the PR **ready for review** when CI is green. Reviewers come from [.github/CODEOWNERS](.github/CODEOWNERS).
-- One approval from a code owner is needed. Reviews happen within 1 working day; comments are labelled `blocker`, `should`, `nit` or `question`, and only `blocker` holds up approval.
+- One approval from Işık Dönger or the advisor (the code owners) is needed; area teammates are welcome to review too, but their approval does not count. Işık's own PRs need no approval. Reviews happen within 1 working day; comments are labelled `blocker`, `should`, `nit` or `question`, and only `blocker` holds up approval.
 - The author squash-merges. Afterwards, set the ClickUp task to **done**.
 
 ## Rules for `main`
 
 - No direct pushes, no force pushes. Every change goes through a squash-merged PR with an approval and a green `ci-ok` check.
-- Branch protection is not available on our GitHub plan yet, so these rules are a team agreement. The **Main guard** workflow marks any commit that reached `main` without a merged PR.
+- A ruleset on `main` enforces this (DEC-032): PR required, one code-owner approval, squash merge only, `ci-ok` must pass, no force pushes or deletion. Repository admins may bypass it only through a PR, which is how Işık merges his own PRs without review. The **Main guard** workflow still marks any commit that reached `main` without a merged PR.
 
 ## AI agents
 

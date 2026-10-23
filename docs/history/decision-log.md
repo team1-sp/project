@@ -39,6 +39,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-028 | GitHub issues are created from ClickUp tasks with ClickUp's GitHub integration | Accepted | 2026-10-15 |
 | DEC-029 | Platforms: develop on Windows and macOS (Windows priority); the engine application and the development tool must run on both; games are built for Windows only for now | Accepted | 2026-10-15 |
 | DEC-030 | Compilers: whatever each platform needs; none pinned now | Accepted | 2026-10-15 |
+| DEC-032 | Only Işık Dönger and the advisor approve PRs; Işık's own PRs need no approval; `main` ruleset on | Accepted | 2026-10-23 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -359,3 +360,16 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Amendments:** 2026-10-16 — renumbered by claude-code/sonnet-5.5/012r: recorded locally on 2026-10-15 as DEC-023 (collision with the build-system decision on main). —
 
 ---
+
+### DEC-032 — Only Işık Dönger and the advisor approve PRs; Işık's own PRs need no approval
+- **Date:** 2026-10-23
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
+- **Human's words:** "make it so that my personal pr's or issues do not require a review? but only for me, and everyone else requires a review specifically from me or our advisor."
+- **Context:** DEC-024 made area owners second code owners, so their approval counted. DEC-027 deferred branch protection because the repo was private on the free plan; the repo is now public, so rulesets are available.
+- **Decision:** The only code owners are Işık Dönger and the advisor. A ruleset on `main` requires a PR, one code-owner approval, squash merge, a green `ci-ok`, and blocks force pushes and deletion. Repository admins and organization owners may bypass it, only through a PR; that is how Işık merges his own PRs without review. Area teammates stay listed in CODEOWNERS as people to ask, without approval rights. Issues have no review step, so nothing changes for issues.
+- **Rationale:** `[rationale not given beyond the words above]`
+- **Consequences:** Supersedes the "area owners are second owners" part of DEC-024 and the "protection deferred" part of DEC-027. Every PR from another member waits for Işık or the advisor. Anyone else who is a repository admin or organization owner can also bypass `[ASSUMPTION — Işık is the only one; check Settings > Collaborators]`. The advisor needs write access for their approval to count.
+- **Docs updated:** `.github/CODEOWNERS`, `CONTRIBUTING.md`, `guidelines/git-workflow.md`.
+- **Course documents affected (for humans):** none known.
+- **Related:** DEC-024, DEC-027.

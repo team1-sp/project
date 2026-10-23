@@ -1,20 +1,12 @@
-# Who reviews what. GitHub requests a review from the owners of every changed path.
-# When a path lists several owners, an approval from any one of them counts.
-# The last matching line wins, so the default owner comes first.
+# Who must approve. The `main` ruleset requires one approval from a code owner, so
+# only the people below can approve a PR (DEC-032). Işık Dönger's own PRs need no
+# approval: repository admins may merge through the ruleset's PR bypass.
 # Plan: docs/guidelines/git-workflow.md
+#
+# Area teammates are not code owners. Ask them for a review as well when a PR
+# touches their area; their approval is welcome but does not count toward merging:
+#   engine/core, engine/ecs                          Işık Dönger, Arda Karabulut (@ardkbl)
+#   engine/physics*, engine/rendering*               Zeynep Ertürk (@zeyneperturk)
+#   semantic/                                        Elifnur Özçelik (@elifnur-ozcelik), Arda Sarıtaş (@ardasaritas)
 
-# Default: the project manager reviews everything.
-*                         @isikdonger
-
-# ECS and engine core
-/engine/core/             @isikdonger @ardkbl
-/engine/ecs/              @isikdonger @ardkbl
-
-# Physics and rendering adapters
-/engine/physics/          @isikdonger @zeyneperturk
-/engine/physics-box2d/    @isikdonger @zeyneperturk
-/engine/rendering/        @isikdonger @zeyneperturk
-/engine/rendering-raylib/ @isikdonger @zeyneperturk
-
-# Semantic layer
-/semantic/                @isikdonger @elifnur-ozcelik @ardasaritas
+*    @isikdonger
