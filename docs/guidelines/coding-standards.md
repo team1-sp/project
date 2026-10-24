@@ -1,6 +1,8 @@
 # Coding Standards
 
-Language is **C++** (DEC-013). Physics is Box2D v3.1.1 behind the Physics Adapter (DEC-014, DEC-020); graphics is Raylib behind the rendering abstraction (DEC-015); 2D only (DEC-016); ECS is custom (DEC-018). **Platforms (DEC-029):** the project is developed on Windows and macOS, Windows has priority; games are built for Windows only for now. **Standard: C++20 (DEC-019). Raylib v6.0 (DEC-021).** **Compilers (DEC-030):** whatever each platform needs, none pinned — no compiler-specific extensions. **Build system CMake and test framework GoogleTest (DEC-023).** Still open and decided by the human: formatter — do not pick it yourself.
+**Status: Accepted (2026-10-23).** Agreed by the team and approved by the advisor (DEC-031, PB-005). Changes go through a PR and a new decision entry.
+
+Language is **C++** (DEC-013). Physics is Box2D v3.1.1 behind the Physics Adapter (DEC-014, DEC-020); graphics is Raylib behind the rendering abstraction (DEC-015); 2D only (DEC-016); ECS is custom (DEC-018). **Platforms (DEC-029):** the project is developed on Windows and macOS, Windows has priority; games are built for Windows only for now. **Standard: C++20 (DEC-019). Raylib v6.0 (DEC-021).** **Compilers (DEC-030):** whatever each platform needs, none pinned — no compiler-specific extensions. **Build system CMake and test framework GoogleTest (DEC-023).** **Formatter: clang-format 19** with the repo's [`.clang-format`](../../.clang-format) (DEC-031).
 
 ## 1. Universal rules
 
@@ -45,7 +47,7 @@ See [repository-structure.md](repository-structure.md). One concept per file; he
 - Box2D and Raylib headers are included **only** in the adapter implementation and the rendering implementation respectively (R-3, R-4). Wrap C-style handles (Box2D v3 ids, Raylib structs) in our own types.
 - Raylib is a C API: its functions need a window/GL context for textures, shaders and fonts. Never call them from simulation code or in headless mode.
 - No exceptions across the adapter boundary unless the adapter documents it `[open]`.
-- Formatting: `clang-format` with a checked-in config `[open — ask]`.
+- Formatting: **clang-format 19** with the checked-in [`.clang-format`](../../.clang-format) (DEC-031): 4-space indent, 100 columns, braces on the same line, braces always on `if`/`for`/`while`, includes grouped standard library / third-party / ours. Install the same version everyone uses with `pip install clang-format==19.1.7` and turn on format-on-save in your editor. CI fails a PR whose C++ files are not formatted. Other files follow [`.editorconfig`](../../.editorconfig).
 - Warnings on, treated as errors where practical; sanitisers (ASan/UBSan) on debug test builds if the toolchain supports them.
 
 ## 5. 2D only
@@ -72,3 +74,4 @@ No 3D types, cameras, models or physics (DEC-016). Use 2D vector/transform types
 | 2026-10-13 | C++ decided (DEC-013); C# section removed; Box2D/Raylib rules added | claude-code/sonnet-5.5/012r |
 | 2026-10-13 | C++20/platforms proposed, not decided (DEC-019) | claude-code/sonnet-5.5/012r |
 | 2026-10-15 | C++20 (DEC-019), Raylib v6.0 (DEC-021) accepted; platforms/compilers decided | claude-code/sonnet-5.5/012r |
+| 2026-10-23 | Accepted by the team and advisor; formatter clang-format 19 with `.clang-format` (DEC-031, PB-005) | claude-code (session 0171) |

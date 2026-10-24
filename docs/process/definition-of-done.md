@@ -1,5 +1,7 @@
 # Definition of Done
 
+**Status: Accepted (2026-10-23).** Agreed by the team and approved by the advisor (DEC-031, PB-005). Pinned in the [pull request template](../../.github/pull_request_template.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md). Changes go through a PR and a new decision entry.
+
 A task is `Done` only if **all** applicable items hold.
 
 ## Code tasks
@@ -13,7 +15,7 @@ A task is `Done` only if **all** applicable items hold.
 - [ ] No library/framework types leaked outside adapter / rendering implementation.
 - [ ] Headless and normal mode produce identical simulation results for the affected feature (if applicable).
 - [ ] Telemetry updated for new state/events; overhead considered (ip.nfr.1.3).
-- [ ] No new compiler warnings; formatting per `coding-standards.md`.
+- [ ] No new compiler warnings; C++ formatted with clang-format 19 (`.clang-format`, checked by CI).
 - [ ] No secrets, no stray files, no large binaries.
 
 ## Docs
@@ -41,3 +43,9 @@ Accuracy verified against the repo, links checked, change table updated, README 
 ## Not Done if
 
 Tests were not run; "works on my machine" only; a TODO hides a known failure without a `Blocked`/new task; the doc contradicts the code.
+
+## Change table
+
+| Date | Change | By |
+| --- | --- | --- |
+| 2026-10-23 | Accepted by the team and advisor; pinned in the PR template (DEC-031, PB-005) | claude-code (session 0171) |

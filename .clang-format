@@ -1,0 +1,33 @@
+# C++ formatting for the engine (PB-005, DEC-031). Run clang-format 19 so everyone,
+# and CI, formats the same way: `pip install clang-format==19.1.7`.
+---
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: c++20
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+AccessModifierOffset: -4
+NamespaceIndentation: None
+PointerAlignment: Left
+ReferenceAlignment: Pointer
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+BreakConstructorInitializers: BeforeComma
+PackConstructorInitializers: Never
+InsertBraces: true
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # 1. Standard library  2. Third-party (Box2D, raylib, gtest)  3. Our own headers
+  - Regex: '^<[a-z_]+>$'
+    Priority: 1
+  - Regex: '^<(box2d|raylib|rlgl|raymath|gtest|gmock)'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
+...
