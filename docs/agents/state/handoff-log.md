@@ -99,3 +99,17 @@
 - **Next:** human reviews, commits the merged docs on a `docs/` branch and opens a PR (DEC-025, DEC-027); answers Q-014, Q-015. Then TASK-005.
 
 ---
+
+### HND-010 — CMake build skeleton (PB-002)
+- **Date:** 2026-10-24
+- **Agent:** claude-code (PB-002 session)
+- **Task:** TASK-005 (ClickUp PB-002)
+- **Goal:** C++20 CMake project with engine, editor, demo and tests targets; raylib and Box2D fetched at pinned versions; Windows and macOS presets plus headless.
+- **Result:** Done, in review on `ci/pb-002-ci-create-the-cmake-build-skeleton`; not pushed by the agent (DEC-025).
+- **Files changed:** `CMakeLists.txt`, `CMakePresets.json`, `cmake/*`, `engine/{core,physics-box2d,rendering-raylib}/*`, `editor/*`, `games/demo-maze/*`, `tests/*`, `.github/workflows/ci.yml` (new `build` job in `ci-ok`), `README.md`, `guidelines/repository-structure.md`, `troubleshooting/environment-setup.md`, decision log (DEC-033 raylib 6.2, DEC-034 name Aegis, DEC-035 PR title format; amendments on DEC-021, DEC-023), `tools/start_task.py` and `CONTRIBUTING.md`/`git-workflow.md`/PR template for DEC-035, tech-stack, coding-standards, common-errors, roadmap, state files.
+- **Verified (Linux, GCC 13.3, CMake 3.28):** `cmake --workflow --preset headless` builds and 2/2 tests pass; same with `-DENGINE_WARNINGS_AS_ERRORS=ON` on GCC and Clang, no warnings; full build with raylib, `demo-maze --frames 30` under Xvfb printed engine 0.1.0, box2d 3.1.1, raylib 6.2.0 and exited 0 (rerun after the move to 6.2); clang-format 19.1.7 `--dry-run -Werror` clean.
+- **Not verified:** MSVC on Windows and Apple Clang on macOS (the CI `build` job and PB-002.6 cover them); the workflow file has not run on GitHub yet.
+- **Next:** (1) human pushes the branch and marks the draft PR ready; (2) fix whatever the Windows/macOS CI jobs report; (3) each member runs `cmake --workflow --preset windows-debug` or `macos-debug` (PB-002.6) and confirms the compilers in `environment-setup.md` §3; (4) TASK-006.
+- **Traps:** the Windows presets use the default (Visual Studio, multi-config) generator, so build and test presets pass `configuration`; executables land in `.../Debug/`. Box2D's samples and tests are skipped automatically because it is not the top-level project. The CMake project is `aegis` (DEC-034); namespaces and target names stay `engine` until someone decides otherwise.
+
+---

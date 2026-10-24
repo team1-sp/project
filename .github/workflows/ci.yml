@@ -22,6 +22,7 @@ jobs:
     outputs:
       docs: ${{ steps.filter.outputs.docs }}
       cpp: ${{ steps.filter.outputs.cpp }}
+      build: ${{ steps.filter.outputs.build }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: filter
@@ -33,6 +34,12 @@ jobs:
             cpp:
               - '**/*.{c,cc,cpp,cxx,h,hh,hpp,hxx,inl}'
               - '.clang-format'
+            build:
+              - '**/*.{c,cc,cpp,cxx,h,hh,hpp,hxx,inl,in}'
+              - '**/CMakeLists.txt'
+              - 'cmake/**'
+              - 'CMakePresets.json'
+              - '.github/workflows/ci.yml'
 
   pr-hygiene:
     if: github.event_name == 'pull_request'
@@ -83,6 +90,32 @@ jobs:
             ':!:third_party/**' ':!:external/**' \
             | xargs -0 -r "$HOME/.local/bin/clang-format" --dry-run -Werror
 
+  build:
+    # Configure, build and test with the same presets developers use (PB-002). Windows and
+    # macOS are the development platforms (DEC-029); `headless` proves the build works
+    # without raylib (R-6).
+    needs: changes
+    if: needs.changes.outputs.build == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            preset: windows-debug
+          - os: macos-latest
+            preset: macos-debug
+          - os: ubuntu-latest
+            preset: headless
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }} -DENGINE_WARNINGS_AS_ERRORS=ON
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }} --parallel
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }}
+
   secrets:
     runs-on: ubuntu-latest
     steps:
@@ -97,7 +130,7 @@ jobs:
   ci-ok:
     # Skipped when a newer push cancels this run, so superseded runs don't report a failure.
     if: ${{ always() && !cancelled() }}
-    needs: [changes, pr-hygiene, docs, format, secrets]
+    needs: [changes, pr-hygiene, docs, format, build, secrets]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped

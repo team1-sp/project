@@ -1,0 +1,113 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "ENGINE_WITH_RAYLIB": "ON",
+        "ENGINE_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "inherits": "base",
+      "description": "Newest installed Visual Studio and MSVC (multi-config)",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    { "name": "windows-debug", "inherits": "windows-base", "displayName": "Windows Debug" },
+    { "name": "windows-release", "inherits": "windows-base", "displayName": "Windows Release" },
+    {
+      "name": "macos-base",
+      "hidden": true,
+      "inherits": "base",
+      "description": "Apple Clang from the Xcode Command Line Tools",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" }
+    },
+    {
+      "name": "macos-debug",
+      "inherits": "macos-base",
+      "displayName": "macOS Debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "macos-release",
+      "inherits": "macos-base",
+      "displayName": "macOS Release",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "headless",
+      "inherits": "base",
+      "displayName": "Headless (no raylib, any OS)",
+      "cacheVariables": {
+        "ENGINE_WITH_RAYLIB": "OFF",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows-debug", "configurePreset": "windows-debug", "configuration": "Debug" },
+    { "name": "windows-release", "configurePreset": "windows-release", "configuration": "Release" },
+    { "name": "macos-debug", "configurePreset": "macos-debug" },
+    { "name": "macos-release", "configurePreset": "macos-release" },
+    { "name": "headless", "configurePreset": "headless", "configuration": "Debug" }
+  ],
+  "testPresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "output": { "outputOnFailure": true }
+    },
+    { "name": "windows-debug", "inherits": "base", "configurePreset": "windows-debug", "configuration": "Debug" },
+    { "name": "windows-release", "inherits": "base", "configurePreset": "windows-release", "configuration": "Release" },
+    { "name": "macos-debug", "inherits": "base", "configurePreset": "macos-debug" },
+    { "name": "macos-release", "inherits": "base", "configurePreset": "macos-release" },
+    { "name": "headless", "inherits": "base", "configurePreset": "headless", "configuration": "Debug" }
+  ],
+  "workflowPresets": [
+    {
+      "name": "windows-debug",
+      "steps": [
+        { "type": "configure", "name": "windows-debug" },
+        { "type": "build", "name": "windows-debug" },
+        { "type": "test", "name": "windows-debug" }
+      ]
+    },
+    {
+      "name": "windows-release",
+      "steps": [
+        { "type": "configure", "name": "windows-release" },
+        { "type": "build", "name": "windows-release" },
+        { "type": "test", "name": "windows-release" }
+      ]
+    },
+    {
+      "name": "macos-debug",
+      "steps": [
+        { "type": "configure", "name": "macos-debug" },
+        { "type": "build", "name": "macos-debug" },
+        { "type": "test", "name": "macos-debug" }
+      ]
+    },
+    {
+      "name": "macos-release",
+      "steps": [
+        { "type": "configure", "name": "macos-release" },
+        { "type": "build", "name": "macos-release" },
+        { "type": "test", "name": "macos-release" }
+      ]
+    },
+    {
+      "name": "headless",
+      "steps": [
+        { "type": "configure", "name": "headless" },
+        { "type": "build", "name": "headless" },
+        { "type": "test", "name": "headless" }
+      ]
+    }
+  ]
+}

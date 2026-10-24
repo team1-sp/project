@@ -29,7 +29,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-018 | ECS is custom-built (so components can be LLM-instructive via the semantic layer) | Accepted | 2026-10-13 |
 | DEC-019 | C++20 (its platform part was decided in DEC-029) | Accepted | 2026-10-13 |
 | DEC-020 | Box2D version is v3.1.1 (C API) | Accepted | 2026-10-13 |
-| DEC-021 | Raylib version is v6.0 | Accepted | 2026-10-13 |
+| DEC-021 | Raylib version is v6.0 | Superseded by DEC-033 | 2026-10-13 |
 | DEC-022 | One repository for code and engineering docs; `team1-sp/docs` holds course deliverables only | Accepted | 2026-10-15 |
 | DEC-023 | Build system CMake, test framework GoogleTest | Accepted | 2026-10-15 |
 | DEC-024 | Işık Dönger reviews every PR; area owners are second code owners | Accepted | 2026-10-15 |
@@ -41,10 +41,13 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-030 | Compilers: whatever each platform needs; none pinned now | Accepted | 2026-10-15 |
 | DEC-031 | Coding standards, Definition of Done and clang-format 19 accepted | Accepted | 2026-10-23 |
 | DEC-032 | Only Işık Dönger and the advisor approve PRs; Işık's own PRs need no approval; `main` ruleset on | Accepted | 2026-10-23 |
+| DEC-033 | Raylib version is 6.2 | Accepted | 2026-10-24 |
+| DEC-034 | The product name is Aegis | Accepted | 2026-10-24 |
+| DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Accepted | 2026-10-24 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
-what "LLM-instructive components" means concretely (Q-013, deferred by the human) · AI service language and protocol (DEC-011, deferred) · world units / coordinate convention · project name (Q-005) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
+what "LLM-instructive components" means concretely (Q-013, deferred by the human) · AI service language and protocol (DEC-011, deferred) · world units / coordinate convention · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
 
 ---
 
@@ -246,7 +249,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-021 — Raylib version is v6.0
 - **Date:** 2026-10-13
-- **Status:** Accepted (2026-10-15)
+- **Status:** Superseded by DEC-033
 - **Decided by:** Işık Dönger (Project Manager) on 2026-10-15; first proposed 2026-10-13 from their answer  **Recorded by:** claude-code/sonnet-5.5/012r
 - **Human's words:** "all decisions are decided" (2026-10-15, said after the open points were listed: C++20 and Raylib v6.0)
 - **Context:** Q-007. `[ASSUMPTION — a Raylib v6.0 release exists and matches the API you expect; verify before pinning.]`
@@ -254,7 +257,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Consequences:** `[VERIFIED 2026-10-15]` Raylib 6.0 exists (GitHub release tag `6.0`, marked Latest). Still to do at TASK-005: pin the exact version in the build (Q-009) and check the API against the 6.0 headers/CHANGELOG — 6.0 changed fullscreen/High-DPI handling (High-DPI needs `FLAG_WINDOW_HIGHDPI`) and the model/skeletal-animation API, so 5.5-era tutorials may not match.
 - **Docs updated:** `architecture/tech-stack.md`, `guidelines/repository-structure.md`, `troubleshooting/*`, `agents/state/*`.
 - **Related:** DEC-015, Q-007.
-- **Amendments:** 2026-10-15 — Işık Dönger asked to confirm v6.0; claude-code/sonnet-5.5/012r checked the Raylib GitHub releases page and release notes: 6.0 is the latest release (previous: 5.5). Observation only, not a decision: 6.0 adds a software renderer and a headless "Memory" platform backend, which may matter for headless mode (DEC-003 area) — to be evaluated when headless mode is designed.
+- **Amendments:** 2026-10-15 — Işık Dönger asked to confirm v6.0; claude-code/sonnet-5.5/012r checked the Raylib GitHub releases page and release notes: 6.0 is the latest release (previous: 5.5). Observation only, not a decision: 6.0 adds a software renderer and a headless "Memory" platform backend, which may matter for headless mode (DEC-003 area) — to be evaluated when headless mode is designed. 2026-10-24 — pinned in `cmake/Dependencies.cmake` as git tag `6.0` (commit `dbc56a8`) by PB-002. Observation only: tag `6.2` also exists now; the pin stays at 6.0 unless a human decides otherwise. 2026-10-24 — superseded by DEC-033 (6.2), decided by Işık Dönger the same day.
 
 ### DEC-022 — One repository for code and engineering docs
 - **Date:** 2026-10-15
@@ -278,7 +281,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Consequences:** Unblocks TASK-005 / PB-002 except for the still-open C++ standard and toolchain (Q-007).
 - **Docs updated:** `guidelines/coding-standards.md`, `guidelines/repository-structure.md`, `agents/state/open-questions.md`.
 - **Related:** Q-009, DEC-019, PB-002.
-- **Amendments:** 2026-10-16 — the "still-open C++ standard and toolchain" in Consequences is resolved: C++20 Accepted (DEC-019), compilers per platform need (DEC-030), platforms (DEC-029). TASK-005 / PB-002 is no longer blocked by Q-007.
+- **Amendments:** 2026-10-16 — the "still-open C++ standard and toolchain" in Consequences is resolved: C++20 Accepted (DEC-019), compilers per platform need (DEC-030), platforms (DEC-029). TASK-005 / PB-002 is no longer blocked by Q-007. 2026-10-24 — PB-002 pinned GoogleTest at `v1.17.0` (commit `52eb810`) in `cmake/Dependencies.cmake`; the version was chosen by the agent and confirmed by Işık Dönger the same day: "googletest 1.17.0 is fine". Box2D is pinned at `v3.1.1` (DEC-020).
 
 ### DEC-024 — Işık Dönger reviews every PR; area owners are second code owners
 - **Date:** 2026-10-15
@@ -387,3 +390,43 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Docs updated:** `.github/CODEOWNERS`, `CONTRIBUTING.md`, `guidelines/git-workflow.md`.
 - **Course documents affected (for humans):** none known.
 - **Related:** DEC-024, DEC-027.
+
+### DEC-033 — Raylib version is 6.2
+- **Date:** 2026-10-24
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (PB-002 session)
+- **Human's words:** "raylib 6.2 came after we decided so it can be updated to v6.2 since we havent started yet"
+- **Context:** PB-002 pinned raylib 6.0 (DEC-021) and noted that tag `6.2` now exists. No engine code uses raylib yet, so moving costs nothing.
+- **Options considered:** (1) stay on 6.0; (2) move to 6.2 before any rendering code exists. 2 chosen.
+- **Decision:** Pin raylib 6.2 (git tag `6.2`, commit `0256645`) in `cmake/Dependencies.cmake`.
+- **Rationale:** 6.2 is newer and nothing has been built on 6.0 yet.
+- **Consequences:** API examples must match 6.2. The 6.0 notes in DEC-021 (High-DPI flag, fullscreen, software renderer, headless "Memory" backend) still need checking against 6.2 when rendering and headless work start.
+- **Docs updated:** `cmake/Dependencies.cmake`, `architecture/tech-stack.md`, `guidelines/coding-standards.md`, `guidelines/repository-structure.md`, `troubleshooting/environment-setup.md`, `troubleshooting/common-errors.md`, `process/roadmap.md`, `agents/state/*`.
+- **Course documents affected (for humans):** any place that names the raylib version.
+- **Supersedes / Related:** supersedes DEC-021; DEC-015, PB-002.
+
+### DEC-034 — The product name is Aegis
+- **Date:** 2026-10-24
+- **Status:** Accepted
+- **Decided by:** the team, reported by Işık Dönger (Project Manager)  **Recorded by:** claude-code (PB-002 session)
+- **Human's words:** "project name is Aegis decided by the team."
+- **Context:** Q-005 (open since 2026-10-12): needed for namespaces, binary names and repo naming.
+- **Decision:** The product is called Aegis. The CMake project is `aegis`.
+- **Rationale:** `[rationale not given beyond the words above]`
+- **Consequences:** C++ namespaces (`engine::`), target names (`engine_*`) and the repository name (`team1-sp/project`) are unchanged; renaming any of them is a separate decision `[ASSUMPTION — ask before renaming]`.
+- **Docs updated:** `CMakeLists.txt`, `README.md`, `agents/state/open-questions.md`, `agents/state/current-status.md`, `agents/state/task-board.md`.
+- **Course documents affected (for humans):** the Initial Plan and other deliverables that name the product.
+- **Related:** Q-005.
+
+### DEC-035 — PR titles put the PB id in the Conventional Commit scope
+- **Date:** 2026-10-24
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (PB-002 session)
+- **Human's words:** "pr title should be how it is now. with requirement right after the tag." Then chose `ci(PB-002): Create the CMake…` when asked which format that meant.
+- **Context:** `guidelines/git-workflow.md` used the area label as the scope and put the PB id at the end (`feat(phys): … (PB-025)`); the Issue start workflow wrote `feat: … (PB-025)`.
+- **Options considered:** (1) `ci(PB-002): Create …`; (2) `ci: PB-002 Create …`; (3) keep the id at the end. 1 chosen.
+- **Decision:** PR titles, and so the squash commits on `main`, are `<type>(PB-<nnn>): <description>`. The area stays visible through the `area:*` labels. Bugs without a PB item were not discussed; they keep the old form `fix(game): … (#142)` until a human says otherwise `[ASSUMPTION]`.
+- **Rationale:** `[rationale not given beyond the words above]`
+- **Consequences:** `tools/start_task.py` writes draft PR titles in this form. The CI title check (`amannn/action-semantic-pull-request`) accepts any scope, so no workflow change is needed.
+- **Docs updated:** `tools/start_task.py`, `guidelines/git-workflow.md`, `CONTRIBUTING.md`.
+- **Supersedes / Related:** replaces the scope rule in DEC-027's workflow; DEC-028.

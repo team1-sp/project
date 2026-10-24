@@ -1,6 +1,6 @@
 # Repository Structure
 
-**Current reality `[VERIFIED 2026-10-15]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/` and repo config files. No engine source yet.
+**Current reality `[VERIFIED 2026-10-24]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002: `CMakeLists.txt`, `CMakePresets.json`, `cmake/`, `engine/core/`, `engine/physics-box2d/`, `engine/rendering-raylib/`, `editor/`, `games/demo-maze/` and `tests/unit/`. The other folders below are created as their PRs land.
 
 Related repos on the team's machines (separate git repos):
 
@@ -17,8 +17,8 @@ One repository for all code and engineering docs (DEC-022); `team1-sp/docs` hold
 ```
 project/
 ├── CMakeLists.txt            root build, C++20 (DEC-019), options (ENGINE_WITH_RAYLIB, ENGINE_BUILD_TESTS)
-├── CMakePresets.json         windows-debug, windows-release, headless (no raylib); macOS presets required (DEC-029)
-├── cmake/                    FetchContent pins (raylib v6.0 — DEC-021, Box2D v3.1.1 — DEC-020, GoogleTest — DEC-023), warning flags
+├── CMakePresets.json         windows-debug/-release, macos-debug/-release, headless (no raylib, any OS)
+├── cmake/                    Dependencies.cmake: FetchContent pins (raylib 6.2 — DEC-033, Box2D v3.1.1 — DEC-020, GoogleTest v1.17.0 — DEC-023); CompilerWarnings.cmake
 ├── engine/                   LAYER 1, C++ static libraries, one CMake target per folder
 │   ├── core/                 game loop, time, config, run modes, logging
 │   ├── ecs/                  world, entities, storage, queries, scheduler, component metadata
@@ -42,6 +42,8 @@ project/
 └── .github/                  workflows, CODEOWNERS, issue forms, PR template, labels
 ```
 
+CMake targets: each engine folder builds `engine_<folder>` (alias `engine::<folder>`, `-` becomes `_`) with public headers under `include/engine/<folder>/`; executables are `editor`, `demo-maze` and `engine_tests`. Options: `ENGINE_WITH_RAYLIB` (off in `headless`: no raylib fetch, no `rendering-raylib`, no `demo-maze`), `ENGINE_BUILD_TESTS`, `ENGINE_WARNINGS_AS_ERRORS` (on in CI). Build output goes to `build/<preset>/` (git-ignored).
+
 Dependency checks: only `physics-box2d` includes Box2D and only `rendering-raylib` includes raylib (compile errors elsewhere); `engine/` never depends on `semantic/`, `ai-services/` or `editor/` (CMake targets + a CI script); the `headless` preset builds without raylib (R-6).
 
 ## Rules
@@ -58,3 +60,4 @@ Dependency checks: only `physics-box2d` includes Box2D and only `rendering-rayli
 | --- | --- | --- |
 | 2026-10-12 | Proposed layout | claude-code/sonnet-5.5/012r |
 | 2026-10-15 | Accepted layout: one repo, CMake targets per engine module, separate `semantic/` (DEC-022, DEC-023, DEC-026) | claude-code (session 0171) |
+| 2026-10-24 | Build skeleton landed (PB-002): presets incl. macOS, target names, options; raylib 6.2 (DEC-033) | claude-code (PB-002 session) |

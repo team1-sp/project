@@ -32,12 +32,15 @@ The `pr-hygiene` CI job rejects other names (`tools/check_pr.py`).
 
 ## 2. Commits and PR titles
 
-PRs are squash-merged, so **the PR title becomes the commit on `main`**. It must be a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/), scope = area label without `area:`:
+PRs are squash-merged, so **the PR title becomes the commit on `main`**. It must be a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/), with the backlog id as the scope (DEC-035). The Issue start workflow already titles the draft PR this way:
 
 ```
-feat(phys): define the physics adapter interface (PB-025)
+feat(PB-025): Define the physics adapter interface
+ci(PB-002): Create the CMake build skeleton with raylib and Box2D
 fix(game): door opened without the key (#142)
 ```
+
+Bugs without a PB item keep the area as scope and the issue number at the end (not yet discussed, `[ASSUMPTION]`).
 
 Types: `feat`, `fix`, `test`, `refactor`, `perf`, `docs`, `build`, `ci`, `chore`, `research`, `revert`. Commits inside a branch are free-form. Squash merging keeps the PR author as the commit author; co-authors stay as `Co-authored-by:` trailers. When an AI agent made a commit, keep the tool's co-author trailer. Never commit secrets, large binaries, build output or personal paths.
 
@@ -67,3 +70,4 @@ Increment deliverables get an annotated tag `inc-1`, `inc-2`, `final` on `main`,
 | 2026-10-15 | Rewritten to the accepted repo plan: trunk-based, PB branch names, Conventional Commit PR titles, CODEOWNERS review, main guard | claude-code (session 0171) |
 | 2026-10-23 | Only Işık and the advisor approve; Işık's PRs need no approval; `main` ruleset (DEC-032) | claude-code (session 0171) |
 | 2026-10-15 | Issue start automation (branch and draft PR from ClickUp issues) | claude-code (session 0171) |
+| 2026-10-24 | PR title scope is the PB id: `<type>(PB-<nnn>): …` (DEC-035) | claude-code (PB-002 session) |

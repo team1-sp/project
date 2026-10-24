@@ -133,7 +133,7 @@ def main():
 
     clickup = CLICKUP_URL.search(issue.get("body") or "")
     pr = gh("-X", "POST", f"repos/{repo}/pulls", body={
-        "title": f"{kind}: {title} (PB-{pb})",
+        "title": f"{kind}(PB-{pb}): {title}",
         "head": branch,
         "base": default,
         "body": pr_body(issue["number"], clickup.group(0) if clickup else None),
