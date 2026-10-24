@@ -45,10 +45,10 @@ Types: `feat`, `fix`, `test`, `refactor`, `perf`, `docs`, `build`, `ci`, `chore`
 
 - Body: `Closes #<issue>` (or the `no-issue` label for chore/ci), what and why, how it was verified, docs updated, and the Definition of Done checklist (template in `.github/pull_request_template.md`).
 - Open as a draft early; mark ready for review when CI is green. Keep PRs under about 400 changed lines.
-- Review: 1 approval from a code owner (`.github/CODEOWNERS`, DEC-024). Işık Dönger is the default owner of every path; area owners are second owners, so either approval counts. That also covers Işık's own PRs and days he cannot review within 1 working day. Review practice: `process/code-review.md`.
+- Review: 1 approval from a code owner (`.github/CODEOWNERS`, DEC-032). The only code owners are Işık Dönger and the advisor, Leyla Sezer (`@leylasezer196`), so every other member's PR needs one of them. Area teammates are listed in CODEOWNERS as people to ask for a review; their approval does not count toward merging. Işık's own PRs need no approval: repository admins merge them through the ruleset's PR bypass. Review practice: `process/code-review.md`.
 - All CI green (`ci-ok`) and conversations resolved before merging. The author squash-merges, then sets the ClickUp task to done.
 
-**Enforcement:** branch protection is not available on our GitHub plan for a private repo (DEC-027). Until it is, these rules are a team agreement and the `Main guard` workflow flags commits that reached `main` without a merged PR.
+**Enforcement:** the repo is public, so GitHub rulesets work on the free plan. The `main` ruleset (DEC-032) requires a PR, one code-owner approval, squash merge and a green `ci-ok`, and blocks force pushes and deletion. Bypass: repository admins and organization owners, only through a PR. The `Main guard` workflow still flags commits that reached `main` without a merged PR.
 
 ## 4. Merge conflicts
 
@@ -65,4 +65,5 @@ Increment deliverables get an annotated tag `inc-1`, `inc-2`, `final` on `main`,
 | --- | --- | --- |
 | 2026-10-12 | Proposed | claude-code/sonnet-5.5/012r |
 | 2026-10-15 | Rewritten to the accepted repo plan: trunk-based, PB branch names, Conventional Commit PR titles, CODEOWNERS review, main guard | claude-code (session 0171) |
+| 2026-10-23 | Only Işık and the advisor approve; Işık's PRs need no approval; `main` ruleset (DEC-032) | claude-code (session 0171) |
 | 2026-10-15 | Issue start automation (branch and draft PR from ClickUp issues) | claude-code (session 0171) |
