@@ -23,6 +23,7 @@ jobs:
       docs: ${{ steps.filter.outputs.docs }}
       cpp: ${{ steps.filter.outputs.cpp }}
       build: ${{ steps.filter.outputs.build }}
+      python: ${{ steps.filter.outputs.python }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: filter
@@ -39,6 +40,10 @@ jobs:
               - '**/CMakeLists.txt'
               - 'cmake/**'
               - 'CMakePresets.json'
+              - '.github/workflows/ci.yml'
+            python:
+              - 'ai-services/**'
+              - 'semantic/**'
               - '.github/workflows/ci.yml'
 
   pr-hygiene:
@@ -109,12 +114,51 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Keep the FetchContent downloads (Box2D, raylib, GoogleTest) between runs, so configure
+      # skips the git clones. Their *-build folders are left out: the libraries are always
+      # compiled fresh with this runner's compiler. A version change in Dependencies.cmake
+      # gives a new key, so stale sources are never reused (PB-004.2).
+      - name: Cache fetched dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/${{ matrix.preset }}/_deps
+            !build/${{ matrix.preset }}/_deps/*-build
+          key: deps-${{ runner.os }}-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
       - name: Configure
         run: cmake --preset ${{ matrix.preset }} -DENGINE_WARNINGS_AS_ERRORS=ON
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }} --parallel
       - name: Test
         run: ctest --preset ${{ matrix.preset }}
+
+  python:
+    # ruff and pytest for the Python packages (PB-004.4). Each package folder with a
+    # pyproject.toml is checked with its own settings; until PB-006 adds ai-services/
+    # there is nothing to check and the job passes.
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - name: ruff and pytest
+        run: |
+          found=0
+          for pkg in ai-services semantic; do
+            [ -f "$pkg/pyproject.toml" ] || continue
+            found=1
+            echo "::group::$pkg"
+            python -m pip install --quiet ruff pytest -e "./$pkg"
+            ruff check "$pkg"
+            (cd "$pkg" && python -m pytest)
+            echo "::endgroup::"
+          done
+          if [ "$found" = 0 ]; then
+            echo "No Python package with a pyproject.toml yet; nothing to check."
+          fi
 
   secrets:
     runs-on: ubuntu-latest
@@ -130,7 +174,7 @@ jobs:
   ci-ok:
     # Skipped when a newer push cancels this run, so superseded runs don't report a failure.
     if: ${{ always() && !cancelled() }}
-    needs: [changes, pr-hygiene, docs, format, build, secrets]
+    needs: [changes, pr-hygiene, docs, format, build, python, secrets]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped

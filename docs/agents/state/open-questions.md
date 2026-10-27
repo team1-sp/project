@@ -31,11 +31,11 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 - **To:** human:isik (consult the team)
 - **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-15; reduced 2026-10-16 after reconciling with GitHub main
 - **Status:** Open — most items were answered on 2026-10-15 (DEC-022…028). Still open:
-  1. **Visibility and branch protection.** `team1-sp/project` is now **public** (clone works without sign-in), but DEC-027 and `CONTRIBUTING.md` say branch protection is unavailable (private repo, free plan). Public repositories can use branch protection/rulesets on the free plan `[ASSUMPTION — check GitHub docs/settings]`. Is the repo meant to stay public? If yes, should protection be switched on now (same rules as DEC-027)? Also: everything in `docs/` (names, decisions, course context) is now publicly readable.
+  1. **Visibility and branch protection.** *Protection answered:* the "Protect Main" ruleset is active (DEC-032; checked through the GitHub API on 2026-10-27, PB-004). Whether the repo stays public is still open. `team1-sp/project` is now **public** (clone works without sign-in), but DEC-027 and `CONTRIBUTING.md` say branch protection is unavailable (private repo, free plan). Public repositories can use branch protection/rulesets on the free plan `[ASSUMPTION — check GitHub docs/settings]`. Is the repo meant to stay public? If yes, should protection be switched on now (same rules as DEC-027)? Also: everything in `docs/` (names, decisions, course context) is now publicly readable.
   2. **License.** No `LICENSE` file exists. A public repository without a license is "all rights reserved" by default. Which license (or none on purpose)? Raylib is zlib and Box2D is MIT, so any choice works.
   3. **Access.** GitHub usernames/roles of the 5 members and read access for the advisor (Leyla Sezer), if the repo goes private again.
   4. **Git LFS** for assets: yes or no? [no until needed]
-  5. **Windows and macOS in CI.** `.github/workflows/ci.yml` runs every job on `ubuntu-latest` only, and the layout lists Windows presets only. Once code exists, builds must run on Windows and macOS (DEC-029). Add them with PB-002, or earlier? [with PB-002]
+  5. *(Answered: the `build` job runs on Windows, macOS and headless Linux since PB-002.)* **Windows and macOS in CI.** `.github/workflows/ci.yml` runs every job on `ubuntu-latest` only, and the layout lists Windows presets only. Once code exists, builds must run on Windows and macOS (DEC-029). Add them with PB-002, or earlier? [with PB-002]
 - **Answered by:** project name → Q-005 (answered 2026-10-24: Aegis, DEC-034); branch rules → DEC-027; agent permissions → DEC-025; task tracking → DEC-028; layout/hygiene/CI/naming → DEC-022, `git-workflow.md`, PB-001.
 - **Answer:** —
 

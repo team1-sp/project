@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-10-27
-updated_by: claude-code (PB-003 session)
+updated_by: claude-code (PB-004 session)
 ---
 
 # Current Status
@@ -29,7 +29,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); world units (TASK-008); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004).
 
 ## In progress / next
-1. **TASK-014 (ClickUp PB-003): GoogleTest + CTest** — Review. The test setup came with PB-002 (done); this adds the how-to-add-a-test guide `tests/README.md`.
+1. **TASK-015 (ClickUp PB-004): CI with GitHub Actions** — Review. Build/test on Windows, macOS and headless, clang-format check and the required `ci-ok` were already in place; this adds a dependency cache and a `python` job (ruff + pytest) that starts checking once PB-006 adds `ai-services/`. PB-003 (GoogleTest + CTest) is merged.
 2. Human answers Q-014 (leftovers) and Q-015 (task ids).
 3. Then phase 2: window + game loop (TASK-006). The custom ECS design (TASK-010) waits for the human (Q-013).
 

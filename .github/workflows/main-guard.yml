@@ -1,5 +1,5 @@
-# Branch protection is not available on this plan yet, so this flags any commit that
-# reached main without a merged pull request. Remove once protection is switched on.
+# Backstop for the main ruleset (DEC-032): flags any commit that reached main without a
+# merged pull request, for example through an admin bypass.
 name: Main guard
 
 on:
