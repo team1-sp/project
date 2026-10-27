@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-10-16
-updated_by: claude-code/sonnet-5.5/012r
+last_updated: 2026-10-27
+updated_by: claude-code (demo-undecided session)
 ---
 
 # Live Plan
@@ -45,13 +45,13 @@ All criteria are met; the human confirms closing phase 1.
 | 6 | Collision events | Not started |
 | 7 | Physics–rendering synchronisation | Not started |
 | 8 | Headless mode + telemetry | Not started |
-| 9 | Demo game with deliberate bugs | Not started |
+| 9 | Demo game with deliberate bugs | Not started; **game undecided** (Q-016) |
 | 10 | Semantic Architecture Layer (graph from telemetry) | Not started |
 | 11 | Automated Playtest Agent + bug detection | Not started |
 | 12 | AI Assistant Layer | Not started |
 | 13 | Stretch: narrative/RAG assistant, UI polish | Not started |
 
-Phases 10–13 order may change after the advisor review (ask the human). 3D is out of scope (DEC-016).
+Phases 10–13 order may change after the advisor review (ask the human). Phase 9 needs the team to choose the demo game first (Q-016). 3D is out of scope (DEC-016).
 
 ## Change table
 
@@ -59,3 +59,4 @@ Phases 10–13 order may change after the advisor review (ask the human). 3D is 
 | --- | --- | --- |
 | 2026-10-12 | Initial live plan created from Senior Project Guide §7 and Initial Plan §4 | claude-code/sonnet-5.5/012r |
 | 2026-10-13 | Phase 1 exit criteria updated after DEC-013…016 | claude-code/sonnet-5.5/012r |
+| 2026-10-27 | Demo game marked undecided (Q-016); maze demo removed | claude-code (demo-undecided session) |

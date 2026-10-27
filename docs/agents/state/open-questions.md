@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-10-16
-updated_by: claude-code/sonnet-5.5/012r
+last_updated: 2026-10-27
+updated_by: claude-code (demo-undecided session)
 ---
 
 # Open Questions
@@ -60,6 +60,14 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 - **Status:** Open — **deferred by the human** ("too early", 2026-10-15). Do not raise until a human does. Blocks TASK-010 only.
 - **Context:** DEC-018: the custom ECS exists so components are more LLM-instructive via the semantic layer.
 - **Options (not decisions):** (A) minimal: component name + per-field name/type; (B) plus human-readable purpose and per-field description/unit/range; (C) plus declared owner/readers and example values. Declared in C++20 by a registration function per component vs macro/table. I lean (B)/(C) because the assistant must cite meaning, not just values — your call.
+- **Answer:** —
+
+### Q-016 — Which demo game do we build?
+- **To:** human:team
+- **Asked by:** claude-code (demo-undecided session) on 2026-10-27
+- **Status:** Open
+- **Context:** Phase 9 needs a demo game with deliberately injectable bugs, used as ground truth for bug detection and the AI assistant (ip.fr.12.*). Earlier docs assumed a 2D maze with a player, walls, a door, a key and a goal (`games/demo-maze/`, `design/demo-game-spec.md`), but the team never agreed on it. Işık Dönger had both removed on 2026-10-27; the build's window check moved to `sandbox/`. Door/key wording elsewhere in the docs is only an example, not the demo.
+- **Needed:** the game (genre, entities, win condition) and the bugs it must be able to inject. Record the answer in the decision log, then write the spec under `design/` and create `games/<name>/`.
 - **Answer:** —
 
 ---

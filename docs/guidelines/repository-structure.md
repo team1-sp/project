@@ -1,6 +1,6 @@
 # Repository Structure
 
-**Current reality `[VERIFIED 2026-10-24]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002: `CMakeLists.txt`, `CMakePresets.json`, `cmake/`, `engine/core/`, `engine/physics-box2d/`, `engine/rendering-raylib/`, `editor/`, `games/demo-maze/` and `tests/unit/`. The other folders below are created as their PRs land.
+**Current reality `[VERIFIED 2026-10-24]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002: `CMakeLists.txt`, `CMakePresets.json`, `cmake/`, `engine/core/`, `engine/physics-box2d/`, `engine/rendering-raylib/`, `editor/`, `sandbox/` and `tests/unit/`. The other folders below are created as their PRs land.
 
 Related repos on the team's machines (separate git repos):
 
@@ -31,7 +31,8 @@ project/
 │   ├── headless/             headless runner, limits, exit codes
 │   └── bridge/               engine server for the Python client
 ├── editor/                   C++ editor app
-├── games/demo-maze/          demo game, levels, bug-injected variants
+├── sandbox/                  scratch app that opens a raylib window (build smoke check); not the demo game
+├── games/<name>/             demo game, levels, bug-injected variants — `[UNDECIDED]`: the team has not chosen the game (Q-016)
 ├── tests/                    GoogleTest, mirrors engine/ (unit/, integration/, scenarios/, benchmarks/)
 ├── proto/                    engine <-> Python contract
 ├── semantic/                 LAYER 2, own package and pipeline (DEC-026); language open, Python assumed
@@ -42,7 +43,7 @@ project/
 └── .github/                  workflows, CODEOWNERS, issue forms, PR template, labels
 ```
 
-CMake targets: each engine folder builds `engine_<folder>` (alias `engine::<folder>`, `-` becomes `_`) with public headers under `include/engine/<folder>/`; executables are `editor`, `demo-maze` and `engine_tests`. Options: `ENGINE_WITH_RAYLIB` (off in `headless`: no raylib fetch, no `rendering-raylib`, no `demo-maze`), `ENGINE_BUILD_TESTS`, `ENGINE_WARNINGS_AS_ERRORS` (on in CI). Build output goes to `build/<preset>/` (git-ignored).
+CMake targets: each engine folder builds `engine_<folder>` (alias `engine::<folder>`, `-` becomes `_`) with public headers under `include/engine/<folder>/`; executables are `editor`, `sandbox` and `engine_tests`. Options: `ENGINE_WITH_RAYLIB` (off in `headless`: no raylib fetch, no `rendering-raylib`, no `sandbox`), `ENGINE_BUILD_TESTS`, `ENGINE_WARNINGS_AS_ERRORS` (on in CI). Build output goes to `build/<preset>/` (git-ignored).
 
 Dependency checks: only `physics-box2d` includes Box2D and only `rendering-raylib` includes raylib (compile errors elsewhere); `engine/` never depends on `semantic/`, `ai-services/` or `editor/` (CMake targets + a CI script); the `headless` preset builds without raylib (R-6).
 
@@ -61,3 +62,4 @@ Dependency checks: only `physics-box2d` includes Box2D and only `rendering-rayli
 | 2026-10-12 | Proposed layout | claude-code/sonnet-5.5/012r |
 | 2026-10-15 | Accepted layout: one repo, CMake targets per engine module, separate `semantic/` (DEC-022, DEC-023, DEC-026) | claude-code (session 0171) |
 | 2026-10-24 | Build skeleton landed (PB-002): presets incl. macOS, target names, options; raylib 6.2 (DEC-033) | claude-code (PB-002 session) |
+| 2026-10-27 | `games/demo-maze/` removed (the team never chose it as the demo); its smoke window moved to `sandbox/`; demo game undecided (Q-016) | claude-code |

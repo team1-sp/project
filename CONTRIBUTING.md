@@ -12,7 +12,7 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
    git switch feat/pb-025-define-the-physics-adapter-interface
    ```
 
-   Branch names follow `<type>/pb-<nnn>-<short-description>`. For a bug without a PB item, create the branch yourself: `fix/<issue>-<short-description>`.
+   Branch names follow `<type>/pb-<nnn>-<short-description>`. For a bug without a PB item, create the branch yourself: `fix/<issue>-<short-description>`. Only `fix/` may use a bare issue number.
    Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`. Lowercase, words joined with `-`.
 3. Commit and push to that branch. The draft PR already says `Closes #<issue>`.
 

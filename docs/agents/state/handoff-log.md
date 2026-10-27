@@ -115,3 +115,17 @@
 - **Traps:** the Windows presets use the default (Visual Studio, multi-config) generator, so build and test presets pass `configuration`; executables land in `.../Debug/`. Box2D's samples and tests are skipped automatically because it is not the top-level project. The CMake project is `aegis` (DEC-034); namespaces and target names stay `engine` until someone decides otherwise.
 
 ---
+
+### HND-011 — Demo game marked undecided; demo-maze removed
+- **Date:** 2026-10-27
+- **Agent:** claude-code (demo-undecided session)
+- **Task:** GitHub issue #10 (no ClickUp task); branch to be renamed `fix/10-fix-demo-game-documentation`
+- **Goal:** The team never agreed on the maze demo. Remove `games/demo-maze/` and its docs, and mark the demo game undecided.
+- **Result:** Done, in review as PR #12. `games/demo-maze/` and `design/demo-game-spec.md` deleted. The raylib smoke window now runs from a new `sandbox/` app (same code, new name), so the Windows/macOS builds still prove raylib links. New Q-016 (which demo game). Status, plan and roadmap say the demo is undecided.
+- **Files changed:** `CMakeLists.txt`, `sandbox/*` (new), `games/demo-maze/*` (deleted), `docs/design/demo-game-spec.md` (deleted), `docs/README.md`, `guidelines/repository-structure.md`, `troubleshooting/environment-setup.md`, `agents/state/{current-status,plan,open-questions,handoff-log}.md`, `process/roadmap.md`.
+- **Also:** branch names tightened to the active ruleset: only `fix/` may use a bare issue number (`tools/check_pr.py`, `git-workflow.md`, `CONTRIBUTING.md`).
+- **Not changed on purpose:** door/key/goal examples in architecture, design, testing and troubleshooting docs (e.g. `DoorOpenedEvent`, `B-DOOR-NO-KEY`) are general examples, not the demo spec. Earlier history entries (HND-010, task board) keep the old name.
+- **Not verified:** the full Windows/macOS build after the rename (CI `build` job will run it).
+- **Next:** team answers Q-016; then a decision entry, a spec under `design/` and `games/<name>/`.
+
+---

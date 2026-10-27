@@ -46,7 +46,6 @@ docs/
 │   ├── ecs-design.md
 │   ├── physics-adapter-design.md
 │   ├── telemetry-and-events.md
-│   ├── demo-game-spec.md
 │   └── templates/design-doc-template.md
 ├── guidelines/                    RULES for writing code, git, docs
 │   ├── coding-standards.md

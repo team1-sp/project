@@ -1,4 +1,4 @@
-# Root build for the engine, editor, demo game and tests (PB-002).
+# Root build for the engine, editor, sandbox and tests (PB-002).
 # Layout and layer rules: docs/guidelines/repository-structure.md
 cmake_minimum_required(VERSION 3.25)
 
@@ -23,7 +23,7 @@ add_subdirectory(engine)
 add_subdirectory(editor)
 
 if(ENGINE_WITH_RAYLIB)
-    add_subdirectory(games/demo-maze)
+    add_subdirectory(sandbox)
 endif()
 
 if(ENGINE_BUILD_TESTS)
