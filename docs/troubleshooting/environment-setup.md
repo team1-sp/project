@@ -47,6 +47,8 @@ ctest --preset windows-debug                # run all tests
 ctest --preset windows-debug -R Box2d       # run tests whose name matches
 ```
 
+How to add a test and run a single one: [`tests/README.md`](../../tests/README.md).
+
 | Preset | What it builds |
 | --- | --- |
 | `windows-debug`, `windows-release` | Everything, Visual Studio generator (Windows only) |
@@ -93,3 +95,4 @@ Solved setup problems also go into `history/problem-log.md` (area `Build`) and g
 | 2026-10-15 | C++20, Raylib v6.0, platforms and compilers decided | claude-code/sonnet-5.5/012r |
 | 2026-10-24 | Exact prerequisites, build, test and run commands for the PB-002 skeleton | claude-code (PB-002 session) |
 | 2026-10-24 | Windows build verified with Visual Studio 2026 / MSVC 19.51; first configure takes several minutes (raylib download) | claude-code (PB-002 session) |
+| 2026-10-27 | Link to the how-to-add-a-test guide (PB-003) | claude-code (PB-003 session) |

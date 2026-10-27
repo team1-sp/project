@@ -129,3 +129,17 @@
 - **Next:** team answers Q-016; then a decision entry, a spec under `design/` and `games/<name>/`.
 
 ---
+
+### HND-012 — How-to-add-a-test guide (PB-003)
+- **Date:** 2026-10-27
+- **Agent:** claude-code (PB-003 session)
+- **Task:** ClickUp PB-003 (TASK-014), branch `ci/pb-003-integrate-googletest-and-ctest`
+- **Goal:** GoogleTest + CTest integrated, a passing sample test, how-to-add-a-test documented.
+- **Result:** In review. PB-002 had already delivered PB-003.1 (GoogleTest v1.17.0 via FetchContent, `enable_testing()`, `gtest_discover_tests`, tests link the engine libraries, CI runs `ctest`). This task adds `tests/README.md` (where tests go, naming, registering a file, running all or one test). Işık Dönger chose to use the existing `version_test.cpp` as the sample instead of a dummy `sample_test.cpp` (2026-10-27). Unit tests live in `tests/unit/<folder>/`, not `tests/core/` as the ClickUp text said; test names follow `coding-standards.md`, not ClickUp's `ClassName_Behavior`.
+- **Files changed:** `tests/README.md` (new), `docs/testing/test-strategy.md` (framework no longer "not chosen"), `docs/troubleshooting/environment-setup.md` (link), `agents/state/{task-board,current-status,handoff-log}.md`.
+- **Verified (Linux, GCC 13, CMake 3.28):** `cmake --workflow --preset headless` builds, 2/2 tests pass; `ctest --preset headless -R Box2d` runs 1 test; `engine_tests --gtest_filter=EngineVersion.*` runs 1 test.
+- **Not verified:** the Windows `engine_tests.exe` path in `tests/README.md` (`build\windows-debug\tests\Debug\`) is inferred from the multi-config generator, not run.
+- **Next:** human commits, pushes and marks the draft PR ready; then TASK-006 (window + game loop).
+- **Traps:** branches named like `ci(pb-003)-…` (parentheses, from the PR title) fail the branch rule; use the branch the Issue start workflow creates.
+
+---

@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-10-24
-updated_by: claude-code (PB-002 session)
+last_updated: 2026-10-27
+updated_by: claude-code (PB-003 session)
 ---
 
 # Task Board
@@ -26,6 +26,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-012 | Set up the GitHub repository and project board | Done (DEC-022…028, PB-001); leftovers in Q-014 | humans + claude-code (session 0171) | — | DEC-009, process |
 | TASK-013 | Reconcile local docs with GitHub main (merge, renumber colliding IDs, update stale state) | Done | claude-code/sonnet-5.5/012r | — | DEC-017 |
 | TASK-011 | Propagate round-2 decisions (DEC-018…021) | Done | claude-code/sonnet-5.5/012r | — | DEC-017 |
+| TASK-014 | Integrate GoogleTest and CTest, how-to-add-a-test guide — ClickUp PB-003 | Review | Işık Dönger + claude-code (PB-003 session) | TASK-005 | process, test-strategy |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -88,3 +89,8 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 
 ### TASK-013 — Reconcile local docs with GitHub main
 - **Status:** Done 2026-10-16, claude-code/sonnet-5.5/012r. Three-way merge (base `95cb8d9`, upstream `69670b0`); local decisions DEC-022/023 renumbered DEC-029/030; stale state files updated; see HND-009.
+
+### TASK-014 — Integrate GoogleTest and CTest (ClickUp PB-003)
+- **Status:** Review (2026-10-27), branch `ci/pb-003-integrate-googletest-and-ctest`.
+- **Acceptance (ClickUp):** test target builds and runs with `ctest`; a sample test passes; how-to-add-a-test documented.
+- **Result:** GoogleTest/CTest integration came with TASK-005 (PB-002). Added `tests/README.md`; `tests/unit/core/version_test.cpp` is the sample test (human choice, no dummy test). See HND-012.
