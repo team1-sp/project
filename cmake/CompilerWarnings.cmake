@@ -1,0 +1,11 @@
+# Warning flags for our own targets only; third-party code keeps its own flags.
+function(engine_set_warnings target)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wconversion)
+    endif()
+    if(ENGINE_WARNINGS_AS_ERRORS)
+        set_target_properties(${target} PROPERTIES COMPILE_WARNING_AS_ERROR ON)
+    endif()
+endfunction()

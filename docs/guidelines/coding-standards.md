@@ -2,7 +2,7 @@
 
 **Status: Accepted (2026-10-23).** Agreed by the team and approved by the advisor (DEC-031, PB-005). Changes go through a PR and a new decision entry.
 
-Language is **C++** (DEC-013). Physics is Box2D v3.1.1 behind the Physics Adapter (DEC-014, DEC-020); graphics is Raylib behind the rendering abstraction (DEC-015); 2D only (DEC-016); ECS is custom (DEC-018). **Platforms (DEC-029):** the project is developed on Windows and macOS, Windows has priority; games are built for Windows only for now. **Standard: C++20 (DEC-019). Raylib v6.0 (DEC-021).** **Compilers (DEC-030):** whatever each platform needs, none pinned — no compiler-specific extensions. **Build system CMake and test framework GoogleTest (DEC-023).** **Formatter: clang-format 19** with the repo's [`.clang-format`](../../.clang-format) (DEC-031).
+Language is **C++** (DEC-013). Physics is Box2D v3.1.1 behind the Physics Adapter (DEC-014, DEC-020); graphics is Raylib behind the rendering abstraction (DEC-015); 2D only (DEC-016); ECS is custom (DEC-018). **Platforms (DEC-029):** the project is developed on Windows and macOS, Windows has priority; games are built for Windows only for now. **Standard: C++20 (DEC-019). Raylib 6.2 (DEC-033).** **Compilers (DEC-030):** whatever each platform needs, none pinned — no compiler-specific extensions. **Build system CMake and test framework GoogleTest (DEC-023).** **Formatter: clang-format 19** with the repo's [`.clang-format`](../../.clang-format) (DEC-031).
 
 ## 1. Universal rules
 
@@ -75,3 +75,4 @@ No 3D types, cameras, models or physics (DEC-016). Use 2D vector/transform types
 | 2026-10-13 | C++20/platforms proposed, not decided (DEC-019) | claude-code/sonnet-5.5/012r |
 | 2026-10-15 | C++20 (DEC-019), Raylib v6.0 (DEC-021) accepted; platforms/compilers decided | claude-code/sonnet-5.5/012r |
 | 2026-10-23 | Accepted by the team and advisor; formatter clang-format 19 with `.clang-format` (DEC-031, PB-005) | claude-code (session 0171) |
+| 2026-10-24 | Raylib 6.2 (DEC-033) | claude-code (PB-002 session) |

@@ -19,7 +19,7 @@ Exit criteria (all must be true):
 - [x] ECS approach: custom (DEC-018)
 - [x] Box2D v3.1.1 (DEC-020)
 - [x] Platforms: develop on Windows+macOS (Windows priority), games Windows-only for now (DEC-029)
-- [x] C++20 (DEC-019), Raylib v6.0 (DEC-021)
+- [x] C++20 (DEC-019), Raylib 6.2 (DEC-033, replaced v6.0 / DEC-021)
 - [x] Compilers: whatever each platform needs (DEC-030)
 - [x] Build system and test framework: CMake + GoogleTest (DEC-023)
 - [x] Repo layout accepted (`guidelines/repository-structure.md`, DEC-022, DEC-026)

@@ -11,10 +11,10 @@
 | Graphics framework | **Raylib** — only behind the rendering abstraction | DEC-015, DEC-007 |
 | ECS | **Custom-built** (so components can be LLM-instructive through the semantic layer) | DEC-018 |
 | Box2D version | **v3.1.1** (C API with id handles) | DEC-020 |
-| Build system / tests | **CMake** (presets, FetchContent pins) / **GoogleTest** | DEC-023 |
+| Build system / tests | **CMake** (presets, FetchContent pins) / **GoogleTest v1.17.0** | DEC-023 |
 | Platforms | **Development on Windows and macOS, Windows priority; games built for Windows only for now; other platforms/builds delayed** | DEC-029 |
 | C++ standard | **C++20** | DEC-019 |
-| Raylib version | **v6.0** `[VERIFIED 2026-10-15: release exists, latest]` | DEC-021 |
+| Raylib version | **6.2** (was v6.0; changed before any rendering code existed) | DEC-033 |
 | Formatter | **clang-format 19** with the repo's `.clang-format` | DEC-031 |
 | Compilers | **Whatever each platform needs; none pinned now** (exact compiler per OS recorded when the build is set up) | DEC-030 |
 | Scope | **2D only.** 3D is future work; keep the seams (adapter, rendering abstraction, ECS) so it stays possible, build nothing 3D | DEC-016 |
@@ -63,3 +63,4 @@ The engine is not directly coupled to Box2D or Raylib. The Physics Adapter and t
 | 2026-10-15 | CMake + GoogleTest decided (DEC-023) | claude-code (session 0171) |
 | 2026-10-16 | Reconciled with GitHub main; platforms and compilers renumbered DEC-029/DEC-030 (collision with DEC-022/023) | claude-code/sonnet-5.5/012r |
 | 2026-10-23 | Formatter clang-format 19 (DEC-031) | claude-code (session 0171) |
+| 2026-10-24 | Raylib 6.2 (DEC-033); GoogleTest v1.17.0 pinned | claude-code (PB-002 session) |

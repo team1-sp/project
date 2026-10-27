@@ -19,7 +19,7 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
 ## Pull requests
 
 - The PR title is a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/) and becomes the commit on `main`:
-  `feat(phys): define the physics adapter interface (PB-025)`. The scope is the area label without `area:`.
+  `feat(PB-025): Define the physics adapter interface`. The scope is the PB id (DEC-035); the draft PR from the Issue start workflow already has this title.
 - Keep PRs under about 400 changed lines.
 - Fill in the PR template, including how you verified the change.
 - Mark the PR **ready for review** when CI is green. Reviewers come from [.github/CODEOWNERS](.github/CODEOWNERS).

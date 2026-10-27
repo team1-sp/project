@@ -1,4 +1,4 @@
-<!-- Title: Conventional Commit, e.g. "feat(phys): define the physics adapter interface (PB-025)" -->
+<!-- Title: Conventional Commit, e.g. "feat(PB-025): Define the physics adapter interface" -->
 
 Closes #<!-- issue number; for chore/ci PRs without an issue, add the no-issue label instead -->
 
