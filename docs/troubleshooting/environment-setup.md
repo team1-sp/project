@@ -2,7 +2,7 @@
 
 **Status: first version (PB-002, 2026-10-24).** Commands match the presets in [`CMakePresets.json`](../../CMakePresets.json). Stack: C++20 (DEC-019), Box2D v3.1.1 (DEC-020), raylib 6.2 (DEC-033), CMake + GoogleTest (DEC-023). Platforms (DEC-029): develop on Windows and macOS, Windows first; games are built for Windows only. Compilers: whatever each platform needs (DEC-030), recorded in section 3.
 
-`[VERIFIED 2026-10-24]` only on Linux (GCC 13, CMake 3.28) by the agent that wrote the skeleton: the `headless` workflow and a full build with raylib, and `demo-maze` opened and closed a window under Xvfb. Windows and macOS are checked by the CI `build` job and by each member (PB-002.6); until then treat those steps as `[NOT YET VERIFIED]`.
+`[VERIFIED 2026-10-24]` only on Linux (GCC 13, CMake 3.28) by the agent that wrote the skeleton: the `headless` workflow and a full build with raylib, and `demo-maze` opened and closed a window under Xvfb. `[VERIFIED 2026-10-24]` on Windows by Işık Dönger: `cmake --workflow --preset windows-debug` with Visual Studio 2026 (MSVC 19.51, CMake 4.4.3), and `demo-maze.exe` opened its window. macOS is checked by the CI `build` job and by the Mac users (PB-002.6); until then treat the macOS steps as `[NOT YET VERIFIED]`.
 
 ## 1. Goal
 
@@ -25,7 +25,7 @@ Raylib, Box2D and GoogleTest are not installed by hand: CMake downloads them at 
 
 | OS | Compiler | Status |
 | --- | --- | --- |
-| Windows | MSVC from Visual Studio 2022 or newer (CMake picks the newest Visual Studio installed) | `[ASSUMPTION — confirm in PB-002.6]` |
+| Windows | MSVC from Visual Studio 2022 or newer (CMake picks the newest Visual Studio installed) | `[VERIFIED 2026-10-24]` Visual Studio 2026 (generator `Visual Studio 18 2026`), MSVC 19.51, Windows SDK 10.0.26100 |
 | macOS | Apple Clang from the Xcode Command Line Tools | `[ASSUMPTION — confirm in PB-002.6]` |
 
 ## 4. Build and test
@@ -70,6 +70,7 @@ Normal and headless run modes of the engine come with TASK-006.
 | Problem | Fix |
 | --- | --- |
 | `No such preset` on configure | The Windows presets only exist on Windows and the macOS presets only on macOS. Use `cmake --list-presets` |
+| First configure seems stuck after `Box2D on MSVC` | It is downloading raylib (a large repository); the first configure can take several minutes. Later configures reuse `build/<preset>/_deps` |
 | First configure fails while cloning | It needs github.com. Retry; behind a proxy set `HTTPS_PROXY` |
 | Linux (not a supported platform) | Needs the X11 and OpenGL dev packages for raylib; on a machine without Wayland libraries add `-DGLFW_BUILD_WAYLAND=OFF` |
 
@@ -91,3 +92,4 @@ Solved setup problems also go into `history/problem-log.md` (area `Build`) and g
 | 2026-10-13 | Box2D version recorded; C++20/platforms proposed only | claude-code/sonnet-5.5/012r |
 | 2026-10-15 | C++20, Raylib v6.0, platforms and compilers decided | claude-code/sonnet-5.5/012r |
 | 2026-10-24 | Exact prerequisites, build, test and run commands for the PB-002 skeleton | claude-code (PB-002 session) |
+| 2026-10-24 | Windows build verified with Visual Studio 2026 / MSVC 19.51; first configure takes several minutes (raylib download) | claude-code (PB-002 session) |

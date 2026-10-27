@@ -37,8 +37,8 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 
 | Check | Result |
 | --- | --- |
-| Build | Skeleton builds on Linux (GCC 13), headless and with raylib `[VERIFIED 2026-10-24]`; Windows/macOS via CI pending |
-| Tests | 2/2 pass (`ctest --preset headless`) `[VERIFIED 2026-10-24, Linux]` |
+| Build | Skeleton builds on Linux (GCC 13) Windows (MSVC 19.51, Visual Studio 2026) `[VERIFIED 2026-10-24]` and macOS (Apple Clang) `[VERIFIED 2026-10-27]` |
+| Tests | 2/2 pass on Linux, Windows and macOS `[VERIFIED 2026-10-27]` |
 | Docs | Scaffold created 2026-10-12; updated 2026-10-13 for the stack decision and the decision-authority rule |
 
 ## Things a new agent should know immediately
