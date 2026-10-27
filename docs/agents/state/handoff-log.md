@@ -143,3 +143,16 @@
 - **Traps:** branches named like `ci(pb-003)-…` (parentheses, from the PR title) fail the branch rule; use the branch the Issue start workflow creates.
 
 ---
+
+### HND-013 — CI with GitHub Actions (PB-004)
+- **Date:** 2026-10-27
+- **Agent:** claude-code (PB-004 session)
+- **Task:** ClickUp PB-004 (TASK-015), branch `ci/pb-004-set-up-ci-with-github-actions`, issue #15
+- **Goal:** Every PR is built and tested automatically; formatting checked; Python runs ruff + pytest; checks required before merge.
+- **Result:** In review. PB-004.1 (build + `ctest` on windows-latest, plus macOS and headless) came with PB-002, PB-004.3 (clang-format 19 check) with PB-005, and PB-004.5 (`ci-ok` required on `main`) with the "Protect Main" ruleset (DEC-032). New: the `build` job caches `build/<preset>/_deps` without the `*-build` folders, keyed on OS, preset and the hash of `cmake/Dependencies.cmake` (PB-004.2); a `python` job runs `ruff check` and `pytest` in each of `ai-services/` and `semantic/` that has a `pyproject.toml`, and is part of `ci-ok` (PB-004.4). `main-guard.yml` comment updated (protection is on now); Q-014 items 1 (protection part) and 5 marked answered.
+- **Files changed:** `.github/workflows/ci.yml`, `.github/workflows/main-guard.yml`, `agents/state/{task-board,current-status,open-questions,handoff-log}.md`.
+- **Verified (Linux, CMake 3.28):** with `_deps` kept but `*-build`, `CMakeCache.txt` and `CMakeFiles` deleted, `cmake --preset headless` re-configures in 1.1 s instead of 5.6 s without cloning, then builds and passes 2/2 tests. The `python` step, run locally with bash `-eo pipefail`, passes a sample `ai-services/` package (ruff clean, 1 test) and prints "nothing to check" without one. YAML parses.
+- **Not verified:** the cache on real runners (first run fills it; the second PR run should show a cache hit and a shorter Windows configure). Python 3.12 is an assumption until PB-006 picks the version; PB-006 may change the install line (e.g. a `dev` extra).
+- **Next:** human pushes and marks the PR ready; PB-006 adds `ai-services/pyproject.toml` with ruff and pytest settings, and the `python` job starts checking it.
+- **Traps:** a pull request that changes no C++/CMake file skips `build` (and its cache). `pytest` exits with code 5 when it finds no tests, which fails the job; PB-006 needs at least one test.
+
