@@ -1,6 +1,6 @@
 # Test Strategy
 
-The test framework and build integration are not chosen yet (Q-009, TASK-005); tests are C++. This file defines *what* we test and *how it is organised*, independent of tools.
+Tests are C++ with GoogleTest, run through CTest (DEC-023, PB-003). This file defines *what* we test and *how it is organised*; how to add and run a test is in [`tests/README.md`](../../tests/README.md).
 
 ## 1. Principles
 
@@ -51,3 +51,4 @@ Not a numeric coverage target; the targets are: every checklist item has a test;
 | Date | Change | By |
 | --- | --- | --- |
 | 2026-10-12 | Created from guide testing checklist and requirements | claude-code/sonnet-5.5/012r |
+| 2026-10-27 | GoogleTest + CTest in place; link to the how-to in `tests/README.md` | claude-code (PB-003 session) |
