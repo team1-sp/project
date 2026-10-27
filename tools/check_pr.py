@@ -7,9 +7,11 @@ import os
 import re
 import sys
 
+# Any type with a PB id, or `fix/` with a bare issue number (bugs without a PB item).
+# Keep in sync with the branch name rule of the GitHub ruleset.
 BRANCH = re.compile(
-    r"^(feat|fix|test|refactor|docs|ci|chore|research)/"
-    r"(pb-\d{3}(\.\d+)?|\d+)-[a-z0-9]+(-[a-z0-9]+)*$"
+    r"^((feat|fix|test|refactor|docs|ci|chore|research)/pb-\d{3}(\.\d+)?|fix/\d+)"
+    r"-[a-z0-9]+(-[a-z0-9]+)*$"
 )
 EXEMPT_PREFIXES = ("dependabot/",)
 CLOSES = re.compile(r"\b(close[sd]?|fix(e[sd])?|resolve[sd]?) #\d+", re.IGNORECASE)
@@ -26,7 +28,7 @@ def main():
     if not branch.startswith(EXEMPT_PREFIXES) and not BRANCH.match(branch):
         errors.append(
             f"Branch '{branch}' does not match <type>/pb-<nnn>-<short-description> "
-            "(or <type>/<issue>-<short-description> for bugs), all lowercase. "
+            "(or fix/<issue>-<short-description> for a bug without a PB item), all lowercase. "
             "Types: feat, fix, test, refactor, docs, ci, chore, research."
         )
     if not CLOSES.search(body) and "no-issue" not in labels:

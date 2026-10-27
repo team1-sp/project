@@ -12,7 +12,11 @@ Trunk-based: `main` is the only long-lived branch. No `develop` branch.
 | Work branches | From the latest `main`, one backlog item (or one bug) per branch, merged within the sprint, deleted after merge |
 | Tags `inc-1`, `inc-2`, `final` | Annotated tags on `main` at each increment review, created by a repo admin |
 
-Branch names: `<type>/pb-<nnn>-<short-description>`, lowercase, words joined with `-`. Bugs without a PB item use the issue number: `fix/142-door-opens-without-key`.
+Branch names: `<type>/pb-<nnn>-<short-description>`, lowercase, words joined with `-`. Bugs without a PB item use the issue number: `fix/142-door-opens-without-key`. Only `fix/` may use a bare issue number; every other type needs a PB id. `tools/check_pr.py` and the GitHub branch name rule enforce this pattern:
+
+```
+^((feat|fix|test|refactor|docs|ci|chore|research)/pb-[0-9]{3}(\.[0-9]+)?|fix/[0-9]+)-[a-z0-9]+(-[a-z0-9]+)*$
+```
 
 | Type | Use for |
 | --- | --- |
@@ -71,3 +75,4 @@ Increment deliverables get an annotated tag `inc-1`, `inc-2`, `final` on `main`,
 | 2026-10-23 | Only Işık and the advisor approve; Işık's PRs need no approval; `main` ruleset (DEC-032) | claude-code (session 0171) |
 | 2026-10-15 | Issue start automation (branch and draft PR from ClickUp issues) | claude-code (session 0171) |
 | 2026-10-24 | PR title scope is the PB id: `<type>(PB-<nnn>): …` (DEC-035) | claude-code (PB-002 session) |
+| 2026-10-27 | Only `fix/` branches may use a bare issue number; pattern written out | claude-code |
