@@ -2,7 +2,7 @@
 
 **Status: first version (PB-002, 2026-10-24).** Commands match the presets in [`CMakePresets.json`](../../CMakePresets.json). Stack: C++20 (DEC-019), Box2D v3.1.1 (DEC-020), raylib 6.2 (DEC-033), CMake + GoogleTest (DEC-023). Platforms (DEC-029): develop on Windows and macOS, Windows first; games are built for Windows only. Compilers: whatever each platform needs (DEC-030), recorded in section 3.
 
-`[VERIFIED 2026-10-24]` only on Linux (GCC 13, CMake 3.28) by the agent that wrote the skeleton: the `headless` workflow and a full build with raylib, and `demo-maze` opened and closed a window under Xvfb. `[VERIFIED 2026-10-24]` on Windows by Işık Dönger: `cmake --workflow --preset windows-debug` with Visual Studio 2026 (MSVC 19.51, CMake 4.4.3), and `demo-maze.exe` opened its window. macOS is checked by the CI `build` job and by the Mac users (PB-002.6); until then treat the macOS steps as `[NOT YET VERIFIED]`.
+`[VERIFIED 2026-10-24]` only on Linux (GCC 13, CMake 3.28) by the agent that wrote the skeleton: the `headless` workflow and a full build with raylib, and the window app (now `sandbox`) opened and closed a window under Xvfb. `[VERIFIED 2026-10-24]` on Windows by Işık Dönger: `cmake --workflow --preset windows-debug` with Visual Studio 2026 (MSVC 19.51, CMake 4.4.3), and the window app (now `sandbox.exe`) opened its window. macOS is checked by the CI `build` job and by the Mac users (PB-002.6); until then treat the macOS steps as `[NOT YET VERIFIED]`.
 
 ## 1. Goal
 
@@ -51,7 +51,7 @@ ctest --preset windows-debug -R Box2d       # run tests whose name matches
 | --- | --- |
 | `windows-debug`, `windows-release` | Everything, Visual Studio generator (Windows only) |
 | `macos-debug`, `macos-release` | Everything, Unix Makefiles (macOS only) |
-| `headless` | No raylib: engine libraries, `editor`, `engine_tests`. No `demo-maze` (R-4, R-6) |
+| `headless` | No raylib: engine libraries, `editor`, `engine_tests`. No `sandbox` (R-4, R-6) |
 
 Clean: delete `build/<preset>/` (or all of `build/`). Opening the folder in Visual Studio, CLion or VS Code with the CMake Tools extension picks up the same presets.
 
@@ -59,8 +59,8 @@ Clean: delete `build/<preset>/` (or all of `build/`). Opening the folder in Visu
 
 | Program | Windows | macOS |
 | --- | --- | --- |
-| Demo (opens a window; Escape closes it) | `build\windows-debug\games\demo-maze\Debug\demo-maze.exe` | `build/macos-debug/games/demo-maze/demo-maze` |
-| Demo, closes itself after N frames | add `--frames 120` | add `--frames 120` |
+| Sandbox (opens a window; Escape closes it) | `build\windows-debug\sandbox\Debug\sandbox.exe` | `build/macos-debug/sandbox/sandbox` |
+| Sandbox, closes itself after N frames | add `--frames 120` | add `--frames 120` |
 | Editor (placeholder, prints its version) | `build\windows-debug\editor\Debug\editor.exe` | `build/macos-debug/editor/editor` |
 
 Normal and headless run modes of the engine come with TASK-006.

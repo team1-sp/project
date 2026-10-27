@@ -17,7 +17,7 @@ Principle: **working 2D engine prototype first**, then the AI-native layers; aut
 | 6 | Collision events | Adapter → `CollisionEvent`; gameplay responds | Collision with wall produces event with correct entity IDs | ip.fr.3.6, 6.2 |
 | 7 | Physics–rendering sync | Body position → `PositionComponent` → RenderSystem → sprite | Sprite always at the body's position (test compares render data) | ip.fr.3.5, 4.1–4.3 |
 | 8 | Headless mode + telemetry | Run without rendering; record state/events/timings; export | Headless run completes; results identical to normal mode for same inputs; telemetry file produced; overhead ≤ 10% | ip.fr.7.*, 8.*, ip.nfr.1.2–1.3 |
-| 9 | Demo game with deliberate bugs | Player, walls, goal, door, key; injectable bugs | Each flag reproduces its bug; scenarios exist | ip.fr.12.* |
+| 9 | Demo game with deliberate bugs | Game `[UNDECIDED]` — the team has not chosen it (Q-016); it will have injectable bugs | Game chosen and recorded in the decision log; each flag reproduces its bug; scenarios exist | ip.fr.12.* |
 | 10 | Semantic Architecture Layer | Build graph from telemetry; query API | Acceptance sketch in `semantic-layer.md` §5 passes | ip.fr.10.*, ip.nfr.1.4 |
 | 11 | Automated Playtest Agent + bug detection | Agent plays headless; detects 4 bug classes | Each injected bug detected with class/frame/entities; no false positives on clean build | ip.fr.9.*, 5.2, 7.2, 7.5 |
 | 12 | AI Assistant Layer | Chat, graph-based answers with citations, abstention | Evaluation set from injected bugs passes (`ai-assistant-layer.md` §7); latency target | ip.fr.11.*, ip.nfr.1.5, 2.1 |

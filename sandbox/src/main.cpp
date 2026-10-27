@@ -14,7 +14,7 @@ void printVersion(const char* name, engine::Version version) {
 
 } // namespace
 
-// Usage: demo-maze [--frames N]   (N = 0, the default, runs until the window is closed)
+// Usage: sandbox [--frames N]   (N = 0, the default, runs until the window is closed)
 int main(int argc, char** argv) {
     int maxFrames = 0;
     for (int i = 1; i < argc; ++i) {
@@ -27,6 +27,6 @@ int main(int argc, char** argv) {
     printVersion("box2d", engine::physics_box2d::linkedBox2dVersion());
     printVersion("raylib", engine::rendering_raylib::linkedRaylibVersion());
 
-    engine::rendering_raylib::runSmokeWindow("demo-maze", maxFrames);
+    engine::rendering_raylib::runSmokeWindow("sandbox", maxFrames);
     return 0;
 }
