@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-10-27
-updated_by: claude-code (PB-004 session)
+last_updated: 2026-11-01
+updated_by: claude (PB-008 session)
 ---
 
 # Current Status
@@ -24,11 +24,12 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 
 ## Decisions status (details: `history/decision-log.md`)
 
-- **Accepted:** three-layer architecture; ECS as data hub; Physics Adapter; fixed 1/60 s timestep; headless mode; telemetry in loop; graphics abstraction; docs/agent system; C++ (DEC-013); Box2D v3.1.1 (DEC-014, DEC-020); Raylib 6.2 (DEC-015, DEC-033); 2D only (DEC-016); humans decide (DEC-017); custom ECS (DEC-018); C++20 (DEC-019); one repository (DEC-022); CMake + GoogleTest (DEC-023); Işık Dönger reviews every PR (DEC-024); agents push only after human approval (DEC-025); `semantic/` is its own folder (DEC-026); trunk-based workflow, branch protection deferred (DEC-027); GitHub issues created from ClickUp (DEC-028); develop on Windows and macOS, games Windows-only (DEC-029); compilers per platform need (DEC-030); product name Aegis (DEC-034); PR titles `<type>(PB-<nnn>): …` (DEC-035).
+- **Accepted:** three-layer architecture; ECS as data hub; Physics Adapter; fixed 1/60 s timestep; headless mode; telemetry in loop; graphics abstraction; docs/agent system; C++ (DEC-013); Box2D v3.1.1 (DEC-014, DEC-020); Raylib 6.2 (DEC-015, DEC-033); 2D only (DEC-016); humans decide (DEC-017); custom ECS (DEC-018); C++20 (DEC-019); one repository (DEC-022); CMake + GoogleTest (DEC-023); Işık Dönger reviews every PR (DEC-024); agents push only after human approval (DEC-025); `semantic/` is its own folder (DEC-026); trunk-based workflow, branch protection deferred (DEC-027); GitHub issues created from ClickUp (DEC-028); develop on Windows and macOS, games Windows-only (DEC-029); compilers per platform need (DEC-030); product name Aegis (DEC-034); PR titles `<type>(PB-<nnn>): …` (DEC-035); world units meters, y up, 32 px per meter, converted only in the renderer (DEC-036).
 - **Proposed / deferred by the human ("too early"):** MCP later (DEC-010); Python + gRPC for the AI service (DEC-011); LLM-instructive component metadata (Q-013). Agents do not raise these.
-- **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); world units (TASK-008); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004).
+- **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017).
 
 ## In progress / next
+0. **TASK-016 (ClickUp PB-008): Box2D + raylib falling-box spike** — Review. `box2d_raylib_spike` in `sandbox/`, 7 headless tests, findings in `research/box2d.md`. Waits on Işık for DEC-037.
 1. **TASK-015 (ClickUp PB-004): CI with GitHub Actions** — Review. Build/test on Windows, macOS and headless, clang-format check and the required `ci-ok` were already in place; this adds a dependency cache and a `python` job (ruff + pytest) that starts checking once PB-006 adds `ai-services/`. PB-003 (GoogleTest + CTest) is merged.
 2. Human answers Q-014 (leftovers) and Q-015 (task ids).
 3. Then phase 2: window + game loop (TASK-006). The custom ECS design (TASK-010) waits for the human (Q-013).
@@ -38,7 +39,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 | Check | Result |
 | --- | --- |
 | Build | Skeleton builds on Linux (GCC 13) Windows (MSVC 19.51, Visual Studio 2026) `[VERIFIED 2026-10-24]` and macOS (Apple Clang) `[VERIFIED 2026-10-27]` |
-| Tests | 2/2 pass on Linux, Windows and macOS `[VERIFIED 2026-10-27]` |
+| Tests | 2/2 pass on Linux, Windows and macOS `[VERIFIED 2026-10-27]`; with PB-008, 9/9 on Linux (GCC 13), macOS (Zeynep Ertürk) and Windows (local Visual Studio 2026 build and the `windows-latest` CI job); the spike window itself has not been run on Windows `[VERIFIED 2026-11-01]` |
 | Docs | Scaffold created 2026-10-12; updated 2026-10-13 for the stack decision and the decision-authority rule |
 
 ## Things a new agent should know immediately

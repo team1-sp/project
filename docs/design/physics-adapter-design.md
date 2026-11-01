@@ -41,8 +41,8 @@ Language-neutral signatures; types are ours (`BodyId`, `Vec2`, `EntityId`, `Body
 | Point | Options | Leaning |
 | --- | --- | --- |
 | Authoritative velocity | (a) ECS owns velocity, pushes into body every step; (b) body owns velocity, adapter writes back to ECS | `[PROPOSED]` (b) for dynamic bodies, (a) for kinematic; always mirror to ECS for telemetry |
-| Units | meters + pixels-per-meter scale vs raw pixels | `[PROPOSED]` Box2D is tuned for roughly 0.1–10 m objects, so simulate in meters and convert at render |
-| Coordinate convention | y-up (Box2D) vs y-down (Raylib screen) | One *world* convention; convert only at the render boundary (E-004) |
+| Units | meters + pixels-per-meter scale vs raw pixels | **Decided (DEC-036):** meters everywhere in simulation; 32 pixels per meter, applied only in the renderer |
+| Coordinate convention | y-up (Box2D) vs y-down (Raylib screen) | **Decided (DEC-036):** world is y up, angles counter-clockwise; the renderer flips y and negates angles (E-004). Findings: [research/box2d.md](../research/box2d.md) |
 | Box2D handle type | **Decided: v3.1.1** (C API, id handles instead of pointers) | DEC-020 — the entity↔body mapping stores Box2D ids wrapped in our own type; verify names against the v3.1.1 headers before coding `[ASSUMPTION]` |
 | Collision event contents | begin/end/stay? contact points, normals, impulses | Start with begin/end + normal; extend when telemetry needs it |
 | Sensors/triggers | needed for door interaction range, key pickup | likely needed (interaction range = sensor or distance query) |

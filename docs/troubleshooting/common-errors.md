@@ -8,7 +8,7 @@ These are **anticipated** (well-known in engine/ECS/physics work) and **not yet 
 | E-002 | **Stale entity↔body mapping / ID reuse** | Collision events name the wrong entity | Use generation-counted entity IDs; remove mapping on DestroyBody; test it | no |
 | E-003 | **Structural change during iteration** (add/remove component or destroy entity inside a query loop) | Crash, skipped entities, undefined behaviour | Defer changes via a command buffer applied after the system; or collect IDs first | no |
 | E-004 | **Coordinate mismatch: screen y-down vs physics y-up** | Sprite upside down, gravity "up", rotations inverted | One world convention; convert only at the render boundary; unit test with a known position | no |
-| E-005 | **Unit mismatch (pixels vs meters)** | Objects too slow/fast/floaty; library ignores tiny bodies | Define pixels-per-meter once (TASK-008); never mix raw pixels into the adapter | no |
+| E-005 | **Unit mismatch (pixels vs meters)** | Objects too slow/fast/floaty; library ignores tiny bodies | Pixels per meter is 32, defined once in the renderer (DEC-036); never mix raw pixels into the adapter | no |
 | E-006 | **Variable timestep in physics** | Non-deterministic runs, tunnelling, jitter | Fixed 1/60 s accumulator (R-5); cap steps per frame (spiral of death) | no |
 | E-007 | **Spiral of death** | Frame time grows → more steps per frame → slower | Clamp frame delta (e.g. ≤ 0.25 s) and max steps per frame | no |
 | E-008 | **Tunnelling** (fast body passes through thin wall) | Player escapes map | Thicker walls, smaller step, continuous collision, clamp max speed | no |
@@ -27,6 +27,9 @@ These are **anticipated** (well-known in engine/ECS/physics work) and **not yet 
 | E-023 | **Raylib called in headless mode or from simulation code** (`InitWindow`, `LoadTexture`, `LoadShader`, `LoadFont` need a window/GL context) | Crash or hang without a display; headless ≠ normal | Only the rendering implementation calls Raylib; simulation uses asset IDs; headless never initialises it (R-4) | no |
 | E-024 | **Raylib resources unloaded after `CloseWindow`** (or never) | Crash on exit, leaks | RAII wrappers; unload before closing the window | no |
 | E-025 | **Mixing Box2D (y-up, meters) with Raylib (y-down, pixels)** | See E-004/E-005 | One world convention; convert at the render boundary | no |
+| E-026 | **Box2D contact events are off by default** (v3.1.1; v3.0 tutorials assume on) | `b2World_GetContactEvents` returns no begin/end events | Set `b2ShapeDef::enableContactEvents = true` on at least one of the two shapes ([research/box2d.md](../research/box2d.md)) | no (confirmed in the PB-008 spike) |
+| E-027 | **Rotation drawn mirrored or around a corner** | Bodies turn the wrong way on screen, or swing around a corner | Negate the Box2D angle for raylib; use `DrawRectanglePro` with `origin = {w/2, h/2}` | no |
+| E-028 | **Box2D def not started from `b2Default*Def()`** | Debug: assert; release: zero friction, zero density, no gravity | Always start from `b2DefaultWorldDef()` / `BodyDef()` / `ShapeDef()` | no |
 | E-021 | **LLM answers without evidence** | Confident wrong diagnosis | Require citations; abstain when evidence missing (ip.fr.11.5) | no |
 | E-022 | **Sending code/telemetry to an external AI by default** | Privacy violation (ip.nfr.2.1) | External calls off by default; explicit config | no |
 

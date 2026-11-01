@@ -16,7 +16,7 @@ Language is **C++** (DEC-013). Physics is Box2D v3.1.1 behind the Physics Adapte
 8. **Library types stay behind seams**: physics types only in the adapter implementation; graphics-framework types only in the rendering implementation.
 9. **Fail loudly in dev**: assert invariants (entity↔body mapping, valid entity handles, component exists before access).
 10. **Comments explain why**, not what. Public interfaces get a short doc comment: purpose, units, ownership, threading assumptions.
-11. **Units are explicit** in names or docs: `positionMeters`, `dtSeconds`, or documented per type (open, TASK-008).
+11. **Units are explicit** in names or docs: `positionMeters`, `dtSeconds`, or documented per type. World units are meters with y up; pixels exist only in the renderer (DEC-036).
 12. **Errors**: engine code does not swallow errors. Return a result/throw per language convention; log with context (frame, entity).
 
 ## 2. Naming (language-neutral)
@@ -76,3 +76,4 @@ No 3D types, cameras, models or physics (DEC-016). Use 2D vector/transform types
 | 2026-10-15 | C++20 (DEC-019), Raylib v6.0 (DEC-021) accepted; platforms/compilers decided | claude-code/sonnet-5.5/012r |
 | 2026-10-23 | Accepted by the team and advisor; formatter clang-format 19 with `.clang-format` (DEC-031, PB-005) | claude-code (session 0171) |
 | 2026-10-24 | Raylib 6.2 (DEC-033) | claude-code (PB-002 session) |
+| 2026-11-01 | World units decided (DEC-036) | claude (PB-008 session) |

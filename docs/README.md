@@ -34,6 +34,7 @@ The product is **2D only** (DEC-016); the architecture keeps a later 3D extensio
 ```
 docs/
 ├── README.md                      ← you are here
+├── components.md                  conventions every component follows (units, axes)
 ├── architecture/                  WHAT the system is
 │   ├── system-overview.md           three layers, data flow, invariants
 │   ├── engine-layer.md              loop, ECS, physics, rendering, UI, scenes
@@ -63,6 +64,8 @@ docs/
 │   ├── test-checklists.md
 │   ├── headless-testing.md
 │   └── benchmark-protocol.md       graphics framework / shader benchmark
+├── research/                      WHAT we learned from spikes
+│   └── box2d.md                    Box2D v3.1.1 notes and units (PB-008)
 ├── troubleshooting/               HOW we fix things
 │   ├── debugging-playbook.md
 │   ├── common-errors.md            anticipated pitfalls (not yet encountered)

@@ -15,11 +15,11 @@ Status: **design intent** — the ECS is **custom-built in C++** (DEC-018, DEC-0
 
 ## 2. Components (initial set)
 
-Pure data. No methods that change state, no references to other layers.
+Units and axes every component follows: [../components.md](../components.md) (DEC-036). Pure data. No methods that change state, no references to other layers.
 
 | Component | Fields (initial) | Written by | Read by |
 | --- | --- | --- | --- |
-| `PositionComponent` | `x, y` (float) | PhysicsSystem (write-back) / spawn code | Render, Gameplay, Telemetry |
+| `PositionComponent` | `x, y` (float, meters, y up — DEC-036) | PhysicsSystem (write-back) / spawn code | Render, Gameplay, Telemetry |
 | `VelocityComponent` | `vx, vy` | MovementSystem; adapter write-back `[TBD]` | Physics sync, Telemetry |
 | `ColliderComponent` | shape (box/circle), size, body type (static/dynamic/kinematic), restitution, friction | spawn code | Physics sync |
 | `SpriteComponent` | texture id, layer, state→sprite map `[TBD]` | spawn code / gameplay | Render |
