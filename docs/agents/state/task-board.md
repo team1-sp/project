@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-10-27
-updated_by: claude-code (PB-004 session)
+last_updated: 2026-11-01
+updated_by: claude (PB-008 session)
 ---
 
 # Task Board
@@ -20,7 +20,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-005 | Bootstrap `project/` skeleton (CMake, folders, GoogleTest, Raylib + Box2D linked, empty window) — ClickUp PB-002 | Review | Işık Dönger + claude-code (PB-002 session) | — | all |
 | TASK-006 | Phase 2: window + game loop with fixed-timestep accumulator | Blocked (until PB-002 merges) | — | TASK-005 | ip.fr.1.1–1.4 |
 | TASK-007 | Fill `environment-setup.md` once the toolchain is chosen | Review (first version written with PB-002; needs a clean-machine check on Windows and macOS) | — | TASK-005 | — |
-| TASK-008 | Decide world units and coordinate convention (y-up vs y-down, pixels-per-meter) | Backlog — needs human decision | — | Q-008 | ip.fr.3.5, 4.1 |
+| TASK-008 | Decide world units and coordinate convention (y-up vs y-down, pixels-per-meter) | Done (DEC-036) | Zeynep Ertürk (PB-008.3) | — | ip.fr.3.5, 4.1 |
 | TASK-009 | Propagate the 2026-10-13 decisions (DEC-013…017) and role/name fixes through all docs | Done | claude-code/sonnet-5.5/012r | — | DEC-017 |
 | TASK-010 | Design the custom ECS incl. LLM-instructive component metadata | Deferred by the human ("too early") | — | Q-013 | ip.fr.2.*, 10.* |
 | TASK-012 | Set up the GitHub repository and project board | Done (DEC-022…028, PB-001); leftovers in Q-014 | humans + claude-code (session 0171) | — | DEC-009, process |
@@ -28,6 +28,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-011 | Propagate round-2 decisions (DEC-018…021) | Done | claude-code/sonnet-5.5/012r | — | DEC-017 |
 | TASK-014 | Integrate GoogleTest and CTest, how-to-add-a-test guide — ClickUp PB-003 | Done (PR #14) | Işık Dönger + claude-code (PB-003 session) | TASK-005 | process, test-strategy |
 | TASK-015 | Set up CI with GitHub Actions — ClickUp PB-004 | Review | Işık Dönger + claude-code (PB-004 session) | TASK-005, TASK-014 | process |
+| TASK-016 | Spike: Box2D v3 + raylib falling-box prototype — ClickUp PB-008 | Review (DEC-037 awaits Işık) | Zeynep Ertürk + claude (PB-008 session) | TASK-005 | DEC-014, DEC-015, TASK-008 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -67,7 +68,7 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Acceptance:** A new team member can build and run from a clean machine using only `environment-setup.md`.
 
 ### TASK-008 — World units and coordinate convention
-- **Status:** Backlog — needs a human decision (present options; do not choose)
+- **Status:** Done (2026-11-01) — DEC-036, decided by Zeynep Ertürk in PB-008.3: meters, y up, 32 pixels per meter, conversion only in the renderer
 - **Why it matters:** Raylib's screen space is y-down; Box2D is y-up and works best in meters; mixing them is a classic bug (`common-errors.md` E-004, E-005).
 - **Acceptance:** Accepted decision; documented in `design/physics-adapter-design.md`.
 
@@ -100,3 +101,8 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Status:** Review (2026-10-27), branch `ci/pb-004-set-up-ci-with-github-actions`, issue #15.
 - **Acceptance (ClickUp):** engine builds and tests on windows-latest for every PR; formatting checked; Python runs ruff + pytest; checks required before merge.
 - **Result:** Already there before this task: `build` job (PB-002, Windows/macOS/headless presets + `ctest`), `format` job (PB-005), `ci-ok` required by the "Protect Main" ruleset (DEC-032). Added: cache of the FetchContent downloads in `build` (PB-004.2) and a `python` job (PB-004.4) that runs `ruff check` and `pytest` for `ai-services/` and `semantic/` once they have a `pyproject.toml` (PB-006 creates them). See HND-013.
+
+### TASK-016 — Spike: Box2D v3 + raylib falling-box prototype (ClickUp PB-008)
+- **Status:** Review (2026-11-01). Zeynep Ertürk + claude (PB-008 session)
+- **Acceptance:** ground + falling box simulated by Box2D and drawn by raylib; units decided; findings written for the guide (`docs/research/box2d.md`), presented at sprint review.
+- **Result:** `sandbox_falling_box` (Box2D only, our types in its header) and `box2d_raylib_spike` (raylib window) in `sandbox/`; 7 tests in `tests/unit/sandbox/`; units decided (DEC-036); findings in `research/box2d.md`; pitfalls E-026…E-028. The R-3/R-4 exception for the spike is `Proposed` (DEC-037, Q-017). See HND-014.

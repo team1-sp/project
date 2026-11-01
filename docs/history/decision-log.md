@@ -44,10 +44,12 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-033 | Raylib version is 6.2 | Accepted | 2026-10-24 |
 | DEC-034 | The product name is Aegis | Accepted | 2026-10-24 |
 | DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Accepted | 2026-10-24 |
+| DEC-036 | World units are meters with y up; 32 pixels per meter; conversion only in the renderer | Accepted | 2026-11-01 |
+| DEC-037 | The PB-008 spike in `sandbox/` may link Box2D and raylib directly (exception to R-3/R-4 for that spike only) | Proposed | 2026-11-01 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
-what "LLM-instructive components" means concretely (Q-013, deferred by the human) · AI service language and protocol (DEC-011, deferred) · world units / coordinate convention · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
+what "LLM-instructive components" means concretely (Q-013, deferred by the human) · AI service language and protocol (DEC-011, deferred) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
 
 ---
 
@@ -430,3 +432,28 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Consequences:** `tools/start_task.py` writes draft PR titles in this form. The CI title check (`amannn/action-semantic-pull-request`) accepts any scope, so no workflow change is needed.
 - **Docs updated:** `tools/start_task.py`, `guidelines/git-workflow.md`, `CONTRIBUTING.md`.
 - **Supersedes / Related:** replaces the scope rule in DEC-027's workflow; DEC-028.
+
+### DEC-036 — World units are meters with y up; 32 pixels per meter; conversion only in the renderer
+- **Date:** 2026-11-01
+- **Status:** Accepted
+- **Decided by:** Zeynep Ertürk (owner of ClickUp PB-008.3)  **Recorded by:** claude (PB-008 session)
+- **Human's words:** chose "32 px per meter" with "the world is in meters with Y pointing up (Box2D's way), and the conversion to pixels with Y pointing down happens only in the renderer" when asked which convention the PB-008 prototype should use.
+- **Context:** TASK-008 / PB-008.3. Box2D works in meters and is tuned for objects of about 0.1–10 m, with y up; raylib draws in pixels with y down (E-004, E-005, E-025).
+- **Options considered:** 32, 50 or 100 pixels per meter, all with a y-up meter world converted at the render boundary. 32 chosen. 64 was then tried in the spike and compared on screen: in the 800 x 450 window it shows only 12.5 x 7 m, so the box starts and ends off-screen unless a camera follows it. Zeynep kept 32.
+- **Decision:** Simulation, ECS components and gameplay use meters, kilograms, seconds and radians, y up, angles counter-clockwise. The renderer converts with 32 pixels per meter, flips y and negates angles. Nothing else converts.
+- **Rationale:** 32 is the value the PB-008 task suggested; a 1 m object is 32 px and an 800 x 450 window shows 25 m x 14 m, inside Box2D's preferred size range. `[further rationale not given]`
+- **Consequences:** `PositionComponent` is in meters. The camera (where the world origin is on screen, zoom) is still open; the spike's bottom-left origin is not a decision.
+- **Docs updated:** `components.md` (new), `research/box2d.md`, `design/physics-adapter-design.md`, `design/ecs-design.md`, `guidelines/coding-standards.md`, `troubleshooting/common-errors.md`, `agents/state/*`.
+- **Course documents affected (for humans):** none known.
+- **Revisit when:** the rendering abstraction or the camera is designed.
+- **Supersedes / Related:** TASK-008, PB-008, DEC-014, DEC-015.
+
+### DEC-037 — The PB-008 spike in `sandbox/` may link Box2D and raylib directly
+- **Date:** 2026-11-01
+- **Status:** Proposed
+- **Proposed by:** Zeynep Ertürk (chose this option for PB-008.2)  **Recorded by:** claude (PB-008 session)
+- **Context:** PB-008.2 asks for a Box2D + raylib prototype in `sandbox/` before the Physics Adapter exists. R-3/R-4 allow Box2D only in `engine/physics-box2d/` and raylib only in `engine/rendering-raylib/`.
+- **Options considered:** (1) a separate spike target in `sandbox/` that links both libraries directly, marked as research code; (2) split the spike across the two engine targets, which starts building the adapter early. 1 chosen by Zeynep.
+- **Decision (proposed):** `sandbox_falling_box` (links Box2D) and `box2d_raylib_spike` (links raylib) may break R-3/R-4. Box2D stays in `falling_box_scene.cpp` and raylib in `box2d_raylib.cpp`; no engine target uses them. The exception covers this spike only.
+- **Consequences:** needs confirmation from Işık Dönger (architecture rules); asked in Q-017 and in the PB-008 pull request.
+- **Supersedes / Related:** R-3, R-4, DEC-003, DEC-007, PB-008, Q-017.

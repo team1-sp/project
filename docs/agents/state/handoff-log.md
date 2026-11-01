@@ -156,3 +156,18 @@
 - **Next:** human pushes and marks the PR ready; PB-006 adds `ai-services/pyproject.toml` with ruff and pytest settings, and the `python` job starts checking it.
 - **Traps:** a pull request that changes no C++/CMake file skips `build` (and its cache). `pytest` exits with code 5 when it finds no tests, which fails the job; PB-006 needs at least one test.
 
+---
+
+### HND-014 — Box2D + raylib falling-box spike (PB-008)
+- **Date:** 2026-11-01
+- **Agent:** claude (PB-008 session), working with Zeynep Ertürk
+- **Task:** TASK-016 (ClickUp PB-008); TASK-008 closed by DEC-036
+- **Goal:** Ground + falling box simulated by Box2D and drawn by raylib; units decided; findings for the team.
+- **Result:** Done, ready for review. Box2D code in `sandbox/src/falling_box_scene.{hpp,cpp}` (header uses only our types), raylib code in `sandbox/src/box2d_raylib.cpp`, conversion in `sandbox/src/world_to_screen.hpp`. Fixed 1/60 s step with 4 substeps driven by a frame-time accumulator. Zeynep decided the units (DEC-036) and chose a separate spike target over splitting it into the engine targets (DEC-037, `Proposed` until Işık confirms; Q-017).
+- **Files changed:** `sandbox/CMakeLists.txt`, `sandbox/src/{falling_box_scene.hpp,falling_box_scene.cpp,world_to_screen.hpp,box2d_raylib.cpp}`, `tests/CMakeLists.txt`, `tests/unit/sandbox/*` (new), `docs/research/box2d.md` (new), `docs/components.md` (new), `docs/README.md`, `docs/guidelines/{coding-standards,documentation-rules}.md`, `docs/design/{physics-adapter-design,ecs-design}.md`, `docs/troubleshooting/common-errors.md`, `docs/history/decision-log.md`, `docs/agents/state/{task-board,current-status,open-questions,handoff-log}.md`.
+- **Verified (Linux, GCC 13, CMake 3.28, `ENGINE_WARNINGS_AS_ERRORS=ON`, raylib on):** builds with no warnings; `ctest` 9/9 pass; with `enableContactEvents` removed, `BoxLands_ContactEventNamesGroundAndBox` fails (so the flag is needed); `cmake --workflow --preset headless` builds and passes 2/2 (sandbox not built there); clang-format 19.1.7 `--dry-run -Werror` clean; `box2d_raylib_spike --frames 330` under Xvfb exits 0 and shows the box landing and resting at y = 1.50 m, asleep, with 1 contact.
+- **Verified by Zeynep Ertürk (macOS):** `cmake --workflow --preset macos-debug` passes 9/9; the spike window works.
+- **Not verified:** the Windows build (CI covers it); the Windows exe path in `research/box2d.md` section 7 is inferred from the multi-config generator.
+- **Next:** Işık answers Q-017; then the Physics Adapter design can use `research/box2d.md` section 8.
+- **Traps:** contact events are off by default in v3.1.1 (E-026). The ClickUp text names `docs/components.md`, which did not exist; Zeynep chose to create it (units and axes only; the component list stays in `design/ecs-design.md`). The spike target is only built when raylib is on, so its tests do not run in the headless preset.
+- **Records:** DEC-036 (Accepted), DEC-037 (Proposed), Q-017, E-026…E-028.

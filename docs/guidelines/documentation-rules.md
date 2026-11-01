@@ -26,6 +26,7 @@
 | Rules for writing code/git/docs | `guidelines/` |
 | How the team works | `process/` |
 | How we verify | `testing/` |
+| What we learned from spikes and prototypes | `research/` |
 | How we fix | `troubleshooting/` |
 | What happened / why we chose | `history/` (append-only) |
 | Agent coordination | `agents/` |

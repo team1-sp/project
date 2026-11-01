@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-10-27
-updated_by: claude-code (demo-undecided session)
+last_updated: 2026-11-01
+updated_by: claude (PB-008 session)
 ---
 
 # Open Questions
@@ -71,6 +71,14 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 - **Answer:** —
 
 ---
+
+### Q-017 — May the PB-008 spike link Box2D and raylib directly?
+- **To:** human:isik
+- **Asked by:** claude (PB-008 session) on 2026-11-01, for Zeynep Ertürk
+- **Status:** Open
+- **Context:** R-3/R-4 keep Box2D in `engine/physics-box2d/` and raylib in `engine/rendering-raylib/`. The PB-008 spike in `sandbox/` links both directly, kept in separate files (DEC-037, `Proposed`).
+- **Options:** (A) accept the exception for this spike only; (B) move the spike's Box2D code into `engine/physics-box2d/` and its drawing into `engine/rendering-raylib/`.
+- **Answer:**
 
 ## Answered
 

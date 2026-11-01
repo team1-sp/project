@@ -2,7 +2,7 @@
 
 **Status: first version (PB-002, 2026-10-24).** Commands match the presets in [`CMakePresets.json`](../../CMakePresets.json). Stack: C++20 (DEC-019), Box2D v3.1.1 (DEC-020), raylib 6.2 (DEC-033), CMake + GoogleTest (DEC-023). Platforms (DEC-029): develop on Windows and macOS, Windows first; games are built for Windows only. Compilers: whatever each platform needs (DEC-030), recorded in section 3.
 
-`[VERIFIED 2026-10-24]` only on Linux (GCC 13, CMake 3.28) by the agent that wrote the skeleton: the `headless` workflow and a full build with raylib, and the window app (now `sandbox`) opened and closed a window under Xvfb. `[VERIFIED 2026-10-24]` on Windows by Işık Dönger: `cmake --workflow --preset windows-debug` with Visual Studio 2026 (MSVC 19.51, CMake 4.4.3), and the window app (now `sandbox.exe`) opened its window. macOS is checked by the CI `build` job and by the Mac users (PB-002.6); until then treat the macOS steps as `[NOT YET VERIFIED]`.
+`[VERIFIED 2026-10-24]` only on Linux (GCC 13, CMake 3.28) by the agent that wrote the skeleton: the `headless` workflow and a full build with raylib, and the window app (now `sandbox`) opened and closed a window under Xvfb. `[VERIFIED 2026-10-24]` on Windows by Işık Dönger: `cmake --workflow --preset windows-debug` with Visual Studio 2026 (MSVC 19.51, CMake 4.4.3), and the window app (now `sandbox.exe`) opened its window. `[VERIFIED 2026-11-01]` on macOS by Zeynep Ertürk: `cmake --workflow --preset macos-debug` built everything and passed 9/9 tests, and `build/macos-debug/sandbox/box2d_raylib_spike` opened its window (PB-008).
 
 ## 1. Goal
 
