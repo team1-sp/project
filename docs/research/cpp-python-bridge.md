@@ -130,9 +130,9 @@ that protobuf won every case does not hold on Windows; neither result justifies 
 
 Limits: one pass with no repeats on a laptop with hybrid cores and a Balanced power plan, so small
 gaps are noise. The C++ client used gRPC 1.84.0 against a Python grpcio 1.85.1 server. Do not compare
-these numbers directly with the macOS table. The raw Windows JSON is kept on the test machine and was
-not committed; its metadata fields for compiler and native libraries are placeholders on Windows, so
-the versions above are the record.
+these numbers directly with the macOS table. Raw results:
+[pb-065-windows-results.json](pb-065-windows-results.json). Its `compiler`, `hardware` and
+`native_libraries` fields are placeholders on Windows, so the versions above are the record.
 
 ## 5. Recommendation
 
