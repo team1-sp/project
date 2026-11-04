@@ -65,7 +65,11 @@ docs/
 │   ├── headless-testing.md
 │   └── benchmark-protocol.md       graphics framework / shader benchmark
 ├── research/                      WHAT we learned from spikes
-│   └── box2d.md                    Box2D v3.1.1 notes and units (PB-008)
+│   ├── box2d.md                    Box2D v3.1.1 notes and units (PB-008)
+│   ├── ipc.md                      C++/Python IPC option matrix (PB-065)
+│   ├── cpp-python-bridge.md        gRPC/ZeroMQ research and measurements (PB-065)
+│   ├── pb-065-benchmark-results.json raw bridge benchmark results (macOS)
+│   └── pb-065-windows-results.json   raw bridge benchmark results (Windows)
 ├── troubleshooting/               HOW we fix things
 │   ├── debugging-playbook.md
 │   ├── common-errors.md            anticipated pitfalls (not yet encountered)
@@ -73,6 +77,7 @@ docs/
 ├── history/                       APPEND-ONLY memory of the project
 │   ├── problem-log.md              every problem actually hit + its solution
 │   ├── decision-log.md             every decision + rationale (ADR style)
+│   ├── adr-002-cpp-python-communication.md C++/Python bridge decision (DEC-038)
 │   └── genai-usage-log.md          AI usage disclosures required by the course
 └── agents/                        AGENT-ONLY: coordination between models
     ├── README.md

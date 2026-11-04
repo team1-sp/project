@@ -85,7 +85,7 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 ### Q-018 — Which Python version should `ai-services` pin?
 - **To:** human:arda-s
 - **Asked by:** codex/gpt-5/pb006 on 2026-11-04
-- **Status:** Answered 2026-11-04 → DEC-038
+- **Status:** Answered 2026-11-04 → DEC-039
 - **Context:** GitHub issue #20 requires a pinned Python version, but no accepted decision or repository configuration named one. HND-013 explicitly called Python 3.12 an assumption until PB-006 chose the version.
 - **Options:** (A) Python 3.12 — mature ecosystem support and already used provisionally by CI; (B) Python 3.13 — newer runtime, with a greater chance that future AI dependencies lag support.
 - **Recommendation:** Python 3.12 for the initial skeleton.

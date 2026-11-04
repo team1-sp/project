@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aegis-bridge-benchmark"
+version = "0.1.0"
+description = "Python responders for the optional Aegis gRPC and ZeroMQ bridge benchmark."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "grpcio==1.85.1",
+    "protobuf==7.36.2",
+    "pyzmq==27.2.0",
+    "flatbuffers==25.12.19",
+]
+
+[project.optional-dependencies]
+dev = ["pybind11==3.1.0", "pytest==9.2.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bridge_bench*"]
+namespaces = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+exclude = ["bridge_bench/agent_bridge_pb2.py", "bridge_bench/flat_generated/**"]

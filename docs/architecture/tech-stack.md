@@ -16,9 +16,10 @@
 | C++ standard | **C++20** | DEC-019 |
 | Raylib version | **6.2** (was v6.0; changed before any rendering code existed) | DEC-033 |
 | Formatter | **clang-format 19** with the repo's `.clang-format` | DEC-031 |
-| AI services | **Python 3.12**, Ruff 0.17.3, pytest 9.2.0, setuptools 84.2.1 | DEC-038 |
+| AI services | **Python 3.12**, Ruff 0.17.3, pytest 9.2.0, setuptools 84.2.1 | DEC-039 |
 | Compilers | **Whatever each platform needs; none pinned now** (exact compiler per OS recorded when the build is set up) | DEC-030 |
 | World units | **Meters, y up, 32 pixels per meter; renderer alone converts to screen space** | DEC-036 |
+| Engine to AI-service protocol | **gRPC/protobuf** behind the engine's `AgentBridge` interface; optional pybind11 local-RL path only if profiling justifies it | DEC-038 (ADR-002) |
 | Scope | **2D only.** 3D is future work; keep the seams (adapter, rendering abstraction, ECS) so it stays possible, build nothing 3D | DEC-016 |
 
 ## 2. Still open (ask the human; do not decide)
@@ -26,7 +27,6 @@
 | Area | Candidates / notes | Question |
 | --- | --- | --- |
 | What "LLM-instructive components" means concretely (metadata schema) | Deferred by the human ("too early") | Q-013 |
-| Engine-facing AI protocol | `[PROPOSED]` gRPC/protobuf (DEC-011) — human: too early to decide | open |
 
 ## 3. What the decisions mean in practice
 
@@ -66,4 +66,7 @@ The engine is not directly coupled to Box2D or Raylib. The Physics Adapter and t
 | 2026-10-23 | Formatter clang-format 19 (DEC-031) | claude-code (session 0171) |
 | 2026-10-24 | Raylib 6.2 (DEC-033); GoogleTest v1.17.0 pinned | claude-code (PB-002 session) |
 | 2026-11-01 | World units and renderer conversion accepted (DEC-036) | claude (PB-008 session) |
-| 2026-11-04 | Python 3.12 and pinned `ai-services` project tooling (DEC-038) | codex/gpt-5/pb006 |
+| 2026-11-04 | Python 3.12 and pinned `ai-services` project tooling (DEC-039) | codex/gpt-5/pb006 |
+| 2026-11-04 | PB-065 adds benchmark evidence and provisional ADR-002/DEC-038; protocol remains open | Codex |
+| 2026-11-04 | Merged the two AI-protocol rows, removed the world-units row (decided in DEC-036), Python decision cited as DEC-039 after renumbering | claude (PR #23 review) |
+| 2026-11-04 | gRPC/protobuf protocol accepted and moved to Decided (DEC-038) | claude (PR #23 review) |
