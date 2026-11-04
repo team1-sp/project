@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-11-01
-updated_by: claude (PB-008 session)
+last_updated: 2026-11-04
+updated_by: codex/gpt-5/pb062
 ---
 
 # Task Board
@@ -29,7 +29,8 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-014 | Integrate GoogleTest and CTest, how-to-add-a-test guide — ClickUp PB-003 | Done (PR #14) | Işık Dönger + claude-code (PB-003 session) | TASK-005 | process, test-strategy |
 | TASK-015 | Set up CI with GitHub Actions — ClickUp PB-004 | Review | Işık Dönger + claude-code (PB-004 session) | TASK-005, TASK-014 | process |
 | TASK-016 | Spike: Box2D v3 + raylib falling-box prototype — ClickUp PB-008 | Review (DEC-037 awaits Işık) | Zeynep Ertürk + claude (PB-008 session) | TASK-005 | DEC-014, DEC-015, TASK-008 |
-| TASK-017 | Create the Python `ai-services` project skeleton — ClickUp PB-006 | Review | codex/gpt-5/pb006 | TASK-012 | AI layer tooling |
+| TASK-017 | Literature on RL-based automated game testing — ClickUp PB-062 | Review | codex/gpt-5/pb062 | — | ip.fr.7.*, ip.fr.9.* |
+| TASK-018 | Create the Python `ai-services` project skeleton — ClickUp PB-006 | Review | codex/gpt-5/pb006 | TASK-012 | AI layer tooling |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -108,7 +109,22 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Acceptance:** ground + falling box simulated by Box2D and drawn by raylib; units decided; findings written for the guide (`docs/research/box2d.md`), presented at sprint review.
 - **Result:** `sandbox_falling_box` (Box2D only, our types in its header) and `box2d_raylib_spike` (raylib window) in `sandbox/`; 7 tests in `tests/unit/sandbox/`; units decided (DEC-036); findings in `research/box2d.md`; pitfalls E-026…E-028. The R-3/R-4 exception for the spike is `Proposed` (DEC-037, Q-017). See HND-014.
 
-### TASK-017 — Create the Python `ai-services` project skeleton (ClickUp PB-006)
+### TASK-017 — Literature on RL-based automated game testing (ClickUp PB-062)
+- **Status:** Review (2026-11-04)
+- **Claimed by:** codex/gpt-5/pb062
+- **Goal:** Summarize the three papers named by PB-062, compare modl.ai and related game-testing tools, and derive evidence-backed implications for Aegis without turning proposals into accepted decisions.
+- **Files expected:** `docs/research/rl-testing-lit.md`; task/status/handoff state files.
+- **Plan:**
+  1. Compare each paper's environment, observations, actions, rewards, coverage, oracles, results and limitations.
+  2. Compare modl.ai, Unity ML-Agents, Unreal Learning Agents, GameDriver and AltTester by automation model, integration, detection claims and developer output.
+  3. Map the evidence to the current `ip.fr.9.2` bug classes and propose a hybrid goal-seeking PPO + coverage-agent strategy.
+  4. Specify metrics and replay evidence needed by the headless and telemetry designs.
+  5. Verify citations and repository links; update state and append a handoff.
+- **Verification:** `python3 tools/check_md_links.py docs`; `git diff --check`; manual cross-check against the original papers and official tool documentation. Unit tests are not applicable because this task changes documentation only.
+- **Risks:** All three papers use environments unlike Aegis's eventual 2D demo, which is still undecided (Q-016); transfer claims must be labelled as proposals. Product capabilities can change, so the comparison records an access date.
+- **Result:** Added `docs/research/rl-testing-lit.md` with the three required paper summaries; a comparison of modl.ai, Unity ML-Agents, Unreal Learning Agents, GameDriver and AltTester; cross-paper findings; a proposed hybrid goal-seeking/coverage PPO kernel; mappings to all four current bug classes; reporting metrics; and IEEE references. Recommendations are marked `[PROPOSED]`; no architecture decision was made.
+
+### TASK-018 — Create the Python `ai-services` project skeleton (ClickUp PB-006)
 - **Status:** Review (2026-11-04); implemented by codex/gpt-5/pb006.
 - **Goal:** Add the `ai-services/` Python project skeleton required by GitHub issue #20: a `pyproject.toml` with a pinned Python version, package layout, environment instructions, Ruff and pytest configuration, and a passing sample test.
 - **Plan:**
