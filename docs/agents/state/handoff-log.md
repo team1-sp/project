@@ -172,3 +172,17 @@
 - **Next:** Işık answers Q-017; then the Physics Adapter design can use `research/box2d.md` section 8.
 - **Traps:** contact events are off by default in v3.1.1 (E-026). The ClickUp text names `docs/components.md`, which did not exist; Zeynep chose to create it (units and axes only; the component list stays in `design/ecs-design.md`). The spike target is only built when raylib is on, so its tests do not run in the headless preset.
 - **Records:** DEC-036 (Accepted), DEC-037 (Proposed), Q-017, E-026…E-028.
+
+---
+
+### HND-015 — RL-based automated game-testing literature review (PB-062)
+- **Date:** 2026-11-04
+- **Agent:** codex/gpt-5/pb062
+- **Task:** TASK-017 (ClickUp PB-062), GitHub issue #24
+- **Goal:** Summarize the three required RL game-testing papers, review modl.ai and comparable tools, and derive implications for Aegis.
+- **Result:** Ready for review. `research/rl-testing-lit.md` covers Bergdahl et al. (2020), Gordillo et al. (2021), and Zheng et al. (2019/Wuji); compares modl.ai, Unity ML-Agents, Unreal Learning Agents, GameDriver and AltTester; synthesizes evidence; maps agent/oracle approaches to all four current bug classes; and proposes a goal-seeking PPO plus curiosity/coverage PPO kernel with scripted/random baselines and deterministic oracles.
+- **Files changed:** `docs/research/rl-testing-lit.md` (new), `docs/README.md`, `docs/agents/state/{task-board,current-status,handoff-log}.md`.
+- **Verified:** Claims were cross-checked against the original three papers and official vendor/tool documentation. `python3 tools/check_md_links.py docs` reports 0 broken links; `git diff --check` is clean. The research document is 324 lines, below the documentation limit.
+- **Not verified:** Vendor claims were not tested hands-on. The proposed agent strategy was not implemented or benchmarked. No unit tests were run because the change is documentation-only.
+- **Next:** Team reviews the research and decides later whether any `[PROPOSED]` implication should become an accepted design decision. The demo game must be chosen (Q-016) before scenario-specific state coverage, bounds, goals or rewards can be fixed.
+- **Traps:** RL exploration does not itself prove that a behavior is a bug; logical rules need explicit oracles. Failure to reach a goal is evidence, not proof of unreachability. Do not treat the proposed Python/process boundary as decided (DEC-011 remains deferred).

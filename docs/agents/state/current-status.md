@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-11-01
-updated_by: claude (PB-008 session)
+last_updated: 2026-11-04
+updated_by: codex/gpt-5/pb062
 ---
 
 # Current Status
@@ -8,7 +8,7 @@ updated_by: claude (PB-008 session)
 Snapshot of the project. Overwrite this file each session (keep it short). History belongs in `handoff-log.md`. **The truth is the `Accepted` entries in `history/decision-log.md`.**
 
 ## One-line summary
-Pre-implementation. Architecture is defined, the tech stack and the GitHub repository workflow are **decided**: C++20, custom ECS, Box2D v3.1.1, Raylib 6.2, CMake + GoogleTest, 2D only (3D possible later); developed on Windows and macOS, games built for Windows only. The build skeleton (TASK-005 = ClickUp PB-002) is written and in review: CMake presets for Windows, macOS and headless, Box2D and raylib linked, an empty window (the `sandbox` app), two GoogleTest tests. **The demo game is undecided:** the team never chose one, so the maze/door/key demo and its spec were removed (Q-016).
+Pre-implementation. Architecture is defined, the tech stack and the GitHub repository workflow are **decided**: C++20, custom ECS, Box2D v3.1.1, Raylib 6.2, CMake + GoogleTest, 2D only (3D possible later); developed on Windows and macOS, games built for Windows only. PB-062's RL game-testing literature/tool review is ready for review in `research/rl-testing-lit.md`. **The demo game is undecided:** the team never chose one, so the maze/door/key demo and its spec were removed (Q-016).
 
 ## Phase
 Roadmap phase **1 — Project and technology decisions**: all exit criteria are met (see `plan.md`); the human confirms closing it. Phase 2 starts with the skeleton (TASK-005).
@@ -29,10 +29,11 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017).
 
 ## In progress / next
-0. **TASK-016 (ClickUp PB-008): Box2D + raylib falling-box spike** — Review. `box2d_raylib_spike` in `sandbox/`, 7 headless tests, findings in `research/box2d.md`. Waits on Işık for DEC-037.
-1. **TASK-015 (ClickUp PB-004): CI with GitHub Actions** — Review. Build/test on Windows, macOS and headless, clang-format check and the required `ci-ok` were already in place; this adds a dependency cache and a `python` job (ruff + pytest) that starts checking once PB-006 adds `ai-services/`. PB-003 (GoogleTest + CTest) is merged.
-2. Human answers Q-014 (leftovers) and Q-015 (task ids).
-3. Then phase 2: window + game loop (TASK-006). The custom ECS design (TASK-010) waits for the human (Q-013).
+0. **TASK-017 (ClickUp PB-062): RL-based automated game-testing research** — Review. Three papers, five tools, Aegis implications and IEEE references are in `research/rl-testing-lit.md`; all design implications remain `[PROPOSED]`.
+1. **TASK-016 (ClickUp PB-008): Box2D + raylib falling-box spike** — Review. `box2d_raylib_spike` in `sandbox/`, 7 headless tests, findings in `research/box2d.md`. Waits on Işık for DEC-037.
+2. **TASK-015 (ClickUp PB-004): CI with GitHub Actions** — Review. Build/test on Windows, macOS and headless, clang-format check and the required `ci-ok` were already in place; this adds a dependency cache and a `python` job (ruff + pytest) that starts checking once PB-006 adds `ai-services/`. PB-003 (GoogleTest + CTest) is merged.
+3. Human answers Q-014 (leftovers) and Q-015 (task ids).
+4. Then phase 2: window + game loop (TASK-006). The custom ECS design (TASK-010) waits for the human (Q-013).
 
 ## Health
 
@@ -40,7 +41,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 | --- | --- |
 | Build | Skeleton builds on Linux (GCC 13) Windows (MSVC 19.51, Visual Studio 2026) `[VERIFIED 2026-10-24]` and macOS (Apple Clang) `[VERIFIED 2026-10-27]` |
 | Tests | 2/2 pass on Linux, Windows and macOS `[VERIFIED 2026-10-27]`; with PB-008, 9/9 on Linux (GCC 13), macOS (Zeynep Ertürk) and Windows (local Visual Studio 2026 build and the `windows-latest` CI job); the spike window itself has not been run on Windows `[VERIFIED 2026-11-01]` |
-| Docs | Scaffold created 2026-10-12; updated 2026-10-13 for the stack decision and the decision-authority rule |
+| Docs | PB-062 research review added and relative links verified `[VERIFIED 2026-11-04]` |
 
 ## Things a new agent should know immediately
 

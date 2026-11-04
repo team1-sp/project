@@ -65,7 +65,8 @@ docs/
 │   ├── headless-testing.md
 │   └── benchmark-protocol.md       graphics framework / shader benchmark
 ├── research/                      WHAT we learned from spikes
-│   └── box2d.md                    Box2D v3.1.1 notes and units (PB-008)
+│   ├── box2d.md                    Box2D v3.1.1 notes and units (PB-008)
+│   └── rl-testing-lit.md           RL game-testing literature and tool review (PB-062)
 ├── troubleshooting/               HOW we fix things
 │   ├── debugging-playbook.md
 │   ├── common-errors.md            anticipated pitfalls (not yet encountered)
