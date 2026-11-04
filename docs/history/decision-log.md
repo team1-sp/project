@@ -19,7 +19,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-008 | Telemetry is recorded every frame inside the loop | Accepted | 2026-10-12 (extracted) |
 | DEC-009 | Adopt this docs structure and agent protocol | Accepted | 2026-10-12 |
 | DEC-010 | MCP is an optional later interoperability layer, not the first integration | Proposed | 2026-10-12 |
-| DEC-011 | AI orchestration in Python, engine-facing contract via gRPC/protobuf | Proposed | 2026-10-12 |
+| DEC-011 | AI orchestration in Python, engine-facing contract via gRPC/protobuf | Superseded by DEC-038 (protocol) and DEC-039 (Python) | 2026-10-12 |
 | DEC-012 | Graphics framework selection is decided by the shader benchmark | Superseded by DEC-015 | 2026-10-12 (extracted) |
 | DEC-013 | Programming language is C++ | Accepted | 2026-10-13 |
 | DEC-014 | Physics library is Box2D (behind the Physics Adapter) | Accepted | 2026-10-13 |
@@ -46,12 +46,12 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Accepted | 2026-10-24 |
 | DEC-036 | World units are meters with y up; 32 pixels per meter; conversion only in the renderer | Accepted | 2026-11-01 |
 | DEC-037 | The PB-008 spike in `sandbox/` may link Box2D and raylib directly (exception to R-3/R-4 for that spike only) | Proposed | 2026-11-01 |
-| DEC-038 | ADR-002: gRPC/protobuf is the provisional C++ to Python bridge behind AgentBridge | Proposed | 2026-11-04 |
+| DEC-038 | ADR-002: the C++ to Python bridge is gRPC/protobuf behind AgentBridge | Accepted | 2026-11-04 |
 | DEC-039 | `ai-services` uses Python 3.12 with pinned Python project tooling | Accepted | 2026-11-04 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
-what "LLM-instructive components" means concretely (Q-013, deferred by the human) · engine-facing AI protocol (the gRPC/protobuf part of DEC-011; PB-065 now proposes it as DEC-038 / ADR-002, awaiting a human decision) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
+what "LLM-instructive components" means concretely (Q-013, deferred by the human) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
 
 ---
 
@@ -133,11 +133,11 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-011 — AI orchestration in Python; engine-facing contract via gRPC/protobuf
 - **Date:** 2026-10-12
-- **Status:** Proposed (not yet decided by a human; the engine language is now C++ — DEC-013 — so this is ready to be decided)
+- **Status:** Superseded by DEC-038 (engine-facing protocol) and DEC-039 (Python for `ai-services`)
 - **Context:** The guide says the assistant "may use an LLM via gRPC to a Python AI service" (ip.fr.11.8).
 - **Decision (proposed):** Keep model orchestration/experiments in Python; define a strongly-typed protobuf contract between engine-side exporter and AI service. The engine side is C++ (DEC-013); the AI service language is still open.
 - **Consequences:** Privacy rule ip.nfr.2.1 (no source/telemetry leaves the machine unless enabled).
-- **Amendments:** 2026-10-15 — Işık Dönger: too early to decide; stays Proposed, agents must not raise it until a human does. 2026-11-04 — DEC-039 accepts Python 3.12 for `ai-services`; only the proposed gRPC/protobuf engine-facing contract remains open and deferred. 2026-11-04 — PB-065 benchmarked the options; DEC-038 (Proposed) and ADR-002 recommend gRPC/protobuf behind `AgentBridge`. This entry stays Proposed until a human decides DEC-038.
+- **Amendments:** 2026-10-15 — Işık Dönger: too early to decide; stays Proposed, agents must not raise it until a human does. 2026-11-04 — DEC-039 accepts Python 3.12 for `ai-services`; only the proposed gRPC/protobuf engine-facing contract remains open and deferred. 2026-11-04 — PB-065 benchmarked the options; DEC-038 (Proposed) and ADR-002 recommend gRPC/protobuf behind `AgentBridge`. This entry stays Proposed until a human decides DEC-038. 2026-11-04 — Işık Dönger accepted DEC-038, so both parts of this proposal are now decided and this entry is superseded.
 
 ### DEC-012 — Graphics framework selection is decided by the shader benchmark
 - **Date:** 2026-10-12 (extracted from Initial Plan §4.2 and `shader-test/test-guideline.md`)
@@ -460,19 +460,20 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Consequences:** needs confirmation from Işık Dönger (architecture rules); asked in Q-017 and in the PB-008 pull request.
 - **Supersedes / Related:** R-3, R-4, DEC-003, DEC-007, PB-008, Q-017.
 
-### DEC-038 — ADR-002: gRPC/protobuf is the provisional C++ to Python bridge behind AgentBridge
+### DEC-038 — ADR-002: the C++ to Python bridge is gRPC/protobuf behind AgentBridge
 - **Date:** 2026-11-04
-- **Status:** Proposed
-- **Proposed by:** Codex, from PB-065 evidence (PR #23)  **Recorded by:** Codex
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager), on PR #23  **Proposed by:** Codex, from PB-065 evidence  **Recorded by:** claude (PR #23 review)
+- **Human's words:** "I accept dec-38"
 - **Context:** The headless C++ engine needs synchronous observation/action exchange with Python RL services and later assistant-facing services. PB-065 benchmarked gRPC and ZeroMQ with equivalent protobuf payloads and concurrent clients.
 - **Options considered:** gRPC/protobuf; ZeroMQ via cppzmq/pyzmq with protobuf, MessagePack or FlatBuffers; shared memory; raw sockets; and Python bindings. See `research/ipc.md`.
-- **Decision (proposed):** Start with gRPC/protobuf behind `AgentBridge` for fault-isolated service communication. Permit an optional pybind11 local-RL adapter if end-to-end profiling justifies it. Keep communication dependencies out of the default engine build.
+- **Decision:** Start with gRPC/protobuf behind `AgentBridge` for fault-isolated service communication. Permit an optional pybind11 local-RL adapter if end-to-end profiling justifies it. Keep communication dependencies out of the default engine build.
 - **Rationale:** Both transports meet the measured latency needs. ZeroMQ scaled better at 4–8 clients; gRPC's contracts, deadlines, status semantics and tooling reduce integration and maintenance risk. FlatBuffers did not beat protobuf on ZeroMQ; pybind11 established a much faster in-process ceiling but trades away isolation and remote access.
-- **Consequences:** This does not bind the team until accepted by a human. ZeroMQ remains available as benchmark evidence and a revisitable alternative.
-- **Docs updated:** `history/adr-002-cpp-python-communication.md`, `research/ipc.md`, `research/cpp-python-bridge.md`, `architecture/tech-stack.md`, `agents/state/current-status.md`.
-- **Course documents affected (for humans):** any course document that fixes the engine-to-Python protocol before the team accepts this proposal.
+- **Consequences:** The first production bridge task pins gRPC and protobuf and generates code from a `.proto` contract; engine code depends only on `engine::bridge`. ZeroMQ and FlatBuffers stay benchmark evidence, not production dependencies. The Windows build of gRPC has not been tried yet and is the main risk (see Revisit when).
+- **Docs updated:** `history/adr-002-cpp-python-communication.md`, `research/ipc.md`, `research/cpp-python-bridge.md`, `architecture/tech-stack.md`, `architecture/ai-assistant-layer.md`, `agents/state/current-status.md`, `agents/state/plan.md`, `agents/state/handoff-log.md`, `README.md`.
+- **Course documents affected (for humans):** any course document that names the engine-to-AI-service protocol or still treats it as open (the guide only says the assistant "may use an LLM via gRPC", ip.fr.11.8).
 - **Revisit when:** an end-to-end RL benchmark shows bridge overhead is material; concurrency exceeds 8 local instances; or Windows deployment cost changes the tradeoff.
-- **Supersedes / Related:** would accept the protocol part of DEC-011; related to DEC-005, DEC-013, DEC-019, DEC-029 and PB-065.
+- **Supersedes / Related:** supersedes the protocol part of DEC-011; related to DEC-005, DEC-013, DEC-019, DEC-029 and PB-065.
 
 ### DEC-039 — `ai-services` uses Python 3.12 with pinned Python project tooling
 - **Date:** 2026-11-04
@@ -487,4 +488,4 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Docs updated:** `ai-services/README.md`, `architecture/tech-stack.md`, `guidelines/repository-structure.md`, `troubleshooting/environment-setup.md`, `agents/state/*`.
 - **Course documents affected (for humans):** any software-environment section that names the AI-service Python version.
 - **Supersedes / Related:** accepts the language/runtime part of DEC-011; PB-006, GitHub issue #20, Q-018.
-- **Amendments:** 2026-11-04 — renumbered from DEC-038 by Işık Dönger while merging `main` into the PB-065 branch, because both branches had created a DEC-038. Citations in project docs were updated to DEC-039.
+- **Amendments:** 2026-11-04 — renumbered from DEC-038 by Işık Dönger while merging `main` into the PB-065 branch, because both branches had created a DEC-038. Citations in project docs were updated to DEC-039. 2026-11-04 — the engine-facing protocol mentioned in Consequences is now decided by DEC-038.

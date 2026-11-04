@@ -53,13 +53,13 @@ Semantic graph / telemetry / source code
 | Reinforcement learning | Automated Playtest Agent only | The narrative checker |
 | Fine-tuning | Not needed initially | — |
 
-## 5. Suggested build order `[PROPOSED]` (see DEC-010, DEC-011)
+## 5. Suggested build order `[PROPOSED]` (see DEC-010; protocol decided in DEC-038)
 
 1. Local script that loads a telemetry export + graph and answers 3 fixed questions without an LLM.
 2. Add LLM with the compact-context prompt.
 3. Add source-code retrieval.
 4. Chat UI.
-5. Engine ↔ AI service contract (gRPC/protobuf) if the AI service is a separate process.
+5. Engine ↔ AI service contract: gRPC/protobuf behind `AgentBridge` (DEC-038).
 6. Optional: MCP server exposing project tools to external AI clients.
 
 ## 6. Narrative Design Assistant (stretch)

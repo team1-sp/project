@@ -19,6 +19,7 @@
 | AI services | **Python 3.12**, Ruff 0.17.3, pytest 9.2.0, setuptools 84.2.1 | DEC-039 |
 | Compilers | **Whatever each platform needs; none pinned now** (exact compiler per OS recorded when the build is set up) | DEC-030 |
 | World units | **Meters, y up, 32 pixels per meter; renderer alone converts to screen space** | DEC-036 |
+| Engine to AI-service protocol | **gRPC/protobuf** behind the engine's `AgentBridge` interface; optional pybind11 local-RL path only if profiling justifies it | DEC-038 (ADR-002) |
 | Scope | **2D only.** 3D is future work; keep the seams (adapter, rendering abstraction, ECS) so it stays possible, build nothing 3D | DEC-016 |
 
 ## 2. Still open (ask the human; do not decide)
@@ -26,7 +27,6 @@
 | Area | Candidates / notes | Question |
 | --- | --- | --- |
 | What "LLM-instructive components" means concretely (metadata schema) | Deferred by the human ("too early") | Q-013 |
-| Engine-facing AI protocol (C++ engine to Python services) | `[PROPOSED]` gRPC/protobuf behind `AgentBridge`, optional pybind11 local-RL path later (ADR-002, DEC-038; first proposed in DEC-011). PB-065 benchmark evidence exists; a human has not accepted it | DEC-038 |
 
 ## 3. What the decisions mean in practice
 
@@ -69,3 +69,4 @@ The engine is not directly coupled to Box2D or Raylib. The Physics Adapter and t
 | 2026-11-04 | Python 3.12 and pinned `ai-services` project tooling (DEC-039) | codex/gpt-5/pb006 |
 | 2026-11-04 | PB-065 adds benchmark evidence and provisional ADR-002/DEC-038; protocol remains open | Codex |
 | 2026-11-04 | Merged the two AI-protocol rows, removed the world-units row (decided in DEC-036), Python decision cited as DEC-039 after renumbering | claude (PR #23 review) |
+| 2026-11-04 | gRPC/protobuf protocol accepted and moved to Decided (DEC-038) | claude (PR #23 review) |

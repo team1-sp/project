@@ -1,7 +1,7 @@
 # ADR-002 — C++ to Python Communication
 
 - **Date:** 2026-11-04
-- **Status:** Proposed (provisional; requires a human decision before becoming binding)
+- **Status:** Accepted on 2026-11-04 by Işık Dönger (DEC-038)
 - **Context:** PB-065 requires a C++ engine to Python agent bridge for headless RL playtesting and
   later assistant interactions. The engine must stay independent from upper AI layers and support
   multiple simultaneous game instances.
@@ -9,7 +9,7 @@
   Python bindings, including cppzmq/pyzmq with MessagePack or FlatBuffers. Detailed evidence is in
   the [IPC option matrix](../research/ipc.md) and
   [PB-065 benchmark report](../research/cpp-python-bridge.md).
-- **Decision proposed:** Use gRPC with protobuf for the first fault-isolated production bridge. Keep
+- **Decision:** Use gRPC with protobuf for the first fault-isolated production bridge. Keep
   an optional pybind11 Python extension as a local RL fast path if end-to-end profiling justifies it.
   Core engine and RL logic depend only on the lightweight observation/action interface. Keep all
   communication implementations optional and out of the default engine build.
@@ -26,6 +26,5 @@
   gRPC disproportionately costly.
 - **Related:** PB-065, DEC-005, DEC-011, DEC-013, DEC-019, DEC-029, DEC-038.
 
-The repository's binding decision source is `docs/history/decision-log.md`; DEC-038 records this ADR's
-Proposed status. A human acceptance should update DEC-038 and propagate the decision using the normal
-decision playbook.
+The repository's binding decision source is `docs/history/decision-log.md`; DEC-038 records this ADR as
+Accepted. A later change of transport needs a new decision entry that supersedes DEC-038.

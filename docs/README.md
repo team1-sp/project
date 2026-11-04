@@ -76,7 +76,7 @@ docs/
 ├── history/                       APPEND-ONLY memory of the project
 │   ├── problem-log.md              every problem actually hit + its solution
 │   ├── decision-log.md             every decision + rationale (ADR style)
-│   ├── adr-002-cpp-python-communication.md PB-065 provisional decision record
+│   ├── adr-002-cpp-python-communication.md C++/Python bridge decision (DEC-038)
 │   └── genai-usage-log.md          AI usage disclosures required by the course
 └── agents/                        AGENT-ONLY: coordination between models
     ├── README.md

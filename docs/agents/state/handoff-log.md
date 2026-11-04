@@ -187,3 +187,14 @@
 - **Next:** Arda reviews the diff and creates the PR; CI should run the Python and docs jobs. Future AI capabilities remain separate tasks, and the engine-facing protocol is still deferred.
 - **Traps:** Run the package checks from `ai-services/` after installing `.[dev]`. Python 3.13+ is intentionally rejected by package metadata. A fresh dependency install needs PyPI access (PRB-003).
 - **Records:** DEC-039, Q-018 answered, PRB-003.
+
+---
+
+### HND-016 — C++/Python bridge research and decision (PB-065)
+- **Date:** 2026-11-04
+- **Agent:** claude (PR #23 review), on top of the PB-065 work by Codex
+- **Task:** ClickUp PB-065, GitHub issue #22, PR #23
+- **Result:** Işık Dönger accepted DEC-038 ("I accept dec-38"): the engine-to-Python bridge is gRPC/protobuf behind `engine::bridge::AgentBridge`. DEC-011 is superseded by DEC-038 and DEC-039. ADR-002, tech-stack, research docs and state files updated to match.
+- **Next:** a production bridge task (pinned gRPC/protobuf, `.proto` contract, Windows build check). End-to-end RL benchmark before revisiting the transport.
+- **Traps:** gRPC on Windows has not been built yet. The benchmark harness under `benchmarks/bridge/` is research code, not the production bridge.
+- **Records:** DEC-038 accepted, DEC-011 superseded, DEC-039 and PRB-003 renumbered during the merge, PRB-002.

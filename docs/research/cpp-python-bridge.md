@@ -1,8 +1,8 @@
 # C++ to Python Communication Research (PB-065)
 
-**Status:** benchmarked on 2026-11-04; recommendation is provisional pending team approval and
+**Status:** benchmarked on 2026-11-04; recommendation accepted the same day (DEC-038). Revisit with
 end-to-end RL workload evidence. Raw results: [pb-065-benchmark-results.json](pb-065-benchmark-results.json).
-Decision proposal: [ADR-002](../history/adr-002-cpp-python-communication.md). The required IPC option
+Decision: [ADR-002](../history/adr-002-cpp-python-communication.md). The required IPC option
 matrix, including cppzmq/MessagePack, FlatBuffers and Windows effort, is in [ipc.md](ipc.md).
 
 ## 1. Existing architecture
@@ -102,7 +102,7 @@ calls do not predict complete simulation or inference throughput.
 
 ## 5. Recommendation
 
-Provisionally choose **gRPC + protobuf** for the first fault-isolated production bridge, behind
+Choose **gRPC + protobuf** for the first fault-isolated production bridge, behind
 `AgentBridge`. Add **pybind11 as an optional Python-driven local RL adapter only when an end-to-end
 training profile justifies it**. The binding should batch/vectorize environments and prefer buffer
 views. Do not adopt FlatBuffers now; it added complexity and was slower than protobuf here.
@@ -118,18 +118,18 @@ actual simulation observations and inference.
 | --- | --- | --- |
 | Acceptance: options researched | gRPC/ZeroMQ comparison and alternative analysis in section 2 | Implemented |
 | Acceptance: two options benchmarked | Five configurations share one 40-case matrix; raw results linked above | Implemented and run on macOS |
-| Acceptance: decision recorded as ADR | ADR-002 and DEC-038 propose gRPC behind `AgentBridge` | Implemented, awaiting human acceptance |
+| Acceptance: decision recorded as ADR | ADR-002 and DEC-038 choose gRPC behind `AgentBridge` | Accepted by Işık Dönger, 2026-11-04 |
 | PB-065.1 research communication options | Sections 1–2 cover required criteria and alternatives | Complete |
 | PB-065.2 gRPC ping-pong | C++ client, concurrent Python server, statistics, timeout/error handling | Implemented and tested |
 | PB-065.3 ZeroMQ ping-pong | C++ client, concurrent ROUTER/DEALER Python server, same protobuf/statistics | Implemented and tested |
 | Follow-up: ZeroMQ + FlatBuffers | Equivalent schema and topology, generated C++/Python bindings | Implemented, tested and measured |
 | Follow-up: pybind11 | In-process copy and buffer-view extension baseline | Implemented, tested and measured |
-| PB-065.4 record ADR-002 | `docs/history/adr-002-cpp-python-communication.md` plus DEC-038 | Proposed, not binding |
+| PB-065.4 record ADR-002 | `docs/history/adr-002-cpp-python-communication.md` plus DEC-038 | Accepted |
 | Multiple-client correctness | Automated 1- and 4-client integration tests for all three IPC configurations and both pybind11 modes | Tested |
-| Portability | Default engine build has no new transport dependency; optional Ubuntu CI job and platform setup are documented | Implemented; initial Ubuntu configure failure has a locally verified package-discovery fix awaiting CI rerun; Windows benchmark not run |
+| Portability | Default engine build has no new transport dependency; optional Ubuntu CI job and platform setup are documented | Implemented; Ubuntu `bridge-benchmark` CI passes after the PRB-002 fix; Windows benchmark not run |
 
 Remaining work is production transport implementation, end-to-end simulation/inference benchmarking,
-Windows benchmark execution, and a human decision on ADR-002. Those are deliberately outside this
+and Windows benchmark execution. Those are deliberately outside this
 research spike; no production gRPC or ZeroMQ dependency has been introduced.
 
 ## 7. Change table
@@ -137,3 +137,4 @@ research spike; no production gRPC or ZeroMQ dependency has been introduced.
 | Date | Change | By |
 | --- | --- | --- |
 | 2026-11-04 | PB-065 implementation, controlled benchmark and provisional recommendation | Codex |
+| 2026-11-04 | Recommendation accepted (DEC-038) | claude (PR #23 review) |

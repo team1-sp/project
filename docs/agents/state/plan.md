@@ -30,7 +30,7 @@ All criteria are met; the human confirms closing phase 1.
 ## Next 3 steps
 1. Review and merge the Python `ai-services` skeleton: TASK-017 / ClickUp PB-006.
 2. Human answers the Q-014 leftovers and Q-015 (task ids).
-3. Window + game loop (TASK-006), then the basic ECS (phase 3). Deferred by the human: Q-013, DEC-010 and the protocol part of DEC-011.
+3. Window + game loop (TASK-006), then the basic ECS (phase 3). Deferred by the human: Q-013 and DEC-010.
 
 ## Phase overview
 
