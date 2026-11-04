@@ -16,6 +16,7 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 | ID | Title | Area | Status | Date |
 | --- | --- | --- | --- | --- |
 | PRB-001 | Raylib sprite shader shows edge artefacts: texture wrap defaults to repeat | Rendering | Solved (documented in spec) | 2026-10-12 (recorded) |
+| PRB-002 | Ubuntu FlatBuffers package has no CMake config package | Build | Solved | 2026-11-04 |
 
 ---
 
@@ -33,5 +34,33 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 - **Keywords:** raylib, texture wrap, repeat, CLAMP_TO_EDGE, sprite edge artefact, shader sampling outside 0-1, fragTexCoord
 - **Related:** TASK-001, DEC-012
 - **Occurrences:** —
+
+---
+
+### PRB-002 — Ubuntu FlatBuffers package has no CMake config package
+- **Date:** 2026-11-04
+- **Reported by:** GitHub Actions `bridge-benchmark` job for PB-065
+- **Area:** Build
+- **Status:** Solved
+- **Symptom:** CMake stopped during the Ubuntu 24.04 bridge configuration with
+  `Could not find a package configuration file provided by "flatbuffers"` and listed
+  `flatbuffersConfig.cmake` and `flatbuffers-config.cmake` as missing.
+- **Context:** `libflatbuffers-dev`, `flatbuffers-compiler` and `flatbuffers-compiler-dev` 2.0.8 were
+  installed successfully from Ubuntu packages. The same CMake project configured successfully with
+  Homebrew FlatBuffers 25.12.19 on macOS.
+- **Root cause:** Ubuntu's FlatBuffers development package supplies the headers, library and `flatc`
+  executable but does not supply the CMake config package required by
+  `find_package(flatbuffers CONFIG REQUIRED)`.
+- **Solution:** Prefer the FlatBuffers config package when available, then fall back to locating the
+  distro headers, library and `flatc` executable and expose the same imported CMake targets used by
+  the benchmark.
+- **How verified:** Forced the fallback locally with
+  `-DCMAKE_DISABLE_FIND_PACKAGE_flatbuffers=ON`; configuration and compilation succeeded and all
+  four CTest targets passed. The Ubuntu GitHub Actions rerun is pending.
+- **Prevention:** Optional benchmark dependencies must support both upstream/Homebrew CMake config
+  packages and the packaging layout provided by the Ubuntu CI image.
+- **Keywords:** FlatBuffers, flatbuffersConfig.cmake, Ubuntu, CMake, imported target, PB-065
+- **Related:** PB-065, ADR-002, DEC-038
+- **Occurrences:** GitHub Actions PR #23, Ubuntu 24.04
 
 ---

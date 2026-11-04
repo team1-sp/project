@@ -126,7 +126,7 @@ actual simulation observations and inference.
 | Follow-up: pybind11 | In-process copy and buffer-view extension baseline | Implemented, tested and measured |
 | PB-065.4 record ADR-002 | `docs/history/adr-002-cpp-python-communication.md` plus DEC-038 | Proposed, not binding |
 | Multiple-client correctness | Automated 1- and 4-client integration tests for all three IPC configurations and both pybind11 modes | Tested |
-| Portability | Default engine build has no new transport dependency; optional Ubuntu CI job and platform setup are documented | Implemented; Ubuntu CI and Windows benchmark not run in this environment |
+| Portability | Default engine build has no new transport dependency; optional Ubuntu CI job and platform setup are documented | Implemented; initial Ubuntu configure failure has a locally verified package-discovery fix awaiting CI rerun; Windows benchmark not run |
 
 Remaining work is production transport implementation, end-to-end simulation/inference benchmarking,
 Windows benchmark execution, and a human decision on ADR-002. Those are deliberately outside this

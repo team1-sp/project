@@ -3,7 +3,23 @@ if(NOT Protobuf_FOUND)
     find_package(Protobuf REQUIRED)
 endif()
 find_package(gRPC CONFIG REQUIRED)
-find_package(flatbuffers CONFIG REQUIRED)
+find_package(flatbuffers CONFIG QUIET)
+if(NOT TARGET flatbuffers::flatbuffers)
+    find_path(FLATBUFFERS_INCLUDE_DIR NAMES flatbuffers/flatbuffers.h REQUIRED)
+    find_library(FLATBUFFERS_LIBRARY NAMES flatbuffers REQUIRED)
+    add_library(flatbuffers::flatbuffers UNKNOWN IMPORTED)
+    set_target_properties(flatbuffers::flatbuffers PROPERTIES
+        IMPORTED_LOCATION "${FLATBUFFERS_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${FLATBUFFERS_INCLUDE_DIR}"
+    )
+endif()
+if(NOT TARGET flatbuffers::flatc)
+    find_program(FLATBUFFERS_FLATC_EXECUTABLE NAMES flatc REQUIRED)
+    add_executable(flatbuffers::flatc IMPORTED)
+    set_target_properties(flatbuffers::flatc PROPERTIES
+        IMPORTED_LOCATION "${FLATBUFFERS_FLATC_EXECUTABLE}"
+    )
+endif()
 find_package(cppzmq CONFIG REQUIRED)
 find_path(ZEROMQ_INCLUDE_DIR NAMES zmq.h REQUIRED)
 find_library(ZEROMQ_LIBRARY NAMES zmq libzmq REQUIRED)
