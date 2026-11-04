@@ -474,6 +474,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** any course document that names the engine-to-AI-service protocol or still treats it as open (the guide only says the assistant "may use an LLM via gRPC", ip.fr.11.8).
 - **Revisit when:** an end-to-end RL benchmark shows bridge overhead is material; concurrency exceeds 8 local instances; or Windows deployment cost changes the tradeoff.
 - **Supersedes / Related:** supersedes the protocol part of DEC-011; related to DEC-005, DEC-013, DEC-019, DEC-029 and PB-065.
+- **Amendments:** 2026-11-04 — Windows evidence (recorded by claude, PR #23 review): with MSVC 14.44 and vcpkg the bridge builds and passes after the PRB-004 fixes; the first vcpkg install took about 22 minutes. ZeroMQ had 3.4–5.5x gRPC's throughput at 8 clients there (macOS: about 2.5x). Packaging did not block gRPC, so the "Windows deployment cost" revisit trigger has not fired; the throughput gap is the number to watch in the end-to-end RL benchmark.
 
 ### DEC-039 — `ai-services` uses Python 3.12 with pinned Python project tooling
 - **Date:** 2026-11-04

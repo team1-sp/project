@@ -119,9 +119,13 @@ def run_case(
     timeout_ms: int,
 ) -> dict[str, object]:
     module, binary_name, endpoint = TRANSPORTS[transport]
-    binary = build_dir / binary_name
-    if not binary.is_file():
-        raise FileNotFoundError(f"missing benchmark executable: {binary}")
+    candidates = [
+        build_dir / binary_name,
+        *(build_dir / config / f"{binary_name}.exe" for config in ("Release", "Debug")),
+    ]
+    binary = next((path for path in candidates if path.is_file()), None)
+    if binary is None:
+        raise FileNotFoundError(f"missing benchmark executable: {candidates}")
     server = subprocess.Popen(
         [sys.executable, "-m", module, "--bind", endpoint, "--workers", str(workers)],
         stdout=subprocess.PIPE,

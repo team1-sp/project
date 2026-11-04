@@ -47,8 +47,19 @@ python3.12 -m venv .venv
 .venv/bin/python -m pip install -e "benchmarks/bridge/python[dev]"
 ```
 
-On Windows, install gRPC, protobuf and ZeroMQ with vcpkg, pass its CMake toolchain file, and
-use the Python virtual environment's `Scripts/python.exe` below.
+Windows (verified 2026-11-04 with VS 2022 / MSVC 14.44 and the vcpkg bundled with Visual Studio;
+the first `vcpkg install` builds gRPC from source and took about 22 minutes):
+
+```powershell
+vcpkg install grpc protobuf zeromq cppzmq flatbuffers --triplet x64-windows
+py -3.12 -m venv .venv
+.venv\Scripts\python -m pip install -e "benchmarks/bridge/python[dev]"
+```
+
+Configure with `-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake`, use
+`.venv\Scripts\python.exe` as `AEGIS_BRIDGE_PYTHON_EXECUTABLE`, and pass `--config Release` to
+`cmake --build` and `-C Release` to `ctest`. `run_benchmarks.py` takes the same
+`--build-dir .../benchmarks/bridge` and finds the `Release\*.exe` files itself.
 
 ## Build and test
 

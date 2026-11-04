@@ -21,13 +21,22 @@ if(NOT TARGET flatbuffers::flatc)
     )
 endif()
 find_package(cppzmq CONFIG REQUIRED)
-find_path(ZEROMQ_INCLUDE_DIR NAMES zmq.h REQUIRED)
-find_library(ZEROMQ_LIBRARY NAMES zmq libzmq REQUIRED)
-add_library(bridge_benchmark_zeromq UNKNOWN IMPORTED)
-set_target_properties(bridge_benchmark_zeromq PROPERTIES
-    IMPORTED_LOCATION "${ZEROMQ_LIBRARY}"
-    INTERFACE_INCLUDE_DIRECTORIES "${ZEROMQ_INCLUDE_DIR}"
-)
+# cppzmq's config package normally brings in libzmq's own target. Use it when present, because
+# vcpkg names the Windows import library by toolset and version (for example
+# libzmq-mt-4_3_5.lib), which a plain find_library(zmq) does not find.
+if(TARGET libzmq)
+    add_library(bridge_benchmark_zeromq ALIAS libzmq)
+elseif(TARGET libzmq-static)
+    add_library(bridge_benchmark_zeromq ALIAS libzmq-static)
+else()
+    find_path(ZEROMQ_INCLUDE_DIR NAMES zmq.h REQUIRED)
+    find_library(ZEROMQ_LIBRARY NAMES zmq libzmq REQUIRED)
+    add_library(bridge_benchmark_zeromq UNKNOWN IMPORTED)
+    set_target_properties(bridge_benchmark_zeromq PROPERTIES
+        IMPORTED_LOCATION "${ZEROMQ_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${ZEROMQ_INCLUDE_DIR}"
+    )
+endif()
 
 set(PROTO_FILE "${CMAKE_CURRENT_SOURCE_DIR}/proto/agent_bridge.proto")
 set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
@@ -72,6 +81,11 @@ add_executable(grpc_bridge_benchmark cpp/grpc_client.cpp)
 target_include_directories(grpc_bridge_benchmark PRIVATE cpp)
 target_link_libraries(grpc_bridge_benchmark PRIVATE bridge_benchmark_grpc)
 engine_set_warnings(grpc_bridge_benchmark)
+if(MSVC)
+    # gRPC 1.84's own headers use a deprecated IdentityKeyCertPair destructor (C4996), which
+    # /WX turns into an error. The warning is in gRPC, not in our code.
+    target_compile_options(grpc_bridge_benchmark PRIVATE /wd4996)
+endif()
 
 add_executable(zmq_bridge_benchmark cpp/zmq_client.cpp)
 target_include_directories(zmq_bridge_benchmark PRIVATE cpp)
@@ -114,7 +128,9 @@ list(APPEND CMAKE_PREFIX_PATH "${PYBIND11_CMAKE_DIR}")
 find_package(pybind11 CONFIG REQUIRED)
 pybind11_add_module(aegis_bridge_pybind MODULE cpp/pybind_module.cpp)
 set_target_properties(aegis_bridge_pybind PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/python"
+    # The generator expression stops multi-config generators (Visual Studio) from adding a
+    # Release/ or Debug/ subfolder, so tests and run_benchmarks.py find the module in one place.
+    LIBRARY_OUTPUT_DIRECTORY "$<1:${CMAKE_CURRENT_BINARY_DIR}/python>"
 )
 engine_set_warnings(aegis_bridge_pybind)
 

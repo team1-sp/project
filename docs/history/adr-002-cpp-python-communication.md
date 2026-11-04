@@ -24,6 +24,10 @@
 - **Revisit when:** end-to-end RL measurements show bridge overhead is material; batching or streaming
   requirements are known; more than 8 concurrent local games are needed; or Windows packaging makes
   gRPC disproportionately costly.
+- **Windows evidence (2026-11-04):** the bridge builds and passes with MSVC 14.44 and vcpkg after four
+  build fixes (PRB-004); the first vcpkg install took about 22 minutes. On that machine ZeroMQ had
+  3.4–5.5x gRPC's throughput at 8 clients, a wider gap than on macOS
+  ([results](../research/cpp-python-bridge.md)). gRPC stayed under 1.7 ms p99, so the decision stands.
 - **Related:** PB-065, DEC-005, DEC-011, DEC-013, DEC-019, DEC-029, DEC-038.
 
 The repository's binding decision source is `docs/history/decision-log.md`; DEC-038 records this ADR as

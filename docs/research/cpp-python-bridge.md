@@ -1,6 +1,6 @@
 # C++ to Python Communication Research (PB-065)
 
-**Status:** benchmarked on 2026-11-04; recommendation accepted the same day (DEC-038). Revisit with
+**Status:** benchmarked on macOS and Windows on 2026-11-04; recommendation accepted the same day (DEC-038). Revisit with
 end-to-end RL workload evidence. Raw results: [pb-065-benchmark-results.json](pb-065-benchmark-results.json).
 Decision: [ADR-002](../history/adr-002-cpp-python-communication.md). The required IPC option
 matrix, including cppzmq/MessagePack, FlatBuffers and Windows effort, is in [ipc.md](ipc.md).
@@ -100,6 +100,40 @@ Python-thread throughput and tail latency degraded as concurrency increased, sug
 binding should expose vectorized C++ stepping rather than many tiny threaded calls. These empty-work
 calls do not predict complete simulation or inference throughput.
 
+### Windows run
+
+Run on 2026-11-04 to check the Windows-priority platform (DEC-029). Machine: HP OMEN MAX 16 laptop,
+Intel Core Ultra 9 275HX (24 cores, hybrid P/E), 63.4 GB RAM, Windows 11 Home 10.0.26200, on AC power
+with the Balanced power plan; MSVC 14.44 (VS 2022), CMake 4.4.3, Python 3.12.0; vcpkg baseline
+`482b8b1756b3` with gRPC 1.84.0, protobuf 7.36.2, ZeroMQ 4.3.5, cppzmq 4.11.0, FlatBuffers 25.12.19;
+Python grpcio 1.85.1, pyzmq 27.2.0, pybind11 3.1.0. Same matrix and settings as above.
+
+The first vcpkg install took 22.2 minutes. The build needed four fixes, now on the branch (PRB-004);
+after them the build with warnings as errors, CTest (4/4) and all 40 cases passed with 0 errors.
+
+| Configuration | 256 B: exchanges/s at 1 / 2 / 4 / 8 | 256 B: median µs 1 / 8 | 64 KiB: exchanges/s at 1 / 2 / 4 / 8 | 64 KiB: median µs 1 / 8 |
+| --- | ---: | ---: | ---: | ---: |
+| gRPC + protobuf | 3,641 / 4,759 / 6,557 / 7,109 | 270 / 1,118 | 3,339 / 5,314 / 6,069 / 6,017 | 290 / 1,319 |
+| ZeroMQ + protobuf | 7,433 / 13,404 / 25,519 / 39,417 | 130 / 200 | 5,325 / 11,023 / 16,696 / 20,627 | 173 / 370 |
+| ZeroMQ + FlatBuffers | 5,680 / 13,167 / 24,031 / 33,668 | 147 / 224 | 5,440 / 11,070 / 15,988 / 20,184 | 169 / 381 |
+| pybind11 copy | 1,148,574 / 1,059,093 / 351,834 / 342,462 | 0.7 / 20.6 | 389,438 / 271,255 / 212,138 / 213,463 | 2.3 / 5.8 |
+| pybind11 buffer view | 1,338,921 / 1,188,499 / 353,985 / 376,192 | 0.6 / 2.3 | 937,007 / 547,986 / 314,253 / 307,607 | 0.9 / 25.0 |
+
+8-client p95 / p99 (µs), 256 B: gRPC 1,313 / 1,432; ZeroMQ 244 / 279; ZeroMQ + FlatBuffers 339 / 411.
+64 KiB: gRPC 1,542 / 1,678; ZeroMQ 526 / 633; ZeroMQ + FlatBuffers 548 / 671.
+
+On Windows the gap is wider than on macOS: ZeroMQ was about 2x gRPC's throughput at 1 client and
+3.4–5.5x at 8 clients, and gRPC's median passed 1 ms at 8 clients. gRPC still stays under 1.7 ms p99
+at 8 clients, so it remains usable for step-by-step exchange at these rates. FlatBuffers and protobuf
+were within 15% on ZeroMQ, with FlatBuffers slightly ahead in two 64 KiB cases, so the macOS finding
+that protobuf won every case does not hold on Windows; neither result justifies a second wire format.
+
+Limits: one pass with no repeats on a laptop with hybrid cores and a Balanced power plan, so small
+gaps are noise. The C++ client used gRPC 1.84.0 against a Python grpcio 1.85.1 server. Do not compare
+these numbers directly with the macOS table. The raw Windows JSON is kept on the test machine and was
+not committed; its metadata fields for compiler and native libraries are placeholders on Windows, so
+the versions above are the record.
+
 ## 5. Recommendation
 
 Choose **gRPC + protobuf** for the first fault-isolated production bridge, behind
@@ -117,7 +151,7 @@ actual simulation observations and inference.
 | Item | Evidence | Status |
 | --- | --- | --- |
 | Acceptance: options researched | gRPC/ZeroMQ comparison and alternative analysis in section 2 | Implemented |
-| Acceptance: two options benchmarked | Five configurations share one 40-case matrix; raw results linked above | Implemented and run on macOS |
+| Acceptance: two options benchmarked | Five configurations share one 40-case matrix; raw results linked above | Implemented and run on macOS and Windows |
 | Acceptance: decision recorded as ADR | ADR-002 and DEC-038 choose gRPC behind `AgentBridge` | Accepted by Işık Dönger, 2026-11-04 |
 | PB-065.1 research communication options | Sections 1–2 cover required criteria and alternatives | Complete |
 | PB-065.2 gRPC ping-pong | C++ client, concurrent Python server, statistics, timeout/error handling | Implemented and tested |
@@ -126,10 +160,10 @@ actual simulation observations and inference.
 | Follow-up: pybind11 | In-process copy and buffer-view extension baseline | Implemented, tested and measured |
 | PB-065.4 record ADR-002 | `docs/history/adr-002-cpp-python-communication.md` plus DEC-038 | Accepted |
 | Multiple-client correctness | Automated 1- and 4-client integration tests for all three IPC configurations and both pybind11 modes | Tested |
-| Portability | Default engine build has no new transport dependency; optional Ubuntu CI job and platform setup are documented | Implemented; Ubuntu `bridge-benchmark` CI passes after the PRB-002 fix; Windows benchmark not run |
+| Portability | Default engine build has no new transport dependency; optional Ubuntu CI job and platform setup are documented | Implemented; Ubuntu `bridge-benchmark` CI passes after the PRB-002 fix; Windows builds and passes after the PRB-004 fixes and was benchmarked |
 
-Remaining work is production transport implementation, end-to-end simulation/inference benchmarking,
-and Windows benchmark execution. Those are deliberately outside this
+Remaining work is production transport implementation and end-to-end simulation/inference
+benchmarking. Those are deliberately outside this
 research spike; no production gRPC or ZeroMQ dependency has been introduced.
 
 ## 7. Change table
@@ -138,3 +172,4 @@ research spike; no production gRPC or ZeroMQ dependency has been introduced.
 | --- | --- | --- |
 | 2026-11-04 | PB-065 implementation, controlled benchmark and provisional recommendation | Codex |
 | 2026-11-04 | Recommendation accepted (DEC-038) | claude (PR #23 review) |
+| 2026-11-04 | Windows build fixes and Windows benchmark results added | claude (PR #23 review) |
