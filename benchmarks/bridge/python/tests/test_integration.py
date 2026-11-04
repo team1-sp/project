@@ -1,11 +1,28 @@
 import json
 import os
+import queue
 import socket
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 import pytest
+
+
+def read_ready_line(
+    server: subprocess.Popen[str], timeout_seconds: float = 10.0
+) -> str:
+    """Return the server's first stdout line, failing instead of hanging if it never prints."""
+    assert server.stdout is not None
+    lines: queue.Queue[str] = queue.Queue(maxsize=1)
+    threading.Thread(
+        target=lambda: lines.put(server.stdout.readline()), daemon=True
+    ).start()
+    try:
+        return lines.get(timeout=timeout_seconds).strip()
+    except queue.Empty:
+        pytest.fail(f"server did not print READY within {timeout_seconds:.0f} seconds")
 
 
 def unused_port() -> int:
@@ -18,7 +35,10 @@ def executable(name: str) -> Path:
     build_dir = os.environ.get("BRIDGE_BENCH_BUILD_DIR")
     if not build_dir:
         pytest.skip("BRIDGE_BENCH_BUILD_DIR is not set")
-    candidates = [Path(build_dir) / name, Path(build_dir) / "Debug" / f"{name}.exe"]
+    candidates = [
+        Path(build_dir) / name,
+        *(Path(build_dir) / config / f"{name}.exe" for config in ("Release", "Debug")),
+    ]
     for candidate in candidates:
         if candidate.is_file():
             return candidate
@@ -71,8 +91,7 @@ def test_request_reply_is_correct_for_concurrent_clients(
         text=True,
     )
     try:
-        assert server.stdout is not None
-        ready = server.stdout.readline().strip()
+        ready = read_ready_line(server)
         assert ready.startswith("READY"), (
             server.stderr.read()
             if server.stderr is not None

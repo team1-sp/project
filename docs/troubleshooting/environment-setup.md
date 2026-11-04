@@ -1,6 +1,6 @@
 # Environment Setup
 
-**Status: updated for PB-006, 2026-11-04.** Commands match the presets in [`CMakePresets.json`](../../CMakePresets.json). Stack: C++20 (DEC-019), Box2D v3.1.1 (DEC-020), raylib 6.2 (DEC-033), CMake + GoogleTest (DEC-023), and Python 3.12 for `ai-services` (DEC-038). Platforms (DEC-029): develop on Windows and macOS, Windows first; games are built for Windows only. Compilers: whatever each platform needs (DEC-030), recorded in section 3.
+**Status: updated for PB-006, 2026-11-04.** Commands match the presets in [`CMakePresets.json`](../../CMakePresets.json). Stack: C++20 (DEC-019), Box2D v3.1.1 (DEC-020), raylib 6.2 (DEC-033), CMake + GoogleTest (DEC-023), and Python 3.12 for `ai-services` (DEC-039). Platforms (DEC-029): develop on Windows and macOS, Windows first; games are built for Windows only. Compilers: whatever each platform needs (DEC-030), recorded in section 3.
 
 `[VERIFIED 2026-10-24]` only on Linux (GCC 13, CMake 3.28) by the agent that wrote the skeleton: the `headless` workflow and a full build with raylib, and the window app (now `sandbox`) opened and closed a window under Xvfb. `[VERIFIED 2026-10-24]` on Windows by Işık Dönger: `cmake --workflow --preset windows-debug` with Visual Studio 2026 (MSVC 19.51, CMake 4.4.3), and the window app (now `sandbox.exe`) opened its window. `[VERIFIED 2026-11-01]` on macOS by Zeynep Ertürk: `cmake --workflow --preset macos-debug` built everything and passed 9/9 tests, and `build/macos-debug/sandbox/box2d_raylib_spike` opened its window (PB-008).
 
@@ -16,7 +16,7 @@ A new team member (or agent with shell access) can build, run and test from a cl
 | CMake 3.25 or newer | Comes with Visual Studio; or `winget install Kitware.CMake` | `brew install cmake` |
 | git | `winget install Git.Git` | Comes with the Command Line Tools |
 | clang-format 19 (DEC-031) | `pip install clang-format==19.1.7` | `pip install clang-format==19.1.7` |
-| Python 3.12 for `ai-services` (DEC-038) | Install Python 3.12 from python.org; enable the `py` launcher | Install from python.org or `brew install python@3.12` |
+| Python 3.12 for `ai-services` (DEC-039) | Install Python 3.12 from python.org; enable the `py` launcher | Install from python.org or `brew install python@3.12` |
 
 Optional physics visualisation (learning aid, not part of the engine; may be a different Box2D version): `pip install "box2d-python[testbed]" glfw pillow`.
 

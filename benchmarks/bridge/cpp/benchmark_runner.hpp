@@ -103,6 +103,7 @@ inline int run(const std::string& transport, const Configuration& config,
             std::vector<double> localLatencies;
             localLatencies.reserve(config.iterations);
             std::vector<std::string> localErrors;
+            bool passedBarriers = false;
             const std::uint64_t gameInstanceId = static_cast<std::uint64_t>(clientIndex + 1);
             std::vector<std::byte> payload(config.payloadBytes);
             for (std::size_t byteIndex = 0; byteIndex < payload.size(); ++byteIndex) {
@@ -121,6 +122,7 @@ inline int run(const std::string& transport, const Configuration& config,
 
                 ready.arrive_and_wait();
                 start.arrive_and_wait();
+                passedBarriers = true;
                 for (std::size_t iteration = 0; iteration < config.iterations; ++iteration) {
                     const std::uint64_t sequence =
                         static_cast<std::uint64_t>(config.warmupIterations + iteration);
@@ -140,8 +142,12 @@ inline int run(const std::string& transport, const Configuration& config,
                         std::chrono::duration<double, std::micro>(after - before).count());
                 }
             } catch (const std::exception& exception) {
-                ready.arrive_and_drop();
-                start.arrive_and_drop();
+                // Only release the barriers this thread has not reached yet; dropping a barrier
+                // that was already passed would corrupt its next phase.
+                if (!passedBarriers) {
+                    ready.arrive_and_drop();
+                    start.arrive_and_drop();
+                }
                 localErrors.push_back(exception.what());
             }
 

@@ -36,23 +36,6 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 - **Related:** TASK-001, DEC-012
 - **Occurrences:** —
 
-### PRB-002 — Clean Python environment could not download pinned build dependencies in the sandbox
-- **Date:** 2026-11-04
-- **Reported by:** codex/gpt-5/pb006
-- **Area:** Tooling
-- **Status:** Solved
-- **Symptom:** Installing `./ai-services[dev]` in a fresh Python 3.12 virtual environment failed with `ERROR: Could not find a version that satisfies the requirement setuptools==84.2.1 (from versions: none)` and `ERROR: No matching distribution found for setuptools==84.2.1`.
-- **Context:** Local PB-006 verification inside the restricted command sandbox.
-- **Root cause:** The sandbox could not resolve or connect to PyPI; pip's preceding retries reported `Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known`. The package version exists and was independently verified on PyPI.
-- **Solution:** Re-ran the clean-environment install with approved network access and `set -e`, then ran Ruff, pytest and `pip check` successfully.
-- **How verified:** Python 3.12.13 installed setuptools 84.2.1, Ruff 0.17.3 and pytest 9.2.0; Ruff passed, pytest passed 1/1 and `pip check` found no broken requirements.
-- **Prevention:** Expect fresh dependency installs to need network approval in restricted sessions, and use `set -e` for multi-command verification so the first failure controls the exit status.
-- **Keywords:** pip, PyPI, setuptools 84.2.1, no matching distribution, nodename nor servname, sandbox, network
-- **Related:** TASK-017, PB-006, DEC-038
-- **Occurrences:** —
-
----
-
 ### PRB-002 — Ubuntu FlatBuffers package has no CMake config package
 - **Date:** 2026-11-04
 - **Reported by:** GitHub Actions `bridge-benchmark` job for PB-065
@@ -72,11 +55,29 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
   the benchmark.
 - **How verified:** Forced the fallback locally with
   `-DCMAKE_DISABLE_FIND_PACKAGE_flatbuffers=ON`; configuration and compilation succeeded and all
-  four CTest targets passed. The Ubuntu GitHub Actions rerun is pending.
+  four CTest targets passed. The Ubuntu `bridge-benchmark` job on PR #23 then passed.
 - **Prevention:** Optional benchmark dependencies must support both upstream/Homebrew CMake config
   packages and the packaging layout provided by the Ubuntu CI image.
 - **Keywords:** FlatBuffers, flatbuffersConfig.cmake, Ubuntu, CMake, imported target, PB-065
 - **Related:** PB-065, ADR-002, DEC-038
 - **Occurrences:** GitHub Actions PR #23, Ubuntu 24.04
+
+---
+
+### PRB-003 — Clean Python environment could not download pinned build dependencies in the sandbox
+- **Date:** 2026-11-04
+- **Reported by:** codex/gpt-5/pb006
+- **Area:** Tooling
+- **Status:** Solved
+- **Symptom:** Installing `./ai-services[dev]` in a fresh Python 3.12 virtual environment failed with `ERROR: Could not find a version that satisfies the requirement setuptools==84.2.1 (from versions: none)` and `ERROR: No matching distribution found for setuptools==84.2.1`.
+- **Context:** Local PB-006 verification inside the restricted command sandbox.
+- **Root cause:** The sandbox could not resolve or connect to PyPI; pip's preceding retries reported `Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known`. The package version exists and was independently verified on PyPI.
+- **Solution:** Re-ran the clean-environment install with approved network access and `set -e`, then ran Ruff, pytest and `pip check` successfully.
+- **How verified:** Python 3.12.13 installed setuptools 84.2.1, Ruff 0.17.3 and pytest 9.2.0; Ruff passed, pytest passed 1/1 and `pip check` found no broken requirements.
+- **Prevention:** Expect fresh dependency installs to need network approval in restricted sessions, and use `set -e` for multi-command verification so the first failure controls the exit status.
+- **Keywords:** pip, PyPI, setuptools 84.2.1, no matching distribution, nodename nor servname, sandbox, network
+- **Related:** TASK-017, PB-006, DEC-039
+- **Occurrences:** —
+- **Amendments:** 2026-11-04 — renumbered from PRB-002 by Işık Dönger while merging `main` into the PB-065 branch, because both branches had created a PRB-002.
 
 ---

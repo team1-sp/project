@@ -60,4 +60,4 @@ Phases 10–13 order may change after the advisor review (ask the human). Phase 
 | 2026-10-12 | Initial live plan created from Senior Project Guide §7 and Initial Plan §4 | claude-code/sonnet-5.5/012r |
 | 2026-10-13 | Phase 1 exit criteria updated after DEC-013…016 | claude-code/sonnet-5.5/012r |
 | 2026-10-27 | Demo game marked undecided (Q-016); maze demo removed | claude-code (demo-undecided session) |
-| 2026-11-04 | Python 3.12 `ai-services` skeleton ready for review (TASK-017, DEC-038) | codex/gpt-5/pb006 |
+| 2026-11-04 | Python 3.12 `ai-services` skeleton ready for review (TASK-017, DEC-039) | codex/gpt-5/pb006 |
