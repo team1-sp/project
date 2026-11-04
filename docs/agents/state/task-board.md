@@ -29,6 +29,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-014 | Integrate GoogleTest and CTest, how-to-add-a-test guide — ClickUp PB-003 | Done (PR #14) | Işık Dönger + claude-code (PB-003 session) | TASK-005 | process, test-strategy |
 | TASK-015 | Set up CI with GitHub Actions — ClickUp PB-004 | Review | Işık Dönger + claude-code (PB-004 session) | TASK-005, TASK-014 | process |
 | TASK-016 | Spike: Box2D v3 + raylib falling-box prototype — ClickUp PB-008 | Review (DEC-037 awaits Işık) | Zeynep Ertürk + claude (PB-008 session) | TASK-005 | DEC-014, DEC-015, TASK-008 |
+| TASK-017 | Create the Python `ai-services` project skeleton — ClickUp PB-006 | Review | codex/gpt-5/pb006 | TASK-012 | AI layer tooling |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -106,3 +107,17 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Status:** Review (2026-11-01). Zeynep Ertürk + claude (PB-008 session)
 - **Acceptance:** ground + falling box simulated by Box2D and drawn by raylib; units decided; findings written for the guide (`docs/research/box2d.md`), presented at sprint review.
 - **Result:** `sandbox_falling_box` (Box2D only, our types in its header) and `box2d_raylib_spike` (raylib window) in `sandbox/`; 7 tests in `tests/unit/sandbox/`; units decided (DEC-036); findings in `research/box2d.md`; pitfalls E-026…E-028. The R-3/R-4 exception for the spike is `Proposed` (DEC-037, Q-017). See HND-014.
+
+### TASK-017 — Create the Python `ai-services` project skeleton (ClickUp PB-006)
+- **Status:** Review (2026-11-04); implemented by codex/gpt-5/pb006.
+- **Goal:** Add the `ai-services/` Python project skeleton required by GitHub issue #20: a `pyproject.toml` with a pinned Python version, package layout, environment instructions, Ruff and pytest configuration, and a passing sample test.
+- **Plan:**
+  1. Record the human's Python version decision and propagate it to the relevant project docs.
+  2. Create a `src/` package layout under `ai-services/` without implementing deferred AI capabilities.
+  3. Configure Ruff and pytest in `ai-services/pyproject.toml`, with pinned development-tool versions.
+  4. Add concise setup/test instructions and one sample package test.
+  5. Run Ruff and pytest from `ai-services/`, then inspect the final diff.
+- **Expected files:** `ai-services/pyproject.toml`, `ai-services/README.md`, `ai-services/src/`, `ai-services/tests/`, and project state/decision documentation required by the agent protocol.
+- **Risks:** Python's minor version is not specified; choosing one would silently make a technology decision. Keep the skeleton isolated from `engine/` and do not add model/runtime dependencies.
+- **Verification:** create a clean virtual environment, install the project development dependencies, run `ruff check .` and `pytest` from `ai-services/`.
+- **Result:** Added a Python 3.12 `src/`-layout package, pinned setuptools/Ruff/pytest configuration, platform setup instructions and a package-metadata smoke test. CI now installs each Python package's pinned `dev` extra. Ruff, pytest (1/1) and `pip check` pass in a fresh Python 3.12 environment. See HND-015.

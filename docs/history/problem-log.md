@@ -16,6 +16,7 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 | ID | Title | Area | Status | Date |
 | --- | --- | --- | --- | --- |
 | PRB-001 | Raylib sprite shader shows edge artefacts: texture wrap defaults to repeat | Rendering | Solved (documented in spec) | 2026-10-12 (recorded) |
+| PRB-002 | Clean Python environment could not download pinned build dependencies in the sandbox | Tooling | Solved | 2026-11-04 |
 
 ---
 
@@ -32,6 +33,21 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 - **Prevention:** The wrap mode is a mandatory line in the shared scene specification (`testing/benchmark-protocol.md`). Apply the same check to any new sprite/shader path in the engine's rendering layer.
 - **Keywords:** raylib, texture wrap, repeat, CLAMP_TO_EDGE, sprite edge artefact, shader sampling outside 0-1, fragTexCoord
 - **Related:** TASK-001, DEC-012
+- **Occurrences:** —
+
+### PRB-002 — Clean Python environment could not download pinned build dependencies in the sandbox
+- **Date:** 2026-11-04
+- **Reported by:** codex/gpt-5/pb006
+- **Area:** Tooling
+- **Status:** Solved
+- **Symptom:** Installing `./ai-services[dev]` in a fresh Python 3.12 virtual environment failed with `ERROR: Could not find a version that satisfies the requirement setuptools==84.2.1 (from versions: none)` and `ERROR: No matching distribution found for setuptools==84.2.1`.
+- **Context:** Local PB-006 verification inside the restricted command sandbox.
+- **Root cause:** The sandbox could not resolve or connect to PyPI; pip's preceding retries reported `Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known`. The package version exists and was independently verified on PyPI.
+- **Solution:** Re-ran the clean-environment install with approved network access and `set -e`, then ran Ruff, pytest and `pip check` successfully.
+- **How verified:** Python 3.12.13 installed setuptools 84.2.1, Ruff 0.17.3 and pytest 9.2.0; Ruff passed, pytest passed 1/1 and `pip check` found no broken requirements.
+- **Prevention:** Expect fresh dependency installs to need network approval in restricted sessions, and use `set -e` for multi-command verification so the first failure controls the exit status.
+- **Keywords:** pip, PyPI, setuptools 84.2.1, no matching distribution, nodename nor servname, sandbox, network
+- **Related:** TASK-017, PB-006, DEC-038
 - **Occurrences:** —
 
 ---
