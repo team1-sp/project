@@ -46,6 +46,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Accepted | 2026-10-24 |
 | DEC-036 | World units are meters with y up; 32 pixels per meter; conversion only in the renderer | Accepted | 2026-11-01 |
 | DEC-037 | The PB-008 spike in `sandbox/` may link Box2D and raylib directly (exception to R-3/R-4 for that spike only) | Proposed | 2026-11-01 |
+| DEC-038 | ADR-002: gRPC/protobuf is the provisional C++ to Python bridge behind AgentBridge | Proposed | 2026-11-04 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -457,3 +458,29 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Decision (proposed):** `sandbox_falling_box` (links Box2D) and `box2d_raylib_spike` (links raylib) may break R-3/R-4. Box2D stays in `falling_box_scene.cpp` and raylib in `box2d_raylib.cpp`; no engine target uses them. The exception covers this spike only.
 - **Consequences:** needs confirmation from Işık Dönger (architecture rules); asked in Q-017 and in the PB-008 pull request.
 - **Supersedes / Related:** R-3, R-4, DEC-003, DEC-007, PB-008, Q-017.
+
+### DEC-038 — ADR-002: gRPC/protobuf is the provisional C++ to Python bridge behind AgentBridge
+- **Date:** 2026-11-04
+- **Status:** Proposed
+- **Proposed by:** Codex, from PB-065 evidence
+- **Context:** The headless C++ engine needs synchronous observation/action exchange with Python RL
+  services and later assistant-facing services. PB-065 benchmarked gRPC and ZeroMQ with equivalent
+  protobuf payloads and concurrent clients.
+- **Options considered:** gRPC/protobuf; ZeroMQ via cppzmq/pyzmq with protobuf, MessagePack or
+  FlatBuffers; shared memory; raw sockets; and Python bindings. See `research/ipc.md`.
+- **Decision (proposed):** Start with gRPC/protobuf behind `AgentBridge` for fault-isolated service
+  communication. Permit an optional pybind11 local-RL adapter if end-to-end profiling justifies it.
+  Keep communication dependencies out of the default engine build.
+- **Rationale:** Both transports meet the measured latency needs. ZeroMQ scaled better at 4–8 clients;
+  gRPC's contracts, deadlines, status semantics and tooling reduce integration and maintenance risk.
+  FlatBuffers did not beat protobuf on ZeroMQ; pybind11 established a much faster in-process ceiling
+  but trades away isolation and remote access.
+- **Consequences:** This does not bind the team until accepted by a human. ZeroMQ remains available
+  as benchmark evidence and a revisitable alternative.
+- **Docs updated:** `history/adr-002-cpp-python-communication.md`, `research/ipc.md`,
+  `research/cpp-python-bridge.md`.
+- **Course documents affected (for humans):** any course document that fixes the engine-to-Python
+  protocol before the team accepts this proposal.
+- **Revisit when:** an end-to-end RL benchmark shows bridge overhead is material; concurrency exceeds
+  8 local instances; or Windows deployment cost changes the tradeoff.
+- **Supersedes / Related:** related to DEC-005, DEC-011, DEC-013, DEC-019, DEC-029 and PB-065.

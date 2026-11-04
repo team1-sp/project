@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package aegis.bridge.benchmark;
+
+service AgentService {
+  rpc Exchange(Observation) returns (Action);
+}
+
+message Observation {
+  uint64 game_instance_id = 1;
+  uint64 sequence = 2;
+  bytes payload = 3;
+}
+
+message Action {
+  uint64 game_instance_id = 1;
+  uint64 sequence = 2;
+  int32 action_id = 3;
+}

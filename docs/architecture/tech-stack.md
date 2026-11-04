@@ -24,7 +24,7 @@
 | Area | Candidates / notes | Question |
 | --- | --- | --- |
 | What "LLM-instructive components" means concretely (metadata schema) | Deferred by the human ("too early") | Q-013 |
-| AI service language / protocol | `[PROPOSED]` Python + gRPC/protobuf (DEC-011) — human: too early to decide | open |
+| AI service language / protocol | `[PROPOSED]` Python + gRPC/protobuf behind `AgentBridge` (ADR-002, DEC-038); PB-065 benchmark evidence exists, but a human has not accepted it | open |
 | World units / coordinate convention | Meters vs pixels; y-up vs y-down | TASK-008 |
 
 ## 3. What the decisions mean in practice
@@ -64,3 +64,4 @@ The engine is not directly coupled to Box2D or Raylib. The Physics Adapter and t
 | 2026-10-16 | Reconciled with GitHub main; platforms and compilers renumbered DEC-029/DEC-030 (collision with DEC-022/023) | claude-code/sonnet-5.5/012r |
 | 2026-10-23 | Formatter clang-format 19 (DEC-031) | claude-code (session 0171) |
 | 2026-10-24 | Raylib 6.2 (DEC-033); GoogleTest v1.17.0 pinned | claude-code (PB-002 session) |
+| 2026-11-04 | PB-065 adds benchmark evidence and provisional ADR-002/DEC-038; protocol remains open | Codex |

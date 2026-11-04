@@ -1,0 +1,28 @@
+# C++ to Python IPC Options (PB-065)
+
+**Status:** researched on 2026-11-04. This table distinguishes options that were benchmarked from
+options that were assessed architecturally. Detailed methodology and measurements are in
+[cpp-python-bridge.md](cpp-python-bridge.md).
+
+| Option | Latency and serialization | Concurrency / request-reply | Integration and maintenance | Windows / deployment effort | PB-065 conclusion | Evidence status |
+| --- | --- | --- | --- | --- | --- | --- |
+| **gRPC + protobuf** | Protobuf schema and generated code; HTTP/2/RPC adds overhead. Measured median RTT was 161–1,057 µs across the tested matrix. | Native synchronous unary RPC, deadlines/statuses, HTTP/2 multiplexing and a configurable server worker pool. | Strong C++/Python contract and debugging ecosystem, but code generation and a comparatively large dependency graph. | **High.** vcpkg can supply gRPC, protobuf and transitive dependencies, but the build/download footprint is heavy and must be validated on the Windows-priority toolchain. | Provisional first production transport behind `AgentBridge`; maintainability outweighs its weaker high-concurrency result in this experiment. | **Benchmarked:** C++ gRPC client, Python gRPC server, protobuf. Windows build not run. |
+| **ZeroMQ via cppzmq/pyzmq + MessagePack** | ZeroMQ has low messaging overhead. MessagePack is compact and simple but schema-less, so compatibility and validation rules become application code. | REQ/REP is synchronous; ROUTER/DEALER supports concurrent clients and workers. Retry and socket-state recovery are application-owned. | cppzmq is a thin C++ binding and pyzmq is mature. Fewer RPC semantics than gRPC; message versioning must be designed and tested. | Medium. libzmq/cppzmq are available through vcpkg; Python wheels simplify the agent side. | Viable when custom routing and throughput matter, but MessagePack currently offers too little contract safety for the engine boundary. | **Partially assessed:** pyzmq and ZeroMQ topology were tested. The benchmark used the libzmq C API and protobuf for serializer fairness; cppzmq/MessagePack were **not** benchmarked. |
+| **ZeroMQ via cppzmq/pyzmq + FlatBuffers** | FlatBuffers supports generated schemas and direct buffer reads. In this benchmark it was slightly slower than protobuf at every tested point, including 64 KiB payloads. | Same concurrent ROUTER/DEALER worker model as the protobuf variant; FlatBuffers does not supply RPC deadlines, statuses or retry behavior. | Better type safety than MessagePack, but adds a second schema compiler and generated API. | Medium to high. vcpkg can supply ZeroMQ, cppzmq and FlatBuffers; generated code must remain consistent across C++ and Python. | Do not adopt now: no measured benefit over protobuf for this request/reply shape. Revisit with real tensor layouts if serialization becomes material. | **Benchmarked:** cppzmq 4.11.0/pyzmq + FlatBuffers at 1/2/4/8 clients and 256 B/64 KiB. |
+| **Raw TCP sockets** | Can minimize framework overhead, but needs custom framing, serialization and buffering. | Synchronous exchange is possible; multiplexing, timeouts, backpressure, reconnection and client association must be implemented. | Highest protocol/debugging burden and greatest risk of recreating existing RPC functionality. | Medium implementation effort on both Winsock and POSIX sockets, plus platform abstraction and extensive tests. | Do not pursue at this stage. Expected savings do not justify owning the protocol stack. | **Architecturally assessed only.** |
+| **Shared memory** | Potentially lowest local latency and copy cost; serialization may be reduced or avoided. | Requires synchronization, ring-buffer ownership, crash recovery and explicit multi-process coordination. Local machine only. | Complex lifecycle and failure debugging; platform details differ substantially between Windows and POSIX. | High cross-platform engineering effort. Packaging is light, but implementation and correctness cost are high. | Revisit only if an end-to-end vectorized RL profile proves IPC is a bottleneck after batching. Unsuitable for remote assistant interactions. | **Architecturally assessed only.** |
+| **Python extension via pybind11** | Removes socket IPC. The measured buffer-view path reached about 2.51M exchanges/s for one 64 KiB client; copying reduced that to about 493K/s. | Natural synchronous calls. Python-thread scaling was limited and tail latency increased, so vectorized C++ stepping is preferable to many tiny threaded calls. A native fault shares the Python process. | Convenient Gym-style local API, but couples Python ABI and engine lifetime. It does not serve remote assistant clients or provide process isolation. | Medium to high. pybind11 is small, but matching Python/compiler ABIs and extension packaging on Windows requires validation. | Strong optional local-RL path when profiling justifies it; retain gRPC for isolated/cross-process assistant and control-plane work. | **Benchmarked:** Python 3.12 extension, copied input and zero-copy buffer view, 1/2/4/8 threads and 256 B/64 KiB. Windows build not run. |
+
+## Benchmark clarification
+
+The protobuf and FlatBuffers ZeroMQ implementations hold the ROUTER/DEALER topology and logical
+fields constant. The protobuf client uses libzmq's C API; the FlatBuffers client uses cppzmq's thin
+RAII wrapper. The pybind11 extension is an in-process baseline and is not a fault-isolated IPC
+replacement. MessagePack remains unimplemented.
+
+## Change table
+
+| Date | Change | By |
+| --- | --- | --- |
+| 2026-11-04 | Added explicit PB-065 IPC option matrix and evidence status | Codex |
+| 2026-11-04 | Added measured ZeroMQ/FlatBuffers and pybind11 copy/view evidence | Codex |

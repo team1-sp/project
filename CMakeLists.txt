@@ -14,6 +14,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(ENGINE_WITH_RAYLIB "Build the raylib renderer and the targets that open a window" ON)
 option(ENGINE_BUILD_TESTS "Build the GoogleTest suite" ON)
 option(ENGINE_WARNINGS_AS_ERRORS "Treat compiler warnings in our own targets as errors" OFF)
+option(AEGIS_BUILD_BRIDGE_BENCHMARKS "Build the optional gRPC/ZeroMQ bridge benchmarks" OFF)
+set(AEGIS_BRIDGE_PYTHON_EXECUTABLE "" CACHE FILEPATH
+    "Python 3.12 interpreter containing the optional bridge benchmark dependencies")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(CompilerWarnings)
@@ -29,4 +32,8 @@ endif()
 if(ENGINE_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+if(AEGIS_BUILD_BRIDGE_BENCHMARKS)
+    add_subdirectory(benchmarks/bridge)
 endif()
