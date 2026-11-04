@@ -46,10 +46,11 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Accepted | 2026-10-24 |
 | DEC-036 | World units are meters with y up; 32 pixels per meter; conversion only in the renderer | Accepted | 2026-11-01 |
 | DEC-037 | The PB-008 spike in `sandbox/` may link Box2D and raylib directly (exception to R-3/R-4 for that spike only) | Proposed | 2026-11-01 |
+| DEC-038 | `ai-services` uses Python 3.12 with pinned Python project tooling | Accepted | 2026-11-04 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
-what "LLM-instructive components" means concretely (Q-013, deferred by the human) · AI service language and protocol (DEC-011, deferred) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
+what "LLM-instructive components" means concretely (Q-013, deferred by the human) · engine-facing AI protocol (the gRPC/protobuf part of DEC-011, deferred) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
 
 ---
 
@@ -135,7 +136,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Context:** The guide says the assistant "may use an LLM via gRPC to a Python AI service" (ip.fr.11.8).
 - **Decision (proposed):** Keep model orchestration/experiments in Python; define a strongly-typed protobuf contract between engine-side exporter and AI service. The engine side is C++ (DEC-013); the AI service language is still open.
 - **Consequences:** Privacy rule ip.nfr.2.1 (no source/telemetry leaves the machine unless enabled).
-- **Amendments:** 2026-10-15 — Işık Dönger: too early to decide; stays Proposed, agents must not raise it until a human does.
+- **Amendments:** 2026-10-15 — Işık Dönger: too early to decide; stays Proposed, agents must not raise it until a human does. 2026-11-04 — DEC-038 accepts Python 3.12 for `ai-services`; only the proposed gRPC/protobuf engine-facing contract remains open and deferred.
 
 ### DEC-012 — Graphics framework selection is decided by the shader benchmark
 - **Date:** 2026-10-12 (extracted from Initial Plan §4.2 and `shader-test/test-guideline.md`)
@@ -457,3 +458,17 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Decision (proposed):** `sandbox_falling_box` (links Box2D) and `box2d_raylib_spike` (links raylib) may break R-3/R-4. Box2D stays in `falling_box_scene.cpp` and raylib in `box2d_raylib.cpp`; no engine target uses them. The exception covers this spike only.
 - **Consequences:** needs confirmation from Işık Dönger (architecture rules); asked in Q-017 and in the PB-008 pull request.
 - **Supersedes / Related:** R-3, R-4, DEC-003, DEC-007, PB-008, Q-017.
+
+### DEC-038 — `ai-services` uses Python 3.12 with pinned Python project tooling
+- **Date:** 2026-11-04
+- **Status:** Accepted
+- **Decided by:** Arda Saritas (PB-006 owner)  **Recorded by:** codex/gpt-5/pb006
+- **Human's words:** "proceed with 3.12"
+- **Context:** PB-006 / GitHub issue #20 requires a Python `ai-services` skeleton with a pinned Python version, Ruff and pytest. No accepted entry named the Python minor version; HND-013 explicitly treated Python 3.12 as an assumption pending PB-006.
+- **Options considered:** Python 3.12 or 3.13. The agent recommended 3.12 for mature AI-library compatibility and alignment with the existing CI job; Arda selected 3.12.
+- **Decision:** `ai-services` uses Python 3.12. The package metadata accepts `>=3.12,<3.13`, and `.python-version` records `3.12`. PB-006 also pins its required project tools: setuptools 84.2.1 (MIT, build backend, about 2.1 MB release), Ruff 0.17.3 (MIT, linter, platform wheel about 9–11 MB) and pytest 9.2.0 (MIT, test framework, about 2.2 MB release). These were current stable releases verified on PyPI on 2026-11-04.
+- **Rationale:** A single supported minor version makes local and CI environments reproducible. Ruff and pytest are explicit PB-006 requirements; setuptools supplies the standard `src/`-layout build backend. All three projects are actively maintained and support Python 3.12.
+- **Consequences:** Python CI and local setup use Python 3.12 and install the package's `dev` extra. This accepts only the Python language/runtime part of DEC-011; the engine-facing protocol remains Proposed and deferred.
+- **Docs updated:** `ai-services/README.md`, `architecture/tech-stack.md`, `guidelines/repository-structure.md`, `troubleshooting/environment-setup.md`, `agents/state/*`.
+- **Course documents affected (for humans):** any software-environment section that names the AI-service Python version.
+- **Supersedes / Related:** accepts the language/runtime part of DEC-011; PB-006, GitHub issue #20, Q-018.

@@ -1,6 +1,7 @@
 ---
 last_updated: 2026-11-04
 updated_by: codex/gpt-5/pb062
+updated_by: codex/gpt-5/pb006
 ---
 
 # Current Status
@@ -8,7 +9,7 @@ updated_by: codex/gpt-5/pb062
 Snapshot of the project. Overwrite this file each session (keep it short). History belongs in `handoff-log.md`. **The truth is the `Accepted` entries in `history/decision-log.md`.**
 
 ## One-line summary
-Pre-implementation. Architecture is defined, the tech stack and the GitHub repository workflow are **decided**: C++20, custom ECS, Box2D v3.1.1, Raylib 6.2, CMake + GoogleTest, 2D only (3D possible later); developed on Windows and macOS, games built for Windows only. PB-062's RL game-testing literature/tool review is ready for review in `research/rl-testing-lit.md`. **The demo game is undecided:** the team never chose one, so the maze/door/key demo and its spec were removed (Q-016).
+Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. PB-006 adds an isolated Python 3.12 `ai-services` package skeleton with pinned Ruff/pytest tooling; AI capabilities remain deferred. **The demo game is undecided** (Q-016).
 
 ## Phase
 Roadmap phase **1 — Project and technology decisions**: all exit criteria are met (see `plan.md`); the human confirms closing it. Phase 2 starts with the skeleton (TASK-005).
@@ -17,15 +18,15 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 
 | Item | State |
 | --- | --- |
-| `team1-sp/project` (GitHub, public) | `README.md`, `CONTRIBUTING.md`, `.github/` (CI, CODEOWNERS, issue/PR templates, labels), `tools/` (PR and link checks), `.editorconfig`, `.gitattributes`, `.gitignore`, and this `docs/` folder. No engine source code. |
+| `team1-sp/project` (GitHub, public) | C++/CMake engine skeleton, sandbox, tests, engineering docs and workflows; `ai-services/` now contains the Python 3.12 package/tooling skeleton. |
 | `senior-project/docs/` (course deliverables) | Initial Plan sections mostly written. **Not authoritative; not edited by agents.** It may still say "C++ or C#" etc. (see "Course documents affected" in the decision entries) |
 | `senior-project/shader-test/` | Graphics benchmark spec, shared assets, per-library folders. Benchmark finished (no notable difference; team chose by code complexity and ease of use). Raylib decided (DEC-015) |
 | Process | Scrum, 2-week sprints, weekly progress meeting, sprint review with advisor |
 
 ## Decisions status (details: `history/decision-log.md`)
 
-- **Accepted:** three-layer architecture; ECS as data hub; Physics Adapter; fixed 1/60 s timestep; headless mode; telemetry in loop; graphics abstraction; docs/agent system; C++ (DEC-013); Box2D v3.1.1 (DEC-014, DEC-020); Raylib 6.2 (DEC-015, DEC-033); 2D only (DEC-016); humans decide (DEC-017); custom ECS (DEC-018); C++20 (DEC-019); one repository (DEC-022); CMake + GoogleTest (DEC-023); Işık Dönger reviews every PR (DEC-024); agents push only after human approval (DEC-025); `semantic/` is its own folder (DEC-026); trunk-based workflow, branch protection deferred (DEC-027); GitHub issues created from ClickUp (DEC-028); develop on Windows and macOS, games Windows-only (DEC-029); compilers per platform need (DEC-030); product name Aegis (DEC-034); PR titles `<type>(PB-<nnn>): …` (DEC-035); world units meters, y up, 32 px per meter, converted only in the renderer (DEC-036).
-- **Proposed / deferred by the human ("too early"):** MCP later (DEC-010); Python + gRPC for the AI service (DEC-011); LLM-instructive component metadata (Q-013). Agents do not raise these.
+- **Accepted:** core entries DEC-001…009 and DEC-013…036 as indexed in the decision log; Python 3.12 with pinned `ai-services` tooling (DEC-038).
+- **Proposed / deferred by the human ("too early"):** MCP later (DEC-010); the engine-facing gRPC/protobuf protocol (remaining part of DEC-011); LLM-instructive component metadata (Q-013). Agents do not raise these.
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017).
 
 ## In progress / next
@@ -42,12 +43,14 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 | Build | Skeleton builds on Linux (GCC 13) Windows (MSVC 19.51, Visual Studio 2026) `[VERIFIED 2026-10-24]` and macOS (Apple Clang) `[VERIFIED 2026-10-27]` |
 | Tests | 2/2 pass on Linux, Windows and macOS `[VERIFIED 2026-10-27]`; with PB-008, 9/9 on Linux (GCC 13), macOS (Zeynep Ertürk) and Windows (local Visual Studio 2026 build and the `windows-latest` CI job); the spike window itself has not been run on Windows `[VERIFIED 2026-11-01]` |
 | Docs | PB-062 research review added and relative links verified `[VERIFIED 2026-11-04]` |
+| Python | Python 3.12.13 clean-environment install succeeds; Ruff clean; pytest 1/1; `pip check` clean `[VERIFIED 2026-11-04]` |
+| Docs | Scaffold created 2026-10-12; updated 2026-10-13 for the stack decision and the decision-authority rule |
 
 ## Things a new agent should know immediately
 
 - **Humans decide; agents consult.** Put every real uncertainty to the human (`DECISION NEEDED`); log their decision as `Accepted`; update every doc (`playbooks/record-decision.md`).
 - Course documents are not the truth; the decision log is.
-- Stack is fixed: C++20 / custom ECS / Box2D v3.1.1 (behind the adapter) / Raylib 6.2 (behind the rendering abstraction) / CMake + GoogleTest. **2D only** — no 3D work. Develop on Windows and macOS (Windows priority); games Windows-only (DEC-029).
+- Stack is fixed: C++20 / custom ECS / Box2D v3.1.1 (behind the adapter) / Raylib 6.2 (behind the rendering abstraction) / CMake + GoogleTest; `ai-services` uses Python 3.12 (DEC-038). **2D only** — no 3D work.
 - Work through GitHub: branch `<type>/pb-<nnn>-…`, PR with Conventional Commit title, Işık Dönger or an area owner approves, agents push only after a human approves (DEC-024/025/027; `guidelines/git-workflow.md`).
 - Raylib must not be initialised in headless mode.
 - The demo game is `[UNDECIDED]` (Q-016). Do not design or build a demo game, or treat any example (door, key, maze) as its spec, until the team chooses it.

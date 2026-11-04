@@ -30,6 +30,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-015 | Set up CI with GitHub Actions — ClickUp PB-004 | Review | Işık Dönger + claude-code (PB-004 session) | TASK-005, TASK-014 | process |
 | TASK-016 | Spike: Box2D v3 + raylib falling-box prototype — ClickUp PB-008 | Review (DEC-037 awaits Işık) | Zeynep Ertürk + claude (PB-008 session) | TASK-005 | DEC-014, DEC-015, TASK-008 |
 | TASK-017 | Literature on RL-based automated game testing — ClickUp PB-062 | Review | codex/gpt-5/pb062 | — | ip.fr.7.*, ip.fr.9.* |
+| TASK-018 | Create the Python `ai-services` project skeleton — ClickUp PB-006 | Review | codex/gpt-5/pb006 | TASK-012 | AI layer tooling |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -122,3 +123,17 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Verification:** `python3 tools/check_md_links.py docs`; `git diff --check`; manual cross-check against the original papers and official tool documentation. Unit tests are not applicable because this task changes documentation only.
 - **Risks:** All three papers use environments unlike Aegis's eventual 2D demo, which is still undecided (Q-016); transfer claims must be labelled as proposals. Product capabilities can change, so the comparison records an access date.
 - **Result:** Added `docs/research/rl-testing-lit.md` with the three required paper summaries; a comparison of modl.ai, Unity ML-Agents, Unreal Learning Agents, GameDriver and AltTester; cross-paper findings; a proposed hybrid goal-seeking/coverage PPO kernel; mappings to all four current bug classes; reporting metrics; and IEEE references. Recommendations are marked `[PROPOSED]`; no architecture decision was made.
+
+### TASK-018 — Create the Python `ai-services` project skeleton (ClickUp PB-006)
+- **Status:** Review (2026-11-04); implemented by codex/gpt-5/pb006.
+- **Goal:** Add the `ai-services/` Python project skeleton required by GitHub issue #20: a `pyproject.toml` with a pinned Python version, package layout, environment instructions, Ruff and pytest configuration, and a passing sample test.
+- **Plan:**
+  1. Record the human's Python version decision and propagate it to the relevant project docs.
+  2. Create a `src/` package layout under `ai-services/` without implementing deferred AI capabilities.
+  3. Configure Ruff and pytest in `ai-services/pyproject.toml`, with pinned development-tool versions.
+  4. Add concise setup/test instructions and one sample package test.
+  5. Run Ruff and pytest from `ai-services/`, then inspect the final diff.
+- **Expected files:** `ai-services/pyproject.toml`, `ai-services/README.md`, `ai-services/src/`, `ai-services/tests/`, and project state/decision documentation required by the agent protocol.
+- **Risks:** Python's minor version is not specified; choosing one would silently make a technology decision. Keep the skeleton isolated from `engine/` and do not add model/runtime dependencies.
+- **Verification:** create a clean virtual environment, install the project development dependencies, run `ruff check .` and `pytest` from `ai-services/`.
+- **Result:** Added a Python 3.12 `src/`-layout package, pinned setuptools/Ruff/pytest configuration, platform setup instructions and a package-metadata smoke test. CI now installs each Python package's pinned `dev` extra. Ruff, pytest (1/1) and `pip check` pass in a fresh Python 3.12 environment. See HND-015.
