@@ -142,9 +142,8 @@ jobs:
         run: ctest --preset ${{ matrix.preset }}
 
   python:
-    # ruff and pytest for the Python packages (PB-004.4). Each package folder with a
-    # pyproject.toml is checked with its own settings; until PB-006 adds ai-services/
-    # there is nothing to check and the job passes.
+    # Ruff and pytest for the Python packages (PB-004.4). Each package folder with a
+    # pyproject.toml is checked with its own pinned development tools and settings.
     needs: changes
     if: needs.changes.outputs.python == 'true'
     runs-on: ubuntu-latest
@@ -160,8 +159,8 @@ jobs:
             [ -f "$pkg/pyproject.toml" ] || continue
             found=1
             echo "::group::$pkg"
-            python -m pip install --quiet ruff pytest -e "./$pkg"
-            ruff check "$pkg"
+            python -m pip install --quiet -e "./$pkg[dev]"
+            python -m ruff check "$pkg"
             (cd "$pkg" && python -m pytest)
             echo "::endgroup::"
           done

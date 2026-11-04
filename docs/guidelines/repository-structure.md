@@ -1,6 +1,6 @@
 # Repository Structure
 
-**Current reality `[VERIFIED 2026-10-24]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002: `CMakeLists.txt`, `CMakePresets.json`, `cmake/`, `engine/core/`, `engine/physics-box2d/`, `engine/rendering-raylib/`, `editor/`, `sandbox/` and `tests/unit/`. The other folders below are created as their PRs land.
+**Current reality `[VERIFIED 2026-11-04]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002: `CMakeLists.txt`, `CMakePresets.json`, `cmake/`, `engine/core/`, `engine/physics-box2d/`, `engine/rendering-raylib/`, `editor/`, `sandbox/` and `tests/unit/`. PB-006 adds the `ai-services/` Python 3.12 package skeleton. The other folders below are created as their PRs land.
 
 Related repos on the team's machines (separate git repos):
 
@@ -36,7 +36,7 @@ project/
 ├── tests/                    GoogleTest, mirrors engine/ (unit/, integration/, scenarios/, benchmarks/)
 ├── proto/                    engine <-> Python contract
 ├── semantic/                 LAYER 2, own package and pipeline (DEC-026); language open, Python assumed
-├── ai-services/              LAYER 3, Python package (RL, bug detection, assistant, narrative); uses semantic/
+├── ai-services/              LAYER 3, Python 3.12 src-layout package (DEC-038); uses semantic/ when available
 ├── assets/                   small, license-recorded assets
 ├── tools/                    repo scripts (PR checks, link check, label sync, architecture check)
 ├── docs/                     this documentation
@@ -63,3 +63,4 @@ Dependency checks: only `physics-box2d` includes Box2D and only `rendering-rayli
 | 2026-10-15 | Accepted layout: one repo, CMake targets per engine module, separate `semantic/` (DEC-022, DEC-023, DEC-026) | claude-code (session 0171) |
 | 2026-10-24 | Build skeleton landed (PB-002): presets incl. macOS, target names, options; raylib 6.2 (DEC-033) | claude-code (PB-002 session) |
 | 2026-10-27 | `games/demo-maze/` removed (the team never chose it as the demo); its smoke window moved to `sandbox/`; demo game undecided (Q-016) | claude-code |
+| 2026-11-04 | Added the Python 3.12 `ai-services/` package skeleton (PB-006, DEC-038) | codex/gpt-5/pb006 |
