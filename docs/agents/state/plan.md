@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-10-27
-updated_by: claude-code (demo-undecided session)
+last_updated: 2026-11-04
+updated_by: codex/gpt-5/pb006
 ---
 
 # Live Plan
@@ -28,9 +28,9 @@ Exit criteria (all must be true):
 All criteria are met; the human confirms closing phase 1.
 
 ## Next 3 steps
-1. Build the repo skeleton: TASK-005 / ClickUp PB-002 (with macOS support, DEC-029).
+1. Review and merge the Python `ai-services` skeleton: TASK-017 / ClickUp PB-006.
 2. Human answers the Q-014 leftovers and Q-015 (task ids).
-3. Window + game loop (TASK-006), then the basic ECS (phase 3). Deferred by the human: Q-013, DEC-010, DEC-011.
+3. Window + game loop (TASK-006), then the basic ECS (phase 3). Deferred by the human: Q-013, DEC-010 and the protocol part of DEC-011.
 
 ## Phase overview
 
@@ -60,3 +60,4 @@ Phases 10–13 order may change after the advisor review (ask the human). Phase 
 | 2026-10-12 | Initial live plan created from Senior Project Guide §7 and Initial Plan §4 | claude-code/sonnet-5.5/012r |
 | 2026-10-13 | Phase 1 exit criteria updated after DEC-013…016 | claude-code/sonnet-5.5/012r |
 | 2026-10-27 | Demo game marked undecided (Q-016); maze demo removed | claude-code (demo-undecided session) |
+| 2026-11-04 | Python 3.12 `ai-services` skeleton ready for review (TASK-017, DEC-038) | codex/gpt-5/pb006 |

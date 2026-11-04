@@ -172,3 +172,18 @@
 - **Next:** Işık answers Q-017; then the Physics Adapter design can use `research/box2d.md` section 8.
 - **Traps:** contact events are off by default in v3.1.1 (E-026). The ClickUp text names `docs/components.md`, which did not exist; Zeynep chose to create it (units and axes only; the component list stays in `design/ecs-design.md`). The spike target is only built when raylib is on, so its tests do not run in the headless preset.
 - **Records:** DEC-036 (Accepted), DEC-037 (Proposed), Q-017, E-026…E-028.
+
+---
+
+### HND-015 — Python `ai-services` project skeleton (PB-006)
+- **Date:** 2026-11-04
+- **Agent:** codex/gpt-5/pb006
+- **Task:** TASK-017 (ClickUp PB-006), GitHub issue #20
+- **Goal:** Create a ready Python project structure so RL, graph and assistant work can begin without setup friction.
+- **Result:** Ready for review. Arda selected Python 3.12 (DEC-038). Added an isolated `ai-services/` src-layout package, `.python-version`, package metadata, pinned setuptools/Ruff/pytest versions, Ruff and pytest settings, environment instructions and a package-metadata smoke test. Python CI now installs each package's pinned `dev` extra.
+- **Files changed:** `ai-services/{.python-version,pyproject.toml,README.md,src/aegis_ai_services/__init__.py,tests/test_package.py}`, `.github/workflows/ci.yml`, and decision/state/environment/repository documentation.
+- **Verified (macOS):** Python 3.12.13 fresh virtual environment; editable install with pinned tools succeeds; `python -m ruff check ai-services` passes; `python -m pytest` passes 1/1; `python -m pip check` reports no broken requirements; repository docs links pass.
+- **Not verified:** GitHub Actions execution and Windows-local setup commands; CI uses the same Python 3.12 install and test flow.
+- **Next:** Arda reviews the diff and creates the PR; CI should run the Python and docs jobs. Future AI capabilities remain separate tasks, and the engine-facing protocol is still deferred.
+- **Traps:** Run the package checks from `ai-services/` after installing `.[dev]`. Python 3.13+ is intentionally rejected by package metadata. A fresh dependency install needs PyPI access (PRB-002).
+- **Records:** DEC-038, Q-018 answered, PRB-002.
