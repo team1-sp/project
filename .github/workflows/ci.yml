@@ -23,6 +23,7 @@ jobs:
       docs: ${{ steps.filter.outputs.docs }}
       cpp: ${{ steps.filter.outputs.cpp }}
       build: ${{ steps.filter.outputs.build }}
+      bridge: ${{ steps.filter.outputs.bridge }}
       python: ${{ steps.filter.outputs.python }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,6 +41,15 @@ jobs:
               - '**/CMakeLists.txt'
               - 'cmake/**'
               - 'CMakePresets.json'
+              - '.github/workflows/ci.yml'
+            bridge:
+              - 'benchmarks/bridge/**'
+              - 'engine/bridge/**'
+              - 'tests/unit/bridge/**'
+              - 'CMakeLists.txt'
+              - 'engine/CMakeLists.txt'
+              - 'tests/CMakeLists.txt'
+              - 'cmake/**'
               - '.github/workflows/ci.yml'
             python:
               - 'ai-services/**'
@@ -159,6 +169,34 @@ jobs:
             echo "No Python package with a pyproject.toml yet; nothing to check."
           fi
 
+  bridge-benchmark:
+    needs: changes
+    if: needs.changes.outputs.bridge == 'true'
+    # Pinned so the apt gRPC/protobuf/FlatBuffers versions only change when we bump this line.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - name: Install optional benchmark dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes cppzmq-dev flatbuffers-compiler libflatbuffers-dev libgrpc++-dev libprotobuf-dev libzmq3-dev protobuf-compiler protobuf-compiler-grpc
+          python -m pip install -e "benchmarks/bridge/python[dev]"
+      - name: Configure and build bridge benchmarks
+        run: |
+          cmake -S . -B build/bridge-ci \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENGINE_WITH_RAYLIB=OFF \
+            -DENGINE_BUILD_TESTS=ON \
+            -DENGINE_WARNINGS_AS_ERRORS=ON \
+            -DAEGIS_BUILD_BRIDGE_BENCHMARKS=ON \
+            -DAEGIS_BRIDGE_PYTHON_EXECUTABLE="$(command -v python)"
+          cmake --build build/bridge-ci --parallel
+      - name: Test bridge request/reply and concurrency
+        run: ctest --test-dir build/bridge-ci --output-on-failure
+
   secrets:
     runs-on: ubuntu-latest
     steps:
@@ -173,7 +211,7 @@ jobs:
   ci-ok:
     # Skipped when a newer push cancels this run, so superseded runs don't report a failure.
     if: ${{ always() && !cancelled() }}
-    needs: [changes, pr-hygiene, docs, format, build, python, secrets]
+    needs: [changes, pr-hygiene, docs, format, build, python, bridge-benchmark, secrets]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped

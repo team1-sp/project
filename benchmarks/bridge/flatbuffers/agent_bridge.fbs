@@ -1,0 +1,13 @@
+namespace Aegis.Bridge.Benchmark;
+
+table Observation {
+  game_instance_id:ulong;
+  sequence:ulong;
+  payload:[ubyte];
+}
+
+table Action {
+  game_instance_id:ulong;
+  sequence:ulong;
+  action_id:int;
+}

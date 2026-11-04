@@ -8,7 +8,7 @@
 "area:telemetry": [{changed-files: [{any-glob-to-any-file: ["engine/telemetry/**"]}]}]
 "area:editor": [{changed-files: [{any-glob-to-any-file: ["editor/**"]}]}]
 "area:game": [{changed-files: [{any-glob-to-any-file: ["games/**"]}]}]
-"area:bridge": [{changed-files: [{any-glob-to-any-file: ["engine/bridge/**", "proto/**"]}]}]
+"area:bridge": [{changed-files: [{any-glob-to-any-file: ["engine/bridge/**", "proto/**", "benchmarks/bridge/**"]}]}]
 "area:semantic-graph": [{changed-files: [{any-glob-to-any-file: ["semantic/**"]}]}]
 "area:ai-services": [{changed-files: [{any-glob-to-any-file: ["ai-services/**"]}]}]
 "area:qa": [{changed-files: [{any-glob-to-any-file: ["tests/**"]}]}]

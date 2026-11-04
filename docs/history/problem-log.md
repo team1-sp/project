@@ -16,7 +16,9 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 | ID | Title | Area | Status | Date |
 | --- | --- | --- | --- | --- |
 | PRB-001 | Raylib sprite shader shows edge artefacts: texture wrap defaults to repeat | Rendering | Solved (documented in spec) | 2026-10-12 (recorded) |
-| PRB-002 | Clean Python environment could not download pinned build dependencies in the sandbox | Tooling | Solved | 2026-11-04 |
+| PRB-002 | Ubuntu FlatBuffers package has no CMake config package | Build | Solved | 2026-11-04 |
+| PRB-003 | Clean Python environment could not download pinned build dependencies in the sandbox | Tooling | Solved | 2026-11-04 |
+| PRB-004 | Bridge benchmark did not build or run on Windows (vcpkg ZeroMQ name, gRPC C4996, pybind11 output folder, missing .exe lookup) | Build | Solved | 2026-11-04 |
 
 ---
 
@@ -35,7 +37,35 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 - **Related:** TASK-001, DEC-012
 - **Occurrences:** —
 
-### PRB-002 — Clean Python environment could not download pinned build dependencies in the sandbox
+### PRB-002 — Ubuntu FlatBuffers package has no CMake config package
+- **Date:** 2026-11-04
+- **Reported by:** GitHub Actions `bridge-benchmark` job for PB-065
+- **Area:** Build
+- **Status:** Solved
+- **Symptom:** CMake stopped during the Ubuntu 24.04 bridge configuration with
+  `Could not find a package configuration file provided by "flatbuffers"` and listed
+  `flatbuffersConfig.cmake` and `flatbuffers-config.cmake` as missing.
+- **Context:** `libflatbuffers-dev`, `flatbuffers-compiler` and `flatbuffers-compiler-dev` 2.0.8 were
+  installed successfully from Ubuntu packages. The same CMake project configured successfully with
+  Homebrew FlatBuffers 25.12.19 on macOS.
+- **Root cause:** Ubuntu's FlatBuffers development package supplies the headers, library and `flatc`
+  executable but does not supply the CMake config package required by
+  `find_package(flatbuffers CONFIG REQUIRED)`.
+- **Solution:** Prefer the FlatBuffers config package when available, then fall back to locating the
+  distro headers, library and `flatc` executable and expose the same imported CMake targets used by
+  the benchmark.
+- **How verified:** Forced the fallback locally with
+  `-DCMAKE_DISABLE_FIND_PACKAGE_flatbuffers=ON`; configuration and compilation succeeded and all
+  four CTest targets passed. The Ubuntu `bridge-benchmark` job on PR #23 then passed.
+- **Prevention:** Optional benchmark dependencies must support both upstream/Homebrew CMake config
+  packages and the packaging layout provided by the Ubuntu CI image.
+- **Keywords:** FlatBuffers, flatbuffersConfig.cmake, Ubuntu, CMake, imported target, PB-065
+- **Related:** PB-065, ADR-002, DEC-038
+- **Occurrences:** GitHub Actions PR #23, Ubuntu 24.04
+
+---
+
+### PRB-003 — Clean Python environment could not download pinned build dependencies in the sandbox
 - **Date:** 2026-11-04
 - **Reported by:** codex/gpt-5/pb006
 - **Area:** Tooling
@@ -47,7 +77,29 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 - **How verified:** Python 3.12.13 installed setuptools 84.2.1, Ruff 0.17.3 and pytest 9.2.0; Ruff passed, pytest passed 1/1 and `pip check` found no broken requirements.
 - **Prevention:** Expect fresh dependency installs to need network approval in restricted sessions, and use `set -e` for multi-command verification so the first failure controls the exit status.
 - **Keywords:** pip, PyPI, setuptools 84.2.1, no matching distribution, nodename nor servname, sandbox, network
-- **Related:** TASK-017, PB-006, DEC-038
+- **Related:** TASK-017, PB-006, DEC-039
+- **Occurrences:** —
+- **Amendments:** 2026-11-04 — renumbered from PRB-002 by Işık Dönger while merging `main` into the PB-065 branch, because both branches had created a PRB-002.
+
+---
+
+### PRB-004 — Bridge benchmark did not build or run on Windows
+- **Date:** 2026-11-04
+- **Reported by:** claude (PR #23 review), running the PB-065 benchmark on Işık Dönger's Windows 11 machine
+- **Area:** Build
+- **Status:** Solved
+- **Symptom:** four separate failures at commit `df60602`:
+  1. configure: `Could not find ZEROMQ_LIBRARY using the following names: zmq, libzmq`;
+  2. build with `ENGINE_WARNINGS_AS_ERRORS=ON`: `grpc_bridge_benchmark` failed with `C2220` from `C4996: 'grpc::experimental::IdentityKeyCertPair::~IdentityKeyCertPair': Use IdentityKeyOrSignerCertPair instead`;
+  3. ctest: 4 of 14 pytest cases failed with `ModuleNotFoundError: No module named 'aegis_bridge_pybind'`;
+  4. `run_benchmarks.py`: `FileNotFoundError: missing benchmark executable: ...\grpc_bridge_benchmark`.
+- **Context:** Windows 11, VS 2022 / MSVC 14.44, Visual Studio generator, vcpkg (bundled with VS) x64-windows, gRPC 1.84.0, Python 3.12.0.
+- **Root cause:** (1) vcpkg names the ZeroMQ import library `libzmq-mt-4_3_5.lib`; (2) the deprecation warning comes from gRPC's own headers; (3) the Visual Studio generator puts the `.pyd` in `python/Release/`; (4) the runner looked only for a binary without `.exe` directly in the build folder.
+- **Solution:** (1) use the `libzmq` target that cppzmq's config package provides, with the old `find_library` as fallback; (2) `/wd4996` on `grpc_bridge_benchmark` only, under `if(MSVC)`; (3) `LIBRARY_OUTPUT_DIRECTORY "$<1:...>"` so no config subfolder is added; (4) `run_benchmarks.py` uses the same `Release`/`Debug` `.exe` lookup as `test_integration.py`.
+- **How verified:** on the Windows machine with equivalent local fixes: build passed with warnings as errors, ctest 4/4, and the full 40-case matrix passed with 0 errors. The committed versions of fixes 1 and 4 differ slightly from the local workarounds; Ubuntu CI covers fix 1's fallback path, and Windows needs a re-run to confirm the committed form.
+- **Prevention:** README now documents the Windows setup. A Windows CI job for the bridge was not added because the uncached gRPC build takes about 20–40 minutes.
+- **Keywords:** Windows, MSVC, vcpkg, libzmq-mt-4_3_5, ZEROMQ_LIBRARY, C4996, C2220, IdentityKeyCertPair, aegis_bridge_pybind, ModuleNotFoundError, .pyd, Release folder, run_benchmarks.py
+- **Related:** PB-065, DEC-029, DEC-038, PRB-002
 - **Occurrences:** —
 
 ---
