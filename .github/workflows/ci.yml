@@ -49,6 +49,7 @@ jobs:
               - 'CMakeLists.txt'
               - 'engine/CMakeLists.txt'
               - 'tests/CMakeLists.txt'
+              - 'cmake/**'
               - '.github/workflows/ci.yml'
             python:
               - 'ai-services/**'
