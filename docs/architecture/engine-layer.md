@@ -49,9 +49,9 @@ Main job: store and process all game data.
 | World | Container owning entities, components and systems. |
 | Query | Filter selecting entities with a given component combination. |
 
-Example entities: `PlayerEntity` (Position, Velocity, Collider, Health, Sprite, Inventory), `WallEntity` (Position, Collider, Sprite), `DoorEntity` (Position, Collider, Sprite, DoorState, RequiredItem), `GoalEntity`.
+Example entities (the Phase 1 test scene, DEC-042): player (Position, Velocity, RigidBody, BoxCollider, Sprite, PlayerInput, Inventory), wall (Position, BoxCollider, Sprite, tag Obstacle), door (Position, BoxCollider, Sprite, Unlockable), key (Position, BoxCollider with isSensor, Sprite, Collectible), goal (Position, BoxCollider with isSensor, Objective).
 
-Example systems: `InputSystem`, `MovementSystem`, `PhysicsSystem`, `CollisionSystem`, `GameplaySystem` (+ `InteractionSystem`), `RenderSystem`, `TelemetrySystem`.
+Phase 1 systems: `InputApplication`, `PlayerMovement`, `PhysicsSyncIn`, `PhysicsSyncOut`, `Collect`, `Objective`, `Unlock`. Rendering and telemetry recording are not systems (srs.fr.1.13, DEC-042).
 
 Requirements: ip.fr.2.1–2.4 (create/destroy entities, add/remove/read/modify components, register systems with defined repeatable order, queries). Detail: [../design/ecs-design.md](../design/ecs-design.md).
 
@@ -104,18 +104,18 @@ Keyboard (gamepad: may) translated to actions: move, interact (ip.fr.5.1, 5.3). 
 
 ## 8. Telemetry (engine-side)
 
-Recorded each frame: state, events, timings (ip.fr.8.*). Details in [../design/telemetry-and-events.md](../design/telemetry-and-events.md). The engine only *records and exports*; interpreting is the Semantic layer's job.
+Recorded per tick: samples, events, entity lifecycle, timings (ip.fr.8.*, srs.fr.8.*), by a recorder that observes the World and the event bus. Details in [../design/telemetry-and-events.md](../design/telemetry-and-events.md). The engine only *records and exports*; interpreting is the Semantic layer's job.
 
 ## 9. Worked example: pressing "right"
 
-1. InputSystem reads the key → move-right action.
-2. MovementSystem updates `VelocityComponent`.
-3. Physics synchronisation pushes velocity to the body.
-4. Physics step (1/60 s) computes gravity, collisions.
-5. Adapter writes the body's new position to `PositionComponent`.
-6. Collision events are created.
-7. GameplaySystem processes the events.
-8. TelemetrySystem records state and events.
-9. RenderSystem reads Position + Sprite and draws.
+1. The keyboard transition is queued in the render frame; `InputApplication` turns it into the MoveRight action in `InputStateComponent` at the start of the tick.
+2. `PlayerMovement` writes `VelocityComponent` (a pending write, DEC-040).
+3. `PhysicsSyncIn` applies the pending velocity to the body.
+4. Physics step (1/60 s) computes gravity and collisions.
+5. `PhysicsSyncOut` writes the body's new position and velocity back and publishes `CollisionEvent`s.
+6. Handlers of `Collect` and `Objective` run at the end of that phase.
+7. `Unlock` runs in GameplayRules if Interact was pressed.
+8. The telemetry recorder records the tick's sample and events.
+9. After the tick, the renderer reads Position + Sprite and draws the frame.
 
 Each step must be observable on its own; a bug is located by finding the first step where the data is wrong.
