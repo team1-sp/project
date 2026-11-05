@@ -49,7 +49,7 @@ struct ItemCollectedEvent {
     AssetId itemId{};                         // srs.fr.2.84
 };
 
-struct UnlockFailedEvent {                    // managed: holds a copy of the Inventory
+struct UnlockFailedEvent {                    // managed: holds a copy of the Inventory (Phase 1: FixedArray<AssetId, 8>)
     static constexpr std::string_view typeName = "UnlockFailed";
     EntityId player = noEntity;
     EntityId unlockable = noEntity;
@@ -118,8 +118,8 @@ private:
 
 - `ctx.publish(event)` returns the `EventSeq`, stamps the current tick and phase, and notifies the observers immediately (2.81).
 - `ctx.subscribe<E>(&S::handler)` binds to the calling system's instance; `S` must be that system's class. It returns a `SubscriptionId`; `ctx.unsubscribe(id)` removes it. Both may be called at any time; during a dispatch they take effect after it (2.117).
-- A handler runs at the dispatch point of the phase **where the event was published**, not in the subscriber's own phase. Its timing is added to the subscriber's per-tick time (srs.fr.2.17).
-- Engine modules publish directly on the bus: `world.events().publish(PublisherId::engine("PhysicsAdapter"), CollisionEvent{…})`.
+- A handler runs at the dispatch point of the phase **where the event was published**, not in the subscriber's own phase. Its timing is added to the subscriber's per-tick time (srs.fr.2.17). Its writes happen in that phase too, so the schema exports each subscription with the phases it actually runs in (`runsIn`, main document §12, D-22). For `UnlockSystem` above that is `PhysicsSyncOut`, not `GameplayRules`.
+- Engine modules publish directly on the bus: `world.events().publish(PublisherId::engine("PhysicsAdapter"), CollisionEvent{…})`. They declare what they publish and in which phase once, at registration: `types.enginePublisher("PhysicsAdapter", TickPhase::PhysicsSyncOut).publishes<CollisionEvent>()`. An undeclared engine publish stops the run like a system's (E-3), and the declaration feeds `runsIn`.
 
 ## 5. Bus API
 
@@ -211,6 +211,10 @@ The record shapes follow the `[PROPOSED]` format in `telemetry-and-events.md` an
 - **Subscriber lists** per event type are kept sorted by (system run index, subscription order) and re-sorted when the scheduler's order changes.
 - The bus is single-threaded, like the rest of the simulation.
 
-## 11. Test checklist
+## 11. Build phases
+
+Following the main document §17 (about 20 % of the project is built this semester), **Phase 1** builds typed publish and subscribe with declarations (E-1, E-3), sequence numbers and publication tick, dispatch at the end of the publishing phase in system run order, handler-published events waiting for the next dispatch point (2.78), engine publishers, and the telemetry observer's publication record. **Later:** the 10,000-per-tick limit and its drop records (2.80), final-status records (2.81, 2.83), run-end drops (2.102), subscribe and unsubscribe during a dispatch (2.117), disabled-subscriber rules (2.116, these need system enable/disable) and managed payloads.
+
+## 12. Test checklist
 
 Sequence numbers increase in publication order · dispatch at the end of the publishing phase · handler-published event waits for the next dispatch point and keeps its tick, also across the tick boundary · delivery in system run order and subscription order · subscriber gets only later events · disabled system or group receives nothing and the event is still "dispatched" · subscribe/unsubscribe during dispatch applies afterwards · limit: 10,000th dispatched, 10,001st dropped "limit", later events that tick dropped, deferred events counted first next tick, one error per tick · run end drops queued and deferred with "run ended" before telemetry closes · handler finds an entity whose destruction was requested in the same phase · undeclared publish or subscribe stops the run.

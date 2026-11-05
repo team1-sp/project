@@ -103,7 +103,7 @@ From skypjack parts 2, 3, 5, 9, 12, 13:
 | **Multithreading** | Easy (chunks) | Possible, less trivial | Archetype (not needed) |
 | **Learning value / debuggability** | Many moving parts | Small, inspectable data structures | **Sparse set** |
 
-> Note added after PB-010.2: the API design keeps every pool **sorted by entity ID** (decision D-3, to satisfy coding standard rule 6). That turns add/remove into an O(n) shift inside one pool (≤ ~1,000 small entries) instead of O(1) swap-and-pop. The comparison still holds: only one pool is touched, and the entity's other components never move.
+> Note added after PB-010.2: the API design iterates every query in **ascending entity ID** (decision D-3, coding standard rule 6). Add and remove stay O(1) swap-and-pop; each pool touched during command playback is sorted once at the end of playback (O(n log n), once per phase), so pools are sorted whenever a system runs. A sorted insert per command was considered and rejected, because scene entities have lower IDs than runtime ones and most gameplay changes would shift the pool. The comparison still holds: only one pool is touched, and the entity's other components never move.
 
 ## 8. What "our scale" really means `[ASSUMPTION — estimate, to be measured]`
 
@@ -153,7 +153,7 @@ These came out of the reading and must be handled in `ecs.md`:
 1. **Entity = `{uint32 index, uint32 generation}`.** Generation increments on destroy; recycle indices through an implicit free list inside the entity array (part 3). A stale handle fails `IsAlive`.
 2. **Runtime handle ≠ persistent ID.** SRS srs.fr.2.64–69 requires a stable entity ID across save/load and scenes; index/generation is runtime-only. Plan a separate persistent ID (e.g. a component) used by scenes, prefabs, telemetry and the Semantic Graph.
 3. **Stable component type identity.** Counter-based type ids (`family<T>`) change between runs and can break across DLL boundaries on Windows (part 8). Use explicit registration with a stable name and field metadata (`RegisterComponent<T>("Position", …)`); this is also the reflection the Semantic layer needs.
-4. **Defined iteration/export order.** Swap-and-pop reorders pools after removals. Simulation stays deterministic for the same operation sequence, but telemetry and Semantic export should use a defined order (e.g. sorted by persistent ID).
+4. **Defined iteration/export order.** Swap-and-pop reorders pools after removals. Simulation stays deterministic for the same operation sequence, but telemetry and Semantic export should use a defined order (e.g. sorted by persistent ID). PB-010.2 sorts touched pools at the end of each command playback (D-3).
 5. **Reference invalidation rule.** A `T&` from `Get<T>` is invalid after any add/remove of the same type `T`. Systems and the Physics Adapter store entity handles, never component pointers.
 6. **Structural changes during iteration go through `CommandBuffer`.** (Backward-iteration tricks are optional and not needed.)
 7. **Hierarchy** (SRS transform composition, srs.fr.3): a parent/children component with first/next/prev links (part 4); parent-before-child updates via a dirty tag + sort (part 4 insights).
