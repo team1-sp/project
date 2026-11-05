@@ -48,7 +48,10 @@
 | D-23 | Several Worlds | Many independent `World`s per process; systems are registered as factories and hold no static mutable state | Vectorized RL and simultaneous games (ADR-002, §16) |
 | D-24 | Snapshot | `World::snapshot()` / `restore()` is a requirement of the ECS, even though its design is a separate document | RL episode `reset()` and Play mode (§16) |
 | D-25 | Agent I/O | Actions enter as input in `InputApplication`; observations are built by a declared system; the bridge runs only between ticks | Keeps access checks, determinism and replay valid for agent runs (§16) |
-| D-26 | Build phases | This semester builds the Phase 1 slice only (§17); everything else keeps its API slot | Human decision 2026-11-05: about 20 % of the project is built this semester |
+| D-26 | Build phases | This semester builds the Phase 1 slice only (§17); everything else keeps its API slot | DEC-043: about 20 % of the project is built this semester |
+| D-27 | Pending writes | Position and Velocity pools track writes: a non-const access by a system marks a pending write; PhysicsSyncOut writes back untracked | DEC-040: the body owns velocity (§6) |
+| D-28 | Time and randomness | `ctx.fixedDeltaSeconds()`; one PCG32 gameplay generator through `ctx.random()`, declared with `usesRandom()` | DEC-042, srs.fr.7.5 |
+| D-29 | Errors | Precondition and access violations throw `engine::RunError`, caught only by the game loop | DEC-042, srs.fr.1.11 |
 
 ## 3. Overview
 
@@ -172,7 +175,7 @@ public:
 };
 ```
 
-**Errors.** Precondition violations (stale handle, duplicate add, missing component) fail loudly (coding rule 9): they are reported with the `EntityId`, the type name and the tick and handled like an access violation (§10).
+**Errors** (D-29). Precondition violations (stale handle, duplicate add, missing component) fail loudly (coding rule 9): they throw `engine::RunError` with the `EntityId`, the type name, the system and the tick, like an access violation (§10). Only the game loop catches `RunError`: it logs the message and tick, Error-Pauses in the Editor and exits with a non-zero code headless (srs.fr.1.11). The checks are on in every build, not `assert()`. Exceptions never cross the Physics Adapter boundary.
 
 **Several Worlds** (D-23). A process may hold any number of `World`s that share one finalized `const TypeRegistry&`. Nothing in the ECS is global or static and mutable. Each World creates its own system instances from the registered factories (§8), so a system's member state belongs to one World.
 
@@ -203,7 +206,9 @@ struct HierarchyComponent {            // unmanaged; links are EntityIds (D-2)
 };
 ```
 
-`HierarchyComponent` is changed only through `setParent`, which keeps both sides of the links consistent (skypjack part 4, "unconstrained model"). `TagId` and `AssetId` come from the project-settings and asset designs `[TBD]`.
+`TagId` indexes the project's tag list (Phase 1: `Untagged`, `Obstacle`). `AssetId` is `enum class AssetId : std::uint64_t`, the FNV-1a hash of the asset name (as for `TypeId`, §11); the registry keeps the name for the schema and telemetry (DEC-042).
+
+`HierarchyComponent` is changed only through `setParent`, which keeps both sides of the links consistent (skypjack part 4, "unconstrained model"). Their full asset and project-settings designs come later.
 
 ## 6. Storage: `ComponentPool<T>` (D-1, D-3, D-13, D-14)
 
@@ -246,6 +251,7 @@ contains(e):
 
 A sorted insert per command was rejected: scene entities have Editor IDs (below 2³²), so adding or removing a component on a placed door, key or pickup, the most common gameplay change, would shift every later entry and rewrite its `sparse_` slot.
 
+- **Write tracking** (D-27, DEC-040). Types registered with `.tracksWrites()` (Phase 1: Position, Velocity) keep one more parallel array, `pendingWrite_`. Any non-const access by a system (`get<T>`, `tryGet<T>`, a non-const `T` in `each`/`query`) sets the flag for that entity, so a system declares `const T` unless it writes. `PhysicsSyncIn` reads the marked entries, applies them to the bodies and clears the marks; `PhysicsSyncOut` writes back through `ctx.writeUntracked<T>(e, value)`, which leaves the mark alone and skips entries that are marked. `writeUntracked` is allowed only for types the system declares in `writesUntracked<…>()`, and only engine systems may declare that.
 - **Tags** (`std::is_empty_v<T>`) store no `components_`; only `has`, `add`, `remove` and query filters apply.
 - **Unmanaged** components (`std::is_trivially_copyable_v<T>`) may contain only fixed-size fields. Their pools can be copied with `memcpy` (snapshots, telemetry fast path) and exposed as one contiguous buffer with a field layout (§11, §16).
 - **Managed** components may own heap memory (`std::string`, `std::vector`). They are copied with their copy constructors. Keep them out of hot paths where possible (coding rule 7).
@@ -260,7 +266,7 @@ ctx.each<const VelocityComponent, PositionComponent>(
     [](const VelocityComponent& vel, PositionComponent& pos) { /* ... */ });
 
 ctx.query<HealthComponent>()
-    .with<PlayerControlledTag>()           // must also have it; no parameter
+    .with<PlayerInputComponent>()          // must also have it; no parameter
     .without<InvulnerableTag>()            // must not have it
     .withTag(playerTag)                    // srs.fr.2.57
     .withLayer(2)
@@ -344,29 +350,30 @@ public:
     SystemDescription& createsEntities();                        // D-21
     SystemDescription& destroysEntities();
     SystemDescription& togglesEnabled();                         // setEnabled on entities
+    SystemDescription& usesRandom();                             // D-28
+    template <typename... Ts> SystemDescription& writesUntracked();  // engine systems only (D-27)
 };
 ```
 
 ```cpp
-class MovementSystem final : public ISystem {
+class PlayerMovementSystem final : public ISystem {
 public:
     void describe(SystemDescription& d) const override {
-        d.name("Movement")
-            .purpose("Turns the held move actions into the player's horizontal velocity.")
-            .group("Player")                                     // group "Player" is in GameplayInput
-            .runsAfter("InputMapping")
-            .reads<InputStateComponent, PlayerControlledTag>()
-            .writes<VelocityComponent>();
+        d.name("PlayerMovement")
+            .purpose("Sets the player's velocity from the movement vector times the Player Input speed (srs.fr.6.1).")
+            .phase(TickPhase::GameplayInput)
+            .reads<InputStateComponent, PlayerInputComponent>()
+            .writes<VelocityComponent>();                        // a pending write (D-27)
     }
 
     void update(SystemContext& ctx) override {
         const auto& input = ctx.single<const InputStateComponent>();
-        ctx.query<VelocityComponent>().with<PlayerControlledTag>().each(
-            [&](VelocityComponent& vel) { vel.xMetersPerSecond = input.moveX * speed; });
+        ctx.each<const PlayerInputComponent, VelocityComponent>(
+            [&](const PlayerInputComponent& player, VelocityComponent& vel) {
+                vel.xMetersPerSecond = input.moveX * player.speedMetersPerSecond;
+                vel.yMetersPerSecond = input.moveY * player.speedMetersPerSecond;
+            });
     }
-
-private:
-    static constexpr float speed = 4.0f;   // meters per second
 };
 ```
 
@@ -485,6 +492,9 @@ public:
     SubscriptionId subscribe(void (S::*handler)(const EventInfo&, const E&, SystemContext&));
     void unsubscribe(SubscriptionId id);
     Tick tick() const;
+    double fixedDeltaSeconds() const;                 // 1/60 (R-5); never wall-clock time
+    GameplayRandom& random();                         // PCG32 seeded with the run's seed (D-28)
+    template <typename T> void writeUntracked(Entity e, const T& value);  // D-27
     std::string_view systemName() const;
 };
 ```
@@ -499,6 +509,8 @@ public:
 | `commands().createEntity` | `createsEntities()` |
 | `commands().destroy` | `destroysEntities()` |
 | `setEnabled` | `togglesEnabled()` |
+| `random()` | `usesRandom()`; draws happen in system run order, so the seed fixes the sequence (srs.fr.7.5, 7.24) |
+| `writeUntracked<T>` | `T` in `writesUntracked` (engine systems only) |
 | `publish<E>` / `subscribe<E>` | `E` in `publishes` / `subscribes` |
 
 Destroying or disabling an entity removes or hides every one of its components, so these are declared like writes (D-21). The calls are also recorded in telemetry with the system's name, and the schema exports the three flags, so the Semantic Graph can answer "which systems can destroy or disable entities?" and telemetry answers "which one did".
@@ -601,8 +613,8 @@ struct InventoryComponent {                // managed: owns a std::vector (Phase
     std::vector<AssetId> items;
 };
 
-struct PlayerControlledTag {
-    static constexpr std::string_view typeName = "PlayerControlled";
+struct PrefabTag {                         // later phase; shown as a tag example
+    static constexpr std::string_view typeName = "Prefab";
 };
 
 void registerCoreComponents(TypeRegistry& types) {
@@ -616,8 +628,8 @@ void registerCoreComponents(TypeRegistry& types) {
         .describe("Items the entity has collected and still holds.")
         .field("items", &InventoryComponent::items, Unit::None, "Asset IDs of held items");
 
-    types.component<PlayerControlledTag>()
-        .describe("Marks the entity that the user or the Playtest Agent controls.");
+    types.component<PrefabTag>()
+        .describe("Marks a prefab source entity; normal queries skip it.");
 }
 ```
 
@@ -636,7 +648,8 @@ struct SystemInfo {
     std::vector<std::string> runsBefore, runsAfter;
     std::vector<std::string> reads, writes, publishes;                // type names
     std::vector<SubscriptionInfo> subscribes;
-    bool createsEntities, destroysEntities, togglesEnabled;           // D-21
+    bool createsEntities, destroysEntities, togglesEnabled, usesRandom;  // D-21, D-28
+    std::vector<std::string> writesUntracked;                         // D-27
     std::uint32_t orderIndex;              // position in the computed run order
     bool enabled;
 };
@@ -647,7 +660,7 @@ struct SubscriptionInfo {                  // D-22
 };
 
 struct PublisherInfo {                     // engine modules that publish (event bus E-2)
-    std::string name;                      // e.g. "PhysicsAdapter"
+    std::string name;                      // an engine module that is not a system
     TickPhase phase;                       // e.g. PhysicsSyncOut
     std::vector<std::string> publishes;
 };
@@ -667,7 +680,7 @@ struct Schema {                            // plain data, no accessors
 Schema buildSchema(const TypeRegistry& types, const SystemScheduler& systems);
 ```
 
-**Where handlers run** (D-22). A handler runs at the dispatch point of the phase where its event was published, not in its system's own phase (event bus §4). Its writes therefore happen there. `runsIn` lists, for each subscription, the phases of every declared publisher of that event: systems through `publishes<E>()`, engine modules through `types.enginePublisher("PhysicsAdapter", TickPhase::PhysicsSyncOut).publishes<CollisionEvent>()`. When a publisher is itself a handler, its events wait for the next dispatch point (srs.fr.2.78), so the next phase is listed too. In the example of the event bus document, `Unlock` has phase `GameplayRules` but its `Collision` subscription has `runsIn: ["PhysicsSyncOut"]`, which is where its `Unlockable` writes happen.
+**Where handlers run** (D-22). A handler runs at the dispatch point of the phase where its event was published, not in its system's own phase (event bus §4). Its writes therefore happen there. `runsIn` lists, for each subscription, the phases of every declared publisher of that event: systems through `publishes<E>()`, engine modules that are not systems through `types.enginePublisher(name, phase).publishes<E>()`. When a publisher is itself a handler, its events wait for the next dispatch point (srs.fr.2.78), so the next phase is listed too. In the example of the event bus document, `Collect` has phase `GameplayRules` but its `Collision` subscription has `runsIn: ["PhysicsSyncOut"]` (the `PhysicsSyncOut` system publishes `Collision`, DEC-041), which is where its `Inventory` writes happen.
 
 **Flow:** the ECS builds the `Schema` (no file I/O in `engine/ecs`). The writer in `engine/telemetry` writes it as the **first record after the run header** of every telemetry file. The Semantic Architecture Layer reads only that file (R-1). Project scripts never reload during a run (srs.fr.2.40), so one schema per file is always correct. The Editor's type cache (srs.fr.2.121) can store the same structure.
 
@@ -681,12 +694,12 @@ Example (one line in the file, wrapped here):
    "size":8,
    "fields":[{"name":"x","type":"float","unit":"m","default":0.0,"offset":0,"size":4,"count":1,"description":"Horizontal position"},
              {"name":"y","type":"float","unit":"m","default":0.0,"offset":4,"size":4,"count":1,"description":"Vertical position"}],
-   "readBy":["CameraFollow"],"writtenBy":["PhysicsWriteBack"]}],
- "systems":[{"name":"Movement","purpose":"Turns the held move actions into the player's horizontal velocity.",
-   "phase":"GameplayInput","group":"Player","order":2,"runsAfter":["InputMapping"],
-   "reads":["InputState","PlayerControlled"],"writes":["Velocity"],"publishes":[],"subscribes":[],
-   "createsEntities":false,"destroysEntities":false,"togglesEnabled":false}],
- "enginePublishers":[{"name":"PhysicsAdapter","phase":"PhysicsSyncOut","publishes":["Collision"]}]}
+   "readBy":["PhysicsSyncIn"],"writtenBy":["PhysicsSyncOut"]}],
+ "systems":[{"name":"PlayerMovement","purpose":"Sets the player's velocity from the movement vector times the Player Input speed (srs.fr.6.1).",
+   "phase":"GameplayInput","group":"","order":0,"runsAfter":[],
+   "reads":["InputState","PlayerInput"],"writes":["Velocity"],"publishes":[],"subscribes":[],
+   "createsEntities":false,"destroysEntities":false,"togglesEnabled":false,"usesRandom":false}],
+ "enginePublishers":[]}
 ```
 
 The JSON-lines format follows `telemetry-and-events.md`, which is still `[PROPOSED]`; the final record shape is settled with the telemetry PB item. Runtime values (entity states per tick) use the same field layout, read at each field's `offset` without building `FieldValue`s (§11), keyed by `EntityId`.
@@ -712,9 +725,8 @@ The JSON-lines format follows `telemetry-and-events.md`, which is still `[PROPOS
 - **Agent bridge task (PB-065 follow-up):** the `Observation`/`Action` proto, `AgentObservationSystem` and the input path of §16.
 - **Snapshot design:** a separate document for `WorldSnapshot` (D-24), Play mode and Editor undo.
 - **`coding-standards.md`:** add "functions camelCase, members with trailing underscore" (D-19); fix the tag rule to `<Name>Tag` (D-17).
-- **`ecs-design.md`:** §2 component list vs the SRS roles (Collectible/Unlockable/Objective); §3 RenderSystem is per render frame (srs.fr.1.13); §8 open questions answered (storage, metadata form).
-- **`telemetry-and-events.md`:** add the schema record (§12).
-- **Q-013** stays open: Q-013 extras (valid ranges, examples, notes) can be added to `FieldInfo` and the builder later without changing the API.
+- **`ecs-design.md`** and **`telemetry-and-events.md`:** done on 2026-11-05 (DEC-042): SRS component set, ticks, pushed events, rendering and telemetry outside the scheduler, schema record.
+- **Q-013** is answered for Phase 1 (DEC-042): descriptions, units, derived readBy/writtenBy. Extras (valid ranges, examples, notes) can be added to `FieldInfo` and the builder later without changing the API.
 
 ## 15. Implementation test checklist
 
@@ -750,11 +762,13 @@ The team builds about 20 % of the whole project this semester (human decision, 2
 | Entities | Entity table, runtime and Editor IDs, `find`/`idOf`, dense ID lookup | Hierarchy (`setParent`, recursive destroy), entity and component enabled flags |
 | Storage | `ComponentPool<T>` with sort-at-playback, tags, unmanaged components | Managed components (`String`, `List`); in Phase 1 a list is a `FixedArray<T, N>`, e.g. the inventory |
 | Queries | `each<Ts...>` in ascending `EntityId` | `query<Ts...>()` builder (`with`, `without`, tag, layer), `includeDisabled` |
-| Systems | `ISystem`, `describe()` with phase, reads, writes, create/destroy flags; access check; registration order inside a phase; timings; factories | Groups, `runsBefore`/`runsAfter`, manual order, cycle reporting, enable/disable of systems and groups |
+| Systems | `ISystem`, `describe()` with phase, reads, writes, create/destroy/enable/random flags; access check; registration order inside a phase; timings; factories | Groups, `runsBefore`/`runsAfter`, manual order, cycle reporting, enable/disable of systems and groups |
 | Structural changes | `CommandBuffer` with create, destroy, add, remove; pending-entity rules | Eager reference clearing (D-18), `setParent` commands |
 | Events | Typed publish/subscribe, sequence numbers, dispatch at the end of the publishing phase, handler events wait for the next dispatch point | The 10,000-per-tick limit, drop statuses, run-end drops, subscribe/unsubscribe during dispatch |
 | Reflection and export | `TypeRegistry` with descriptions, units, field layout, member-count check; `Schema` written to telemetry | Data assets, enums beyond the ones the test scene needs, Q-013 extras |
 | Singletons | `single<T>()` for `InputStateComponent` | General singleton support |
+| Physics link | Write tracking for Position/Velocity, `writeUntracked`, `PhysicsSyncIn`/`PhysicsSyncOut` systems (DEC-040, DEC-041) | Hierarchy-following transforms |
+| Time, randomness, errors | `fixedDeltaSeconds()`, `GameplayRandom` (PCG32), `RunError` | — |
 | Agent I/O and snapshot | Rules only: input is the only way in, no static state in systems, unmanaged built-ins | `AgentObservationSystem`, `snapshot()`/`restore()`, the bridge itself |
 
 Phase 1 is the critical path for the semantic layer (it needs the schema and real telemetry) and for the Increment 1 demo.

@@ -70,6 +70,6 @@ Use these terms consistently in code, comments, docs and prompts. Do **not** sub
 ## Names used in the examples
 
 Entities: `PlayerEntity`, `WallEntity`, `DoorEntity`, `GoalEntity`, `EnemyEntity`, key (`GoldenKey`).
-Components: `PositionComponent`, `VelocityComponent`, `ColliderComponent`, `SpriteComponent`, `InventoryComponent`, `HealthComponent`, `DoorStateComponent`, `RequiredItemComponent`.
-Systems: `InputSystem`, `MovementSystem`, `PhysicsSystem`, `CollisionSystem`, `GameplaySystem`/`InteractionSystem`, `RenderSystem`, `TelemetrySystem`.
-Events: `CollisionEvent`, `DoorOpenedEvent`, `DoorOpenFailedEvent`, `GoalReachedEvent`.
+Components (Phase 1, `design/ecs-design.md` §2): `PositionComponent`, `VelocityComponent`, `RigidBodyComponent`, `BoxColliderComponent`, `CircleColliderComponent`, `SpriteComponent`, `PlayerInputComponent`, `InventoryComponent`, `CollectibleComponent` (the key role), `UnlockableComponent` (the door role), `ObjectiveComponent` (the goal role), `InputStateComponent`.
+Systems: `InputApplication`, `PlayerMovement`, `PhysicsSyncIn`, `PhysicsSyncOut`, `Collect`, `Objective`, `Unlock`.
+Events: `CollisionEvent`, `ItemCollectedEvent`, `UnlockedEvent`, `UnlockFailedEvent`, `ObjectiveReachedEvent`.

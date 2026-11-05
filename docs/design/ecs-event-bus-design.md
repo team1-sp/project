@@ -25,7 +25,7 @@
 | # | Choice | Why |
 | --- | --- | --- |
 | E-1 | Subscribers are **systems only**. A handler is a member function of the subscribing system and runs with **that system's `SystemContext`** (same access rules, same phase `CommandBuffer`) | 2.46 and 2.116 speak of systems; keeps the access check (D-11) complete |
-| E-2 | Engine modules (Physics Adapter) may **publish** but not subscribe; telemetry watches through an **observer**, not a subscription | Telemetry must see every event, including dropped ones (2.81) |
+| E-2 | Engine modules that are not systems may **publish** but not subscribe; telemetry watches through an **observer**, not a subscription. `Collision` is published by the `PhysicsSyncOut` system (DEC-041) | Telemetry must see every event, including dropped ones (2.81) |
 | E-3 | `publish<E>` and `subscribe<E>` must be declared in `describe()` (`publishes<…>`, `subscribes<…>`); violations stop the run like other access violations | Extends D-11; gives the Semantic Graph `publishes`/`handles` edges |
 | E-4 | Event payloads use the component reflection and the same managed/unmanaged rule (D-14). Entity fields are `EntityId` (D-2) | One reflection system; 2.84 needs list payloads |
 | E-5 | Storage: one typed buffer per event type plus one ordered queue of `{seq, type index, slot}` | No per-event heap allocation after warm-up for unmanaged events (coding rule 7) |
@@ -35,7 +35,7 @@ E-1…E-5 were not asked separately; they follow from the SRS and from D-2, D-11
 ## 3. Event types
 
 ```cpp
-struct CollisionEvent {                       // published by the Physics Adapter
+struct CollisionEvent {                       // published by the PhysicsSyncOut system (DEC-041)
     static constexpr std::string_view typeName = "Collision";
     EntityId a = noEntity;
     EntityId b = noEntity;
@@ -78,7 +78,7 @@ struct EventInfo {
     Tick publishedTick;                       // 2.46, 2.47
     TickPhase publishedPhase;
     TypeId type;
-    PublisherId publisher;                    // system name or engine module, e.g. "PhysicsAdapter"
+    PublisherId publisher;                    // system name, e.g. "PhysicsSyncOut", or engine module
 };
 
 enum class EventStatus : std::uint8_t { Queued, Dispatched, Dropped };
@@ -88,20 +88,21 @@ enum class DropReason : std::uint8_t { None, Limit, RunEnded };
 ## 4. Publishing and subscribing
 
 ```cpp
-class UnlockSystem final : public ISystem {
+class CollectSystem final : public ISystem {
 public:
     void describe(SystemDescription& d) const override {
-        d.name("Unlock")
-            .purpose("Decides whether a player who touches an Unlockable unlocks it.")
+        d.name("Collect")
+            .purpose("Adds a touched Collectible's item to the player's Inventory and disables it (srs.fr.6.2).")
             .phase(TickPhase::GameplayRules)
-            .reads<InventoryComponent, PlayerControlledTag>()
-            .writes<UnlockableComponent>()
+            .reads<CollectibleComponent, PlayerInputComponent>()
+            .writes<InventoryComponent>()
+            .togglesEnabled()
             .subscribes<CollisionEvent>()
-            .publishes<UnlockedEvent, UnlockFailedEvent>();
+            .publishes<ItemCollectedEvent>();
     }
 
     void setup(SystemContext& ctx) override {
-        ctx.subscribe<CollisionEvent>(&UnlockSystem::onCollision);
+        ctx.subscribe<CollisionEvent>(&CollectSystem::onCollision);
     }
 
     void update(SystemContext&) override {}   // all work happens in the handler
@@ -109,17 +110,17 @@ public:
 private:
     void onCollision(const EventInfo& info, const CollisionEvent& hit, SystemContext& ctx) {
         // Runs at the dispatch point of the phase that published the event (PhysicsSyncOut).
-        // Structural changes go to ctx.commands() and apply at the end of that phase.
-        // ...decide using the Inventory, then:
-        ctx.publish(UnlockFailedEvent{/* ... */});   // waits for the next dispatch point (2.78)
+        // Disabling takes effect at once; structural changes apply at the end of that phase.
+        // ...if one side is the player and the other an enabled Collectible:
+        ctx.publish(ItemCollectedEvent{/* ... */});  // waits for the next dispatch point (2.78)
     }
 };
 ```
 
 - `ctx.publish(event)` returns the `EventSeq`, stamps the current tick and phase, and notifies the observers immediately (2.81).
 - `ctx.subscribe<E>(&S::handler)` binds to the calling system's instance; `S` must be that system's class. It returns a `SubscriptionId`; `ctx.unsubscribe(id)` removes it. Both may be called at any time; during a dispatch they take effect after it (2.117).
-- A handler runs at the dispatch point of the phase **where the event was published**, not in the subscriber's own phase. Its timing is added to the subscriber's per-tick time (srs.fr.2.17). Its writes happen in that phase too, so the schema exports each subscription with the phases it actually runs in (`runsIn`, main document §12, D-22). For `UnlockSystem` above that is `PhysicsSyncOut`, not `GameplayRules`.
-- Engine modules publish directly on the bus: `world.events().publish(PublisherId::engine("PhysicsAdapter"), CollisionEvent{…})`. They declare what they publish and in which phase once, at registration: `types.enginePublisher("PhysicsAdapter", TickPhase::PhysicsSyncOut).publishes<CollisionEvent>()`. An undeclared engine publish stops the run like a system's (E-3), and the declaration feeds `runsIn`.
+- A handler runs at the dispatch point of the phase **where the event was published**, not in the subscriber's own phase. Its timing is added to the subscriber's per-tick time (srs.fr.2.17). Its writes happen in that phase too, so the schema exports each subscription with the phases it actually runs in (`runsIn`, main document §12, D-22). For `CollectSystem` above that is `PhysicsSyncOut`, not `GameplayRules`.
+- Engine modules that are not systems publish directly on the bus: `world.events().publish(PublisherId::engine(name), event)`. They declare what they publish and in which phase once, at registration: `types.enginePublisher(name, phase).publishes<E>()`. Phase 1 has none: `Collision` comes from the `PhysicsSyncOut` system. An undeclared engine publish stops the run like a system's (E-3), and the declaration feeds `runsIn`.
 
 ## 5. Bus API
 
@@ -187,7 +188,7 @@ phase N:  systems update()  →  events.dispatch(N)  →  commands.playback()  �
 
 - Handlers of phase N still find entities whose destruction was requested in phase N, because destruction happens at playback, after dispatch (2.118, 2.119). Requests made by handlers in `PhysicsSyncOut` also apply at the end of that phase, so every CollisionEvent of the step is delivered first (2.120).
 - An event that names an entity destroyed at an **earlier** phase boundary is still delivered with its `EntityId`; `ctx.find(id)` returns nothing for it (2.118).
-- The Physics Adapter publishes no CollisionEvent for a body whose entity was destroyed before collision collection (2.118, srs.fr.7.21). That rule belongs to the adapter design.
+- `PhysicsSyncOut` publishes no CollisionEvent for a body whose entity was destroyed before collision collection (2.118, srs.fr.7.21). That rule belongs to the adapter design.
 
 ## 8. Run end
 
@@ -198,7 +199,7 @@ phase N:  systems update()  →  events.dispatch(N)  →  commands.playback()  �
 The telemetry observer writes one record at publication and one when the status is final. Entity IDs are found through the reflection (`EntityRef` fields), so the `entities` list needs no extra code per event type.
 
 ```json
-{"type":"event","seq":118,"tick":412,"phase":"PhysicsSyncOut","name":"Collision","publisher":"PhysicsAdapter","entities":[4294967301,4294967310],"payload":{"a":4294967301,"b":4294967310,"kind":"Begin"}}
+{"type":"event","seq":118,"tick":412,"phase":"PhysicsSyncOut","name":"Collision","publisher":"PhysicsSyncOut","entities":[4294967301,4294967310],"payload":{"a":4294967301,"b":4294967310,"kind":"Begin"}}
 {"type":"eventStatus","seq":118,"status":"dispatched","tick":412}
 {"type":"eventStatus","seq":131,"status":"dropped","reason":"limit"}
 ```

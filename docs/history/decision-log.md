@@ -48,6 +48,10 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-037 | The PB-008 spike in `sandbox/` may link Box2D and raylib directly (exception to R-3/R-4 for that spike only) | Proposed | 2026-11-01 |
 | DEC-038 | ADR-002: the C++ to Python bridge is gRPC/protobuf behind AgentBridge | Accepted | 2026-11-04 |
 | DEC-039 | `ai-services` uses Python 3.12 with pinned Python project tooling | Accepted | 2026-11-04 |
+| DEC-040 | The physics body owns velocity; the ECS Velocity component mirrors it and carries pending writes | Accepted | 2026-11-05 |
+| DEC-041 | The ECS and the Physics Adapter meet only in two declared systems, PhysicsSyncIn and PhysicsSyncOut | Accepted | 2026-11-05 |
+| DEC-042 | Pre-implementation ECS gaps settled: push events, tick vocabulary, Phase 1 components, input, time, RNG, scene, ids, errors, telemetry records | Accepted | 2026-11-05 |
+| DEC-043 | About 20 % of the whole project is built this semester; the ECS builds its Phase 1 slice | Accepted | 2026-11-05 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -490,3 +494,66 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** any software-environment section that names the AI-service Python version.
 - **Supersedes / Related:** accepts the language/runtime part of DEC-011; PB-006, GitHub issue #20, Q-018.
 - **Amendments:** 2026-11-04 — renumbered from DEC-038 by Işık Dönger while merging `main` into the PB-065 branch, because both branches had created a DEC-038. Citations in project docs were updated to DEC-039. 2026-11-04 — the engine-facing protocol mentioned in Consequences is now decided by DEC-038.
+
+### DEC-040 — The physics body owns velocity
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager, reviewer of PR #28)  **Proposed by:** `physics-adapter-design.md` §4 (TASK-008)  **Recorded by:** claude (PR #28 review)
+- **Human's words:** "for physics adapter body (phyics adapter) should own velocity"
+- **Context:** `physics-adapter-design.md` §4 left open whether the ECS or the Box2D body is authoritative for velocity. It decides which system declares `writes<Velocity>` and how gameplay changes motion. The SRS already describes the behaviour (srs.fr.3.13, 3.18–3.22, 3.28, 3.51).
+- **Options considered:** (a) ECS owns velocity and pushes it into the body every step; (b) the body owns it and the adapter writes it back to the ECS.
+- **Decision:** (b). After each physics step the body's position, rotation and linear velocity are authoritative for dynamic bodies and are written back to `PositionComponent` and `VelocityComponent` in PhysicsSyncOut. Gameplay changes motion only by writing Position or Velocity, which marks the component as a **pending write**, or by force and impulse commands; the next PhysicsSyncIn applies pending writes to the body, and write-back skips a component with a pending write. As the SRS states: static bodies follow the ECS Position and ignore Velocity; a kinematic body keeps a written Velocity until it is written again, and physics never changes a kinematic body's Velocity.
+- **Rationale:** Box2D's collision response must not be overwritten by stale ECS values every step; pending writes keep gameplay control explicit and match the SRS.
+- **Consequences:** The ECS needs write tracking for Position and Velocity (`ecs-api-design.md` §6) and an untracked write-back path used only by PhysicsSyncOut. `VelocityComponent` is a mirror for telemetry and gameplay reads.
+- **Docs updated:** `design/physics-adapter-design.md` §4, `design/ecs-design.md`, `design/ecs-api-design.md`.
+- **Course documents affected (for humans):** none known.
+- **Supersedes / Related:** closes the velocity point of TASK-008; DEC-014, DEC-036, DEC-041.
+
+### DEC-041 — ECS and Physics Adapter meet only in PhysicsSyncIn and PhysicsSyncOut
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Decided by:** Işık Dönger  **Proposed by:** claude (PR #28 review)  **Recorded by:** claude (PR #28 review)
+- **Human's words:** "PhysicsSync system works."
+- **Context:** Nothing defined how bodies are created and destroyed and who reads and writes ECS data for physics. Options were an `IWorldObserver` reacting to component adds, or declared systems.
+- **Decision:** Two engine systems, `PhysicsSyncIn` (phase PhysicsSyncIn) and `PhysicsSyncOut` (phase PhysicsSyncOut), are the only code that calls the Physics Adapter from the simulation. PhysicsSyncIn creates and changes bodies and shapes and applies pending writes, in the order of srs.fr.3.61. PhysicsSyncOut writes positions and velocities back and publishes `CollisionEvent`. The game loop calls `adapter.step(1/60)` in PhysicsStep, which holds no systems. The adapter keeps an `IWorldObserver` only to learn about destroyed and disabled entities, and acts on them in the next PhysicsSyncIn (srs.fr.2.119). Both systems declare their reads, writes and publishes like any system and are created by factories that receive that World's adapter.
+- **Rationale:** Declared systems make every physics read and write visible in the Semantic Graph and keep the access check complete.
+- **Consequences:** The Physics Adapter uses the ECS `EntityId` type. `CollisionEvent` is published by the PhysicsSyncOut system, not by an engine module.
+- **Docs updated:** `design/physics-adapter-design.md`, `design/ecs-design.md`, `design/ecs-api-design.md`, `design/ecs-event-bus-design.md`.
+- **Course documents affected (for humans):** none known.
+- **Supersedes / Related:** DEC-002, DEC-003, DEC-040, R-2, R-3.
+
+### DEC-042 — Pre-implementation ECS gaps settled
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Decided by:** Işık Dönger  **Proposed by:** claude (PR #28 review, "Gaps before implementation")  **Recorded by:** claude (PR #28 review)
+- **Human's words:** "for everything else your suggestions work."
+- **Context:** After the PB-010 API design, `ecs-design.md` and `telemetry-and-events.md` contradicted it, and several things Phase 1 needs were `[TBD]`.
+- **Decision:**
+  1. Events are **pushed**: handlers run at the end of the publishing tick phase (event bus design). `ecs-design.md` §4's per-frame pull model is replaced.
+  2. Simulation steps are **ticks** (srs.fr.1.12) everywhere in engine docs; "frame" means render frame only. PhysicsStep holds no systems; rendering is not a system; telemetry recording is done by a recorder that observes the World and the bus, not by a TelemetrySystem.
+  3. Phase 1 components use the SRS names and fields (srs.fr.22.34–22.45), listed in `ecs-design.md` §2.
+  4. `InputStateComponent` holds pressed, released and held states for the Phase 1 actions (MoveUp, MoveDown, MoveLeft, MoveRight, Interact) and the movement vector; it is also the agent's action shape.
+  5. Systems read the fixed step through `ctx.fixedDeltaSeconds()`; there is one seeded gameplay random number generator (PCG32, srs.fr.7.5), reached through `ctx.random()` by systems that declare `usesRandom()`.
+  6. Phase 1 scenes are built by C++ spawn code with explicit Editor-range entity IDs; the `.scene` format waits for the Editor.
+  7. `AssetId` is a 64-bit FNV-1a hash of the asset name, with the name kept for export; `TagId` indexes the project's tag list (Phase 1: Untagged, Obstacle).
+  8. Unrecoverable run errors (precondition and access violations) throw `engine::RunError`, caught only by the game loop, which logs the message and tick, Error-Pauses in the Editor and exits non-zero headless (srs.fr.1.11). The checks are on in every build. Exceptions never cross the adapter boundary.
+  9. Telemetry Phase 1 records: run header, schema, per-tick sample, entity lifecycle, event publication. `telemetry-and-events.md` is rewritten to ticks.
+  10. Q-013 is answered for Phase 1: description, unit, and the derived readBy/writtenBy; ranges, examples and notes can be added later.
+- **Rationale:** Each item was a blocker or a contradiction for Phase 1 implementation; see the PR #28 review.
+- **Consequences:** `ecs-design.md`, `telemetry-and-events.md`, `ecs-api-design.md` and `ecs-event-bus-design.md` are updated; the PB-010 D-decisions still go through the PB-010.3 review and ADR-001.
+- **Docs updated:** `design/ecs-design.md`, `design/telemetry-and-events.md`, `design/ecs-api-design.md`, `design/ecs-event-bus-design.md`, `design/physics-adapter-design.md`, `architecture/engine-layer.md`, `architecture/glossary.md`, `agents/state/open-questions.md` (Q-013).
+- **Course documents affected (for humans):** any course text that describes events as living for a frame or uses DoorState/RequiredItem component names.
+- **Supersedes / Related:** DEC-002, DEC-008, DEC-018, Q-013, PB-010.
+
+### DEC-043 — About 20 % of the whole project is built this semester
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Decided by:** Işık Dönger  **Recorded by:** claude (PR #28 review)
+- **Human's words:** "for scope we will build only %20 of the whole project this semester."
+- **Context:** The PB-010 ECS design covers the full SRS; it is more than the ECS owners can build and test this semester.
+- **Decision:** This semester builds about 20 % of the whole project. For the ECS this is Phase 1 of `ecs-api-design.md` §17 (D-26): enough for the test scene (player, wall, door, key, goal), the semantic layer's schema and telemetry, and the AI bridge seams. Later items keep their place in the API.
+- **Rationale:** `[not given]`
+- **Consequences:** Implementation tasks for the ECS are cut to Phase 1; later items need their own PB tasks.
+- **Docs updated:** `design/ecs-api-design.md` §17, `design/ecs-event-bus-design.md` §11, `design/ecs-design.md`.
+- **Course documents affected (for humans):** the semester plan or roadmap sections of course documents, if they promise more.
+- **Supersedes / Related:** D-26, PB-010.

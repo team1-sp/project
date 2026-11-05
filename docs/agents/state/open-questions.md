@@ -57,10 +57,10 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 ### Q-013 — What should "LLM-instructive components" contain?
 - **To:** human:isik
 - **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-13
-- **Status:** Open — **deferred by the human** ("too early", 2026-10-15). Do not raise until a human does. Blocks TASK-010 only.
+- **Status:** Answered for Phase 1 (2026-11-05, DEC-042). Was deferred by the human ("too early", 2026-10-15).
 - **Context:** DEC-018: the custom ECS exists so components are more LLM-instructive via the semantic layer.
 - **Options (not decisions):** (A) minimal: component name + per-field name/type; (B) plus human-readable purpose and per-field description/unit/range; (C) plus declared owner/readers and example values. Declared in C++20 by a registration function per component vs macro/table. I lean (B)/(C) because the assistant must cite meaning, not just values — your call.
-- **Answer:** —
+- **Answer:** 2026-11-05, Işık Dönger, for Phase 1 (DEC-042 item 10): a registration builder (no macros) with component and field descriptions, units, and readBy/writtenBy derived from system declarations. Valid ranges, examples and notes may be added later without changing the API (`ecs-api-design.md` §11, §14).
 
 ### Q-016 — Which demo game do we build?
 - **To:** human:team

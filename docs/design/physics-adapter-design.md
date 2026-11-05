@@ -13,7 +13,7 @@ ECS / Engine ──► IPhysicsAdapter ──► Box2D
 
 ## 2. Interface (engine-facing) — ip.fr.3.1
 
-Language-neutral signatures; types are ours (`BodyId`, `Vec2`, `EntityId`, `BodyDesc`, `RaycastHit`, `RawCollision`).
+Language-neutral signatures; types are ours (`BodyId`, `Vec2`, `EntityId`, `BodyDesc`, `RaycastHit`, `RawCollision`). `EntityId` is the ECS type of `ecs-api-design.md` §4 (DEC-041).
 
 | Function | Purpose | Notes |
 | --- | --- | --- |
@@ -30,8 +30,8 @@ Language-neutral signatures; types are ours (`BodyId`, `Vec2`, `EntityId`, `Body
 ## 3. Responsibilities
 
 1. **Entity ↔ body mapping**, both directions (ip.fr.3.4): `PlayerEntity ↔ PhysicsBody 17`. Mapping is the only place where entity IDs and library body handles meet.
-2. **Write-back** after every `Step` (ip.fr.3.5): body position → `PositionComponent` of the mapped entity. (Velocity write-back: see §4.)
-3. **Collision translation** (ip.fr.3.6): `Body 17 collided with Body 23` → `CollisionEvent(PlayerEntity, WallEntity, frame)`.
+2. **Write-back** after every `Step` (ip.fr.3.5): body position, rotation and velocity → `PositionComponent` and `VelocityComponent` of the mapped entity, in the PhysicsSyncOut system (§7, DEC-040).
+3. **Collision translation** (ip.fr.3.6): `Body 17 collided with Body 23` → `CollisionEvent(PlayerEntity, WallEntity)`, published by the PhysicsSyncOut system with its tick (§7).
 4. **Body types and shapes** (ip.fr.3.2): static, dynamic, kinematic; box, circle; polygon (should).
 5. **Gravity** applied to dynamic bodies (ip.fr.3.3) — configurable vector in adapter config.
 6. **Lifecycle safety:** no orphan bodies, no stale mappings (see `common-errors.md` E-001/E-002).
@@ -40,7 +40,8 @@ Language-neutral signatures; types are ours (`BodyId`, `Vec2`, `EntityId`, `Body
 
 | Point | Options | Leaning |
 | --- | --- | --- |
-| Authoritative velocity | (a) ECS owns velocity, pushes into body every step; (b) body owns velocity, adapter writes back to ECS | `[PROPOSED]` (b) for dynamic bodies, (a) for kinematic; always mirror to ECS for telemetry |
+| Authoritative velocity | (a) ECS owns velocity, pushes into body every step; (b) body owns velocity, adapter writes back to ECS | **Decided (DEC-040):** (b). The body owns velocity; `VelocityComponent` mirrors it after each step. Gameplay changes motion only through pending writes of Position/Velocity or force/impulse commands, applied in the next sync-in (srs.fr.3.18–3.22, 3.51). Static bodies ignore Velocity; a kinematic body keeps a written Velocity until it is written again |
+| How the ECS calls the adapter | an ECS observer reacting to component adds, or declared systems | **Decided (DEC-041):** only the two declared systems `PhysicsSyncIn` and `PhysicsSyncOut` call the adapter; an observer only reports destroyed and disabled entities. See §7 |
 | Units | meters + pixels-per-meter scale vs raw pixels | **Decided (DEC-036):** meters everywhere in simulation; 32 pixels per meter, applied only in the renderer |
 | Coordinate convention | y-up (Box2D) vs y-down (Raylib screen) | **Decided (DEC-036):** world is y up, angles counter-clockwise; the renderer flips y and negates angles (E-004). Findings: [research/box2d.md](../research/box2d.md) |
 | Box2D handle type | **Decided: v3.1.1** (C API, id handles instead of pointers) | DEC-020 — the entity↔body mapping stores Box2D ids wrapped in our own type; verify names against the v3.1.1 headers before coding `[ASSUMPTION]` |
@@ -60,6 +61,16 @@ Language-neutral signatures; types are ours (`BodyId`, `Vec2`, `EntityId`, `Body
 
 Dynamic body falls under gravity · static body does not move · collider produces collision · collision event carries correct entity IDs · raycast finds correct entity / none · fixed timestep gives identical trajectories across two runs · destroying entity removes body · write-back equals body position.
 
-## 7. Visualising physics (optional aid)
+## 7. Place in the tick (DEC-040, DEC-041)
+
+| Tick phase | Who | What |
+| --- | --- | --- |
+| PhysicsSyncIn | `PhysicsSyncIn` system | In the order of srs.fr.3.61: destroy bodies of entities destroyed or disabled earlier (reported by the adapter's `IWorldObserver`); create bodies for new entities with a collider, ascending `EntityId`; apply shape, body-type and material changes, the Unlockable sensor rule (srs.fr.6.10); apply pending Position and Velocity writes, then forces and impulses; clear the pending marks it applied |
+| PhysicsStep | game loop | `adapter.step(1/60)`; no systems run |
+| PhysicsSyncOut | `PhysicsSyncOut` system | Write position, rotation and velocity of dynamic bodies back to the ECS without marking them pending, skipping components with a pending write; publish one `CollisionEvent` per begin/end contact, sorted by (`EntityId` a, `EntityId` b) |
+
+Both systems declare their reads, writes and publishes (`ecs-api-design.md` §8, §10), so the Semantic Graph shows every physics read and write. Each World gets its own adapter instance, passed to the two systems' factories.
+
+## 8. Visualising physics (optional aid)
 
 `box2d-testbed` (Python: `pip install "box2d-python[testbed]"`, plus `glfw`, `pillow`) can be used to see Box2D behaviour. It is a learning tool, not part of the engine, and may be a different Box2D version.
