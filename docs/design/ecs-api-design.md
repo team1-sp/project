@@ -39,9 +39,9 @@
 | D-14 | Component kinds | **Unmanaged** (trivially copyable) and **managed** (owns heap memory), auto-detected | Unity-like split |
 | D-15 | Query API | `each<Ts...>(fn)` plus `query<Ts...>()` builder with `with / without / withTag / withLayer` | srs.fr.2.57 |
 | D-16 | Singletons | Singleton components on engine-created, runtime-only entities; `single<T>()` | Unity style |
-| D-17 | Tags | `<Name>Tag`, empty structs, no storage | Coding standard §2 |
+| D-17 | Tags | `<Name>Tag`, empty structs, no storage | Coding standard §2 (DEC-044) |
 | D-18 | Dead references | Cleared **eagerly** through reflection when destructions are played back | srs.fr.2.44 |
-| D-19 | Naming | camelCase functions, trailing-underscore members, namespace `engine` | Matches merged code |
+| D-19 | Naming | camelCase functions, trailing-underscore members, namespace `engine` | Matches merged code; coding standard §2 (DEC-044) |
 | D-20 | Event bus | Full API, separate document | Size guideline |
 | D-21 | Structural power | Systems declare `createsEntities`, `destroysEntities` and `togglesEnabled`; checked like reads/writes and exported | The Semantic Graph can answer "which system can destroy this?" (§10) |
 | D-22 | Handler phase | The schema records, per subscription, the phase in which the handler actually runs (the publisher's) | A handler's writes happen there, not in the subscriber's own phase (§12) |
@@ -724,7 +724,7 @@ The JSON-lines format follows `telemetry-and-events.md`, which is still `[PROPOS
 - **Decision log:** ADR-001 (D-1), plus the D-2…D-25 choices once the team accepts them in PB-010.3. D-26 restates the human's scope decision of 2026-11-05 and should be logged with it.
 - **Agent bridge task (PB-065 follow-up):** the `Observation`/`Action` proto, `AgentObservationSystem` and the input path of §16.
 - **Snapshot design:** a separate document for `WorldSnapshot` (D-24), Play mode and Editor undo.
-- **`coding-standards.md`:** add "functions camelCase, members with trailing underscore" (D-19); fix the tag rule to `<Name>Tag` (D-17).
+- **`coding-standards.md`:** done on 2026-11-05 (DEC-044): naming (D-19), tag rule (D-17), errors and randomness.
 - **`ecs-design.md`** and **`telemetry-and-events.md`:** done on 2026-11-05 (DEC-042): SRS component set, ticks, pushed events, rendering and telemetry outside the scheduler, schema record.
 - **Q-013** is answered for Phase 1 (DEC-042): descriptions, units, derived readBy/writtenBy. Extras (valid ranges, examples, notes) can be added to `FieldInfo` and the builder later without changing the API.
 

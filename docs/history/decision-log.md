@@ -52,6 +52,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-041 | The ECS and the Physics Adapter meet only in two declared systems, PhysicsSyncIn and PhysicsSyncOut | Accepted | 2026-11-05 |
 | DEC-042 | Pre-implementation ECS gaps settled: push events, tick vocabulary, Phase 1 components, input, time, RNG, scene, ids, errors, telemetry records | Accepted | 2026-11-05 |
 | DEC-043 | About 20 % of the whole project is built this semester; the ECS builds its Phase 1 slice | Accepted | 2026-11-05 |
+| DEC-044 | Coding standards amended for the ECS design: naming, tags, declarations, errors, RNG | Accepted | 2026-11-05 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -557,3 +558,16 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Docs updated:** `design/ecs-api-design.md` §17, `design/ecs-event-bus-design.md` §11, `design/ecs-design.md`.
 - **Course documents affected (for humans):** the semester plan or roadmap sections of course documents, if they promise more.
 - **Supersedes / Related:** D-26, PB-010.
+
+### DEC-044 — Coding standards amended for the ECS design
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Proposed by:** `ecs-api-design.md` §14 (D-17, D-19) and DEC-042  **Recorded by:** claude (PR #28 review)
+- **Human's words:** "you can edit coding-standart and pr description"
+- **Context:** `coding-standards.md` (DEC-031) says changes go through a PR and a decision entry. The ECS design's naming (D-17, D-19), error policy and randomness rules (DEC-042) did not match it.
+- **Decision:** `guidelines/coding-standards.md` is amended: systems declare everything in `describe()`; no static mutable state in systems; fixed step and gameplay RNG through `SystemContext`; invariant checks stay on in every build and throw `engine::RunError`; per-tick instead of per-frame wording; naming rows for types (PascalCase), functions and locals (camelCase), private members (trailing underscore), component and event fields (camelCase with units), namespace `engine`, tags (`<Name>Tag`, empty, filter only; empty SRS roles stay components); components and events are aggregates with `typeName` and no raw C arrays; only `RunError` may be thrown, never across the adapter boundary.
+- **Rationale:** One set of rules for the code that implements PB-010.
+- **Consequences:** Code review checks the new rules from the first ECS implementation PR.
+- **Docs updated:** `guidelines/coding-standards.md`, `design/ecs-api-design.md` §14.
+- **Course documents affected (for humans):** any course text that quotes the coding standard's naming table.
+- **Supersedes / Related:** amends DEC-031; D-17, D-19, DEC-042.
