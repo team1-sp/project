@@ -198,3 +198,14 @@
 - **Next:** a production bridge task (pinned gRPC/protobuf, `.proto` contract, Windows build check). End-to-end RL benchmark before revisiting the transport.
 - **Traps:** gRPC on Windows has not been built yet. The benchmark harness under `benchmarks/bridge/` is research code, not the production bridge.
 - **Records:** DEC-038 accepted, DEC-011 superseded, DEC-039 and PRB-003 renumbered during the merge, PRB-002.
+
+---
+
+### HND-017 — Record the user-supplied LLM provider decision
+- **Date:** 2026-11-06
+- **Agent:** claude (use cases thread)
+- **Task:** related to ClickUp PB-068 (does not complete it)
+- **Result:** Işık Dönger decided that Aegis builds no model of its own, users supply their own provider account and API key, and only free-tier or local use is guaranteed. Recorded as DEC-045, with matching updates to `architecture/tech-stack.md` and `architecture/ai-assistant-layer.md`.
+- **Next:** PB-068 picks which free-tier and local providers to support and test. The SRS changes (Sections 4 and 5) are handled in the course docs repo by the SRS-A review.
+- **Traps:** The rationale was not given; ask before citing one.
+- **Records:** DEC-045.

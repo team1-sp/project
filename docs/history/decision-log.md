@@ -53,6 +53,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-042 | Pre-implementation ECS gaps settled: push events, tick vocabulary, Phase 1 components, input, time, RNG, scene, ids, errors, telemetry records | Accepted | 2026-11-05 |
 | DEC-043 | About 20 % of the whole project is built this semester; the ECS builds its Phase 1 slice | Accepted | 2026-11-05 |
 | DEC-044 | Coding standards amended for the ECS design: naming, tags, declarations, errors, RNG | Accepted | 2026-11-05 |
+| DEC-045 | No own LLM is built; users supply their own model provider and key; only free-tier or local use is guaranteed | Accepted | 2026-11-06 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -571,3 +572,22 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Docs updated:** `guidelines/coding-standards.md`, `design/ecs-api-design.md` §14.
 - **Course documents affected (for humans):** any course text that quotes the coding standard's naming table.
 - **Supersedes / Related:** amends DEC-031; D-17, D-19, DEC-042.
+
+### DEC-045 — No own LLM is built; users supply their own model provider and key
+- **Date:** 2026-11-06
+- **Status:** Accepted
+- **Decided by:** Işık Dönger   **Recorded by:** claude (use cases thread)
+- **Human's words:** "we must have decided that we will not build our own model at this time. [...] I am thinking that we can only gurantee free tier usage from other models and the user must use their own subscripti[on]" and, asked whether to record it, "you should only change related document in the project repo".
+- **Context:** The AI service is a separate Python process reached over gRPC (DEC-038, DEC-039), and the provider sits behind an interface (`architecture/ai-assistant-layer.md` principle 6). No decision said which models are used or who pays for them. PB-068 (LLM provider selection and cost estimate) is still open.
+- **Options considered:**
+  1. Train or host our own model. Rejected: out of scope for a senior project.
+  2. The team pays for one cloud provider for all users. Not possible to guarantee after the course.
+  3. Users bring their own provider account or subscription and API key; the project guarantees only free-tier or local use. Chosen.
+- **Decision:** Aegis does not build or train its own language model. The AI service talks to third-party or local models through the provider interface. Users supply their own provider account, subscription and API key. The project guarantees only that the assistant works with a free tier or a local model; paid tiers are the user's choice.
+- **Rationale:** `[rationale not given — ask]`
+- **Consequences:** The provider interface must support at least one free-tier cloud provider and one local option. Provider choice, quotas and terms are outside the project's control, so answer quality and limits depend on the user's provider. API keys stay in the OS credential store (SRS srs.nfr.3.7). PB-068 narrows to choosing which free-tier and local providers to support and test.
+- **Docs updated:** `architecture/ai-assistant-layer.md`, `architecture/tech-stack.md`.
+- **Course documents affected (for humans):** SRS Section 4 (assumptions and dependencies) and Section 5 (the "model provider" row says no provider is imposed). Handed to the SRS-A review thread as point 6.
+- **Revisit when:** PB-068 picks the supported providers, or the free tiers they offer change.
+- **Supersedes / Related:** DEC-010, DEC-038, DEC-039, PB-068.
+- **Amendments:**
