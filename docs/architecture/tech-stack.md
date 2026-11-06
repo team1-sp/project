@@ -20,6 +20,7 @@
 | Compilers | **Whatever each platform needs; none pinned now** (exact compiler per OS recorded when the build is set up) | DEC-030 |
 | World units | **Meters, y up, 32 pixels per meter; renderer alone converts to screen space** | DEC-036 |
 | Engine to AI-service protocol | **gRPC/protobuf** behind the engine's `AgentBridge` interface; optional pybind11 local-RL path only if profiling justifies it | DEC-038 (ADR-002) |
+| Language models | **No own model.** Users supply their own provider account, subscription and API key; only free-tier or local use is guaranteed. Which providers are supported is PB-068 | DEC-045 |
 | Scope | **2D only.** 3D is future work; keep the seams (adapter, rendering abstraction, ECS) so it stays possible, build nothing 3D | DEC-016 |
 
 ## 2. Still open (ask the human; do not decide)
