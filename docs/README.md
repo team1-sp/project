@@ -66,6 +66,7 @@ docs/
 │   └── benchmark-protocol.md       graphics framework / shader benchmark
 ├── research/                      WHAT we learned from spikes
 │   ├── box2d.md                    Box2D v3.1.1 notes and units (PB-008)
+│   └── rl-testing-lit.md           RL game-testing literature and tool review (PB-062)
 │   ├── ipc.md                      C++/Python IPC option matrix (PB-065)
 │   ├── cpp-python-bridge.md        gRPC/ZeroMQ research and measurements (PB-065)
 │   ├── pb-065-benchmark-results.json raw bridge benchmark results (macOS)
