@@ -209,3 +209,16 @@
 - **Next:** PB-068 picks which free-tier and local providers to support and test. The SRS changes (Sections 4 and 5) are handled in the course docs repo by the SRS-A review.
 - **Traps:** The rationale was not given; ask before citing one.
 - **Records:** DEC-045.
+
+---
+
+### HND-018 — Physics adapter interface (PB-025)
+- **Date:** 2026-11-10
+- **Agent:** claude (PB-025 session), working with Zeynep Ertürk
+- **Task:** TASK-018 (ClickUp PB-025)
+- **Result:** Ready for review. `engine/physics/` (INTERFACE target `engine::physics`, links only `engine::core`): `body_desc.hpp`, `physics_types.hpp`, `physics_adapter.hpp`. `engine/core`: `vec2.hpp`, `entity_id.hpp` (copied from `ecs-api-design.md` §4 so the ECS reuses it). `tools/check_includes.py` added to the CI `format` job. `physics-adapter-design.md` §2 rewritten to the real interface.
+- **Decided by Zeynep:** name `IPhysicsAdapter` (not the ClickUp `IPhysicsWorld`); bodies addressed by `BodyId` as the design doc says, plus `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core`.
+- **Verified (Linux, GCC 13, `ENGINE_WARNINGS_AS_ERRORS=ON`, raylib on):** builds with no warnings; `ctest` 14/14; clang-format 19.1.7 clean; `check_includes.py` reports 0, and reports 1 when a Box2D include is added to `body_desc.hpp`.
+- **Not verified:** Windows and macOS builds (CI covers them); the headless preset.
+- **Next:** PB-026 implements `Box2DPhysicsAdapter` in `engine/physics-box2d/` (also needs PB-012, the fixed-timestep loop).
+- **Traps:** `BodyId` is 64-bit on purpose so the Box2D implementation can pack a `b2BodyId` into it. Collision events and raycasts return `EntityId`, not `BodyId`.

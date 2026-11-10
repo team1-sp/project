@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-11-04
-updated_by: codex/gpt-5/pb006
+last_updated: 2026-11-10
+updated_by: claude (PB-025 session)
 ---
 
 # Current Status
@@ -29,6 +29,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017).
 
 ## In progress / next
+- **TASK-018 (ClickUp PB-025): physics adapter interface** — Review. `engine/physics/` with `IPhysicsAdapter`, `Vec2`/`EntityId` in `engine/core`, include check in CI. Next: PB-026 (Box2D implementation).
 0. **TASK-017 (ClickUp PB-006): Python `ai-services` skeleton** — Review. Python 3.12, `src/` package, pinned tools, setup instructions, Ruff and pytest verified locally.
 1. **TASK-016 (ClickUp PB-008): Box2D + raylib falling-box spike** — Review; waits on Işık for DEC-037.
 2. Human answers Q-014 (leftovers) and Q-015 (task ids).

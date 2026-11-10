@@ -1,6 +1,6 @@
 # Physics Adapter Design
 
-Status: **interface contract defined; implementation not started.** Library: **Box2D** (DEC-014), version **v3.1.1** (DEC-020). Requirements: ip.fr.3.1–3.8 (reference). Decisions: DEC-003, DEC-014, DEC-016 (2D only). Rule: R-3.
+Status: **interface written in C++ (PB-025, 2026-11-10); Box2D implementation not started (PB-026).** Library: **Box2D** (DEC-014), version **v3.1.1** (DEC-020). Requirements: ip.fr.3.1–3.8 (reference). Decisions: DEC-003, DEC-014, DEC-016 (2D only). Rule: R-3.
 
 ## 1. Purpose
 
@@ -13,19 +13,33 @@ ECS / Engine ──► IPhysicsAdapter ──► Box2D
 
 ## 2. Interface (engine-facing) — ip.fr.3.1
 
-Language-neutral signatures; types are ours (`BodyId`, `Vec2`, `EntityId`, `BodyDesc`, `RaycastHit`, `RawCollision`). `EntityId` is the ECS type of `ecs-api-design.md` §4 (DEC-041).
+Written in PB-025. The interface is `engine::physics::IPhysicsAdapter` in the `engine::physics` target (`engine/physics/`, header-only, links only `engine::core`). The ClickUp text named it `IPhysicsWorld`; the team kept the name this document always used (Zeynep Ertürk, 2026-11-10).
+
+| File | Contents |
+| --- | --- |
+| `engine/core/include/engine/core/vec2.hpp` | `engine::Vec2` (x, y) |
+| `engine/core/include/engine/core/entity_id.hpp` | `engine::EntityId`, `noEntity`, as in `ecs-api-design.md` §4; in `core` so the ECS reuses it |
+| `engine/physics/include/engine/physics/body_desc.hpp` | `BodyType` (Static, Kinematic, Dynamic), `ShapeType` (Box, Circle), `BodyDesc` (fields mirror `RigidBodyComponent` and the collider components of `ecs-design.md`) |
+| `engine/physics/include/engine/physics/physics_types.hpp` | `BodyId`, `noBody`, `BodyState`, `ContactPhase`, `CollisionEvent`, `RaycastHit` |
+| `engine/physics/include/engine/physics/physics_adapter.hpp` | `IPhysicsAdapter` |
 
 | Function | Purpose | Notes |
 | --- | --- | --- |
-| `CreateBody(entity, desc) → BodyId` | Create body + collider from ECS data | Registers entity↔body mapping |
-| `DestroyBody(entity or BodyId)` | Remove body | Must be called when the entity is destroyed (E-001) |
-| `SetBodyPosition(BodyId, Vec2)` | Teleport | Sync direction ECS→physics |
-| `SetLinearVelocity(BodyId, Vec2)` | Set velocity | |
-| `ApplyForce(BodyId, Vec2)` | Continuous push for this step | |
-| `ApplyImpulse(BodyId, Vec2)` | Instant velocity change | |
-| `Raycast(origin, dir, maxDist) → hit or none` | First entity hit (ip.fr.3.7) | Returns `EntityId`, point, normal |
-| `Step(dt)` | Advance simulation | Called with fixed `dt = 1/60` (R-5) |
-| `GetCollisionEvents() → list` | Collisions since last step, as **entity** IDs | Translates body IDs → entity IDs (ip.fr.3.6) |
+| `createBody(EntityId, const BodyDesc&) → BodyId` | Create body + collider from ECS data | Registers the entity↔body mapping; a second body for the same entity is a programming error |
+| `destroyBody(BodyId)` | Remove body | Must be called when the entity is destroyed (E-001) |
+| `findBody(EntityId) → optional<BodyId>` | Entity → body lookup | For PhysicsSyncIn |
+| `setTransform(BodyId, Vec2, angle)` | Teleport | Sync direction ECS→physics |
+| `setLinearVelocity(BodyId, Vec2)` | Set velocity | |
+| `applyForce(BodyId, Vec2)` | Continuous push for this step | Newtons |
+| `applyImpulse(BodyId, Vec2)` | Instant velocity change | Newton-seconds |
+| `step(dtSeconds)` | Advance simulation | Called with fixed `dt = 1/60` (R-5) |
+| `bodyState(BodyId) → BodyState` | Position, angle, linear and angular velocity after the step | For PhysicsSyncOut write-back |
+| `collisionEvents() → span<const CollisionEvent>` | Begin/end contacts of the last step, as **entity** IDs | Sorted by (`entityA`, `entityB`), `entityA` the smaller; valid until the next step (ip.fr.3.6) |
+| `raycast(origin, direction, maxDistance) → optional<RaycastHit>` | First entity hit (ip.fr.3.7) | Returns `EntityId`, point, normal |
+
+All values are meters, kilograms, seconds and radians, y up (DEC-036). No exceptions cross the interface; misuse is reported loudly by the implementation (coding standards rule 9). Contract tests with a fake adapter: `tests/unit/physics/physics_adapter_test.cpp`.
+
+**Boundary (R-3).** `engine::physics` never links Box2D. `tools/check_includes.py` (CI `format` job) fails a PR that includes Box2D outside `engine/physics-box2d/` or raylib outside `engine/rendering-raylib/`, anywhere in `engine/` or `editor/`. `sandbox/` is not checked because of the PB-008 spike (DEC-037).
 
 ## 3. Responsibilities
 
@@ -74,3 +88,9 @@ Both systems declare their reads, writes and publishes (`ecs-api-design.md` §8,
 ## 8. Visualising physics (optional aid)
 
 `box2d-testbed` (Python: `pip install "box2d-python[testbed]"`, plus `glfw`, `pillow`) can be used to see Box2D behaviour. It is a learning tool, not part of the engine, and may be a different Box2D version.
+
+## Change table
+
+| Date | Change | By |
+| --- | --- | --- |
+| 2026-11-10 | Interface written in C++: files, final function list with `BodyId` and `findBody`, include check (PB-025) | Zeynep Ertürk + claude (PB-025 session) |

@@ -104,6 +104,8 @@ jobs:
           git ls-files -z -- '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' '*.inl' \
             ':!:third_party/**' ':!:external/**' \
             | xargs -0 -r "$HOME/.local/bin/clang-format" --dry-run -Werror
+      - name: Box2D and raylib stay in their adapter targets (R-3, R-4)
+        run: python3 tools/check_includes.py .
 
   build:
     # Configure, build and test with the same presets developers use (PB-002). Windows and
