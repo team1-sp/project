@@ -41,7 +41,7 @@ Semantic graph / telemetry / source code
 4. **Privacy default-off** for external services: no source code or telemetry leaves the machine unless the user enabled it in configuration (ip.nfr.2.1).
 5. **Latency target:** answer within 30 s for ≥ 90% of questions, excluding service outages (ip.nfr.1.5).
 6. **Model-agnostic.** Provider behind an interface so a local model or a different vendor can be used.
-7. **No own model; user-supplied provider** (DEC-045). We do not build or train a model. Users bring their own provider account and API key (stored in the OS credential store); the project guarantees only free-tier or local use.
+7. **No own model; free to use at free-tier level** (DEC-046). We do not build or train a model. AI features are not behind a paywall: Aegis provides free-tier-level usage through free-tier cloud models or local models. Usage beyond the free tier needs the user's own paid provider subscription and API key (stored in the OS credential store).
 
 ## 4. Techniques (what each is for)
 

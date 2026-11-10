@@ -209,3 +209,15 @@
 - **Next:** PB-068 picks which free-tier and local providers to support and test. The SRS changes (Sections 4 and 5) are handled in the course docs repo by the SRS-A review.
 - **Traps:** The rationale was not given; ask before citing one.
 - **Records:** DEC-045.
+
+---
+
+### HND-018 — Reword the LLM usage decision (DEC-046)
+- **Date:** 2026-11-10
+- **Agent:** claude (SRS-A review thread)
+- **Task:** related to ClickUp PB-068 (does not complete it)
+- **Result:** Işık Dönger clarified that the decision is about usage, not model support: AI features are not behind a paywall, free-tier usage is provided, and paid-tier usage needs the user's own subscription and API key. Recorded as DEC-046, superseding DEC-045; `architecture/tech-stack.md` and `architecture/ai-assistant-layer.md` updated.
+- **Next:** PB-068 picks the free-tier and local providers and decides how free-tier access is delivered (project-held free key or a free key the user creates).
+- **Traps:** "Free-tier usage is provided" does not yet say who holds the free-tier key; do not assume either way.
+- **Records:** DEC-046, DEC-045 superseded.
+

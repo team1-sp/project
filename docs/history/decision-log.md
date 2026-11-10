@@ -53,7 +53,8 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-042 | Pre-implementation ECS gaps settled: push events, tick vocabulary, Phase 1 components, input, time, RNG, scene, ids, errors, telemetry records | Accepted | 2026-11-05 |
 | DEC-043 | About 20 % of the whole project is built this semester; the ECS builds its Phase 1 slice | Accepted | 2026-11-05 |
 | DEC-044 | Coding standards amended for the ECS design: naming, tags, declarations, errors, RNG | Accepted | 2026-11-05 |
-| DEC-045 | No own LLM is built; users supply their own model provider and key; only free-tier or local use is guaranteed | Accepted | 2026-11-06 |
+| DEC-045 | No own LLM is built; users supply their own model provider and key; only free-tier or local use is guaranteed | Superseded by DEC-046 | 2026-11-06 |
+| DEC-046 | AI features are free to use: free-tier usage is provided; usage beyond it needs the user's own paid subscription and API key | Accepted | 2026-11-10 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -575,7 +576,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-045 — No own LLM is built; users supply their own model provider and key
 - **Date:** 2026-11-06
-- **Status:** Accepted
+- **Status:** Superseded by DEC-046
 - **Decided by:** Işık Dönger   **Recorded by:** claude (use cases thread)
 - **Human's words:** "we must have decided that we will not build our own model at this time. [...] I am thinking that we can only gurantee free tier usage from other models and the user must use their own subscripti[on]" and, asked whether to record it, "you should only change related document in the project repo".
 - **Context:** The AI service is a separate Python process reached over gRPC (DEC-038, DEC-039), and the provider sits behind an interface (`architecture/ai-assistant-layer.md` principle 6). No decision said which models are used or who pays for them. PB-068 (LLM provider selection and cost estimate) is still open.
@@ -590,4 +591,22 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** SRS Section 4 (assumptions and dependencies) and Section 5 (the "model provider" row says no provider is imposed). Handed to the SRS-A review thread as point 6.
 - **Revisit when:** PB-068 picks the supported providers, or the free tiers they offer change.
 - **Supersedes / Related:** DEC-010, DEC-038, DEC-039, PB-068.
+- **Amendments:**
+
+### DEC-046 — AI features are free to use: free-tier usage is provided; usage beyond it needs the user's own paid subscription
+- **Date:** 2026-11-10
+- **Status:** Accepted
+- **Decided by:** Işık Dönger   **Recorded by:** claude (SRS-A review thread)
+- **Human's words:** "product will only provide free-tier and local model support. More usage will require API Key to connect their subscription. [...] this assumption and decision made in the project should be more about the usage. AI features will not be behind a paywall or require a subcription, free-tier level usage will be provided. paid-tier usage will require users own subsciprtion connection."
+- **Context:** DEC-045 was worded as a rule about which models are supported ("users supply their own provider account and key; only free-tier or local use is guaranteed"), which read as if every user needs their own account before any AI feature works. The intended decision is about usage and cost to the user. PB-068 (LLM provider selection and cost estimate) is still open.
+- **Options considered:**
+  1. Keep DEC-045's wording. Reads as "bring your own key or no AI", which is not what was decided.
+  2. AI features free at free-tier level; paid-tier usage through the user's own subscription. Chosen.
+- **Decision:** Aegis does not build or train its own language model. AI features are not behind a paywall and need no subscription: Aegis provides free-tier-level usage through free-tier cloud models or local models. Usage beyond the free tier requires the user to connect their own paid provider subscription with its API key.
+- **Rationale:** In the human's words, AI features should "not be behind a paywall or require a subscription". Any further rationale: `[rationale not given — ask]`.
+- **Consequences:** The provider interface must support at least one free-tier cloud provider and one local option, and a way to connect a user's own paid subscription and API key (stored in the OS credential store, SRS srs.nfr.3.6). Free-tier quotas and terms are set by the providers, so the free usage level can change. How free-tier access is delivered (a project-held free key or one the user creates at no cost) is decided under PB-068.
+- **Docs updated:** `architecture/ai-assistant-layer.md`, `architecture/tech-stack.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** SRS A Section 4 (assumption A-07, dependency D-08) and Section 5 (language-model provider row); updated in the docs repo at Işık Dönger's request in the same thread.
+- **Revisit when:** PB-068 picks the supported providers, or provider free tiers change.
+- **Supersedes / Related:** Supersedes DEC-045. Related: DEC-038, DEC-039, PB-068.
 - **Amendments:**
