@@ -225,3 +225,19 @@
 - **Next:** 1. Draft PR with `Closes #34`; CI then builds on Windows, macOS and Linux. 2. Işık answers Q-019. 3. PB-012 replaces the one-tick-per-frame loop with the fixed-timestep accumulator.
 - **Traps:** `RaylibWindow::shouldClose()` is also true after Escape (raylib's default exit key). `Application` holds references to the simulation and the renderer; both must outlive it. A headless run needs `maxTicks`, or `init` refuses it. CTest ignores the exit code when `PASS_REGULAR_EXPRESSION` is set, so the sandbox test uses only `FAIL_REGULAR_EXPRESSION`. `engine/rendering-raylib` is Zeynep Ertürk's area: ask her to look at the window wrapper too.
 - **Records:** DEC-046 (Proposed), Q-019, E-029, E-030.
+
+---
+
+### HND-019 — Fixed 1/60 s timestep loop (PB-012)
+- **Date:** 2026-11-10
+- **Agent:** claude-code (PB-012 session), working with Arda Karabulut
+- **Task:** TASK-006 (ClickUp PB-012), on top of HND-018
+- **Goal:** The simulation advances in fixed 1/60 s ticks whatever the render frame rate is.
+- **Result:** Done, ready for review. `engine/core`: `tick.hpp` (`Tick`, `ticksPerSecond`, `fixedDeltaSeconds`, `simulatedSeconds()`), `FrameClock` (PB-012.1), `FixedTimestep` (PB-012.2), the tick counter in `Application` and `ISimulation::runTick(Tick)` (PB-012.3), unit tests (PB-012.4). The loop rules follow srs.fr.1.2 to 1.6 and are recorded as DEC-047 (`Proposed`, Q-020).
+- **Files changed:** `engine/core/{CMakeLists.txt,include/engine/core/{application,simulation,tick,frame_clock,fixed_timestep}.hpp,src/{application,frame_clock,fixed_timestep}.cpp}`, `sandbox/src/main.cpp`, `tests/{CMakeLists.txt,unit/core/{application_test,fixed_timestep_test,frame_clock_test}.cpp,unit/core/even_frame_times.hpp}`, `docs/architecture/engine-layer.md`, `docs/troubleshooting/{environment-setup,common-errors}.md`, `docs/testing/test-checklists.md`, `docs/history/decision-log.md`, `docs/agents/state/{task-board,current-status,open-questions,handoff-log}.md`.
+- **Verified (Windows 11, MSVC 19.44, CMake 4.2, `ENGINE_WARNINGS_AS_ERRORS=ON`):** `windows-debug` builds with no warnings, `ctest` 49/49; `headless` preset 41/41; clang-format 19.1.7 clean. `sandbox.exe --max-ticks 300 --fps N` for N = 30, 60, 144 and 0: 300 ticks (5.00 s simulated) took 5.00, 5.01, 5.00 and 5.00 s of real time in 151, 301, 702 and 15 396 render frames; exit code 0 and an empty standard error each time. Mutations: `unitsPerTick` set to 1 000 000 020 (a tick of 16 666 667 ns) failed 7 tests; incrementing the counter before `runTick` failed 7 tests.
+- **Not verified:** macOS and Linux builds (CI after a push). The slow-simulation warning in a real window (covered by `FixedTimestep` tests; dragging the window should trigger it).
+- **Repo state:** builds, tests pass; committed on `feat/pb-012-feat-implement-fixed-timestep-1-60-s` (issue #36), which merges the PB-011 branch first, so its PR's base is the PB-011 branch and the diff shows only PB-012 (Işık asked for the PR before PB-011 is merged).
+- **Next:** 1. Merge PB-011 (#35) first. Then switch this PR's base to `main`; Işık resolves the conflicts that the squash merge of #35 causes, taking the PB-012 side in files both tasks touch. 2. Işık answers Q-020. 3. Later tasks: `RunError` in the loop (srs.fr.1.11), pause and step (srs.fr.1.16 to 1.18), headless run settings (srs.fr.7.x), a logger for the warning.
+- **Traps:** 1/60 s is not a whole number of nanoseconds, so tests use frame times such as 50 ms (exactly 3 ticks) or `evenFrameTimes()`. The first render frame of a run always runs 0 ticks. `FrameClock` is read once per render frame by `Application`; a second reading in the same frame would steal time from the accumulator, so the sandbox keeps its own `FrameClock` for the read-out. Ticks beyond 5 per frame are dropped, so a debugger break or a dragged window loses simulated time by design.
+- **Records:** DEC-047 (Proposed), Q-020, E-031; E-007 updated.

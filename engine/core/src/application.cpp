@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <utility>
 
+#include "engine/core/fixed_timestep.hpp"
 #include "engine/core/frame_renderer.hpp"
 #include "engine/core/simulation.hpp"
 
@@ -13,9 +14,14 @@ namespace {
 constexpr int exitCodeOk = 0;
 constexpr int exitCodeError = 1;
 
-// The engine has no logger yet, so errors go straight to the standard error output.
+// The engine has no logger yet, so errors and warnings go straight to the standard error
+// output.
 void logError(const char* message) {
     std::fprintf(stderr, "error: %s\n", message);
+}
+
+void logWarning(const char* message) {
+    std::fprintf(stderr, "warning: %s\n", message);
 }
 
 } // namespace
@@ -25,10 +31,11 @@ Application::Application(ISimulation& simulation)
 }
 
 Application::Application(ISimulation& simulation, IFrameRenderer& frameRenderer,
-                         WindowFactory createWindow)
+                         WindowFactory createWindow, FrameClock::TimeSource realTime)
     : simulation_(simulation)
     , frameRenderer_(&frameRenderer)
-    , createWindow_(std::move(createWindow)) {
+    , createWindow_(std::move(createWindow))
+    , frameClock_(std::move(realTime)) {
 }
 
 Application::~Application() {
@@ -69,6 +76,7 @@ int Application::run() {
         return exitCodeError;
     }
 
+    // The tick counter is 0 when a run starts (srs.fr.1.5).
     ticksExecuted_ = 0;
     if (config_.headless) {
         runHeadless();
@@ -83,6 +91,14 @@ void Application::shutdown() {
     initialised_ = false;
 }
 
+Tick Application::ticksExecuted() const {
+    return ticksExecuted_;
+}
+
+double Application::simulatedSeconds() const {
+    return engine::simulatedSeconds(ticksExecuted_);
+}
+
 void Application::runHeadless() {
     // Simulated time: ticks run back to back, with no clock and no waiting (srs.fr.7.4).
     while (!reachedMaxTicks()) {
@@ -91,14 +107,25 @@ void Application::runHeadless() {
 }
 
 void Application::runNormal() {
+    FixedTimestep timestep;
+    frameClock_.start();
+
     // The close request is read only here, between render frames, so the frame in which the
     // user closes the window is always finished (srs.fr.1.10).
     while (!window_->shouldClose() && !reachedMaxTicks()) {
-        // One tick per render frame until the fixed-timestep accumulator replaces it (PB-012).
-        runOneTick();
+        // One tick for each whole 1/60 s of real time not simulated yet, at most 5 (srs.fr.1.3).
+        // The clock is read here and nowhere else: ticks never see real time (R-6).
+        const FrameTicks frame = timestep.advance(frameClock_.measureFrame());
+        if (frame.warnSlow) {
+            logWarning("Simulation is running slower than real time");
+        }
+        for (int i = 0; i < frame.ticksToRun && !reachedMaxTicks(); ++i) {
+            runOneTick();
+        }
 
-        // Render and present the state the last completed tick left (srs.fr.1.1). endFrame()
-        // also collects the input that the next frame's ticks will use.
+        // Render and present the state the last completed tick left, also when this frame ran
+        // no tick (srs.fr.1.1, 1.15). endFrame() also collects the input that the next frame's
+        // ticks will use.
         window_->beginFrame();
         frameRenderer_->renderFrame();
         window_->endFrame();
@@ -106,7 +133,9 @@ void Application::runNormal() {
 }
 
 void Application::runOneTick() {
-    simulation_.runTick();
+    // The tick's number is the counter's value at its start; the counter goes up only after the
+    // tick has completed (srs.fr.1.5).
+    simulation_.runTick(ticksExecuted_);
     ++ticksExecuted_;
 }
 

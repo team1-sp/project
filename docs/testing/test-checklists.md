@@ -2,6 +2,21 @@
 
 Source: Senior Project Guide "Testing Checklist", extended with requirement IDs. Tick items by linking the test name (`[x] test name — file`). Items stay in this file; progress is also visible in tests.
 
+## Game loop (ip.fr.1.*, srs.fr.1.1 to 1.10)
+
+Tests are in `tests/unit/core/`.
+
+- [x] Render frame order: due ticks, render, present (srs.fr.1.1) — `ApplicationTest.NormalModeFrame_RunsDueTicksThenRenderThenPresent`
+- [x] 60 ticks are 1.0 s at 30, 60, 120, 144 and 240 frames per second (ip.fr.1.2, srs.fr.1.2) — `FixedTimestep.OneSecondAtSteadyFrameRates_RunsExactly60Ticks`, `ApplicationTest.OneSecondAtSteadyFrameRates_RunsSixtyTicks`
+- [x] At most 5 ticks per render frame, further whole ticks dropped, part of a tick kept (srs.fr.1.3, 1.4) — `FixedTimestep.FiveSecondSpike_RunsFiveTicksAndDropsTheRest`, `FixedTimestep.MoreThanFiveTicksDue_DropsWholeTicksAndKeepsThePart`
+- [x] Slow-simulation warning at most once per second (srs.fr.1.4) — `FixedTimestep.TicksDroppedEveryFrame_WarnsOncePerSecond`
+- [x] Tick counter starts at 0 and goes up after each completed tick; simulated time is the counter times 1/60 s (srs.fr.1.5, 1.6) — `ApplicationTest.DuringATick_TickCounterIsThatTicksNumber`, `ApplicationTest.HeadlessSixtyTicks_SimulatedTimeIsOneSecond`
+- [x] Headless: no window, no rendering, stops at the maximum number of ticks (ip.fr.1.4, srs.fr.1.7, 7.1, 7.7) — `ApplicationTest.HeadlessMode_RunsMaxTicksWithoutWindowOrRendering`, `Sandbox.HeadlessRun_ExitsCleanly`
+- [x] Closing the window ends the run with exit code 0 and releases the window (ip.fr.1.3, srs.fr.1.10) — `ApplicationTest.WindowClosedByUser_RunReturnsZeroAndShutdownClosesWindow`
+- [x] A render frame with no tick due still renders and presents (srs.fr.1.15) — `ApplicationTest.FrameWithNoTickDue_StillRendersAndPresents`
+- [ ] Unrecoverable run error: message and tick logged, non-zero exit code (srs.fr.1.11)
+- [ ] Pause, resume and step (srs.fr.1.16 to 1.18)
+
 ## ECS (ip.fr.2.*)
 
 - [ ] Entity creation returns unique IDs (2.1)

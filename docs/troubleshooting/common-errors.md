@@ -10,7 +10,7 @@ These are **anticipated** (well-known in engine/ECS/physics work) and **not yet 
 | E-004 | **Coordinate mismatch: screen y-down vs physics y-up** | Sprite upside down, gravity "up", rotations inverted | One world convention; convert only at the render boundary; unit test with a known position | no |
 | E-005 | **Unit mismatch (pixels vs meters)** | Objects too slow/fast/floaty; library ignores tiny bodies | Pixels per meter is 32, defined once in the renderer (DEC-036); never mix raw pixels into the adapter | no |
 | E-006 | **Variable timestep in physics** | Non-deterministic runs, tunnelling, jitter | Fixed 1/60 s accumulator (R-5); cap steps per frame (spiral of death) | no |
-| E-007 | **Spiral of death** | Frame time grows → more steps per frame → slower | Clamp frame delta (e.g. ≤ 0.25 s) and max steps per frame | no |
+| E-007 | **Spiral of death** | Frame time grows → more steps per frame → slower | At most 5 ticks per render frame; the time of further whole ticks is dropped (srs.fr.1.3, 1.4). `FixedTimestep` does this | no |
 | E-008 | **Tunnelling** (fast body passes through thin wall) | Player escapes map | Thicker walls, smaller step, continuous collision, clamp max speed | no |
 | E-009 | **Reading render state in simulation** | Headless ≠ normal | Simulation reads ECS only (R-6); equivalence test | no |
 | E-010 | **Wall-clock time in simulation** | Different runs differ; headless too slow/fast | Use fixed `dt` only; inject time source | no |
@@ -32,6 +32,7 @@ These are **anticipated** (well-known in engine/ECS/physics work) and **not yet 
 | E-028 | **Box2D def not started from `b2Default*Def()`** | Debug: assert; release: zero friction, zero density, no gravity | Always start from `b2DefaultWorldDef()` / `BodyDef()` / `ShapeDef()` | no |
 | E-029 | **MSVC leak report looked for in the terminal** (`_CRTDBG_LEAK_CHECK_DF` alone writes only to the debugger's output window) | A leaking Debug build looks clean when run from a terminal or in CI | Call `engine::enableLeakReportAtExit()` first in `main()`; it also sends the report to the standard error output (DEC-046) | no |
 | E-030 | **`CloseWindow` after a failed `InitWindow`** (raylib reports the failure only through `IsWindowReady()`) | Crash on exit on a machine without a display or OpenGL 3.3 | Open the window only through `RaylibWindow::open`, which returns `nullptr` when the window is not ready and never closes one that did not open | no |
+| E-031 | **Tick accumulator in floating point or with a tick rounded to whole nanoseconds** | Now and then a second has 59 ticks: a `double` accumulator at 144 frames per second, or a 16 666 667 ns tick at any rate | Use `FixedTimestep`: it counts nanoseconds times 60, where one tick is exactly 1 000 000 000 | no (found by calculation before PB-012 was written) |
 | E-021 | **LLM answers without evidence** | Confident wrong diagnosis | Require citations; abstain when evidence missing (ip.fr.11.5) | no |
 | E-022 | **Sending code/telemetry to an external AI by default** | Privacy violation (ip.nfr.2.1) | External calls off by default; explicit config | no |
 
