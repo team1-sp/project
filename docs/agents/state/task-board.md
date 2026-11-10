@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-11-11
-updated_by: claude-code (PB-012 session)
+updated_by: claude (PB-025 session, merged with main)
 ---
 
 # Task Board
@@ -31,6 +31,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-016 | Spike: Box2D v3 + raylib falling-box prototype — ClickUp PB-008 | Review (DEC-037 awaits Işık) | Zeynep Ertürk + claude (PB-008 session) | TASK-005 | DEC-014, DEC-015, TASK-008 |
 | TASK-017 | Create the Python `ai-services` project skeleton — ClickUp PB-006 | Review | codex/gpt-5/pb006 | TASK-012 | AI layer tooling |
 | TASK-018 | Editor hosts `Application` and opens the main window — ClickUp PB-122 | Review (issue #38) | Işık Dönger + claude (PB-122 thread) | TASK-006 | ip.fr.1.3, srs.fr.1.13, DEC-048 |
+| TASK-019 | Define the physics adapter interface — ClickUp PB-025 | Review | Zeynep Ertürk + claude (PB-025 session) | TASK-016 | ip.fr.3.1, R-3 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -139,3 +140,8 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Acceptance:** `editor` opens the main window through `Application` and `RaylibWindow`; closing exits with code 0 and no leaks; the `headless` preset still builds without raylib.
 - **Result:** `editor/src/main.cpp` runs `Application` with an empty simulation (no project open) and a status line; `--max-ticks N` closes it after N ticks. `editor` links `engine::rendering_raylib` and, like `sandbox`, is built only when `ENGINE_WITH_RAYLIB` is on.
 - **Links:** DEC-048, HND-020, PB-110.
+
+### TASK-019 — Define the physics adapter interface (ClickUp PB-025)
+- **Status:** Review (2026-11-10). Zeynep Ertürk + claude (PB-025 session)
+- **Acceptance:** the adapter interface with the required operations; no Box2D header outside the adapter implementation; reviewed and documented.
+- **Result:** `engine::physics` target (header-only) with `BodyDesc`, `BodyId`, `BodyState`, `CollisionEvent`, `RaycastHit` and `IPhysicsAdapter`; `Vec2` and `EntityId` in `engine/core`; `tools/check_includes.py` in CI; 4 contract tests with a fake adapter. Name kept as `IPhysicsAdapter` (ClickUp said `IPhysicsWorld`). Choices accepted by Işık as DEC-049. See HND-021.
