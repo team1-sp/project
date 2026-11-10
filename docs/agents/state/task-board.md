@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-11-10
+last_updated: 2026-11-11
 updated_by: claude-code (PB-012 session)
 ---
 
@@ -18,7 +18,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-003 | Decide programming language and physics library | Done (DEC-013 C++, DEC-014 Box2D) | human decision | — | ip.fr.3.* |
 | TASK-004 | Decide ECS approach | Done (DEC-018: custom) | human decision | — | ip.fr.2.* |
 | TASK-005 | Bootstrap `project/` skeleton (CMake, folders, GoogleTest, Raylib + Box2D linked, empty window) — ClickUp PB-002 | Review | Işık Dönger + claude-code (PB-002 session) | — | all |
-| TASK-006 | Phase 2: window + game loop with fixed-timestep accumulator — ClickUp PB-011, PB-012 | Review (PB-011: window and loop; PB-012: fixed timestep) | Arda Karabulut + claude-code (PB-011 and PB-012 sessions) | TASK-005 | ip.fr.1.1–1.4 |
+| TASK-006 | Phase 2: window + game loop with fixed-timestep accumulator — ClickUp PB-011, PB-012 | Done (PR #35, #37; DEC-046, DEC-047 accepted) | Arda Karabulut + claude-code (PB-011 and PB-012 sessions) | TASK-005 | ip.fr.1.1–1.4 |
 | TASK-007 | Fill `environment-setup.md` once the toolchain is chosen | Review (first version written with PB-002; needs a clean-machine check on Windows and macOS) | — | TASK-005 | — |
 | TASK-008 | Decide world units and coordinate convention (y-up vs y-down, pixels-per-meter) | Done (DEC-036) | Zeynep Ertürk (PB-008.3) | — | ip.fr.3.5, 4.1 |
 | TASK-009 | Propagate the 2026-10-13 decisions (DEC-013…017) and role/name fixes through all docs | Done | claude-code/sonnet-5.5/012r | — | DEC-017 |
@@ -30,6 +30,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-015 | Set up CI with GitHub Actions — ClickUp PB-004 | Review | Işık Dönger + claude-code (PB-004 session) | TASK-005, TASK-014 | process |
 | TASK-016 | Spike: Box2D v3 + raylib falling-box prototype — ClickUp PB-008 | Review (DEC-037 awaits Işık) | Zeynep Ertürk + claude (PB-008 session) | TASK-005 | DEC-014, DEC-015, TASK-008 |
 | TASK-017 | Create the Python `ai-services` project skeleton — ClickUp PB-006 | Review | codex/gpt-5/pb006 | TASK-012 | AI layer tooling |
+| TASK-018 | Editor hosts `Application` and opens the main window — ClickUp PB-122 | Review (issue #38) | Işık Dönger + claude (PB-122 thread) | TASK-006 | ip.fr.1.3, srs.fr.1.13, DEC-048 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -61,7 +62,7 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Acceptance:** Clean checkout builds an executable that links Raylib and Box2D and opens/closes a window on Windows (and builds on macOS, DEC-029); the test runner runs one trivial test headless (no window); `repository-structure.md` updated to reality; `environment-setup.md` has exact commands. Note: the layout lists presets `windows-debug`, `windows-release`, `headless` only — add macOS presets (DEC-029).
 
 ### TASK-006 — Window + game loop (ClickUp PB-011, PB-012)
-- **Status:** Review (2026-11-10). PB-011: issue #34, branch `feat/pb-011-feat-open-app-win-n-run-main-loop`. PB-012: issue #36, branch `feat/pb-012-feat-implement-fixed-timestep-1-60-s`, stacked on PB-011. Was Blocked by TASK-005 (PB-002, merged).
+- **Status:** Done (2026-11-11): PR #35 and #37 merged 2026-11-10, DEC-046 and DEC-047 accepted by Işık Dönger 2026-11-11. Was Review (2026-11-10). PB-011: issue #34, branch `feat/pb-011-feat-open-app-win-n-run-main-loop`. PB-012: issue #36, branch `feat/pb-012-feat-implement-fixed-timestep-1-60-s`, stacked on PB-011. Was Blocked by TASK-005 (PB-002, merged).
 - **Claimed by:** Arda Karabulut + claude-code (PB-011 session) on 2026-11-10
 - **Acceptance:** Window opens/closes cleanly (ip.fr.1.3); fixed-timestep accumulator for physics at 1/60 s decoupled from render (ip.fr.1.2); mode flag normal/headless parsed (ip.fr.1.4) — headless path must not initialise Raylib.
 - **Acceptance (ClickUp PB-011):** window opens, Update and Draw are called each frame; closing exits with code 0 and no leaks; window code only in the platform module (read as `engine/rendering-raylib`, DEC-046).
@@ -72,7 +73,7 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Plan (PB-012):** `Tick` and the 1/60 s constants in `tick.hpp`; `FrameClock` over `steady_clock` with an injectable time source; `FixedTimestep` as its own class with exact integer math; `Application` uses both and keeps the tick counter; unit tests feed frame times as numbers.
 - **Result (PB-012):** done as planned. Serves srs.fr.1.2 to 1.6 and 1.15. `ISimulation::runTick` now takes the tick number. The sandbox shows ticks, simulated time, real time and frame time, with `--fps N`.
 - **Verification (PB-012):** same machine and flags: `windows-debug` builds with no warnings, `ctest` 49/49; `headless` preset 41/41; `sandbox.exe --max-ticks 300` took 5.00 s, 5.01 s, 5.00 s and 5.00 s of real time at `--fps 30`, `60`, `144` and `0`, exit code 0, nothing on stderr; a tick rounded to whole nanoseconds failed 7 tests, and incrementing the counter before the tick failed 7. See HND-019.
-- **Links:** DEC-046 and DEC-047 (`Proposed`), Q-019, Q-020, HND-018, HND-019.
+- **Links:** DEC-046 and DEC-047 (`Accepted` 2026-11-11), Q-019, Q-020, HND-018, HND-019.
 
 ### TASK-007 — Environment setup doc
 - **Status:** Blocked by TASK-005
@@ -131,3 +132,10 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Risks:** Python's minor version is not specified; choosing one would silently make a technology decision. Keep the skeleton isolated from `engine/` and do not add model/runtime dependencies.
 - **Verification:** create a clean virtual environment, install the project development dependencies, run `ruff check .` and `pytest` from `ai-services/`.
 - **Result:** Added a Python 3.12 `src/`-layout package, pinned setuptools/Ruff/pytest configuration, platform setup instructions and a package-metadata smoke test. CI now installs each Python package's pinned `dev` extra. Ruff, pytest (1/1) and `pip check` pass in a fresh Python 3.12 environment. See HND-015.
+
+### TASK-018 — Editor hosts `Application` and opens the main window (ClickUp PB-122)
+- **Status:** Review (2026-11-11). Issue #38, branch `feat/pb-122-make-the-editor-host-the-application-and`.
+- **Claimed by:** Işık Dönger + claude (PB-122 thread) on 2026-11-11
+- **Acceptance:** `editor` opens the main window through `Application` and `RaylibWindow`; closing exits with code 0 and no leaks; the `headless` preset still builds without raylib.
+- **Result:** `editor/src/main.cpp` runs `Application` with an empty simulation (no project open) and a status line; `--max-ticks N` closes it after N ticks. `editor` links `engine::rendering_raylib` and, like `sandbox`, is built only when `ENGINE_WITH_RAYLIB` is on.
+- **Links:** DEC-048, HND-020, PB-110.

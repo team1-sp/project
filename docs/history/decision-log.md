@@ -54,8 +54,9 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-043 | About 20 % of the whole project is built this semester; the ECS builds its Phase 1 slice | Accepted | 2026-11-05 |
 | DEC-044 | Coding standards amended for the ECS design: naming, tags, declarations, errors, RNG | Accepted | 2026-11-05 |
 | DEC-045 | No own LLM is built; users supply their own model provider and key; only free-tier or local use is guaranteed | Accepted | 2026-11-06 |
-| DEC-046 | PB-011: the window lives in `rendering-raylib` behind `IWindow`; the loop reaches the game through `ISimulation` and `IFrameRenderer`; the leak check is one guarded MSVC call | Proposed | 2026-11-10 |
-| DEC-047 | PB-012: the game loop follows srs.fr.1.2 to 1.6 (at most 5 ticks per render frame) with an exact integer accumulator and the tick counter in `engine/core` | Proposed | 2026-11-10 |
+| DEC-046 | PB-011: the window lives in `rendering-raylib` behind `IWindow`; the loop reaches the game through `ISimulation` and `IFrameRenderer`; the leak check is one guarded MSVC call | Accepted | 2026-11-10 |
+| DEC-047 | PB-012: the game loop follows srs.fr.1.2 to 1.6 (at most 5 ticks per render frame) with an exact integer accumulator and the tick counter in `engine/core` | Accepted | 2026-11-10 |
+| DEC-048 | The editor is the application that hosts `engine::Application` and owns the main window; `sandbox` is a developer and CI test host; games never host the engine | Accepted | 2026-11-11 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -596,7 +597,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-046 — PB-011: window in `rendering-raylib` behind `IWindow`, loop seams `ISimulation` and `IFrameRenderer`, guarded MSVC leak check
 - **Date:** 2026-11-10
-- **Status:** Proposed
+- **Status:** Accepted
 - **Proposed by:** Arda Karabulut (owner of PB-011; engine core area, DEC-024), who chose these options  **Recorded by:** claude-code (PB-011 session)
 - **Context:** The ClickUp text of PB-011 puts the Window wrapper in a new `engine/platform` module, has `Application::Run` "call the scheduler each frame", names `demo/main.cpp` and asks for `_CrtSetDbgFlag`. Against that: only `engine/rendering-raylib` may link raylib (R-4, DEC-007, DEC-022) and `engine/core` must build without it (headless preset); `engine/ecs` does not exist yet and systems run per tick, not per render frame (srs.fr.1.13); no demo game is chosen (Q-016); `_CrtSetDbgFlag` exists only in the Microsoft C runtime, and the coding standard says to ask before adding platform-specific APIs.
 - **Options considered:**
@@ -614,11 +615,11 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none known. The ClickUp text of PB-011 still names `engine/platform` and `demo/main.cpp`.
 - **Revisit when:** `engine/rendering` (renderer interface and null renderer) or `engine/ecs` is created, or the team wants sanitizers in CI.
 - **Supersedes / Related:** R-4, DEC-007, DEC-022, DEC-024, DEC-037, Q-016, Q-019, PB-011, TASK-006.
-- **Amendments:**
+- **Amendments:** 2026-11-11 — accepted by Işık Dönger after merging PR #35 (Q-019): "I want you to update decision from pr 35 and 37 as accepted since they are only proposed now." Item 4 is clarified by DEC-048: `sandbox` is a developer and CI test host, the editor hosts the application, and the demo game is built inside the editor. Recorded by claude (PB-122 thread).
 
 ### DEC-047 — PB-012: the game loop follows srs.fr.1.2 to 1.6 with an exact integer accumulator and the tick counter in `engine/core`
 - **Date:** 2026-11-10
-- **Status:** Proposed
+- **Status:** Accepted
 - **Proposed by:** claude-code (PB-012 session), from srs.fr.1.2 to 1.6  **Recorded by:** claude-code (PB-012 session)
 - **Context:** `architecture/engine-layer.md` had the cap on ticks per render frame only as `[PROPOSED: cap 5]`. The SRS fixes the loop (srs.fr.1.2 to 1.6), but it is a course document and the decision log had no entry. The ClickUp text of PB-012 says "simulation frame counter" and `EngineContext`, gives `maxStepsPerFrame` no value and does not say how time is represented.
 - **Options considered:**
@@ -636,4 +637,27 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none; this follows SRS 6.1.
 - **Revisit when:** pause and step are built (they change what the accumulator keeps), or a logger exists.
 - **Supersedes / Related:** DEC-004, DEC-042, DEC-046, R-5, R-6, E-006, E-007, E-031, Q-020, PB-012, TASK-006.
+- **Amendments:** 2026-11-11 — accepted by Işık Dönger after merging PR #37 (Q-020): "I want you to update decision from pr 35 and 37 as accepted since they are only proposed now." Recorded by claude (PB-122 thread).
+
+### DEC-048 — The editor hosts `engine::Application` and owns the main window
+- **Date:** 2026-11-11
+- **Status:** Accepted
+- **Decided by:** Işık Dönger   **Recorded by:** claude (PB-122 thread)
+- **Human's words:** reviewing PR #35: "shouldnt this task be to initialize the main window that the engine will run in, aka the editor. Demo is a game that will be developed within the editor." Asked for the layout, then: "okey you can go ahead and open pr."
+- **Context:** DEC-046 item 4 named `sandbox` "the example application", and the PB-011 text named `demo/main.cpp`, which read as if a game hosts the engine. `editor/` was a placeholder that only printed its version and did not link the renderer.
+- **Options considered:**
+  1. The editor hosts `Application` and opens the main window; `sandbox` stays as a test host. Chosen.
+  2. Keep `sandbox` as the only window application until the editor shell (PB-110).
+- **Decision:**
+  1. `engine::Application` stays in `engine/core` and knows no editor and no game (DEC-046).
+  2. The `editor` executable is the application that hosts the engine: it builds `Application` with `RaylibWindow` and owns the main window. Editor panels draw in the render frame (srs.fr.1.13).
+  3. `sandbox` is a developer and CI test host, not the product and not a stand-in for the demo.
+  4. Games, including the demo game (Q-016), are content built and run inside the editor; they never host the engine.
+  5. The editor opens a window, so like `sandbox` it is built only when `ENGINE_WITH_RAYLIB` is on; the `headless` preset builds neither (R-4, R-6).
+- **Rationale:** The SRS puts Editor panels in the render frame (srs.fr.1.13) and the run-mode switch in the Editor (srs.fr.1.8), so the editor is the host.
+- **Consequences:** PB-122 moves `editor/` onto `Application`. PB-110 (editor shell) builds its panels on that window. Rule S-6 no longer lists editor tooling as out of scope.
+- **Docs updated:** `agents/rules.md` (S-6), `architecture/engine-layer.md`, `guidelines/repository-structure.md`, `troubleshooting/environment-setup.md`, `agents/state/*`.
+- **Course documents affected (for humans):** none known.
+- **Revisit when:** the editor shell (PB-110) or the run-mode switch (srs.fr.1.8) is built.
+- **Supersedes / Related:** clarifies DEC-046 item 4; DEC-029, R-4, R-6, Q-016, PB-110, PB-122.
 - **Amendments:**
