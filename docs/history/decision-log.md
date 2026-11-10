@@ -56,6 +56,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-045 | No own LLM is built; users supply their own model provider and key; only free-tier or local use is guaranteed | Accepted | 2026-11-06 |
 | DEC-046 | PB-011: the window lives in `rendering-raylib` behind `IWindow`; the loop reaches the game through `ISimulation` and `IFrameRenderer`; the leak check is one guarded MSVC call | Proposed | 2026-11-10 |
 | DEC-047 | PB-012: the game loop follows srs.fr.1.2 to 1.6 (at most 5 ticks per render frame) with an exact integer accumulator and the tick counter in `engine/core` | Proposed | 2026-11-10 |
+| DEC-049 | PB-025: the physics interface is named `IPhysicsAdapter`; bodies are addressed by `BodyId` with `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core` | Accepted | 2026-11-11 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -636,4 +637,26 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none; this follows SRS 6.1.
 - **Revisit when:** pause and step are built (they change what the accumulator keeps), or a logger exists.
 - **Supersedes / Related:** DEC-004, DEC-042, DEC-046, R-5, R-6, E-006, E-007, E-031, Q-020, PB-012, TASK-006.
+- **Amendments:**
+
+### DEC-049 — PB-025: the physics interface is `IPhysicsAdapter`, bodies are addressed by `BodyId`, and `Vec2` and `EntityId` live in `engine/core`
+- **Date:** 2026-11-11
+- **Status:** Accepted
+- **Decided by:** Zeynep Ertürk (owner of PB-025; physics adapter area, DEC-024) chose the three options on 2026-11-10; Işık Dönger (project manager, reviewer of PR #33) accepted them on 2026-11-11  **Recorded by:** claude (PB-025 review session)
+- **Human's words:** Işık Dönger: "I approve the first one, second and third also seems correct to me" (the three choices listed in PR #33).
+- **Context:** The ClickUp text of PB-025 (PB-025.2) names the interface `IPhysicsWorld`, while `design/physics-adapter-design.md`, R-3 and DEC-003 always say Physics Adapter. The design doc addressed bodies by `BodyId` but let `DestroyBody` take either an entity or a `BodyId`, and had no entity-to-body lookup, which `PhysicsSyncIn` needs (DEC-041). `Vec2` and `EntityId` were only designed (`ecs-api-design.md` §4), not written, and the physics target must not depend on an ECS target that does not exist yet.
+- **Options considered:**
+  1. Name: (a) `IPhysicsAdapter`, as in the design doc and the rules; (b) `IPhysicsWorld`, as in ClickUp. Zeynep chose (a).
+  2. Addressing: (a) every call takes a `BodyId`, plus `findBody(EntityId)`; (b) every call takes an `EntityId` and the adapter keeps the mapping inside. Zeynep chose (a).
+  3. Shared types: (a) `Vec2` and `EntityId` in `engine/core`, copied from `ecs-api-design.md` §4; (b) in `engine/physics`; (c) wait for `engine/ecs`. Zeynep chose (a).
+- **Decision:**
+  1. The interface is `engine::physics::IPhysicsAdapter` in the header-only `engine::physics` target, which links only `engine::core`.
+  2. Bodies are addressed by `BodyId` (64-bit, so the Box2D implementation can pack a `b2BodyId` into it). `createBody(EntityId, BodyDesc)` returns it, `findBody(EntityId)` looks it up and `destroyBody(BodyId)` removes it. Collision events and raycasts report `EntityId`, not `BodyId`.
+  3. `engine::Vec2` and `engine::EntityId` are defined in `engine/core` (`vec2.hpp`, `entity_id.hpp`); the ECS reuses them.
+- **Rationale:** One name across the rules, the design doc and the code. A `BodyId` avoids a map lookup in every call, and the lookup the sync systems need is one explicit call. `engine/core` is the one target both physics and the ECS already depend on, so neither depends on the other (R-2). `[further rationale not given]`
+- **Consequences:** PB-026 implements `Box2DPhysicsAdapter` against this interface in `engine/physics-box2d/`. The ECS (Phase 1) must include `engine/core/entity_id.hpp` instead of defining its own `EntityId`. The ClickUp subtask PB-025.2 still says `IPhysicsWorld`.
+- **Docs updated:** `design/physics-adapter-design.md` (§2 and the decisions line), `agents/state/current-status.md`, `agents/state/task-board.md`, `agents/state/handoff-log.md` (HND-020).
+- **Course documents affected (for humans):** none known. The ClickUp text of PB-025.2 names `IPhysicsWorld`.
+- **Revisit when:** PB-026 shows that `BodyId` addressing does not fit Box2D v3, or `engine/ecs` is created and wants `EntityId` elsewhere.
+- **Supersedes / Related:** DEC-003, DEC-014, DEC-024, DEC-041, R-2, R-3, PB-025, PB-026, TASK-018.
 - **Amendments:**

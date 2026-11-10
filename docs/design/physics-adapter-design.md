@@ -1,6 +1,6 @@
 # Physics Adapter Design
 
-Status: **interface written in C++ (PB-025, 2026-11-10); Box2D implementation not started (PB-026).** Library: **Box2D** (DEC-014), version **v3.1.1** (DEC-020). Requirements: ip.fr.3.1–3.8 (reference). Decisions: DEC-003, DEC-014, DEC-016 (2D only). Rule: R-3.
+Status: **interface written in C++ (PB-025, 2026-11-10); Box2D implementation not started (PB-026).** Library: **Box2D** (DEC-014), version **v3.1.1** (DEC-020). Requirements: ip.fr.3.1–3.8 (reference). Decisions: DEC-003, DEC-014, DEC-016 (2D only), DEC-049 (name, `BodyId` addressing, shared types). Rule: R-3.
 
 ## 1. Purpose
 
@@ -13,7 +13,7 @@ ECS / Engine ──► IPhysicsAdapter ──► Box2D
 
 ## 2. Interface (engine-facing) — ip.fr.3.1
 
-Written in PB-025. The interface is `engine::physics::IPhysicsAdapter` in the `engine::physics` target (`engine/physics/`, header-only, links only `engine::core`). The ClickUp text named it `IPhysicsWorld`; the team kept the name this document always used (Zeynep Ertürk, 2026-11-10).
+Written in PB-025. The interface is `engine::physics::IPhysicsAdapter` in the `engine::physics` target (`engine/physics/`, header-only, links only `engine::core`). The ClickUp text named it `IPhysicsWorld`; the team kept the name this document always used (DEC-049).
 
 | File | Contents |
 | --- | --- |

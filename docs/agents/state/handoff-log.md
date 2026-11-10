@@ -254,3 +254,4 @@
 - **Not verified:** Windows and macOS builds (CI covers them); the headless preset.
 - **Next:** PB-026 implements `Box2DPhysicsAdapter` in `engine/physics-box2d/` (also needs PB-012, the fixed-timestep loop).
 - **Traps:** `BodyId` is 64-bit on purpose so the Box2D implementation can pack a `b2BodyId` into it. Collision events and raycasts return `EntityId`, not `BodyId`.
+- **Records:** DEC-049 (Accepted by Işık Dönger on 2026-11-11 during review of PR #33).
