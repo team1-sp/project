@@ -1,5 +1,6 @@
-# Sandbox app. It only opens and closes a window to prove the build links raylib and
-# Box2D (PB-002). It is not the demo game, which the team has not chosen yet (Q-016).
+# Sandbox app: the smallest application on the engine's game loop (PB-011). It opens the
+# window, or runs headless, and proves the build links raylib and Box2D (PB-002). It is not
+# the demo game, which the team has not chosen yet (Q-016).
 add_executable(sandbox
     src/main.cpp
 )

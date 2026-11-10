@@ -63,10 +63,11 @@ Clean: delete `build/<preset>/` (or all of `build/`). Opening the folder in Visu
 | Program | Windows | macOS |
 | --- | --- | --- |
 | Sandbox (opens a window; Escape closes it) | `build\windows-debug\sandbox\Debug\sandbox.exe` | `build/macos-debug/sandbox/sandbox` |
-| Sandbox, closes itself after N frames | add `--frames 120` | add `--frames 120` |
+| Sandbox, closes itself after N ticks | add `--max-ticks 120` | add `--max-ticks 120` |
+| Sandbox in headless mode (no window; 10 000 ticks unless `--max-ticks` is given) | add `--headless` | add `--headless` |
 | Editor (placeholder, prints its version) | `build\windows-debug\editor\Debug\editor.exe` | `build/macos-debug/editor/editor` |
 
-Normal and headless run modes of the engine come with TASK-006.
+The sandbox runs on the engine's `Application` (PB-011). In a Windows Debug build it reports memory leaks on the standard error output when it exits: a clean run prints nothing there, a leak prints "Detected memory leaks!" and the blocks. An unknown option, or a `--max-ticks` value outside 1 to 1 000 000, ends it with exit code 2.
 
 ## 6. Troubleshooting
 
@@ -97,3 +98,4 @@ Solved setup problems also go into `history/problem-log.md` (area `Build`) and g
 | 2026-10-24 | Exact prerequisites, build, test and run commands for the PB-002 skeleton | claude-code (PB-002 session) |
 | 2026-10-24 | Windows build verified with Visual Studio 2026 / MSVC 19.51; first configure takes several minutes (raylib download) | claude-code (PB-002 session) |
 | 2026-10-27 | Link to the how-to-add-a-test guide (PB-003) | claude-code (PB-003 session) |
+| 2026-11-10 | Sandbox options `--max-ticks` and `--headless`, leak report (PB-011) | claude-code (PB-011 session) |
