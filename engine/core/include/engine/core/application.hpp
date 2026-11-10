@@ -1,8 +1,9 @@
 #pragma once
 
-#include <cstdint>
 #include <memory>
 
+#include "engine/core/frame_clock.hpp"
+#include "engine/core/tick.hpp"
 #include "engine/core/window.hpp"
 
 namespace engine {
@@ -16,21 +17,27 @@ struct ApplicationConfig {
     bool headless = false;
     // The run ends once this many ticks have been executed (srs.fr.7.7). 0 means no limit, which
     // only normal mode accepts: a headless run has no window to close.
-    std::uint64_t maxTicks = 0;
+    Tick maxTicks = 0;
     // Used in normal mode only.
     WindowConfig window;
 };
 
-// Owns the application window and runs the game loop (srs.fr.1.1, 1.7 to 1.10).
+// Owns the application window and runs the game loop (srs.fr.1.1 to 1.10, 1.15).
 // Use: construct, init(), run(), shutdown(). The simulation and the frame renderer are not
 // owned and must outlive the Application.
+//
+// Normal mode runs render frames: each one runs the ticks that are due, at most 5, then renders
+// and presents the state the last completed tick left. Headless mode runs one tick after the
+// other without a clock.
 class Application {
 public:
     // An application that can only run headless: it cannot reach a window or a renderer (R-6).
     explicit Application(ISimulation& simulation);
     // An application for normal mode. A headless run of it never calls `createWindow` or
-    // `frameRenderer`, so the graphics framework is not initialised (R-4).
-    Application(ISimulation& simulation, IFrameRenderer& frameRenderer, WindowFactory createWindow);
+    // `frameRenderer`, so the graphics framework is not initialised (R-4). `realTime` replaces
+    // the steady clock that measures render frames; tests use it to script time.
+    Application(ISimulation& simulation, IFrameRenderer& frameRenderer, WindowFactory createWindow,
+                FrameClock::TimeSource realTime = {});
     ~Application();
 
     Application(const Application&) = delete;
@@ -49,6 +56,12 @@ public:
     // the destructor calls it too.
     void shutdown();
 
+    // The tick counter (srs.fr.1.5): 0 when a run starts, one more after every completed tick.
+    // While a tick runs, this is that tick's number.
+    [[nodiscard]] Tick ticksExecuted() const;
+    // Simulated time of the run: the tick counter times 1/60 s (srs.fr.1.6).
+    [[nodiscard]] double simulatedSeconds() const;
+
 private:
     void runHeadless();
     void runNormal();
@@ -58,9 +71,10 @@ private:
     ISimulation& simulation_;
     IFrameRenderer* frameRenderer_ = nullptr;
     WindowFactory createWindow_;
+    FrameClock frameClock_;
     ApplicationConfig config_;
     std::unique_ptr<IWindow> window_;
-    std::uint64_t ticksExecuted_ = 0;
+    Tick ticksExecuted_ = 0;
     bool initialised_ = false;
 };
 

@@ -55,6 +55,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-044 | Coding standards amended for the ECS design: naming, tags, declarations, errors, RNG | Accepted | 2026-11-05 |
 | DEC-045 | No own LLM is built; users supply their own model provider and key; only free-tier or local use is guaranteed | Accepted | 2026-11-06 |
 | DEC-046 | PB-011: the window lives in `rendering-raylib` behind `IWindow`; the loop reaches the game through `ISimulation` and `IFrameRenderer`; the leak check is one guarded MSVC call | Proposed | 2026-11-10 |
+| DEC-047 | PB-012: the game loop follows srs.fr.1.2 to 1.6 (at most 5 ticks per render frame) with an exact integer accumulator and the tick counter in `engine/core` | Proposed | 2026-11-10 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -613,4 +614,26 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none known. The ClickUp text of PB-011 still names `engine/platform` and `demo/main.cpp`.
 - **Revisit when:** `engine/rendering` (renderer interface and null renderer) or `engine/ecs` is created, or the team wants sanitizers in CI.
 - **Supersedes / Related:** R-4, DEC-007, DEC-022, DEC-024, DEC-037, Q-016, Q-019, PB-011, TASK-006.
+- **Amendments:**
+
+### DEC-047 — PB-012: the game loop follows srs.fr.1.2 to 1.6 with an exact integer accumulator and the tick counter in `engine/core`
+- **Date:** 2026-11-10
+- **Status:** Proposed
+- **Proposed by:** claude-code (PB-012 session), from srs.fr.1.2 to 1.6  **Recorded by:** claude-code (PB-012 session)
+- **Context:** `architecture/engine-layer.md` had the cap on ticks per render frame only as `[PROPOSED: cap 5]`. The SRS fixes the loop (srs.fr.1.2 to 1.6), but it is a course document and the decision log had no entry. The ClickUp text of PB-012 says "simulation frame counter" and `EngineContext`, gives `maxStepsPerFrame` no value and does not say how time is represented.
+- **Options considered:**
+  1. Limit on catching up: (a) at most 5 ticks per render frame, drop the time of the further whole ticks, keep the part of a tick (srs.fr.1.3, 1.4); (b) clamp the frame time, as the PB-008 spike does (0.25 s). For comparison, Unity 6.5 also stops catching up beyond a maximum time, and the fixed-step group of its Entities 6.5 package also defaults to 1/60 s. (a) is proposed because the SRS states it.
+  2. Accumulator: (a) exact integers, nanoseconds times 60; (b) `double` seconds; (c) a tick rounded to 16 666 667 ns. In one second, (b) runs 59 ticks at 144 frames per second and (c) runs 59 at every frame rate. (a) is proposed.
+  3. Counter: a tick counter in the loop, passed to `ISimulation::runTick(tick)`, instead of a "frame number" in an `EngineContext`. DEC-042 item 2 already fixes the word tick.
+- **Decision (proposed):**
+  1. `FixedTimestep` in `engine/core` implements 1(a) with `maxTicksPerRenderFrame = 5` and reports when the warning "Simulation is running slower than real time" is due, at most once per second of real time. Until a logger exists, `Application` writes it to the standard error output.
+  2. The accumulator is exact (2(a)).
+  3. `Tick` is `std::uint64_t` in `engine/core/tick.hpp`. `Application` keeps the counter: 0 when a run starts and one more after every completed tick; simulated time is the counter times 1/60 s (srs.fr.1.5, 1.6).
+  4. `FrameClock` (the task's `Time`) reads `std::chrono::steady_clock` once per render frame; nothing in a tick reads real time. A headless run uses no clock and needs a maximum number of ticks (srs.fr.7.4, 7.7).
+- **Rationale:** It follows the SRS as written and keeps "60 ticks are 1.0 s" true at every frame rate.
+- **Consequences:** needs confirmation from Işık Dönger in the PB-012 pull request (Q-020). Not built yet: pause, resume and step (srs.fr.1.16 to 1.18), `RunError` handling (srs.fr.1.11), the headless run settings (srs.fr.7.x).
+- **Docs updated:** `architecture/engine-layer.md`, `troubleshooting/common-errors.md` (E-007, E-031), `troubleshooting/environment-setup.md`, `testing/test-checklists.md`, `agents/state/*`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** pause and step are built (they change what the accumulator keeps), or a logger exists.
+- **Supersedes / Related:** DEC-004, DEC-042, DEC-046, R-5, R-6, E-006, E-007, E-031, Q-020, PB-012, TASK-006.
 - **Amendments:**

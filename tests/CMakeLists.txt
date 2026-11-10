@@ -4,6 +4,8 @@ include(GoogleTest)
 
 add_executable(engine_tests
     unit/core/application_test.cpp
+    unit/core/fixed_timestep_test.cpp
+    unit/core/frame_clock_test.cpp
     unit/core/version_test.cpp
     unit/bridge/agent_bridge_test.cpp
     unit/physics-box2d/box2d_info_test.cpp

@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-11-10
-updated_by: claude-code (PB-011 session)
+updated_by: claude-code (PB-012 session)
 ---
 
 # Current Status
@@ -8,7 +8,7 @@ updated_by: claude-code (PB-011 session)
 Snapshot of the project. Overwrite this file each session (keep it short). History belongs in `handoff-log.md`. **The truth is the `Accepted` entries in `history/decision-log.md`.**
 
 ## One-line summary
-Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The custom ECS is designed (PB-010, merged; Phase 1 slice this semester, DEC-043) but not built. PB-011 adds the application window and the game loop (`Application`, `IWindow`, `RaylibWindow`), in review on a local branch. The Python 3.12 `ai-services` package is a skeleton; AI capabilities remain deferred. **The demo game is undecided** (Q-016).
+Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The custom ECS is designed (PB-010, merged; Phase 1 slice this semester, DEC-043) but not built. PB-011 adds the application window and the game loop (`Application`, `IWindow`, `RaylibWindow`) and PB-012 the fixed 1/60 s timestep (`FrameClock`, `FixedTimestep`, the tick counter); both are in review on local branches. The Python 3.12 `ai-services` package is a skeleton; AI capabilities remain deferred. **The demo game is undecided** (Q-016).
 
 ## Phase
 Roadmap phase **1 — Project and technology decisions**: all exit criteria are met (see `plan.md`); the human confirms closing it. Phase 2 starts with the skeleton (TASK-005).
@@ -26,11 +26,11 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 
 - **Accepted:** core entries DEC-001…009 and DEC-013…036 as indexed in the decision log; Python 3.12 with pinned `ai-services` tooling (DEC-039); gRPC/protobuf behind `AgentBridge` for the engine-to-Python bridge (DEC-038, ADR-002); the ECS decisions from the PB-010 review (DEC-040…044); no own LLM (DEC-045).
 - **Proposed / deferred by the human ("too early"):** MCP later (DEC-010); LLM-instructive component metadata (Q-013). Agents do not raise these.
-- **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019).
+- **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
 
 ## In progress / next
 0. **TASK-006 (ClickUp PB-011): application window and game loop** — Review, issue #34, branch `feat/pb-011-feat-open-app-win-n-run-main-loop`. Waits on Işık for DEC-046 (Q-019).
-1. **TASK-006 (ClickUp PB-012): fixed 1/60 s timestep** — next, on top of PB-011: clock, accumulator, tick counter.
+1. **TASK-006 (ClickUp PB-012): fixed 1/60 s timestep** — Review, issue #36, branch `feat/pb-012-feat-implement-fixed-timestep-1-60-s`, stacked on PB-011 (its PR's base is the PB-011 branch until #35 is merged). Waits on Işık for DEC-047 (Q-020).
 2. **PB-010.3:** ECS design review and ADR-001 (sparse-set storage) are still open.
 3. **DEC-037** (PB-008 spike exception) still waits on Işık. Human answers Q-014 (leftovers) and Q-015 (task ids).
 4. Then the ECS Phase 1 implementation (`design/ecs-api-design.md` §17), which fills `ISimulation`.
@@ -40,7 +40,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 | Check | Result |
 | --- | --- |
 | Build | Skeleton builds on Linux (GCC 13) Windows (MSVC 19.51, Visual Studio 2026) `[VERIFIED 2026-10-24]` and macOS (Apple Clang) `[VERIFIED 2026-10-27]` |
-| Tests | With PB-011: 24/24 on Windows (MSVC 19.44, `windows-debug`) and 16/16 in the `headless` preset on the same machine `[VERIFIED 2026-11-10]`; macOS and Linux not run yet. Before: 2/2 pass on Linux, Windows and macOS `[VERIFIED 2026-10-27]`; with PB-008, 9/9 on Linux (GCC 13), macOS (Zeynep Ertürk) and Windows (local Visual Studio 2026 build and the `windows-latest` CI job); the spike window itself has not been run on Windows `[VERIFIED 2026-11-01]` |
+| Tests | With PB-011 and PB-012: 49/49 on Windows (MSVC 19.44, `windows-debug`) and 41/41 in the `headless` preset on the same machine `[VERIFIED 2026-11-10]`; macOS and Linux not run yet. Before: 2/2 pass on Linux, Windows and macOS `[VERIFIED 2026-10-27]`; with PB-008, 9/9 on Linux (GCC 13), macOS (Zeynep Ertürk) and Windows (local Visual Studio 2026 build and the `windows-latest` CI job); the spike window itself has not been run on Windows `[VERIFIED 2026-11-01]` |
 | Python | Python 3.12.13 clean-environment install succeeds; Ruff clean; pytest 1/1; `pip check` clean `[VERIFIED 2026-11-04]` |
 | Docs | Scaffold created 2026-10-12; updated 2026-10-13 for the stack decision and the decision-authority rule |
 
