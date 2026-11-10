@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-11-01
-updated_by: claude (PB-008 session)
+last_updated: 2026-11-10
+updated_by: claude-code (PB-012 session)
 ---
 
 # Open Questions
@@ -78,6 +78,22 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 - **Status:** Open
 - **Context:** R-3/R-4 keep Box2D in `engine/physics-box2d/` and raylib in `engine/rendering-raylib/`. The PB-008 spike in `sandbox/` links both directly, kept in separate files (DEC-037, `Proposed`).
 - **Options:** (A) accept the exception for this spike only; (B) move the spike's Box2D code into `engine/physics-box2d/` and its drawing into `engine/rendering-raylib/`.
+- **Answer:**
+
+### Q-019 — Are the PB-011 structure choices accepted?
+- **To:** human:isik
+- **Asked by:** claude-code (PB-011 session) on 2026-11-10, for Arda Karabulut
+- **Status:** Open
+- **Context:** PB-011's ClickUp text conflicts with the accepted layout in four places. Arda Karabulut chose: the window in `engine/rendering-raylib` behind an `IWindow` interface in `engine/core` (not a new `engine/platform`); `ISimulation` and `IFrameRenderer` as the loop's seams until the ECS exists; one guarded MSVC-only call for the leak check; `sandbox` as the example application. Recorded as DEC-046, `Proposed`.
+- **Options:** (A) accept DEC-046 as it is; (B) change a point in the PB-011 review.
+- **Answer:**
+
+### Q-020 — Is the fixed-timestep loop of PB-012 accepted as the SRS states it?
+- **To:** human:isik
+- **Asked by:** claude-code (PB-012 session) on 2026-11-10, for Arda Karabulut
+- **Status:** Open
+- **Context:** `engine-layer.md` had the cap on ticks per render frame only as `[PROPOSED: cap 5]`; the SRS fixes it (srs.fr.1.3, 1.4) but the decision log had no entry. PB-012 implements srs.fr.1.2 to 1.6 with an exact integer accumulator and a tick counter in `engine/core`. Recorded as DEC-047, `Proposed`.
+- **Options:** (A) accept DEC-047 as it is; (B) change a point in the PB-012 review.
 - **Answer:**
 
 ## Answered

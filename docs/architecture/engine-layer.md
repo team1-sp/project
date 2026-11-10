@@ -29,9 +29,13 @@ Present frame
 ```
 
 Notes:
-- Physics runs at a **fixed timestep**; rendering at variable FPS. Use an accumulator: add elapsed time, run `Step(1/60)` while `accumulator >= 1/60`. Cap the number of steps per frame to avoid a "spiral of death" `[PROPOSED: cap 5]`.
+- The simulation runs in **ticks of exactly 1/60 s**; rendering runs at a variable frame rate. An accumulator adds the real time of each render frame and runs one tick for each whole 1/60 s. A render frame runs at most **5 ticks**; when more are due, the time of the further whole ticks is dropped, the part of a tick is kept, and the warning "Simulation is running slower than real time" is logged at most once per second (srs.fr.1.3, 1.4; DEC-047 `Proposed`). This stops the "spiral of death".
 - The engine's `Update` changes game state; `Draw` only renders current state. Raylib does not impose a loop structure: our own game loop owns the order (R-9) and calls Raylib only from the rendering step.
 - In headless mode time is *simulated*: each loop iteration advances exactly one fixed step; no sleeping and no dependence on the wall clock.
+
+**Where the loop lives (PB-011, DEC-046).** `engine/core` has `Application` (`init`, `run`, `shutdown`), which owns the loop and the window. It sees the window only as the `IWindow` interface; the window itself is `RaylibWindow` in `engine/rendering-raylib`, opened through a factory that a headless run never calls (R-4). Until `engine/ecs` exists the loop reaches the game through two interfaces in `engine/core`: `ISimulation::runTick()` for everything that runs per tick and `IFrameRenderer::renderFrame()` for the render frame. A normal-mode render frame is: run the ticks, `beginFrame`, `renderFrame`, `endFrame` (present, then collect input for the next frame). Closing the window ends the run after the current render frame with exit code 0 (srs.fr.1.10). `sandbox` is the example application.
+
+**Time in the loop (PB-012, DEC-047).** `FrameClock` measures the real time of each render frame with `std::chrono::steady_clock`; it is read once per render frame, in `Application`, and nowhere in the simulation (R-6). `FixedTimestep` turns those frame times into ticks. Its accumulator counts nanoseconds times 60, a unit in which one tick is exactly 1 000 000 000, so frame times that add up to one second give exactly 60 ticks at any frame rate; a `double` accumulator runs 59 ticks in a second at 144 frames per second. `Application` keeps the tick counter (`Tick`, a `std::uint64_t` in `engine/core/tick.hpp`): 0 when a run starts and one more after every completed tick, so the number passed to `ISimulation::runTick(tick)` is the counter's value at the start of that tick (srs.fr.1.5), and simulated time is the counter times 1/60 s (srs.fr.1.6). The ECS will hand the same number to systems as `ctx.tick()`. A headless run uses no clock: it runs one tick after the other until `maxTicks` (srs.fr.7.4, 7.7).
 
 ## 2. Scene
 

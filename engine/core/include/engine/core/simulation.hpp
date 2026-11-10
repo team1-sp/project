@@ -1,0 +1,24 @@
+#pragma once
+
+#include "engine/core/tick.hpp"
+
+namespace engine {
+
+// What the game loop advances: everything that runs per simulation tick (srs.fr.1.13). One call
+// is one tick of exactly 1/60 s of simulated time (R-5). An implementation must not depend on a
+// window, on rendering or on wall-clock time, so that headless and normal mode give the same
+// results (R-6).
+//
+// This is the seam the ECS fills once engine/ecs exists: runTick() becomes the seven tick
+// phases of srs.fr.1.12.
+class ISimulation {
+public:
+    virtual ~ISimulation() = default;
+
+    // `tick` is the number of the tick to run: 0 for the first tick of a run, then one more for
+    // each tick (srs.fr.1.5). The ECS hands it to systems as ctx.tick(), and events and
+    // telemetry are stamped with it.
+    virtual void runTick(Tick tick) = 0;
+};
+
+} // namespace engine

@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-11-10
-updated_by: claude (PB-025 session)
+updated_by: claude (PB-025 session, merged with main)
 ---
 
 # Task Board
@@ -18,7 +18,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-003 | Decide programming language and physics library | Done (DEC-013 C++, DEC-014 Box2D) | human decision | — | ip.fr.3.* |
 | TASK-004 | Decide ECS approach | Done (DEC-018: custom) | human decision | — | ip.fr.2.* |
 | TASK-005 | Bootstrap `project/` skeleton (CMake, folders, GoogleTest, Raylib + Box2D linked, empty window) — ClickUp PB-002 | Review | Işık Dönger + claude-code (PB-002 session) | — | all |
-| TASK-006 | Phase 2: window + game loop with fixed-timestep accumulator | Blocked (until PB-002 merges) | — | TASK-005 | ip.fr.1.1–1.4 |
+| TASK-006 | Phase 2: window + game loop with fixed-timestep accumulator — ClickUp PB-011, PB-012 | Review (PB-011: window and loop; PB-012: fixed timestep) | Arda Karabulut + claude-code (PB-011 and PB-012 sessions) | TASK-005 | ip.fr.1.1–1.4 |
 | TASK-007 | Fill `environment-setup.md` once the toolchain is chosen | Review (first version written with PB-002; needs a clean-machine check on Windows and macOS) | — | TASK-005 | — |
 | TASK-008 | Decide world units and coordinate convention (y-up vs y-down, pixels-per-meter) | Done (DEC-036) | Zeynep Ertürk (PB-008.3) | — | ip.fr.3.5, 4.1 |
 | TASK-009 | Propagate the 2026-10-13 decisions (DEC-013…017) and role/name fixes through all docs | Done | claude-code/sonnet-5.5/012r | — | DEC-017 |
@@ -61,9 +61,19 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Inputs:** ClickUp PB-002. CMake + GoogleTest (DEC-023), C++20 (DEC-019), Raylib 6.2 (DEC-033), Box2D v3.1.1 (DEC-020), compilers per platform need (DEC-030), Windows + macOS development (DEC-029), layout in `guidelines/repository-structure.md` (DEC-022, DEC-026).
 - **Acceptance:** Clean checkout builds an executable that links Raylib and Box2D and opens/closes a window on Windows (and builds on macOS, DEC-029); the test runner runs one trivial test headless (no window); `repository-structure.md` updated to reality; `environment-setup.md` has exact commands. Note: the layout lists presets `windows-debug`, `windows-release`, `headless` only — add macOS presets (DEC-029).
 
-### TASK-006 — Window + game loop
-- **Status:** Blocked by TASK-005
+### TASK-006 — Window + game loop (ClickUp PB-011, PB-012)
+- **Status:** Review (2026-11-10). PB-011: issue #34, branch `feat/pb-011-feat-open-app-win-n-run-main-loop`. PB-012: issue #36, branch `feat/pb-012-feat-implement-fixed-timestep-1-60-s`, stacked on PB-011. Was Blocked by TASK-005 (PB-002, merged).
+- **Claimed by:** Arda Karabulut + claude-code (PB-011 session) on 2026-11-10
 - **Acceptance:** Window opens/closes cleanly (ip.fr.1.3); fixed-timestep accumulator for physics at 1/60 s decoupled from render (ip.fr.1.2); mode flag normal/headless parsed (ip.fr.1.4) — headless path must not initialise Raylib.
+- **Acceptance (ClickUp PB-011):** window opens, Update and Draw are called each frame; closing exits with code 0 and no leaks; window code only in the platform module (read as `engine/rendering-raylib`, DEC-046).
+- **Plan (PB-011):** `IWindow` in `engine/core`, `RaylibWindow` in `engine/rendering-raylib`; `Application` with `init`/`run`/`shutdown` over `ISimulation` and `IFrameRenderer`; guarded leak report; `sandbox` on `Application`; unit tests with a fake window; a headless sandbox run as a CTest test.
+- **Result (PB-011):** done as planned. Serves srs.fr.1.1, 1.7 to 1.10, 1.13, 1.15 and 7.1, 7.4, 7.7. `runSmokeWindow` removed. The loop runs one tick per render frame until PB-012. Not handled here: `RunError` (srs.fr.1.11), pause and step (srs.fr.1.16 to 1.18), fullscreen (srs.fr.1.9), the keyboard queue.
+- **Verification:** Windows 11, MSVC 19.44, `ENGINE_WARNINGS_AS_ERRORS=ON`: `windows-debug` builds with no warnings, `ctest` 24/24; `headless` preset builds without raylib, `ctest` 16/16; `sandbox.exe --max-ticks 120` opened the window, exit code 0, nothing on stderr; with a deliberate 64-byte leak the report appeared and `Sandbox.HeadlessRun_ExitsCleanly` failed; with the tick moved after present, two `ApplicationTest` tests failed. See HND-018.
+- **Acceptance (ClickUp PB-012):** the simulation steps 0..N times per rendered frame; a maximum of steps per frame protects against the spiral of death; 60 steps are 1.0 s in tests.
+- **Plan (PB-012):** `Tick` and the 1/60 s constants in `tick.hpp`; `FrameClock` over `steady_clock` with an injectable time source; `FixedTimestep` as its own class with exact integer math; `Application` uses both and keeps the tick counter; unit tests feed frame times as numbers.
+- **Result (PB-012):** done as planned. Serves srs.fr.1.2 to 1.6 and 1.15. `ISimulation::runTick` now takes the tick number. The sandbox shows ticks, simulated time, real time and frame time, with `--fps N`.
+- **Verification (PB-012):** same machine and flags: `windows-debug` builds with no warnings, `ctest` 49/49; `headless` preset 41/41; `sandbox.exe --max-ticks 300` took 5.00 s, 5.01 s, 5.00 s and 5.00 s of real time at `--fps 30`, `60`, `144` and `0`, exit code 0, nothing on stderr; a tick rounded to whole nanoseconds failed 7 tests, and incrementing the counter before the tick failed 7. See HND-019.
+- **Links:** DEC-046 and DEC-047 (`Proposed`), Q-019, Q-020, HND-018, HND-019.
 
 ### TASK-007 — Environment setup doc
 - **Status:** Blocked by TASK-005
@@ -126,4 +136,4 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 ### TASK-018 — Define the physics adapter interface (ClickUp PB-025)
 - **Status:** Review (2026-11-10). Zeynep Ertürk + claude (PB-025 session)
 - **Acceptance:** the adapter interface with the required operations; no Box2D header outside the adapter implementation; reviewed and documented.
-- **Result:** `engine::physics` target (header-only) with `BodyDesc`, `BodyId`, `BodyState`, `CollisionEvent`, `RaycastHit` and `IPhysicsAdapter`; `Vec2` and `EntityId` in `engine/core`; `tools/check_includes.py` in CI; 4 contract tests with a fake adapter. Name kept as `IPhysicsAdapter` (ClickUp said `IPhysicsWorld`). See HND-018.
+- **Result:** `engine::physics` target (header-only) with `BodyDesc`, `BodyId`, `BodyState`, `CollisionEvent`, `RaycastHit` and `IPhysicsAdapter`; `Vec2` and `EntityId` in `engine/core`; `tools/check_includes.py` in CI; 4 contract tests with a fake adapter. Name kept as `IPhysicsAdapter` (ClickUp said `IPhysicsWorld`). See HND-020.
