@@ -1,9 +1,17 @@
-"""Create the branch and draft PR for a backlog issue opened from ClickUp.
+"""Create the work branch for issues that moved to "In progress" on the GitHub project.
 
-Runs from .github/workflows/issue-start.yml when an issue is opened or assigned.
-Handles issues whose title carries a backlog id, e.g. "PB-025 Define the physics adapter
-interface" or "ci: pb-001-set-up-repository"; anything else is skipped.
-Rules: docs/guidelines/git-workflow.md
+Runs from .github/workflows/issue-start.yml. It only creates branches; developers open
+their own pull requests. Rules: docs/guidelines/git-workflow.md
+
+Two ways in:
+- Scheduled or manual run without an issue number: reads the project (PROJECT_OWNER,
+  PROJECT_NUMBER) with PROJECT_TOKEN and starts every open issue of this repository whose
+  Status is STATUS_NAME ("In progress") and that has no branch yet.
+- Manual run with ISSUE_NUMBER: starts that one issue, whatever its project status.
+
+Branch name: <type>/<issue number>-<short description>, e.g. feat/41-run-every-simulation-tick.
+With PROJECT_TOKEN the branch is created as a linked branch, so it shows under the issue's
+Development section. Without it the branch is created with GITHUB_TOKEN and is not linked.
 """
 import json
 import os
@@ -12,25 +20,36 @@ import subprocess
 import sys
 import unicodedata
 
-PB_ID = re.compile(r"\bpb-?(\d{3})\b", re.IGNORECASE)
-TYPE_PREFIX = re.compile(r"^(feat|fix|test|refactor|docs|ci|chore|research)(\([^)]*\))?:\s*", re.IGNORECASE)
-CLICKUP_URL = re.compile(r"https://app\.clickup\.com/t/[A-Za-z0-9/_-]+")
+SRS_ID = re.compile(r"^\s*(US-\d+(\.\d+)*|EP-\d+)(\s*\(in part\))?\s*", re.IGNORECASE)
 TURKISH = str.maketrans("ıİşŞğĞüÜöÖçÇ", "iIsSgGuUoOcC")
 MAX_SLUG = 40
+SKIP_LABELS = {"type:epic"}  # epics are tracked through their stories, never worked on directly
 
 
-def gh(*args, body=None):
+def gh(*args, body=None, token=None):
     cmd = ["gh", "api", *args]
     if body is not None:
         cmd += ["--input", "-"]
+    env = dict(os.environ)
+    if token:
+        env["GH_TOKEN"] = token
     result = subprocess.run(cmd, input=json.dumps(body) if body is not None else None,
-                            capture_output=True, text=True)
+                            capture_output=True, text=True, env=env)
     if result.returncode != 0:
-        raise RuntimeError(f"gh api {' '.join(args)} failed: {result.stderr.strip()}")
+        raise RuntimeError(f"gh api {' '.join(args[:2])} failed: {result.stderr.strip()}")
     return json.loads(result.stdout) if result.stdout.strip() else None
 
 
+def graphql(query, token, **variables):
+    body = {"query": query, "variables": variables}
+    data = gh("graphql", body=body, token=token)
+    if data.get("errors"):
+        raise RuntimeError(f"GraphQL error: {data['errors']}")
+    return data["data"]
+
+
 def slugify(text):
+    text = SRS_ID.sub("", text)
     text = unicodedata.normalize("NFKD", text.translate(TURKISH))
     text = text.encode("ascii", "ignore").decode().lower()
     words = re.findall(r"[a-z0-9]+", text)
@@ -43,117 +62,136 @@ def slugify(text):
     return slug or "task"
 
 
-def parse_title(raw):
-    """Return (pb id, type from a Conventional prefix or None, readable title)."""
-    pb = PB_ID.search(raw)
-    if not pb:
-        return None, None, None
-    prefix = TYPE_PREFIX.match(raw)
-    kind = prefix.group(1).lower() if prefix else None
-    rest = raw[prefix.end():] if prefix else raw
-    rest = PB_ID.sub(" ", rest).strip(" :-_")
-    if " " not in rest:  # slug-style title such as "set-up-repository"
-        rest = re.sub(r"[_-]+", " ", rest)
-    rest = re.sub(r"\s+", " ", rest).strip()
-    return pb.group(1), kind, rest or raw.strip()
-
-
 def branch_type(labels):
     if "type:research" in labels or "area:ai-research" in labels:
         return "research"
     if "type:bug" in labels:
         return "fix"
-    if labels and labels <= {"area:docs", "type:chore", "priority:urgent", "priority:high",
-                             "priority:normal", "priority:low"} and "area:docs" in labels:
+    if "area:docs" in labels and not labels & {"type:feature", "type:story", "type:bug"}:
         return "docs"
-    if "area:devops" in labels:
+    if "area:devops" in labels and "type:story" not in labels:
         return "ci"
     return "feat"
 
 
-def pr_body(issue_number, clickup_url):
-    return "\n".join([
-        f"Closes #{issue_number}",
-        "",
-        f"ClickUp: {clickup_url or '<!-- task link -->'}",
-        "",
-        "## What and why",
-        "",
-        "## How it was verified",
-        "<!-- Commands you ran and their results. -->",
-        "",
-        "## Docs updated",
-        "",
-        "## Definition of Done",
-        "- [ ] Acceptance criteria in the issue are met",
-        "- [ ] Builds from a clean checkout; tests added or updated and passing",
-        "- [ ] Tests run headless (no window or GPU)",
-        "- [ ] Architecture rules R-1 to R-9 respected (`docs/agents/rules.md`)",
-        "- [ ] No Box2D or raylib types outside their adapter targets",
-        "- [ ] No new compiler warnings, no secrets, no large binaries",
-        "- [ ] Docs and decision log updated where the change made them inaccurate",
-        "",
-        "After merging: set the ClickUp task to **done**.",
-        "",
-        "_Branch and draft PR created automatically when the issue was opened._",
-    ])
+def branch_name(number, title, labels):
+    return f"{branch_type(labels)}/{number}-{slugify(title)}"
+
+
+def existing_branch(repo, number):
+    """Return a branch already started for this issue (<type>/<number>-...), if any."""
+    pattern = re.compile(rf"^[a-z]+/{number}-")
+    for branch in gh(f"repos/{repo}/branches?per_page=100", "--paginate"):
+        if pattern.match(branch["name"]):
+            return branch["name"]
+    return None
+
+
+PROJECT_ITEMS = """
+query($owner: String!, $number: Int!, $status: String!, $cursor: String) {
+  organization(login: $owner) {
+    projectV2(number: $number) {
+      items(first: 100, after: $cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          fieldValueByName(name: $status) {
+            ... on ProjectV2ItemFieldSingleSelectValue { name }
+          }
+          content {
+            ... on Issue {
+              id number title state
+              repository { nameWithOwner }
+              labels(first: 30) { nodes { name } }
+              linkedBranches(first: 5) { nodes { ref { name } } }
+            }
+          }
+        }
+      }
+    }
+  }
+}"""
+
+CREATE_LINKED_BRANCH = """
+mutation($issue: ID!, $repo: ID!, $oid: GitObjectID!, $name: String!) {
+  createLinkedBranch(input: {issueId: $issue, repositoryId: $repo, oid: $oid, name: $name}) {
+    linkedBranch { ref { name } }
+  }
+}"""
+
+
+def in_progress_issues(repo, token):
+    owner = os.environ.get("PROJECT_OWNER", repo.split("/")[0])
+    number = int(os.environ.get("PROJECT_NUMBER", "3"))
+    wanted = os.environ.get("STATUS_NAME", "In progress").casefold()
+    cursor = None
+    while True:
+        data = graphql(PROJECT_ITEMS, token, owner=owner, number=number, status="Status",
+                       cursor=cursor)
+        items = data["organization"]["projectV2"]["items"]
+        for node in items["nodes"]:
+            issue = node.get("content") or {}
+            status = (node.get("fieldValueByName") or {}).get("name", "")
+            if (issue.get("number") and issue["repository"]["nameWithOwner"] == repo
+                    and issue["state"] == "OPEN" and status.casefold() == wanted):
+                yield issue
+        if not items["pageInfo"]["hasNextPage"]:
+            return
+        cursor = items["pageInfo"]["endCursor"]
+
+
+def start(repo, issue, labels, token, linked=()):
+    number, title = issue["number"], issue["title"]
+    if labels & SKIP_LABELS:
+        print(f"Skipping #{number}: epics are worked on through their stories.")
+        return
+    if linked:
+        print(f"Skipping #{number}: already has branch {linked[0]}.")
+        return
+    found = existing_branch(repo, number)
+    if found:
+        print(f"Skipping #{number}: already has branch {found}.")
+        return
+
+    branch = branch_name(number, title, labels)
+    repo_info = gh(f"repos/{repo}")
+    default = repo_info["default_branch"]
+    sha = gh(f"repos/{repo}/git/ref/heads/{default}")["object"]["sha"]
+    if token:
+        graphql(CREATE_LINKED_BRANCH, token, issue=issue["id"], repo=repo_info["node_id"],
+                oid=sha, name=branch)
+    else:
+        gh("-X", "POST", f"repos/{repo}/git/refs",
+           body={"ref": f"refs/heads/{branch}", "sha": sha})
+
+    gh("-X", "POST", f"repos/{repo}/issues/{number}/comments", body={"body": (
+        f"Branch `{branch}` is ready.\n\n"
+        f"```\ngit fetch origin\ngit switch {branch}\n```\n\n"
+        f"When you open the pull request, put `Closes #{number}` in its description."
+    )})
+    print(f"Created {branch} for #{number}.")
 
 
 def main():
     repo = os.environ["GITHUB_REPOSITORY"]
-    with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as f:
-        issue = json.load(f)["issue"]
+    token = os.environ.get("PROJECT_TOKEN", "").strip() or None
+    one = os.environ.get("ISSUE_NUMBER", "").strip()
 
-    pb, kind, title = parse_title(issue["title"].strip())
-    if not pb:
-        print(f"Skipping #{issue['number']}: title has no PB-<nnn> id.")
+    if one:
+        data = gh(f"repos/{repo}/issues/{one}")
+        if data.get("pull_request"):
+            raise RuntimeError(f"#{one} is a pull request, not an issue.")
+        issue = {"number": data["number"], "title": data["title"], "id": data["node_id"]}
+        start(repo, issue, {label["name"] for label in data["labels"]}, token)
         return
-    labels = {label["name"] for label in issue.get("labels", [])}
-    kind = kind or branch_type(labels)
-    branch = f"{kind}/pb-{pb}-{slugify(title)}"
 
-    # One PR per backlog item: skip if a PR for this PB id already exists.
-    for pr in gh(f"repos/{repo}/pulls?state=all&per_page=100", "--paginate"):
-        if re.search(rf"\bpb-?{pb}\b", pr["title"] + " " + pr["head"]["ref"], re.IGNORECASE):
-            print(f"Skipping #{issue['number']}: PB-{pb} already has PR #{pr['number']}.")
-            return
-
-    default = gh(f"repos/{repo}")["default_branch"]
-    base_sha = gh(f"repos/{repo}/git/ref/heads/{default}")["object"]["sha"]
-    tree = gh(f"repos/{repo}/git/commits/{base_sha}")["tree"]["sha"]
-    # GitHub cannot open a PR for a branch identical to its base, so start with one empty
-    # commit. Squash merging leaves it out of main's history.
-    start = gh("-X", "POST", f"repos/{repo}/git/commits", body={
-        "message": f"chore: start PB-{pb}",
-        "tree": tree,
-        "parents": [base_sha],
-    })
-    gh("-X", "POST", f"repos/{repo}/git/refs",
-       body={"ref": f"refs/heads/{branch}", "sha": start["sha"]})
-
-    clickup = CLICKUP_URL.search(issue.get("body") or "")
-    pr = gh("-X", "POST", f"repos/{repo}/pulls", body={
-        "title": f"{kind}(PB-{pb}): {title}",
-        "head": branch,
-        "base": default,
-        "body": pr_body(issue["number"], clickup.group(0) if clickup else None),
-        "draft": True,
-    })
-
-    people = [a["login"] for a in issue.get("assignees", [])] or [issue["user"]["login"]]
-    people = [p for p in people if not p.endswith("[bot]")]
-    if people:
-        gh("-X", "POST", f"repos/{repo}/issues/{pr['number']}/assignees", body={"assignees": people})
-    reviewers = [r for r in os.environ.get("DEFAULT_REVIEWERS", "").split() if r not in people]
-    if reviewers:
-        gh("-X", "POST", f"repos/{repo}/pulls/{pr['number']}/requested_reviewers",
-           body={"reviewers": reviewers})
-
-    gh("-X", "POST", f"repos/{repo}/issues/{issue['number']}/comments", body={"body": (
-        f"Draft PR #{pr['number']} is ready on branch `{branch}`.\n\n"
-        f"```\ngit fetch origin\ngit switch {branch}\n```"
-    )})
-    print(f"Created {branch} and draft PR #{pr['number']} for #{issue['number']}.")
+    if not token:
+        print("::notice::PROJECT_TOKEN is not set, so the project cannot be read. "
+              "Add the secret, or run the workflow by hand with an issue number.")
+        return
+    for issue in in_progress_issues(repo, token):
+        labels = {label["name"] for label in issue["labels"]["nodes"]}
+        linked = [b["ref"]["name"] for b in issue["linkedBranches"]["nodes"] if b.get("ref")]
+        start(repo, issue, labels, token, linked)
 
 
 if __name__ == "__main__":

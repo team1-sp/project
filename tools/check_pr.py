@@ -7,10 +7,11 @@ import os
 import re
 import sys
 
-# Any type with a PB id, or `fix/` with a bare issue number (bugs without a PB item).
-# Keep in sync with the branch name rule of the GitHub ruleset.
+# <type>/<issue number>-<short-description>. The old ClickUp form <type>/pb-<nnn>-... is still
+# accepted so branches started before the move to GitHub Projects can merge.
+# Keep in sync with the branch name rule of the GitHub ruleset, if one is set.
 BRANCH = re.compile(
-    r"^((feat|fix|test|refactor|docs|ci|chore|research)/pb-\d{3}(\.\d+)?|fix/\d+)"
+    r"^(feat|fix|test|refactor|docs|ci|chore|research)/(\d+|pb-\d{3}(\.\d+)?)"
     r"-[a-z0-9]+(-[a-z0-9]+)*$"
 )
 EXEMPT_PREFIXES = ("dependabot/",)
@@ -27,8 +28,8 @@ def main():
 
     if not branch.startswith(EXEMPT_PREFIXES) and not BRANCH.match(branch):
         errors.append(
-            f"Branch '{branch}' does not match <type>/pb-<nnn>-<short-description> "
-            "(or fix/<issue>-<short-description> for a bug without a PB item), all lowercase. "
+            f"Branch '{branch}' does not match <type>/<issue>-<short-description>, "
+            "all lowercase (for example feat/41-run-every-simulation-tick). "
             "Types: feat, fix, test, refactor, docs, ci, chore, research."
         )
     if not CLOSES.search(body) and "no-issue" not in labels:

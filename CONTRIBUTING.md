@@ -4,27 +4,29 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
 
 ## Starting a task
 
-1. In ClickUp, set the task to **in progress** and press **Create GitHub issue** on it. Keep the PB id in the issue title (for example `PB-025 Define the physics adapter interface`).
-2. Within a minute, the **Issue start** workflow creates the branch and a draft pull request for the issue, and comments on the issue with the checkout command:
+The backlog is the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050). Epics (`EP-xx`) and user stories (`US-x.y`) come from the SRS; each story is a sub-issue of its epic, and its functional requirements are its acceptance criteria.
+
+1. On the project board, move your story to **In progress**.
+2. Within about 10 minutes, the **Issue start** workflow creates the branch, links it to the issue and comments the checkout command:
 
    ```
    git fetch origin
-   git switch feat/pb-025-define-the-physics-adapter-interface
+   git switch feat/41-run-every-simulation-tick-in-a-fixed
    ```
 
-   Branch names follow `<type>/pb-<nnn>-<short-description>`. For a bug without a PB item, create the branch yourself: `fix/<issue>-<short-description>`. Only `fix/` may use a bare issue number.
-   Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`. Lowercase, words joined with `-`.
-3. Commit and push to that branch. The draft PR already says `Closes #<issue>`.
+   To get the branch at once, run **Issue start** from the Actions tab with the issue number. Branch names follow `<type>/<issue>-<short-description>`, lowercase, words joined with `-`. You can also create the branch yourself with the same pattern.
+   Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`.
+3. Commit and push to that branch, then open the pull request yourself (as a draft until CI is green) with `Closes #<issue>` in its description. The workflow never opens pull requests.
 
 ## Pull requests
 
 - The PR title is a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/) and becomes the commit on `main`:
-  `feat(PB-025): Define the physics adapter interface`. The scope is the PB id (DEC-035); the draft PR from the Issue start workflow already has this title.
+  `feat(US-1.1): Run every simulation tick in a fixed phase order`. The scope is the story id, or the issue number for other issues: `fix(#142): Door opens without the key` (DEC-050).
 - Keep PRs under about 400 changed lines.
 - Fill in the PR template, including how you verified the change.
 - Mark the PR **ready for review** when CI is green. Reviewers come from [.github/CODEOWNERS](.github/CODEOWNERS).
 - One approval from Işık Dönger or the advisor, Leyla Sezer (the code owners) is needed; area teammates are welcome to review too, but their approval does not count. Işık's own PRs need no approval. Reviews happen within 1 working day; comments are labelled `blocker`, `should`, `nit` or `question`, and only `blocker` holds up approval.
-- The author squash-merges. Afterwards, set the ClickUp task to **done**.
+- The author squash-merges. The issue closes and its card moves to **Done** on the project by itself.
 
 ## Code style and Definition of Done
 
@@ -42,7 +44,7 @@ An agent pushes a branch only after a human approves that push. A human approves
 
 ## Issues
 
-- One issue per top-level ClickUp backlog item, titled like the task (`PB-025 Define the physics adapter interface`); sub-items are a checklist inside it.
-- Every issue has one assignee, `area:*` labels, a `priority:*` label and a milestone (Increment 1, Increment 2, Final Product).
+- SRS stories are issues titled with their id (`US-17.2 Play, pause and step the game in the editor`), added as a sub-issue of their epic (`EP-17 ...`). Stories not planned yet stay as a checklist in their epic until they are planned.
+- Every story has one assignee, an `area:*` label, its `uc:*` labels and a milestone (Increment 1, Increment 2, Final Product). Iteration, Estimate, Size and Priority are set on the project.
 - Bugs you find along the way get their own issue (use the Bug form).
 - Close issues through a merged PR, or as "not planned" with a one-line reason.

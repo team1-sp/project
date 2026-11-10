@@ -1,8 +1,6 @@
-<!-- Title: Conventional Commit, e.g. "feat(PB-025): Define the physics adapter interface" -->
+<!-- Title: Conventional Commit; the scope is the story id or the issue number, e.g. "feat(US-1.1): Run every simulation tick in a fixed phase order" or "fix(#142): Door opens without the key" -->
 
 Closes #<!-- issue number; for chore/ci PRs without an issue, add the no-issue label instead -->
-
-ClickUp: <!-- task link -->
 
 ## What and why
 
@@ -22,4 +20,4 @@ ClickUp: <!-- task link -->
 - [ ] C++ formatted with clang-format 19; no new compiler warnings, no secrets, no large binaries
 - [ ] Docs and decision log updated where the change made them inaccurate
 
-After merging: set the ClickUp task to **done**.
+After merging, the issue closes and its card moves to **Done** on the project by itself.

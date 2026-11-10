@@ -36,14 +36,14 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-025 | AI agents push only after a human approves; humans approve and merge every PR | Accepted | 2026-10-15 |
 | DEC-026 | The semantic layer lives in its own top-level folder, separate from engine and ai-services | Accepted | 2026-10-15 |
 | DEC-027 | Trunk-based git workflow; branch protection deferred, rules kept as a team agreement | Accepted | 2026-10-15 |
-| DEC-028 | GitHub issues are created from ClickUp tasks with ClickUp's GitHub integration | Accepted | 2026-10-15 |
+| DEC-028 | GitHub issues are created from ClickUp tasks with ClickUp's GitHub integration | Superseded by DEC-050 | 2026-10-15 |
 | DEC-029 | Platforms: develop on Windows and macOS (Windows priority); the engine application and the development tool must run on both; games are built for Windows only for now | Accepted | 2026-10-15 |
 | DEC-030 | Compilers: whatever each platform needs; none pinned now | Accepted | 2026-10-15 |
 | DEC-031 | Coding standards, Definition of Done and clang-format 19 accepted | Accepted | 2026-10-23 |
 | DEC-032 | Only Işık Dönger and the advisor approve PRs; Işık's own PRs need no approval; `main` ruleset on | Accepted | 2026-10-23 |
 | DEC-033 | Raylib version is 6.2 | Accepted | 2026-10-24 |
 | DEC-034 | The product name is Aegis | Accepted | 2026-10-24 |
-| DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Accepted | 2026-10-24 |
+| DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Superseded by DEC-050 | 2026-10-24 |
 | DEC-036 | World units are meters with y up; 32 pixels per meter; conversion only in the renderer | Accepted | 2026-11-01 |
 | DEC-037 | The PB-008 spike in `sandbox/` may link Box2D and raylib directly (exception to R-3/R-4 for that spike only) | Proposed | 2026-11-01 |
 | DEC-038 | ADR-002: the C++ to Python bridge is gRPC/protobuf behind AgentBridge | Accepted | 2026-11-04 |
@@ -58,6 +58,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-047 | PB-012: the game loop follows srs.fr.1.2 to 1.6 (at most 5 ticks per render frame) with an exact integer accumulator and the tick counter in `engine/core` | Accepted | 2026-11-10 |
 | DEC-048 | The editor is the application that hosts `engine::Application` and owns the main window; `sandbox` is a developer and CI test host; games never host the engine | Accepted | 2026-11-11 |
 | DEC-049 | PB-025: the physics interface is named `IPhysicsAdapter`; bodies are addressed by `BodyId` with `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core` | Accepted | 2026-11-11 |
+| DEC-050 | The backlog moves from ClickUp to one GitHub project built from the SRS; branches use the issue number, PR scopes the story id; Issue start creates only the branch when an item is In progress | Accepted | 2026-11-11 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -340,7 +341,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-028 — GitHub issues are created from ClickUp tasks
 - **Date:** 2026-10-15
-- **Status:** Accepted
+- **Status:** Superseded by DEC-050
 - **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
 - **Human's words:** "Clickup lets issue creation directly from a task. I think we will use that."; "pr should be created from clickup when a task is about to be started."
 - **Decision:** When a task is started, the developer creates its GitHub issue from the ClickUp task with ClickUp's GitHub integration. One issue per top-level backlog item, titled like the task. A GitHub Action is planned to add the branch and a draft PR for each new `PB-` issue.
@@ -434,7 +435,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-035 — PR titles put the PB id in the Conventional Commit scope
 - **Date:** 2026-10-24
-- **Status:** Accepted
+- **Status:** Superseded by DEC-050
 - **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (PB-002 session)
 - **Human's words:** "pr title should be how it is now. with requirement right after the tag." Then chose `ci(PB-002): Create the CMake…` when asked which format that meant.
 - **Context:** `guidelines/git-workflow.md` used the area label as the scope and put the PB id at the end (`feat(phys): … (PB-025)`); the Issue start workflow wrote `feat: … (PB-025)`.
@@ -684,3 +685,21 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Revisit when:** PB-026 shows that `BodyId` addressing does not fit Box2D v3, or `engine/ecs` is created and wants `EntityId` elsewhere.
 - **Supersedes / Related:** DEC-003, DEC-014, DEC-024, DEC-041, R-2, R-3, PB-025, PB-026, TASK-019.
 - **Amendments:**
+
+### DEC-050 — The backlog moves from ClickUp to one GitHub project; branches use the issue number; Issue start creates only the branch
+- **Date:** 2026-11-11
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude (issue #126)
+- **Human's words:** "Okey, lets go with Github Projects with one project. But I am going to ask you to create all the issues and everything from stracth instead of copying clickup. Because main reason I wanted to do this was because we needed an overhaul and clickup wasnt easily altered."; "my problem is actions should not be creating pr's, only the branch."; asked for the branch to be created "with github actions when its marked in_progress".
+- **Context:** ClickUp was hard to change and its backlog had drifted from the SRS. The Issue start workflow opened a draft PR for every new `PB-` issue, which failed with "GitHub Actions is not permitted to create or approve pull requests".
+- **Decision:**
+  1. Planning moves to one GitHub project, team1-sp #3 (Iterative development template). Epics (`EP-xx`) and user stories (`US-x.y`) come from SRS A Section 6.3; each story is a sub-issue of its epic and its functional requirements are its acceptance criteria. Increment 1 stories (SRS B) are issues in the Increment 1 milestone; later stories stay as checklists in their epics until planned. Iteration, Estimate, Size and Priority are project fields.
+  2. Branch names are `<type>/<issue>-<short-description>`; `<type>/pb-<nnn>-…` stays valid for branches started before this decision.
+  3. PR titles use the story id as the Conventional Commit scope (`feat(US-1.1): …`), or the issue number for other issues (`fix(#142): …`).
+  4. The Issue start workflow creates only the branch, linked to the issue, for each open issue whose project Status is In progress. Status changes do not trigger workflows, so it polls the project every 10 minutes with the `PROJECT_TOKEN` secret, and can be run by hand for one issue. Developers open their own PRs.
+- **Rationale:** GitHub issues are the backlog itself, so nothing has to be synchronised, and AI agents can edit them directly. Opening PRs from Actions needs a repository setting the team does not want and a PR with an empty start commit.
+- **Consequences:** Someone with org access must add the `PROJECT_TOKEN` repository secret; until then only the manual run works. If a GitHub branch-name ruleset exists, its pattern must be updated to match `tools/check_pr.py`. ClickUp is no longer updated; old `PB-` ids remain in history and in older docs.
+- **Docs updated:** `CONTRIBUTING.md`, `guidelines/git-workflow.md`, `process/development-process.md`, `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/1-backlog-item.yml`, `.github/labels.yml`, `.github/workflows/issue-start.yml`, `tools/start_task.py`, `tools/check_pr.py`.
+- **Course documents affected (for humans):** the Initial Plan names ClickUp as the planning tool (§4.2).
+- **Revisit when:** GitHub lets workflows trigger on project status changes, or the team needs more than one project.
+- **Supersedes / Related:** supersedes DEC-028 and the scope rule of DEC-035; related DEC-024, DEC-027, DEC-032.
