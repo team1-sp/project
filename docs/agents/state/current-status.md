@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-11-10
+last_updated: 2026-11-11
 updated_by: claude (PB-025 session, merged with main)
 ---
 
@@ -29,9 +29,9 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
 
 ## In progress / next
-0. **TASK-006 (ClickUp PB-011): application window and game loop** — Review, issue #34, branch `feat/pb-011-feat-open-app-win-n-run-main-loop`. Waits on Işık for DEC-046 (Q-019).
-1. **TASK-006 (ClickUp PB-012): fixed 1/60 s timestep** — Review, issue #36, branch `feat/pb-012-feat-implement-fixed-timestep-1-60-s`, stacked on PB-011 (its PR's base is the PB-011 branch until #35 is merged). Waits on Işık for DEC-047 (Q-020).
-2. **TASK-018 (ClickUp PB-025): physics adapter interface** — Review, issue #32, PR #33. `engine/physics/` with `IPhysicsAdapter`, `Vec2`/`EntityId` in `engine/core`, include check in CI. Next: PB-026 (Box2D implementation, needs PB-012).
+0. **TASK-006 (ClickUp PB-011, PB-012): window, game loop and fixed timestep** — Done: PR #35 and #37 merged 2026-11-10; DEC-046 and DEC-047 accepted 2026-11-11.
+1. **TASK-018 (ClickUp PB-122): the editor hosts `Application` and opens the main window** — Review, issue #38, branch `feat/pb-122-make-the-editor-host-the-application-and` (DEC-048).
+2. **TASK-019 (ClickUp PB-025): physics adapter interface** — Review, issue #32, PR #33. `engine/physics/` with `IPhysicsAdapter`, `Vec2`/`EntityId` in `engine/core`, include check in CI. Next: PB-026 (Box2D implementation, needs PB-012).
 3. **PB-010.3:** ECS design review and ADR-001 (sparse-set storage) are still open.
 4. **DEC-037** (PB-008 spike exception) still waits on Işık. Human answers Q-014 (leftovers) and Q-015 (task ids).
 5. Then the ECS Phase 1 implementation (`design/ecs-api-design.md` §17), which fills `ISimulation`.
@@ -52,6 +52,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - Stack is fixed: C++20 / custom ECS / Box2D v3.1.1 (behind the adapter) / Raylib 6.2 (behind the rendering abstraction) / CMake + GoogleTest; `ai-services` uses Python 3.12 (DEC-039). **2D only** — no 3D work.
 - Work through GitHub: branch `<type>/pb-<nnn>-…`, PR with Conventional Commit title, Işık Dönger or an area owner approves, agents push only after a human approves (DEC-024/025/027; `guidelines/git-workflow.md`).
 - Raylib must not be initialised in headless mode. The window is opened only through `RaylibWindow::open`, by `Application`, in normal mode.
+- The `editor` is the application that hosts the engine and owns the main window; `sandbox` is only a developer and CI test host; games are built inside the editor (DEC-048).
 - The demo game is `[UNDECIDED]` (Q-016). Do not design or build a demo game, or treat any example (door, key, maze) as its spec, until the team chooses it.
 - The course requires disclosure of AI-generated text in deliverables (`guidelines/genai-usage-rules.md`).
 - Project manager: Işık Dönger. Docs in this repo are English.

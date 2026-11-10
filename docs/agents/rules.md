@@ -41,7 +41,7 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | S-3 | MUST NOT modify files outside `project/` — in particular the sibling `senior-project/docs/` course-deliverable repo — unless the task explicitly says so. Those documents are for the course and are **not** the source of truth; when they disagree with the decision log, list them for the humans instead of editing. |
 | S-4 | MUST NOT write text *for course deliverables* without logging it in `history/genai-usage-log.md` and marking it per `guidelines/genai-usage-rules.md`. Unmarked AI text in a graded document is treated as plagiarism by the course. |
 | S-5 | MUST NOT add heavy dependencies, download assets, or call external AI services without a decision entry. ip.nfr.2.1: no source/telemetry is sent to an external AI service unless the user enabled it. |
-| S-6 | MUST NOT expand scope: **2D only** (DEC-016) — no 3D work, not even experiments; also no networking, editor tooling, etc. — unless a human decides otherwise. Keep seams so 3D stays possible later; do not build it. |
+| S-6 | MUST NOT expand scope: **2D only** (DEC-016) — no 3D work, not even experiments; also no networking etc. — unless a human decides otherwise. Keep seams so 3D stays possible later; do not build it. |
 | S-7 | When unsure whether an action is destructive or irreversible: don't; ask. |
 
 ## D. What agents MAY do without asking

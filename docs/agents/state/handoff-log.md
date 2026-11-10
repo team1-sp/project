@@ -242,12 +242,26 @@
 - **Traps:** 1/60 s is not a whole number of nanoseconds, so tests use frame times such as 50 ms (exactly 3 ticks) or `evenFrameTimes()`. The first render frame of a run always runs 0 ticks. `FrameClock` is read once per render frame by `Application`; a second reading in the same frame would steal time from the accumulator, so the sandbox keeps its own `FrameClock` for the read-out. Ticks beyond 5 per frame are dropped, so a debugger break or a dragged window loses simulated time by design.
 - **Records:** DEC-047 (Proposed), Q-020, E-031; E-007 updated.
 
+### HND-020 — Accept DEC-046 and DEC-047; the editor hosts the application (PB-122)
+- **Date:** 2026-11-11
+- **Agent:** claude (PB-122 thread), working with Işık Dönger
+- **Task:** TASK-018 (ClickUp PB-122); closes TASK-006
+- **Goal:** Record Işık's acceptance of the PB-011 and PB-012 decisions, and make the editor the application that opens the main window.
+- **Result:** DEC-046 and DEC-047 `Accepted` (Q-019, Q-020 answered). DEC-048 records that the editor hosts `Application`, `sandbox` is a test host and games never host the engine. `editor/` now runs `Application` with `RaylibWindow`; it is no longer built in the `headless` preset. Rule S-6 no longer lists editor tooling as out of scope.
+- **Verified (Linux, GCC 13.3, CMake 3.28, `ENGINE_WARNINGS_AS_ERRORS=ON`):** `headless` preset builds, `ctest` 41/41, no `editor` target; a Debug build with raylib builds with no warnings, `ctest` 49/49; `editor --max-ticks 120` under Xvfb opened a 1280 x 720 window, closed it and exited with code 0, nothing on stderr; `editor --bogus` exits with code 2. clang-format 19.1.7 clean.
+- **Not verified:** Windows and macOS (CI after a push); closing the window by hand.
+- **Repo state:** builds, tests pass; committed on `feat/pb-122-make-the-editor-host-the-application-and` (issue #38).
+- **Next:** PB-110 (editor shell with dockable panels) builds on this window. The Issue start workflow failed to open the draft PR ("GitHub Actions is not permitted to create or approve pull requests"): the repository setting under Settings > Actions > General needs turning on.
+- **Records:** DEC-046, DEC-047 (accepted), DEC-048, Q-019, Q-020.
+
 ---
 
-### HND-020 — Physics adapter interface (PB-025)
+---
+
+### HND-021 — Physics adapter interface (PB-025)
 - **Date:** 2026-11-10
 - **Agent:** claude (PB-025 session), working with Zeynep Ertürk
-- **Task:** TASK-018 (ClickUp PB-025)
+- **Task:** TASK-019 (ClickUp PB-025)
 - **Result:** Ready for review. `engine/physics/` (INTERFACE target `engine::physics`, links only `engine::core`): `body_desc.hpp`, `physics_types.hpp`, `physics_adapter.hpp`. `engine/core`: `vec2.hpp`, `entity_id.hpp` (copied from `ecs-api-design.md` §4 so the ECS reuses it). `tools/check_includes.py` added to the CI `format` job. `physics-adapter-design.md` §2 rewritten to the real interface.
 - **Decided by Zeynep:** name `IPhysicsAdapter` (not the ClickUp `IPhysicsWorld`); bodies addressed by `BodyId` as the design doc says, plus `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core`.
 - **Verified (Linux, GCC 13, `ENGINE_WARNINGS_AS_ERRORS=ON`, raylib on):** builds with no warnings; `ctest` 14/14; clang-format 19.1.7 clean; `check_includes.py` reports 0, and reports 1 when a Box2D include is added to `body_desc.hpp`.
