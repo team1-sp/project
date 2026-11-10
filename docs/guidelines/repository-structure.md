@@ -30,8 +30,8 @@ project/
 │   ├── telemetry/            recording + export (what the semantic layer reads)
 │   ├── headless/             headless runner, limits, exit codes
 │   └── bridge/               engine server for the Python client
-├── editor/                   C++ editor app
-├── sandbox/                  scratch app that opens a raylib window (build smoke check); not the demo game
+├── editor/                   C++ editor app; hosts engine::Application and owns the main window (DEC-048)
+├── sandbox/                  developer and CI test host on engine::Application; not the product, not the demo game
 ├── games/<name>/             demo game, levels, bug-injected variants — `[UNDECIDED]`: the team has not chosen the game (Q-016)
 ├── tests/                    GoogleTest, mirrors engine/ (unit/, integration/, scenarios/, benchmarks/)
 ├── proto/                    engine <-> Python contract
@@ -43,7 +43,7 @@ project/
 └── .github/                  workflows, CODEOWNERS, issue forms, PR template, labels
 ```
 
-CMake targets: each engine folder builds `engine_<folder>` (alias `engine::<folder>`, `-` becomes `_`) with public headers under `include/engine/<folder>/`; executables are `editor`, `sandbox` and `engine_tests`. Options: `ENGINE_WITH_RAYLIB` (off in `headless`: no raylib fetch, no `rendering-raylib`, no `sandbox`), `ENGINE_BUILD_TESTS`, `ENGINE_WARNINGS_AS_ERRORS` (on in CI). Build output goes to `build/<preset>/` (git-ignored).
+CMake targets: each engine folder builds `engine_<folder>` (alias `engine::<folder>`, `-` becomes `_`) with public headers under `include/engine/<folder>/`; executables are `editor`, `sandbox` and `engine_tests`. Options: `ENGINE_WITH_RAYLIB` (off in `headless`: no raylib fetch, no `rendering-raylib`, no `editor`, no `sandbox`), `ENGINE_BUILD_TESTS`, `ENGINE_WARNINGS_AS_ERRORS` (on in CI). Build output goes to `build/<preset>/` (git-ignored).
 
 Dependency checks: only `physics-box2d` includes Box2D and only `rendering-raylib` includes raylib (compile errors elsewhere); `engine/` never depends on `semantic/`, `ai-services/` or `editor/` (CMake targets + a CI script); the `headless` preset builds without raylib (R-6).
 
