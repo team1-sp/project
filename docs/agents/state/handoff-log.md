@@ -209,3 +209,19 @@
 - **Next:** PB-068 picks which free-tier and local providers to support and test. The SRS changes (Sections 4 and 5) are handled in the course docs repo by the SRS-A review.
 - **Traps:** The rationale was not given; ask before citing one.
 - **Records:** DEC-045.
+
+---
+
+### HND-018 — Application window and game loop (PB-011)
+- **Date:** 2026-11-10
+- **Agent:** claude-code (PB-011 session), working with Arda Karabulut
+- **Task:** TASK-006 (ClickUp PB-011)
+- **Goal:** The engine opens a window and runs an update/draw loop; closing it exits with code 0 and no leaks.
+- **Result:** Done, ready for review. `engine/core`: `Application` (`init`, `run`, `shutdown`), `IWindow` + `WindowConfig` + `WindowFactory`, `ISimulation`, `IFrameRenderer`, `enableLeakReportAtExit()`. `engine/rendering-raylib`: `RaylibWindow` (the only caller of `InitWindow`, `WindowShouldClose`, `CloseWindow`) and `StatusTextRenderer`; `smoke_window.*` became `raylib_info.*` and `runSmokeWindow` is gone. `sandbox` runs on `Application` with `--headless` and `--max-ticks N`. Arda chose the structure (DEC-046, `Proposed` until Işık confirms; Q-019).
+- **Files changed:** `engine/core/{CMakeLists.txt,include/engine/core/{application,window,simulation,frame_renderer,leak_check}.hpp,src/{application,leak_check}.cpp}`, `engine/rendering-raylib/{CMakeLists.txt,include/engine/rendering_raylib/{raylib_info,raylib_window,status_text_renderer}.hpp,src/{raylib_info,raylib_window,status_text_renderer}.cpp}`, `sandbox/{CMakeLists.txt,src/main.cpp}`, `tests/{CMakeLists.txt,unit/core/application_test.cpp}`, `docs/architecture/engine-layer.md`, `docs/troubleshooting/{environment-setup,common-errors}.md`, `docs/history/decision-log.md`, `docs/agents/state/{task-board,current-status,open-questions,handoff-log}.md`.
+- **Verified (Windows 11, Visual Studio Build Tools 2022, MSVC 19.44, CMake 4.2, `ENGINE_WARNINGS_AS_ERRORS=ON`):** `cmake --build --preset windows-debug` with no warnings; `ctest --preset windows-debug` 24/24 (13 new `ApplicationTest` tests and `Sandbox.HeadlessRun_ExitsCleanly`); `headless` preset builds without raylib, 16/16; clang-format 19.1.7 `--dry-run -Werror` clean. `sandbox.exe --max-ticks 120` opened the window, printed `ticks executed: 120`, exit code 0, standard error empty (no leak report). `sandbox.exe --headless` ran 10 000 ticks without any raylib start-up line, exit code 0. Mutations: a deliberate `new int[16]` gave "Detected memory leaks! ... 64 bytes long" and failed the sandbox test; moving the tick after present failed 2 `ApplicationTest` tests.
+- **Not verified:** macOS and Linux builds (CI will run them after a push); closing the window by hand with the close button or Escape (the runs above ended through `--max-ticks`; the close path is covered by the fake-window tests).
+- **Repo state:** builds, tests pass; committed on `feat/pb-011-feat-open-app-win-n-run-main-loop`, the branch the Issue start workflow made for issue #34 (created from ClickUp). The workflow could not open the draft PR ("GitHub Actions is not permitted to create or approve pull requests", HTTP 403), so the PR is opened by hand.
+- **Next:** 1. Draft PR with `Closes #34`; CI then builds on Windows, macOS and Linux. 2. Işık answers Q-019. 3. PB-012 replaces the one-tick-per-frame loop with the fixed-timestep accumulator.
+- **Traps:** `RaylibWindow::shouldClose()` is also true after Escape (raylib's default exit key). `Application` holds references to the simulation and the renderer; both must outlive it. A headless run needs `maxTicks`, or `init` refuses it. CTest ignores the exit code when `PASS_REGULAR_EXPRESSION` is set, so the sandbox test uses only `FAIL_REGULAR_EXPRESSION`. `engine/rendering-raylib` is Zeynep Ertürk's area: ask her to look at the window wrapper too.
+- **Records:** DEC-046 (Proposed), Q-019, E-029, E-030.

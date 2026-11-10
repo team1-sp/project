@@ -30,6 +30,8 @@ These are **anticipated** (well-known in engine/ECS/physics work) and **not yet 
 | E-026 | **Box2D contact events are off by default** (v3.1.1; v3.0 tutorials assume on) | `b2World_GetContactEvents` returns no begin/end events | Set `b2ShapeDef::enableContactEvents = true` on at least one of the two shapes ([research/box2d.md](../research/box2d.md)) | no (confirmed in the PB-008 spike) |
 | E-027 | **Rotation drawn mirrored or around a corner** | Bodies turn the wrong way on screen, or swing around a corner | Negate the Box2D angle for raylib; use `DrawRectanglePro` with `origin = {w/2, h/2}` | no |
 | E-028 | **Box2D def not started from `b2Default*Def()`** | Debug: assert; release: zero friction, zero density, no gravity | Always start from `b2DefaultWorldDef()` / `BodyDef()` / `ShapeDef()` | no |
+| E-029 | **MSVC leak report looked for in the terminal** (`_CRTDBG_LEAK_CHECK_DF` alone writes only to the debugger's output window) | A leaking Debug build looks clean when run from a terminal or in CI | Call `engine::enableLeakReportAtExit()` first in `main()`; it also sends the report to the standard error output (DEC-046) | no |
+| E-030 | **`CloseWindow` after a failed `InitWindow`** (raylib reports the failure only through `IsWindowReady()`) | Crash on exit on a machine without a display or OpenGL 3.3 | Open the window only through `RaylibWindow::open`, which returns `nullptr` when the window is not ready and never closes one that did not open | no |
 | E-021 | **LLM answers without evidence** | Confident wrong diagnosis | Require citations; abstain when evidence missing (ip.fr.11.5) | no |
 | E-022 | **Sending code/telemetry to an external AI by default** | Privacy violation (ip.nfr.2.1) | External calls off by default; explicit config | no |
 

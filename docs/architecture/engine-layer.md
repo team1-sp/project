@@ -33,6 +33,8 @@ Notes:
 - The engine's `Update` changes game state; `Draw` only renders current state. Raylib does not impose a loop structure: our own game loop owns the order (R-9) and calls Raylib only from the rendering step.
 - In headless mode time is *simulated*: each loop iteration advances exactly one fixed step; no sleeping and no dependence on the wall clock.
 
+**Where the loop lives (PB-011, DEC-046).** `engine/core` has `Application` (`init`, `run`, `shutdown`), which owns the loop and the window. It sees the window only as the `IWindow` interface; the window itself is `RaylibWindow` in `engine/rendering-raylib`, opened through a factory that a headless run never calls (R-4). Until `engine/ecs` exists the loop reaches the game through two interfaces in `engine/core`: `ISimulation::runTick()` for everything that runs per tick and `IFrameRenderer::renderFrame()` for the render frame. A normal-mode render frame is: run the ticks, `beginFrame`, `renderFrame`, `endFrame` (present, then collect input for the next frame). Closing the window ends the run after the current render frame with exit code 0 (srs.fr.1.10). `sandbox` is the example application. The loop still runs one tick per render frame; the fixed-timestep accumulator is PB-012.
+
 ## 2. Scene
 
 A **scene** is the container for everything in one part of the game: lights, sound, environment elements, UI elements and game objects (entities). `[TBD: whether a Scene wraps a World 1:1]`

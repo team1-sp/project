@@ -2,6 +2,8 @@
 configure_file(version_config.hpp.in include/engine/core/version_config.hpp @ONLY)
 
 add_library(engine_core STATIC
+    src/application.cpp
+    src/leak_check.cpp
     src/version.cpp
 )
 add_library(engine::core ALIAS engine_core)
