@@ -1,5 +1,5 @@
-# When a work branch is created (<type>/<issue>-<short-description>, or <issue>-<short-description>
-# from the issue's "Create a branch" button), mark its issue as started at once: move the card to
+# When a work branch is created (<type>/us-<x.y>-<short-description> for a user story, or
+# <type>/<issue>-<short-description> for another issue), mark its issue as started at once: move the card to
 # "In progress" on the GitHub project, assign the branch creator if nobody is assigned, and
 # comment the checkout command. It never creates branches or pull requests.
 # tools/start_task.py, docs/guidelines/git-workflow.md

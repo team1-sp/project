@@ -12,10 +12,16 @@ Trunk-based: `main` is the only long-lived branch. No `develop` branch.
 | Work branches | From the latest `main`, one backlog item (or one bug) per branch, merged within the sprint, deleted after merge |
 | Tags `inc-1`, `inc-2`, `final` | Annotated tags on `main` at each increment review, created by a repo admin |
 
-Branch names: `<type>/<issue>-<short-description>`, lowercase, words joined with `-`, for example `feat/41-run-every-simulation-tick-in-a-fixed` (DEC-050). `<issue>-<short-description>`, the name GitHub's **Create a branch** button gives, is also accepted, and branches started before DEC-050 may still use `<type>/pb-<nnn>-…`. `tools/check_pr.py` enforces this pattern:
+Branch names (DEC-050), lowercase, words joined with `-`, one branch per user story:
+
+- `<type>/us-<x.y>-<short-description>` for an SRS user story, for example `feat/us-15.2-build-settings-file-menu`.
+- `<type>/<issue>-<short-description>` for any other issue, for example `fix/142-door-opens-without-key`.
+- `<type>/pb-<nnn>-…` stays valid for branches started before DEC-050.
+
+`tools/issue_ref.py` (used by `tools/check_pr.py`) and the repository's `branch-names` ruleset enforce this pattern:
 
 ```
-^((feat|fix|test|refactor|docs|ci|chore|research)/([0-9]+|pb-[0-9]{3}(\.[0-9]+)?)|[0-9]+)-[a-z0-9]+(-[a-z0-9]+)*$
+^(feat|fix|test|refactor|docs|ci|chore|research)/(us-[0-9]+\.[0-9]+|[0-9]+|pb-[0-9]{3}(\.[0-9]+)?)-[a-z0-9]+(-[a-z0-9]+)*$
 ```
 
 | Type | Use for |
@@ -30,7 +36,7 @@ Branch names: `<type>/<issue>-<short-description>`, lowercase, words joined with
 
 The `pr-hygiene` CI job rejects other names (`tools/check_pr.py`).
 
-**Starting a task:** create the issue's branch, from the issue's **Development → Create a branch** button or by pushing it (DEC-050). Creating the branch is the start signal: the `Issue start` workflow (`tools/start_task.py`) runs on the branch creation, moves the issue's card to **In progress** on the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (unless it is already further along), assigns the branch creator if nobody is assigned and comments the checkout command. Moving the card needs the `PROJECT_TOKEN` secret (see the workflow file). When the pull request is opened, the `PR fill` workflow (`tools/fill_pr.py`) copies from the issue whatever the PR lacks: `Closes #<issue>`, labels, milestone, assignees, and a Conventional Commit title. No workflow creates branches or pull requests. Epics get no branch; work on their stories.
+**Starting a task:** create the story's branch, from the issue's **Development → Create a branch** button (edit the suggested name to the pattern above) or by pushing it (DEC-050). Creating the branch is the start signal: the `Issue start` workflow (`tools/start_task.py`) runs on the branch creation, moves the issue's card to **In progress** on the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (unless it is already further along), assigns the branch creator if nobody is assigned and comments the checkout command. Moving the card needs the `PROJECT_TOKEN` secret (see the workflow file). When the pull request is opened, the `PR fill` workflow (`tools/fill_pr.py`) copies from the issue whatever the PR lacks: `Closes #<issue>`, labels, milestone, assignees, and a Conventional Commit title. No workflow creates branches or pull requests. Epics get no branch; work on their stories.
 
 **Agents** push a branch only after a human approves that push; a human approves and merges every agent PR (DEC-025, S-2). Agents never push to `main`, force-push or rewrite history.
 

@@ -1,7 +1,7 @@
 """Fill a new pull request from the issue its branch was started for.
 
 Runs from .github/workflows/pr-fill.yml when a pull request is opened. The branch name carries
-the issue number (see tools/start_task.py). From that issue it adds, only where the PR does not
+the story id or issue number (tools/issue_ref.py). From that issue it adds, only where the PR does not
 already have them: a `Closes #<issue>` line, the issue's labels, its milestone, its assignees,
 and a Conventional Commit title `<type>(<story id or #issue>): <issue title>` when the current
 title is not one. Rules: docs/guidelines/git-workflow.md
@@ -12,7 +12,8 @@ import re
 import subprocess
 import sys
 
-BRANCH = re.compile(r"^(?:([a-z]+)/)?(\d+)-[a-z0-9]")
+from issue_ref import find_issue, parse
+
 TYPES = ("feat", "fix", "test", "refactor", "perf", "docs", "build", "ci", "chore", "research",
          "revert")
 CONVENTIONAL = re.compile(rf"^({'|'.join(TYPES)})(\([^)]*\))?!?: \S")
@@ -54,19 +55,13 @@ def main():
     repo = os.environ["GITHUB_REPOSITORY"]
     with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as f:
         pr = json.load(f)["pull_request"]
-    match = BRANCH.match(pr["head"]["ref"])
-    if not match:
-        print(f"Skipping: branch '{pr['head']['ref']}' carries no issue number.")
+    branch = pr["head"]["ref"]
+    branch_type = parse(branch)[0]
+    issue = find_issue(gh, repo, branch)
+    if issue is None:
+        print(f"Skipping: no issue found for branch '{branch}'.")
         return
-    branch_type, number = match.group(1), int(match.group(2))
-    try:
-        issue = gh(f"repos/{repo}/issues/{number}")
-    except RuntimeError:
-        print(f"Skipping: #{number} does not exist.")
-        return
-    if issue.get("pull_request"):
-        print(f"Skipping: #{number} is a pull request, not an issue.")
-        return
+    number = issue["number"]
 
     issue_labels = [label["name"] for label in issue["labels"]]
     pr_labels = {label["name"] for label in pr.get("labels", [])}

@@ -1,9 +1,9 @@
 """React to a new work branch: mark its issue as started.
 
-Runs from .github/workflows/issue-start.yml on every branch creation. The branch name carries
-the issue number: <type>/<issue>-<short-description> (feat/41-run-every-simulation-tick), or
-<issue>-<short-description> as GitHub's "Create a branch" button names it. Other branches are
-skipped. Rules: docs/guidelines/git-workflow.md
+Runs from .github/workflows/issue-start.yml on every branch creation. The branch name names
+the issue: <type>/us-<x.y>-<short-description> for a user story (feat/us-15.2-build-settings),
+or <type>/<issue>-<short-description> for any other issue (tools/issue_ref.py). Other branches
+are skipped. Rules: docs/guidelines/git-workflow.md
 
 For that issue it:
 - moves the issue's card on the GitHub project to STATUS_NAME ("In progress"), unless the card
@@ -14,11 +14,11 @@ It never creates branches or pull requests.
 """
 import json
 import os
-import re
 import subprocess
 import sys
 
-BRANCH_ISSUE = re.compile(r"^(?:[a-z]+/)?(\d+)-[a-z0-9]")
+from issue_ref import find_issue
+
 EARLY_STATUSES = {"", "backlog", "ready", "todo", "to do"}  # statuses a new branch may move on from
 
 
@@ -41,11 +41,6 @@ def graphql(query, token, **variables):
     if data.get("errors"):
         raise RuntimeError(f"GraphQL error: {data['errors']}")
     return data["data"]
-
-
-def issue_number(branch):
-    match = BRANCH_ISSUE.match(branch)
-    return int(match.group(1)) if match else None
 
 
 PROJECT = """
@@ -126,17 +121,13 @@ def main():
     actor = os.environ.get("ACTOR", "")
     token = os.environ.get("PROJECT_TOKEN", "").strip() or None
 
-    number = issue_number(branch)
-    if number is None:
-        print(f"Skipping '{branch}': the name carries no issue number.")
+    issue = find_issue(gh, repo, branch)
+    if issue is None:
+        print(f"Skipping '{branch}': no issue found for this branch name.")
         return
-    try:
-        issue = gh(f"repos/{repo}/issues/{number}")
-    except RuntimeError:
-        print(f"Skipping '{branch}': #{number} does not exist.")
-        return
-    if issue.get("pull_request") or issue["state"] != "open":
-        print(f"Skipping '{branch}': #{number} is not an open issue.")
+    number = issue["number"]
+    if issue["state"] != "open":
+        print(f"Skipping '{branch}': #{number} is closed.")
         return
     if any(label["name"] == "type:epic" for label in issue["labels"]):
         print(f"Skipping '{branch}': #{number} is an epic; work on one of its stories.")

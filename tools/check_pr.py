@@ -7,14 +7,7 @@ import os
 import re
 import sys
 
-# <type>/<issue number>-<short-description>, or <issue number>-<short-description> as GitHub's
-# "Create a branch" button names it. The old ClickUp form <type>/pb-<nnn>-... is still accepted
-# so branches started before the move to GitHub Projects can merge.
-# Keep in sync with the branch name rule of the GitHub ruleset, if one is set.
-BRANCH = re.compile(
-    r"^((feat|fix|test|refactor|docs|ci|chore|research)/(\d+|pb-\d{3}(\.\d+)?)|\d+)"
-    r"-[a-z0-9]+(-[a-z0-9]+)*$"
-)
+from issue_ref import BRANCH  # noqa: E402  (same folder; rules in issue_ref.py)
 EXEMPT_PREFIXES = ("dependabot/",)
 CLOSES = re.compile(r"\b(close[sd]?|fix(e[sd])?|resolve[sd]?) #\d+", re.IGNORECASE)
 
@@ -29,9 +22,10 @@ def main():
 
     if not branch.startswith(EXEMPT_PREFIXES) and not BRANCH.match(branch):
         errors.append(
-            f"Branch '{branch}' does not match <type>/<issue>-<short-description> or "
-            "<issue>-<short-description>, all lowercase (for example "
-            "feat/41-run-every-simulation-tick). "
+            f"Branch '{branch}' does not match <type>/us-<x.y>-<short-description> for a "
+            "user story (feat/us-15.2-build-settings-file-menu) or "
+            "<type>/<issue>-<short-description> for other issues (fix/142-door-opens), "
+            "all lowercase. "
             "Types: feat, fix, test, refactor, docs, ci, chore, research."
         )
     if not CLOSES.search(body) and "no-issue" not in labels:
