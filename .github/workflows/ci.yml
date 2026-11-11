@@ -82,6 +82,20 @@ jobs:
             revert
           requireScope: false
 
+  dependencies:
+    # The PR's issue must have no open "blocked by" issues (tools/check_blockers.py).
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Blocking issues are closed
+        run: python3 tools/check_blockers.py
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   docs:
     needs: changes
     if: needs.changes.outputs.docs == 'true'
@@ -213,7 +227,7 @@ jobs:
   ci-ok:
     # Skipped when a newer push cancels this run, so superseded runs don't report a failure.
     if: ${{ always() && !cancelled() }}
-    needs: [changes, pr-hygiene, docs, format, build, python, bridge-benchmark, secrets]
+    needs: [changes, pr-hygiene, dependencies, docs, format, build, python, bridge-benchmark, secrets]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped

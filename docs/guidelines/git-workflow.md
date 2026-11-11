@@ -38,6 +38,8 @@ The `pr-hygiene` CI job rejects other names (`tools/check_pr.py`).
 
 **Starting a task:** create the story's branch, from the issue's **Development → Create a branch** button (edit the suggested name to the pattern above) or by pushing it (DEC-050). Creating the branch is the start signal: the `Issue start` workflow (`tools/start_task.py`) runs on the branch creation, moves the issue's card to **In progress** on the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (unless it is already further along), assigns the branch creator if nobody is assigned and comments the checkout command. Moving the card needs the `PROJECT_TOKEN` secret (see the workflow file). When the pull request is opened, the `PR fill` workflow (`tools/fill_pr.py`) copies from the issue whatever the PR lacks: `Closes #<issue>`, labels, milestone, assignees, and a Conventional Commit title. No workflow creates branches or pull requests. Epics get no branch; work on their stories.
 
+**Dependencies:** stories have "blocked by" links. Creating a branch for a story whose blockers are still open only gets a warning comment, and the `dependencies` CI job (`tools/check_blockers.py`) fails while any blocker is open, so `ci-ok` and the `main` ruleset block the merge. After a blocker closes, re-run the job or push again.
+
 **Agents** push a branch only after a human approves that push; a human approves and merges every agent PR (DEC-025, S-2). Agents never push to `main`, force-push or rewrite history.
 
 ## 2. Commits and PR titles
