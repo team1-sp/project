@@ -41,3 +41,9 @@ def find_issue(gh, repo, branch):
             if prefix.match(issue["title"]) and not issue.get("pull_request"):
                 return issue
     return None
+
+
+def open_blockers(gh, repo, number):
+    """Return the open issues that block issue `number` (its "blocked by" links)."""
+    blockers = gh(f"repos/{repo}/issues/{number}/dependencies/blocked_by?per_page=100") or []
+    return [b for b in blockers if b.get("state") == "open"]

@@ -5,7 +5,7 @@ the issue: <type>/us-<x.y>-<short-description> for a user story (feat/us-15.2-bu
 or <type>/<issue>-<short-description> for any other issue (tools/issue_ref.py). Other branches
 are skipped. Rules: docs/guidelines/git-workflow.md
 
-For that issue it:
+For that issue, unless it still has open "blocked by" issues (then it only comments), it:
 - moves the issue's card on the GitHub project to STATUS_NAME ("In progress"), unless the card
   is already further along (needs PROJECT_TOKEN; skipped without it),
 - assigns the person who created the branch when nobody is assigned,
@@ -17,7 +17,7 @@ import os
 import subprocess
 import sys
 
-from issue_ref import find_issue
+from issue_ref import find_issue, open_blockers
 
 EARLY_STATUSES = {"", "backlog", "ready", "todo", "to do"}  # statuses a new branch may move on from
 
@@ -131,6 +131,17 @@ def main():
         return
     if any(label["name"] == "type:epic" for label in issue["labels"]):
         print(f"Skipping '{branch}': #{number} is an epic; work on one of its stories.")
+        return
+
+    blockers = open_blockers(gh, repo, number)
+    if blockers:
+        listed = ", ".join(f"#{b['number']}" for b in blockers)
+        gh("-X", "POST", f"repos/{repo}/issues/{number}/comments", body={"body": (
+            f"Branch `{branch}` was created, but this issue is still blocked by {listed}. "
+            "Its card stays where it is. Finish the blocking issues first; the pull request "
+            "cannot merge while any of them is open."
+        )})
+        print(f"#{number} is blocked by {listed}; status not changed.")
         return
 
     if token:
