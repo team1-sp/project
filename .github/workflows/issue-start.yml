@@ -1,29 +1,37 @@
-# When a backlog issue is created from ClickUp (title carries "PB-<nnn>"), create its branch and
-# a draft PR so the developer only has to check out the branch. tools/start_task.py
+# When a work branch is created (<type>/us-<x.y>-<short-description> for a user story, or
+# <type>/<issue>-<short-description> for another issue), mark its issue as started at once: move the card to
+# "In progress" on the GitHub project, assign the branch creator if nobody is assigned, and
+# comment the checkout command. It never creates branches or pull requests.
+# tools/start_task.py, docs/guidelines/git-workflow.md
 #
-# Needs: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
+# Moving the card needs the PROJECT_TOKEN secret: a token that can edit the org project
+# (classic: `project`; fine-grained: organization Projects read/write). Without it the other
+# steps still run.
 name: Issue start
 
 on:
-  issues:
-    types: [opened, assigned]
+  create:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
   issues: write
 
 concurrency:
-  group: issue-start-${{ github.event.issue.number }}
+  group: issue-start-${{ github.ref }}
 
 jobs:
   start:
-    if: contains(github.event.issue.title, 'pb-')
+    if: github.event.ref_type == 'branch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Create branch and draft PR
+      - name: Mark the branch's issue as started
         run: python3 tools/start_task.py
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEFAULT_REVIEWERS: isikdonger
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PROJECT_OWNER: team1-sp
+          PROJECT_NUMBER: "3"
+          STATUS_NAME: In progress
+          BRANCH: ${{ github.event.ref }}
+          ACTOR: ${{ github.actor }}

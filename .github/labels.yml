@@ -1,5 +1,5 @@
 # Repository labels. Edit here and merge; the label-sync workflow applies the file.
-# Area labels mirror the ClickUp tags with an "area:" prefix.
+# Area labels say which part of the system an issue touches.
 - {name: "area:core", color: "1d76db", description: "Game loop, time, config, logging"}
 - {name: "area:ecs", color: "1d76db", description: "World, entities, components, systems"}
 - {name: "area:phys", color: "1d76db", description: "Physics adapter and Box2D"}
@@ -20,14 +20,27 @@
 - {name: "area:devops", color: "0e8a16", description: "Build, CI, repo tooling"}
 - {name: "area:qa", color: "0e8a16", description: "Testing, benchmarks, evaluation"}
 - {name: "area:docs", color: "0e8a16", description: "Documentation"}
+- {name: "type:epic", color: "3e4b9e", description: "SRS epic (EP-xx); its stories are sub-issues"}
+- {name: "type:story", color: "0e8a16", description: "SRS user story (US-x.y); its FRs are the acceptance criteria"}
 - {name: "type:feature", color: "a2eeef", description: "New behaviour"}
 - {name: "type:bug", color: "d73a4a", description: "Something is broken"}
 - {name: "type:research", color: "c5def5", description: "Research or spike"}
 - {name: "type:chore", color: "ededed", description: "Maintenance, docs or tooling"}
-- {name: "priority:urgent", color: "b60205", description: "ClickUp priority: urgent"}
-- {name: "priority:high", color: "d93f0b", description: "ClickUp priority: high"}
-- {name: "priority:normal", color: "fbca04", description: "ClickUp priority: normal"}
-- {name: "priority:low", color: "c2e0c6", description: "ClickUp priority: low"}
+- {name: "uc:UC-01", color: "bfd4f2", description: "Use case UC-01 Manage Projects"}
+- {name: "uc:UC-02", color: "bfd4f2", description: "Use case UC-02 Manage Game Components"}
+- {name: "uc:UC-03", color: "bfd4f2", description: "Use case UC-03 Manage Assets"}
+- {name: "uc:UC-04", color: "bfd4f2", description: "Use case UC-04 Configure Project"}
+- {name: "uc:UC-05", color: "bfd4f2", description: "Use case UC-05 Build Game"}
+- {name: "uc:UC-06", color: "bfd4f2", description: "Use case UC-06 Play and Debug Game"}
+- {name: "uc:UC-07", color: "bfd4f2", description: "Use case UC-07 Run Headless Simulation"}
+- {name: "uc:UC-08", color: "bfd4f2", description: "Use case UC-08 Record and Replay Telemetry"}
+- {name: "uc:UC-09", color: "bfd4f2", description: "Use case UC-09 Run Playtest Agent"}
+- {name: "uc:UC-10", color: "bfd4f2", description: "Use case UC-10 Explore Semantic Graph"}
+- {name: "uc:UC-11", color: "bfd4f2", description: "Use case UC-11 Use AI Assistant"}
+- {name: "priority:urgent", color: "b60205", description: "Must be done first"}
+- {name: "priority:high", color: "d93f0b", description: "High priority"}
+- {name: "priority:normal", color: "fbca04", description: "Normal priority"}
+- {name: "priority:low", color: "c2e0c6", description: "Low priority"}
 - {name: "blocked", color: "000000", description: "Waiting on something outside this issue"}
 - {name: "needs-decision", color: "f9d0c4", description: "Needs a team decision before work continues"}
 - {name: "no-issue", color: "ededed", description: "PR without a linked issue (chore/ci only)"}

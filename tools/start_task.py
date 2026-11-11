@@ -1,159 +1,155 @@
-"""Create the branch and draft PR for a backlog issue opened from ClickUp.
+"""React to a new work branch: mark its issue as started.
 
-Runs from .github/workflows/issue-start.yml when an issue is opened or assigned.
-Handles issues whose title carries a backlog id, e.g. "PB-025 Define the physics adapter
-interface" or "ci: pb-001-set-up-repository"; anything else is skipped.
-Rules: docs/guidelines/git-workflow.md
+Runs from .github/workflows/issue-start.yml on every branch creation. The branch name names
+the issue: <type>/us-<x.y>-<short-description> for a user story (feat/us-15.2-build-settings),
+or <type>/<issue>-<short-description> for any other issue (tools/issue_ref.py). Other branches
+are skipped. Rules: docs/guidelines/git-workflow.md
+
+For that issue it:
+- moves the issue's card on the GitHub project to STATUS_NAME ("In progress"), unless the card
+  is already further along (needs PROJECT_TOKEN; skipped without it),
+- assigns the person who created the branch when nobody is assigned,
+- comments on the issue with the branch and the checkout command.
+It never creates branches or pull requests.
 """
 import json
 import os
-import re
 import subprocess
 import sys
-import unicodedata
 
-PB_ID = re.compile(r"\bpb-?(\d{3})\b", re.IGNORECASE)
-TYPE_PREFIX = re.compile(r"^(feat|fix|test|refactor|docs|ci|chore|research)(\([^)]*\))?:\s*", re.IGNORECASE)
-CLICKUP_URL = re.compile(r"https://app\.clickup\.com/t/[A-Za-z0-9/_-]+")
-TURKISH = str.maketrans("ıİşŞğĞüÜöÖçÇ", "iIsSgGuUoOcC")
-MAX_SLUG = 40
+from issue_ref import find_issue
+
+EARLY_STATUSES = {"", "backlog", "ready", "todo", "to do"}  # statuses a new branch may move on from
 
 
-def gh(*args, body=None):
+def gh(*args, body=None, token=None):
     cmd = ["gh", "api", *args]
     if body is not None:
         cmd += ["--input", "-"]
+    env = dict(os.environ)
+    if token:
+        env["GH_TOKEN"] = token
     result = subprocess.run(cmd, input=json.dumps(body) if body is not None else None,
-                            capture_output=True, text=True)
+                            capture_output=True, text=True, env=env)
     if result.returncode != 0:
-        raise RuntimeError(f"gh api {' '.join(args)} failed: {result.stderr.strip()}")
+        raise RuntimeError(f"gh api {' '.join(args[:2])} failed: {result.stderr.strip()}")
     return json.loads(result.stdout) if result.stdout.strip() else None
 
 
-def slugify(text):
-    text = unicodedata.normalize("NFKD", text.translate(TURKISH))
-    text = text.encode("ascii", "ignore").decode().lower()
-    words = re.findall(r"[a-z0-9]+", text)
-    slug = ""
-    for word in words:
-        candidate = f"{slug}-{word}" if slug else word
-        if len(candidate) > MAX_SLUG:
-            break
-        slug = candidate
-    return slug or "task"
+def graphql(query, token, **variables):
+    data = gh("graphql", body={"query": query, "variables": variables}, token=token)
+    if data.get("errors"):
+        raise RuntimeError(f"GraphQL error: {data['errors']}")
+    return data["data"]
 
 
-def parse_title(raw):
-    """Return (pb id, type from a Conventional prefix or None, readable title)."""
-    pb = PB_ID.search(raw)
-    if not pb:
-        return None, None, None
-    prefix = TYPE_PREFIX.match(raw)
-    kind = prefix.group(1).lower() if prefix else None
-    rest = raw[prefix.end():] if prefix else raw
-    rest = PB_ID.sub(" ", rest).strip(" :-_")
-    if " " not in rest:  # slug-style title such as "set-up-repository"
-        rest = re.sub(r"[_-]+", " ", rest)
-    rest = re.sub(r"\s+", " ", rest).strip()
-    return pb.group(1), kind, rest or raw.strip()
+PROJECT = """
+query($owner: String!, $number: Int!) {
+  organization(login: $owner) {
+    projectV2(number: $number) {
+      id
+      field(name: "Status") {
+        ... on ProjectV2SingleSelectField { id options { id name } }
+      }
+    }
+  }
+}"""
+
+ISSUE_ITEMS = """
+query($node: ID!) {
+  node(id: $node) {
+    ... on Issue {
+      projectItems(first: 20) {
+        nodes {
+          id
+          project { id }
+          fieldValueByName(name: "Status") {
+            ... on ProjectV2ItemFieldSingleSelectValue { name }
+          }
+        }
+      }
+    }
+  }
+}"""
+
+ADD_ITEM = """
+mutation($project: ID!, $content: ID!) {
+  addProjectV2ItemById(input: {projectId: $project, contentId: $content}) { item { id } }
+}"""
+
+SET_STATUS = """
+mutation($project: ID!, $item: ID!, $field: ID!, $option: String!) {
+  updateProjectV2ItemFieldValue(input: {projectId: $project, itemId: $item, fieldId: $field,
+                                        value: {singleSelectOptionId: $option}}) {
+    projectV2Item { id }
+  }
+}"""
 
 
-def branch_type(labels):
-    if "type:research" in labels or "area:ai-research" in labels:
-        return "research"
-    if "type:bug" in labels:
-        return "fix"
-    if labels and labels <= {"area:docs", "type:chore", "priority:urgent", "priority:high",
-                             "priority:normal", "priority:low"} and "area:docs" in labels:
-        return "docs"
-    if "area:devops" in labels:
-        return "ci"
-    return "feat"
+def move_to_in_progress(issue_node_id, token):
+    """Set the issue's project Status; return a short note on what happened."""
+    owner = os.environ.get("PROJECT_OWNER", "team1-sp")
+    number = int(os.environ.get("PROJECT_NUMBER", "3"))
+    wanted = os.environ.get("STATUS_NAME", "In progress")
 
+    project = graphql(PROJECT, token, owner=owner, number=number)["organization"]["projectV2"]
+    field = project["field"]
+    option = next((o["id"] for o in field["options"] if o["name"].casefold() == wanted.casefold()),
+                  None)
+    if not option:
+        raise RuntimeError(f"The project's Status field has no option named '{wanted}'.")
 
-def pr_body(issue_number, clickup_url):
-    return "\n".join([
-        f"Closes #{issue_number}",
-        "",
-        f"ClickUp: {clickup_url or '<!-- task link -->'}",
-        "",
-        "## What and why",
-        "",
-        "## How it was verified",
-        "<!-- Commands you ran and their results. -->",
-        "",
-        "## Docs updated",
-        "",
-        "## Definition of Done",
-        "- [ ] Acceptance criteria in the issue are met",
-        "- [ ] Builds from a clean checkout; tests added or updated and passing",
-        "- [ ] Tests run headless (no window or GPU)",
-        "- [ ] Architecture rules R-1 to R-9 respected (`docs/agents/rules.md`)",
-        "- [ ] No Box2D or raylib types outside their adapter targets",
-        "- [ ] No new compiler warnings, no secrets, no large binaries",
-        "- [ ] Docs and decision log updated where the change made them inaccurate",
-        "",
-        "After merging: set the ClickUp task to **done**.",
-        "",
-        "_Branch and draft PR created automatically when the issue was opened._",
-    ])
+    items = graphql(ISSUE_ITEMS, token, node=issue_node_id)["node"]["projectItems"]["nodes"]
+    item = next((i for i in items if i["project"]["id"] == project["id"]), None)
+    if item is None:
+        item_id = graphql(ADD_ITEM, token, project=project["id"],
+                          content=issue_node_id)["addProjectV2ItemById"]["item"]["id"]
+        current = ""
+    else:
+        item_id = item["id"]
+        current = (item.get("fieldValueByName") or {}).get("name", "")
+    if current.casefold() not in EARLY_STATUSES:
+        return f"left at {current}"
+    graphql(SET_STATUS, token, project=project["id"], item=item_id, field=field["id"],
+            option=option)
+    return f"moved to {wanted}"
 
 
 def main():
     repo = os.environ["GITHUB_REPOSITORY"]
-    with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as f:
-        issue = json.load(f)["issue"]
+    branch = os.environ["BRANCH"]
+    actor = os.environ.get("ACTOR", "")
+    token = os.environ.get("PROJECT_TOKEN", "").strip() or None
 
-    pb, kind, title = parse_title(issue["title"].strip())
-    if not pb:
-        print(f"Skipping #{issue['number']}: title has no PB-<nnn> id.")
+    issue = find_issue(gh, repo, branch)
+    if issue is None:
+        print(f"Skipping '{branch}': no issue found for this branch name.")
         return
-    labels = {label["name"] for label in issue.get("labels", [])}
-    kind = kind or branch_type(labels)
-    branch = f"{kind}/pb-{pb}-{slugify(title)}"
+    number = issue["number"]
+    if issue["state"] != "open":
+        print(f"Skipping '{branch}': #{number} is closed.")
+        return
+    if any(label["name"] == "type:epic" for label in issue["labels"]):
+        print(f"Skipping '{branch}': #{number} is an epic; work on one of its stories.")
+        return
 
-    # One PR per backlog item: skip if a PR for this PB id already exists.
-    for pr in gh(f"repos/{repo}/pulls?state=all&per_page=100", "--paginate"):
-        if re.search(rf"\bpb-?{pb}\b", pr["title"] + " " + pr["head"]["ref"], re.IGNORECASE):
-            print(f"Skipping #{issue['number']}: PB-{pb} already has PR #{pr['number']}.")
-            return
+    if token:
+        status = move_to_in_progress(issue["node_id"], token)
+    else:
+        status = "not changed (the PROJECT_TOKEN secret is not set)"
+        print(f"::notice::Project status {status}.")
 
-    default = gh(f"repos/{repo}")["default_branch"]
-    base_sha = gh(f"repos/{repo}/git/ref/heads/{default}")["object"]["sha"]
-    tree = gh(f"repos/{repo}/git/commits/{base_sha}")["tree"]["sha"]
-    # GitHub cannot open a PR for a branch identical to its base, so start with one empty
-    # commit. Squash merging leaves it out of main's history.
-    start = gh("-X", "POST", f"repos/{repo}/git/commits", body={
-        "message": f"chore: start PB-{pb}",
-        "tree": tree,
-        "parents": [base_sha],
-    })
-    gh("-X", "POST", f"repos/{repo}/git/refs",
-       body={"ref": f"refs/heads/{branch}", "sha": start["sha"]})
+    if not issue["assignees"] and actor and not actor.endswith("[bot]"):
+        gh("-X", "POST", f"repos/{repo}/issues/{number}/assignees", body={"assignees": [actor]})
 
-    clickup = CLICKUP_URL.search(issue.get("body") or "")
-    pr = gh("-X", "POST", f"repos/{repo}/pulls", body={
-        "title": f"{kind}(PB-{pb}): {title}",
-        "head": branch,
-        "base": default,
-        "body": pr_body(issue["number"], clickup.group(0) if clickup else None),
-        "draft": True,
-    })
-
-    people = [a["login"] for a in issue.get("assignees", [])] or [issue["user"]["login"]]
-    people = [p for p in people if not p.endswith("[bot]")]
-    if people:
-        gh("-X", "POST", f"repos/{repo}/issues/{pr['number']}/assignees", body={"assignees": people})
-    reviewers = [r for r in os.environ.get("DEFAULT_REVIEWERS", "").split() if r not in people]
-    if reviewers:
-        gh("-X", "POST", f"repos/{repo}/pulls/{pr['number']}/requested_reviewers",
-           body={"reviewers": reviewers})
-
-    gh("-X", "POST", f"repos/{repo}/issues/{issue['number']}/comments", body={"body": (
-        f"Draft PR #{pr['number']} is ready on branch `{branch}`.\n\n"
-        f"```\ngit fetch origin\ngit switch {branch}\n```"
+    gh("-X", "POST", f"repos/{repo}/issues/{number}/comments", body={"body": (
+        f"Work started on branch `{branch}`"
+        + (f" by @{actor}" if actor else "") + f". Project status: {status}.\n\n"
+        f"```\ngit fetch origin\ngit switch {branch}\n```\n\n"
+        "When you open the pull request, its title, `Closes` line, labels and milestone are "
+        "filled in from this issue."
     )})
-    print(f"Created {branch} and draft PR #{pr['number']} for #{issue['number']}.")
+    print(f"#{number}: status {status}.")
 
 
 if __name__ == "__main__":

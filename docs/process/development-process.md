@@ -10,7 +10,7 @@ Source: Initial Plan §3 (customised Agile Scrum). Re-read that section if the t
 - **Sprint Planning** at sprint start; **Sprint Review** with the Product Owner at the end.
 - **No Sprint Retrospective** (known disadvantage: process friction may persist; mitigate with the problem log and handoffs).
 - Deliver a **working increment every two weeks** where possible; research-heavy sprints may deliver decisions + prototypes.
-- Course milestones (documents, deliverables) are in the ClickUp Gantt chart (link in Initial Plan §4.2).
+- Course milestones (documents, deliverables) are in the ClickUp Gantt chart (link in Initial Plan §4.2). Development work is planned on the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050).
 
 ## 2. Known risks of this model (from the Initial Plan) and mitigations
 
@@ -33,7 +33,7 @@ Source: Initial Plan §3 (customised Agile Scrum). Re-read that section if the t
 
 `Backlog → Ready → Claimed → Review → Done` (+ `Blocked`, `Dropped`). Definition of Ready: has acceptance criteria, no open human decision it depends on, ≤ 1 day. Definition of Done: [definition-of-done.md](definition-of-done.md).
 
-The human-facing planning tool is ClickUp; the repo's `task-board.md` is the **agent-facing mirror**. When a ClickUp task exists, put its link in the task entry; the board must not contradict ClickUp (humans win on conflict).
+The human-facing planning tool is the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050; it replaced ClickUp); the repo's `task-board.md` is the **agent-facing mirror**. Put the issue number in the task entry; the board must not contradict the project (humans win on conflict).
 
 ## 5. Change control
 

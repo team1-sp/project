@@ -1,32 +1,31 @@
 name: Backlog item
-description: A product backlog item (normally created from its ClickUp task)
-title: "PB-000 "
-labels: ["type:feature"]
+description: A user story or task for the GitHub project (stories come from SRS A Section 6.3)
+labels: ["type:story"]
 body:
   - type: input
-    id: clickup
+    id: story-id
     attributes:
-      label: ClickUp task
-      description: Link to the ClickUp task.
-    validations:
-      required: true
+      label: Story id
+      description: The SRS id, if this is an SRS story (for example US-17.2). Also start the issue title with it.
+      placeholder: US-0.0
   - type: textarea
     id: story
     attributes:
       label: User story
-      placeholder: As a ..., I want ... so that ...
+      placeholder: As a game developer, I want ..., so that ...
     validations:
       required: true
   - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria
-      placeholder: "- [ ] ..."
+      description: For an SRS story, its functional requirements (srs.fr.x.y) from SRS A Section 6.1.
+      placeholder: "- [ ] **srs.fr.0.0** ..."
     validations:
       required: true
-  - type: textarea
-    id: subitems
+  - type: input
+    id: epic
     attributes:
-      label: Sub-items
-      description: The PB-xxx.n sub-items as a checklist.
-      placeholder: "- [ ] PB-000.1 ..."
+      label: Epic
+      description: The parent epic issue. Also add this issue to it as a sub-issue.
+      placeholder: "#40 EP-01 Engine Core and Game Loop"
