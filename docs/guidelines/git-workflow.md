@@ -12,10 +12,10 @@ Trunk-based: `main` is the only long-lived branch. No `develop` branch.
 | Work branches | From the latest `main`, one backlog item (or one bug) per branch, merged within the sprint, deleted after merge |
 | Tags `inc-1`, `inc-2`, `final` | Annotated tags on `main` at each increment review, created by a repo admin |
 
-Branch names: `<type>/<issue>-<short-description>`, lowercase, words joined with `-`, for example `feat/41-run-every-simulation-tick-in-a-fixed` (DEC-050). Branches started before DEC-050 may still use `<type>/pb-<nnn>-…`. `tools/check_pr.py` enforces this pattern:
+Branch names: `<type>/<issue>-<short-description>`, lowercase, words joined with `-`, for example `feat/41-run-every-simulation-tick-in-a-fixed` (DEC-050). `<issue>-<short-description>`, the name GitHub's **Create a branch** button gives, is also accepted, and branches started before DEC-050 may still use `<type>/pb-<nnn>-…`. `tools/check_pr.py` enforces this pattern:
 
 ```
-^(feat|fix|test|refactor|docs|ci|chore|research)/([0-9]+|pb-[0-9]{3}(\.[0-9]+)?)-[a-z0-9]+(-[a-z0-9]+)*$
+^((feat|fix|test|refactor|docs|ci|chore|research)/([0-9]+|pb-[0-9]{3}(\.[0-9]+)?)|[0-9]+)-[a-z0-9]+(-[a-z0-9]+)*$
 ```
 
 | Type | Use for |
@@ -30,7 +30,7 @@ Branch names: `<type>/<issue>-<short-description>`, lowercase, words joined with
 
 The `pr-hygiene` CI job rejects other names (`tools/check_pr.py`).
 
-**Starting a task:** move the issue to **In progress** on the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050). The `Issue start` workflow (`tools/start_task.py`) checks the project every 10 minutes and creates the branch from `main` for each open issue in progress that has no branch yet, links it to the issue and comments the checkout command. It never opens a pull request: the developer opens it after the first push. Running the workflow by hand with an issue number starts that issue at once. Epics get no branch. The type comes from the issue labels: `type:research` gives `research/`, `type:bug` gives `fix/`, `area:devops` gives `ci/`, docs-only gives `docs/`, otherwise `feat/`. Reading the project needs the `PROJECT_TOKEN` secret (see the workflow file).
+**Starting a task:** create the issue's branch, from the issue's **Development → Create a branch** button or by pushing it (DEC-050). Creating the branch is the start signal: the `Issue start` workflow (`tools/start_task.py`) runs on the branch creation, moves the issue's card to **In progress** on the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (unless it is already further along), assigns the branch creator if nobody is assigned and comments the checkout command. Moving the card needs the `PROJECT_TOKEN` secret (see the workflow file). When the pull request is opened, the `PR fill` workflow (`tools/fill_pr.py`) copies from the issue whatever the PR lacks: `Closes #<issue>`, labels, milestone, assignees, and a Conventional Commit title. No workflow creates branches or pull requests. Epics get no branch; work on their stories.
 
 **Agents** push a branch only after a human approves that push; a human approves and merges every agent PR (DEC-025, S-2). Agents never push to `main`, force-push or rewrite history.
 
@@ -74,4 +74,4 @@ Increment deliverables get an annotated tag `inc-1`, `inc-2`, `final` on `main`,
 | 2026-10-15 | Issue start automation (branch and draft PR from ClickUp issues) | claude-code (session 0171) |
 | 2026-10-24 | PR title scope is the PB id: `<type>(PB-<nnn>): …` (DEC-035) | claude-code (PB-002 session) |
 | 2026-10-27 | Only `fix/` branches may use a bare issue number; pattern written out | claude-code |
-| 2026-11-11 | GitHub Projects replaces ClickUp: issue-number branches, story-id PR scopes, Issue start creates only the branch when an item is In progress (DEC-050) | claude (issue #126) |
+| 2026-11-11 | GitHub Projects replaces ClickUp: issue-number branches, story-id PR scopes; creating a branch moves the card to In progress and new PRs are filled from the issue (DEC-050) | claude (issue #126) |

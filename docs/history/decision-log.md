@@ -58,7 +58,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-047 | PB-012: the game loop follows srs.fr.1.2 to 1.6 (at most 5 ticks per render frame) with an exact integer accumulator and the tick counter in `engine/core` | Accepted | 2026-11-10 |
 | DEC-048 | The editor is the application that hosts `engine::Application` and owns the main window; `sandbox` is a developer and CI test host; games never host the engine | Accepted | 2026-11-11 |
 | DEC-049 | PB-025: the physics interface is named `IPhysicsAdapter`; bodies are addressed by `BodyId` with `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core` | Accepted | 2026-11-11 |
-| DEC-050 | The backlog moves from ClickUp to one GitHub project built from the SRS; branches use the issue number, PR scopes the story id; Issue start creates only the branch when an item is In progress | Accepted | 2026-11-11 |
+| DEC-050 | The backlog moves from ClickUp to one GitHub project built from the SRS; branches use the issue number, PR scopes the story id; creating a branch moves its card to In progress, new PRs are filled from the issue, and no workflow creates branches or PRs | Accepted | 2026-11-11 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -686,20 +686,20 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Supersedes / Related:** DEC-003, DEC-014, DEC-024, DEC-041, R-2, R-3, PB-025, PB-026, TASK-019.
 - **Amendments:**
 
-### DEC-050 — The backlog moves from ClickUp to one GitHub project; branches use the issue number; Issue start creates only the branch
+### DEC-050 — The backlog moves from ClickUp to one GitHub project; branches use the issue number; the branch starts the task
 - **Date:** 2026-11-11
 - **Status:** Accepted
 - **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude (issue #126)
-- **Human's words:** "Okey, lets go with Github Projects with one project. But I am going to ask you to create all the issues and everything from stracth instead of copying clickup. Because main reason I wanted to do this was because we needed an overhaul and clickup wasnt easily altered."; "my problem is actions should not be creating pr's, only the branch."; asked for the branch to be created "with github actions when its marked in_progress".
+- **Human's words:** "Okey, lets go with Github Projects with one project. But I am going to ask you to create all the issues and everything from stracth instead of copying clickup. Because main reason I wanted to do this was because we needed an overhaul and clickup wasnt easily altered."; "my problem is actions should not be creating pr's, only the branch."; "I do not like this poll idea ... branch creation should be instant since project status will be changed right before starting implementation."
 - **Context:** ClickUp was hard to change and its backlog had drifted from the SRS. The Issue start workflow opened a draft PR for every new `PB-` issue, which failed with "GitHub Actions is not permitted to create or approve pull requests".
 - **Decision:**
   1. Planning moves to one GitHub project, team1-sp #3 (Iterative development template). Epics (`EP-xx`) and user stories (`US-x.y`) come from SRS A Section 6.3; each story is a sub-issue of its epic and its functional requirements are its acceptance criteria. Increment 1 stories (SRS B) are issues in the Increment 1 milestone; later stories stay as checklists in their epics until planned. Iteration, Estimate, Size and Priority are project fields.
-  2. Branch names are `<type>/<issue>-<short-description>`; `<type>/pb-<nnn>-…` stays valid for branches started before this decision.
+  2. Branch names are `<type>/<issue>-<short-description>`, or `<issue>-<short-description>` from GitHub's "Create a branch" button; `<type>/pb-<nnn>-…` stays valid for branches started before this decision.
   3. PR titles use the story id as the Conventional Commit scope (`feat(US-1.1): …`), or the issue number for other issues (`fix(#142): …`).
-  4. The Issue start workflow creates only the branch, linked to the issue, for each open issue whose project Status is In progress. Status changes do not trigger workflows, so it polls the project every 10 minutes with the `PROJECT_TOKEN` secret, and can be run by hand for one issue. Developers open their own PRs.
+  4. The developer creates the branch (instant), and that starts the task: the Issue start workflow runs on the branch creation, moves the issue's card to In progress with the `PROJECT_TOKEN` secret, assigns the creator if nobody is assigned and comments the checkout command. The PR fill workflow copies `Closes #<issue>`, labels, milestone, assignees and a Conventional Commit title from the issue into a new PR. No workflow creates branches or PRs. (Creating the branch from the status was rejected: project status changes do not trigger workflows, so it would need polling.)
 - **Rationale:** GitHub issues are the backlog itself, so nothing has to be synchronised, and AI agents can edit them directly. Opening PRs from Actions needs a repository setting the team does not want and a PR with an empty start commit.
-- **Consequences:** Someone with org access must add the `PROJECT_TOKEN` repository secret; until then only the manual run works. If a GitHub branch-name ruleset exists, its pattern must be updated to match `tools/check_pr.py`. ClickUp is no longer updated; old `PB-` ids remain in history and in older docs.
-- **Docs updated:** `CONTRIBUTING.md`, `guidelines/git-workflow.md`, `process/development-process.md`, `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/1-backlog-item.yml`, `.github/labels.yml`, `.github/workflows/issue-start.yml`, `tools/start_task.py`, `tools/check_pr.py`.
+- **Consequences:** Someone with org access must add the `PROJECT_TOKEN` repository secret; until then cards are not moved, but the comment, assignment and PR filling still work. If a GitHub branch-name ruleset exists, its pattern must be updated to match `tools/check_pr.py`. ClickUp is no longer updated; old `PB-` ids remain in history and in older docs.
+- **Docs updated:** `CONTRIBUTING.md`, `guidelines/git-workflow.md`, `process/development-process.md`, `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/1-backlog-item.yml`, `.github/labels.yml`, `.github/workflows/issue-start.yml`, `.github/workflows/pr-fill.yml`, `tools/start_task.py`, `tools/fill_pr.py`, `tools/check_pr.py`.
 - **Course documents affected (for humans):** the Initial Plan names ClickUp as the planning tool (§4.2).
-- **Revisit when:** GitHub lets workflows trigger on project status changes, or the team needs more than one project.
+- **Revisit when:** the team needs more than one project.
 - **Supersedes / Related:** supersedes DEC-028 and the scope rule of DEC-035; related DEC-024, DEC-027, DEC-032.

@@ -1,35 +1,31 @@
-# When an issue moves to "In progress" on the GitHub project, create its work branch
-# (<type>/<issue>-<short-description>). It never opens a pull request: the developer opens
-# it after the first push. tools/start_task.py, docs/guidelines/git-workflow.md
+# When a work branch is created (<type>/<issue>-<short-description>, or <issue>-<short-description>
+# from the issue's "Create a branch" button), mark its issue as started at once: move the card to
+# "In progress" on the GitHub project, assign the branch creator if nobody is assigned, and
+# comment the checkout command. It never creates branches or pull requests.
+# tools/start_task.py, docs/guidelines/git-workflow.md
 #
-# Project status changes do not trigger workflows, so this polls the project every 10 minutes.
-# Needs the PROJECT_TOKEN secret: a token that can read the org project and write this repo
-# (classic: `repo` + `read:project`; fine-grained: Contents read/write, Issues read/write and
-# organization Projects read). Without it, only the manual run with an issue number works.
+# Moving the card needs the PROJECT_TOKEN secret: a token that can edit the org project
+# (classic: `project`; fine-grained: organization Projects read/write). Without it the other
+# steps still run.
 name: Issue start
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"
-  workflow_dispatch:
-    inputs:
-      issue:
-        description: Issue number to start now (leave empty to check the project)
-        required: false
+  create:
 
 permissions:
-  contents: write
+  contents: read
   issues: write
 
 concurrency:
-  group: issue-start
+  group: issue-start-${{ github.ref }}
 
 jobs:
   start:
+    if: github.event.ref_type == 'branch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Create branches for issues in progress
+      - name: Mark the branch's issue as started
         run: python3 tools/start_task.py
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -37,4 +33,5 @@ jobs:
           PROJECT_OWNER: team1-sp
           PROJECT_NUMBER: "3"
           STATUS_NAME: In progress
-          ISSUE_NUMBER: ${{ inputs.issue }}
+          BRANCH: ${{ github.event.ref }}
+          ACTOR: ${{ github.actor }}

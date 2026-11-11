@@ -6,17 +6,9 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
 
 The backlog is the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050). Epics (`EP-xx`) and user stories (`US-x.y`) come from the SRS; each story is a sub-issue of its epic, and its functional requirements are its acceptance criteria.
 
-1. On the project board, move your story to **In progress**.
-2. Within about 10 minutes, the **Issue start** workflow creates the branch, links it to the issue and comments the checkout command:
-
-   ```
-   git fetch origin
-   git switch feat/41-run-every-simulation-tick-in-a-fixed
-   ```
-
-   To get the branch at once, run **Issue start** from the Actions tab with the issue number. Branch names follow `<type>/<issue>-<short-description>`, lowercase, words joined with `-`. You can also create the branch yourself with the same pattern.
-   Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`.
-3. Commit and push to that branch, then open the pull request yourself (as a draft until CI is green) with `Closes #<issue>` in its description. The workflow never opens pull requests.
+1. Create the branch for your issue. Either press **Create a branch** under **Development** on the issue (GitHub names it `<issue>-<title>` and links it to the issue), or push one yourself named `<type>/<issue>-<short-description>`, for example `feat/41-run-every-simulation-tick`. Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`. Lowercase, words joined with `-`.
+2. The **Issue start** workflow reacts at once: it moves the card to **In progress** on the project, assigns you if nobody is assigned, and comments the checkout command on the issue.
+3. Commit and push, then open the pull request (as a draft until CI is green). The **PR fill** workflow adds `Closes #<issue>`, the issue's labels, milestone and assignees, and a title like `feat(US-1.1): Run every simulation tick in a fixed phase order` if yours is not a Conventional Commit. No workflow creates branches or pull requests for you.
 
 ## Pull requests
 

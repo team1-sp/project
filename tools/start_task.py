@@ -1,29 +1,25 @@
-"""Create the work branch for issues that moved to "In progress" on the GitHub project.
+"""React to a new work branch: mark its issue as started.
 
-Runs from .github/workflows/issue-start.yml. It only creates branches; developers open
-their own pull requests. Rules: docs/guidelines/git-workflow.md
+Runs from .github/workflows/issue-start.yml on every branch creation. The branch name carries
+the issue number: <type>/<issue>-<short-description> (feat/41-run-every-simulation-tick), or
+<issue>-<short-description> as GitHub's "Create a branch" button names it. Other branches are
+skipped. Rules: docs/guidelines/git-workflow.md
 
-Two ways in:
-- Scheduled or manual run without an issue number: reads the project (PROJECT_OWNER,
-  PROJECT_NUMBER) with PROJECT_TOKEN and starts every open issue of this repository whose
-  Status is STATUS_NAME ("In progress") and that has no branch yet.
-- Manual run with ISSUE_NUMBER: starts that one issue, whatever its project status.
-
-Branch name: <type>/<issue number>-<short description>, e.g. feat/41-run-every-simulation-tick.
-With PROJECT_TOKEN the branch is created as a linked branch, so it shows under the issue's
-Development section. Without it the branch is created with GITHUB_TOKEN and is not linked.
+For that issue it:
+- moves the issue's card on the GitHub project to STATUS_NAME ("In progress"), unless the card
+  is already further along (needs PROJECT_TOKEN; skipped without it),
+- assigns the person who created the branch when nobody is assigned,
+- comments on the issue with the branch and the checkout command.
+It never creates branches or pull requests.
 """
 import json
 import os
 import re
 import subprocess
 import sys
-import unicodedata
 
-SRS_ID = re.compile(r"^\s*(US-\d+(\.\d+)*|EP-\d+)(\s*\(in part\))?\s*", re.IGNORECASE)
-TURKISH = str.maketrans("ıİşŞğĞüÜöÖçÇ", "iIsSgGuUoOcC")
-MAX_SLUG = 40
-SKIP_LABELS = {"type:epic"}  # epics are tracked through their stories, never worked on directly
+BRANCH_ISSUE = re.compile(r"^(?:[a-z]+/)?(\d+)-[a-z0-9]")
+EARLY_STATUSES = {"", "backlog", "ready", "todo", "to do"}  # statuses a new branch may move on from
 
 
 def gh(*args, body=None, token=None):
@@ -41,69 +37,39 @@ def gh(*args, body=None, token=None):
 
 
 def graphql(query, token, **variables):
-    body = {"query": query, "variables": variables}
-    data = gh("graphql", body=body, token=token)
+    data = gh("graphql", body={"query": query, "variables": variables}, token=token)
     if data.get("errors"):
         raise RuntimeError(f"GraphQL error: {data['errors']}")
     return data["data"]
 
 
-def slugify(text):
-    text = SRS_ID.sub("", text)
-    text = unicodedata.normalize("NFKD", text.translate(TURKISH))
-    text = text.encode("ascii", "ignore").decode().lower()
-    words = re.findall(r"[a-z0-9]+", text)
-    slug = ""
-    for word in words:
-        candidate = f"{slug}-{word}" if slug else word
-        if len(candidate) > MAX_SLUG:
-            break
-        slug = candidate
-    return slug or "task"
+def issue_number(branch):
+    match = BRANCH_ISSUE.match(branch)
+    return int(match.group(1)) if match else None
 
 
-def branch_type(labels):
-    if "type:research" in labels or "area:ai-research" in labels:
-        return "research"
-    if "type:bug" in labels:
-        return "fix"
-    if "area:docs" in labels and not labels & {"type:feature", "type:story", "type:bug"}:
-        return "docs"
-    if "area:devops" in labels and "type:story" not in labels:
-        return "ci"
-    return "feat"
-
-
-def branch_name(number, title, labels):
-    return f"{branch_type(labels)}/{number}-{slugify(title)}"
-
-
-def existing_branch(repo, number):
-    """Return a branch already started for this issue (<type>/<number>-...), if any."""
-    pattern = re.compile(rf"^[a-z]+/{number}-")
-    for branch in gh(f"repos/{repo}/branches?per_page=100", "--paginate"):
-        if pattern.match(branch["name"]):
-            return branch["name"]
-    return None
-
-
-PROJECT_ITEMS = """
-query($owner: String!, $number: Int!, $status: String!, $cursor: String) {
+PROJECT = """
+query($owner: String!, $number: Int!) {
   organization(login: $owner) {
     projectV2(number: $number) {
-      items(first: 100, after: $cursor) {
-        pageInfo { hasNextPage endCursor }
+      id
+      field(name: "Status") {
+        ... on ProjectV2SingleSelectField { id options { id name } }
+      }
+    }
+  }
+}"""
+
+ISSUE_ITEMS = """
+query($node: ID!) {
+  node(id: $node) {
+    ... on Issue {
+      projectItems(first: 20) {
         nodes {
-          fieldValueByName(name: $status) {
+          id
+          project { id }
+          fieldValueByName(name: "Status") {
             ... on ProjectV2ItemFieldSingleSelectValue { name }
-          }
-          content {
-            ... on Issue {
-              id number title state
-              repository { nameWithOwner }
-              labels(first: 30) { nodes { name } }
-              linkedBranches(first: 5) { nodes { ref { name } } }
-            }
           }
         }
       }
@@ -111,87 +77,88 @@ query($owner: String!, $number: Int!, $status: String!, $cursor: String) {
   }
 }"""
 
-CREATE_LINKED_BRANCH = """
-mutation($issue: ID!, $repo: ID!, $oid: GitObjectID!, $name: String!) {
-  createLinkedBranch(input: {issueId: $issue, repositoryId: $repo, oid: $oid, name: $name}) {
-    linkedBranch { ref { name } }
+ADD_ITEM = """
+mutation($project: ID!, $content: ID!) {
+  addProjectV2ItemById(input: {projectId: $project, contentId: $content}) { item { id } }
+}"""
+
+SET_STATUS = """
+mutation($project: ID!, $item: ID!, $field: ID!, $option: String!) {
+  updateProjectV2ItemFieldValue(input: {projectId: $project, itemId: $item, fieldId: $field,
+                                        value: {singleSelectOptionId: $option}}) {
+    projectV2Item { id }
   }
 }"""
 
 
-def in_progress_issues(repo, token):
-    owner = os.environ.get("PROJECT_OWNER", repo.split("/")[0])
+def move_to_in_progress(issue_node_id, token):
+    """Set the issue's project Status; return a short note on what happened."""
+    owner = os.environ.get("PROJECT_OWNER", "team1-sp")
     number = int(os.environ.get("PROJECT_NUMBER", "3"))
-    wanted = os.environ.get("STATUS_NAME", "In progress").casefold()
-    cursor = None
-    while True:
-        data = graphql(PROJECT_ITEMS, token, owner=owner, number=number, status="Status",
-                       cursor=cursor)
-        items = data["organization"]["projectV2"]["items"]
-        for node in items["nodes"]:
-            issue = node.get("content") or {}
-            status = (node.get("fieldValueByName") or {}).get("name", "")
-            if (issue.get("number") and issue["repository"]["nameWithOwner"] == repo
-                    and issue["state"] == "OPEN" and status.casefold() == wanted):
-                yield issue
-        if not items["pageInfo"]["hasNextPage"]:
-            return
-        cursor = items["pageInfo"]["endCursor"]
+    wanted = os.environ.get("STATUS_NAME", "In progress")
 
+    project = graphql(PROJECT, token, owner=owner, number=number)["organization"]["projectV2"]
+    field = project["field"]
+    option = next((o["id"] for o in field["options"] if o["name"].casefold() == wanted.casefold()),
+                  None)
+    if not option:
+        raise RuntimeError(f"The project's Status field has no option named '{wanted}'.")
 
-def start(repo, issue, labels, token, linked=()):
-    number, title = issue["number"], issue["title"]
-    if labels & SKIP_LABELS:
-        print(f"Skipping #{number}: epics are worked on through their stories.")
-        return
-    if linked:
-        print(f"Skipping #{number}: already has branch {linked[0]}.")
-        return
-    found = existing_branch(repo, number)
-    if found:
-        print(f"Skipping #{number}: already has branch {found}.")
-        return
-
-    branch = branch_name(number, title, labels)
-    repo_info = gh(f"repos/{repo}")
-    default = repo_info["default_branch"]
-    sha = gh(f"repos/{repo}/git/ref/heads/{default}")["object"]["sha"]
-    if token:
-        graphql(CREATE_LINKED_BRANCH, token, issue=issue["id"], repo=repo_info["node_id"],
-                oid=sha, name=branch)
+    items = graphql(ISSUE_ITEMS, token, node=issue_node_id)["node"]["projectItems"]["nodes"]
+    item = next((i for i in items if i["project"]["id"] == project["id"]), None)
+    if item is None:
+        item_id = graphql(ADD_ITEM, token, project=project["id"],
+                          content=issue_node_id)["addProjectV2ItemById"]["item"]["id"]
+        current = ""
     else:
-        gh("-X", "POST", f"repos/{repo}/git/refs",
-           body={"ref": f"refs/heads/{branch}", "sha": sha})
-
-    gh("-X", "POST", f"repos/{repo}/issues/{number}/comments", body={"body": (
-        f"Branch `{branch}` is ready.\n\n"
-        f"```\ngit fetch origin\ngit switch {branch}\n```\n\n"
-        f"When you open the pull request, put `Closes #{number}` in its description."
-    )})
-    print(f"Created {branch} for #{number}.")
+        item_id = item["id"]
+        current = (item.get("fieldValueByName") or {}).get("name", "")
+    if current.casefold() not in EARLY_STATUSES:
+        return f"left at {current}"
+    graphql(SET_STATUS, token, project=project["id"], item=item_id, field=field["id"],
+            option=option)
+    return f"moved to {wanted}"
 
 
 def main():
     repo = os.environ["GITHUB_REPOSITORY"]
+    branch = os.environ["BRANCH"]
+    actor = os.environ.get("ACTOR", "")
     token = os.environ.get("PROJECT_TOKEN", "").strip() or None
-    one = os.environ.get("ISSUE_NUMBER", "").strip()
 
-    if one:
-        data = gh(f"repos/{repo}/issues/{one}")
-        if data.get("pull_request"):
-            raise RuntimeError(f"#{one} is a pull request, not an issue.")
-        issue = {"number": data["number"], "title": data["title"], "id": data["node_id"]}
-        start(repo, issue, {label["name"] for label in data["labels"]}, token)
+    number = issue_number(branch)
+    if number is None:
+        print(f"Skipping '{branch}': the name carries no issue number.")
+        return
+    try:
+        issue = gh(f"repos/{repo}/issues/{number}")
+    except RuntimeError:
+        print(f"Skipping '{branch}': #{number} does not exist.")
+        return
+    if issue.get("pull_request") or issue["state"] != "open":
+        print(f"Skipping '{branch}': #{number} is not an open issue.")
+        return
+    if any(label["name"] == "type:epic" for label in issue["labels"]):
+        print(f"Skipping '{branch}': #{number} is an epic; work on one of its stories.")
         return
 
-    if not token:
-        print("::notice::PROJECT_TOKEN is not set, so the project cannot be read. "
-              "Add the secret, or run the workflow by hand with an issue number.")
-        return
-    for issue in in_progress_issues(repo, token):
-        labels = {label["name"] for label in issue["labels"]["nodes"]}
-        linked = [b["ref"]["name"] for b in issue["linkedBranches"]["nodes"] if b.get("ref")]
-        start(repo, issue, labels, token, linked)
+    if token:
+        status = move_to_in_progress(issue["node_id"], token)
+    else:
+        status = "not changed (the PROJECT_TOKEN secret is not set)"
+        print(f"::notice::Project status {status}.")
+
+    if not issue["assignees"] and actor and not actor.endswith("[bot]"):
+        gh("-X", "POST", f"repos/{repo}/issues/{number}/assignees", body={"assignees": [actor]})
+
+    gh("-X", "POST", f"repos/{repo}/issues/{number}/comments", body={"body": (
+        f"Work started on branch `{branch}`"
+        + (f" by @{actor}" if actor else "") + f". Project status: {status}.\n\n"
+        f"```\ngit fetch origin\ngit switch {branch}\n```\n\n"
+        "When you open the pull request, its title, `Closes` line, labels and milestone are "
+        "filled in from this issue."
+    )})
+    print(f"#{number}: status {status}.")
 
 
 if __name__ == "__main__":
