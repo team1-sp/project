@@ -3,8 +3,7 @@
 Append to `history/decision-log.md` (and add a row to its index table). **Humans decide; agents consult.** Pick the status with the table in [../playbooks/record-decision.md](../playbooks/record-decision.md#proposed-or-accepted) (DEC-052):
 
 - `Proposed`: you asked the human in the conversation (`DECISION NEEDED`, `Q-###`) and are still waiting for the answer.
-- `Accepted` with `Approval: conversation`: the human answered in the conversation (record who, when, their words).
-- `Accepted` with `Approval: review of PR #<n>`: the entry is part of a pull request and is listed under "Decisions for review" in its body. The reviewer treats it as proposed; it binds only when a human merges the PR. If the reviewer rejects or changes it, fix the entry on the branch before the merge.
+- `Accepted`: the human answered in the conversation (record who, when, their words), **or** the entry is part of your pull request and is listed under "Decisions for review" in its body. In the second case the reviewer treats it as proposed and it binds only when a human merges the PR; if the reviewer rejects or changes it, fix the entry on the branch before the merge. No marker says which case it was, so nothing has to change at merge.
 
 After `Accepted`, run [../playbooks/record-decision.md](../playbooks/record-decision.md) so every document agrees.
 
@@ -14,9 +13,8 @@ Never delete or rewrite an entry once it is on `main`. Until its pull request is
 ### DEC-### — Decision title (a statement, not a question)
 - **Date:** YYYY-MM-DD
 - **Status:** Proposed | Accepted | Rejected | Superseded by DEC-###
-- **Decided by:** <human name(s); for `review of PR #<n>`, the human whose choice it is, or "the PR reviewer" when the PR puts it up for review>   **Recorded by:** <agent-id or human>
-- **Approval:** conversation | review of PR #<n> (binds when a human merges the PR) (omit while Proposed)
-- **Human's words:** "<short quote or faithful paraphrase of the decision>" (omit while Proposed, and when the approval is the PR review and nobody chose it in the conversation)
+- **Decided by:** <human name(s): who chose it in the conversation, or the PR's reviewer when the PR is the first time a human sees it>   **Recorded by:** <agent-id or human>
+- **Human's words:** "<short quote or faithful paraphrase of the decision>" (omit while Proposed, and when nobody chose it in the conversation)
 - **Context:** the situation and forces. Link tasks / questions / requirement IDs (reference only).
 - **Options considered:**
   1. Option A — pros / cons

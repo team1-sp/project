@@ -81,9 +81,9 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 ## Phase 4 — Record (mandatory, even if the work failed)
 
 19. **Problem hit and solved?** → append an entry to `history/problem-log.md` using [templates/problem-entry.md](templates/problem-entry.md). Include the exact error text so future searches find it.
-20. **Human made a decision this session?** → [playbooks/record-decision.md](playbooks/record-decision.md): log it `Accepted` with `Approval: conversation` (with who decided, when, and their words), propagate to all documents.
+20. **Human made a decision this session?** → [playbooks/record-decision.md](playbooks/record-decision.md): log it `Accepted` (with who decided, when, and their words), propagate to all documents.
 21. **You think a decision is needed but the human has not decided?** → put the `DECISION NEEDED` block in your reply, log it `Proposed` (so it is visible) and add a `Q-###` in `open-questions.md`. A `Proposed` entry binds nobody. When the human answers, it becomes `Accepted`.
-21a. **Your change carries a decision nobody had to answer first** (a name, a layout, how a module reads an SRS rule)? → log it `Accepted` with `Approval: review of PR #<n>` and list it under "Decisions for review" in the PR body. The reviewer approves or rejects it with the rest of the diff, and it binds only once a human merges the PR (DEC-052). This saves a follow-up commit; it is not permission to decide open choices yourself (P-3, P-4).
+21a. **Your change carries a decision nobody had to answer first** (a name, a layout, how a module reads an SRS rule)? → log it `Accepted` and list it under "Decisions for review" in the PR body. The reviewer approves or rejects it with the rest of the diff, and it binds only once a human merges the PR (DEC-052). This saves a follow-up commit; it is not permission to decide open choices yourself (P-3, P-4).
 22. **AI-generated text for a course deliverable?** → append to `history/genai-usage-log.md` (see [guidelines/genai-usage-rules.md](../guidelines/genai-usage-rules.md)).
 23. **Docs affected?** Update the architecture/design/testing doc that your change made wrong. A change that makes a doc lie is not done.
 24. Update the task on the board (`Review` or `Done` or `Blocked`) with a one-paragraph result.

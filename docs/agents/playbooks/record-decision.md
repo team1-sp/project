@@ -9,7 +9,7 @@ Principle: the decision log is the single source of truth. A decision is finishe
 | Action | Human | Agent |
 | --- | --- | --- |
 | Decide | Yes | **No** — agents consult: present uncertainty, options, recommendation |
-| Write the entry as `Accepted` | Yes | **Yes, but only for a decision a human approves**: one they made in the conversation (cite who, when, their words), or one the agent's pull request puts up for review (`Approval: review of PR #<n>`, see below) |
+| Write the entry as `Accepted` | Yes | **Yes, but only for a decision a human approves**: one they made in the conversation (cite who, when, their words), or one the agent's pull request lists under "Decisions for review" (see below) |
 | Write a `Proposed` entry | Yes | Yes, while waiting for the human's answer in the conversation (binds nobody) |
 | Edit course documents (`senior-project/docs/`) | Yes | No (S-3) — list them for humans |
 
@@ -19,13 +19,13 @@ If you are not sure the human actually *decided* (vs. "maybe", "I think", "proba
 
 DEC-052. Every decision needs a human's approval; the status only says **where** that approval happens. The pull request review is an approval step like the conversation: the reviewer treats every new entry in a PR as proposed, and asks for a change or rejects it like any other part of the diff. Writing the entry `Accepted` on the branch means that when the reviewer agrees, merging the PR is enough, with no extra commit to flip `Proposed` to `Accepted`. **It does not let an agent decide.** Whatever is open still goes to the human (P-3, P-4); nothing an agent chose binds anyone before a human merges it.
 
-| Situation | Status | `Approval` field |
-| --- | --- | --- |
-| You asked in the conversation (`DECISION NEEDED`, `Q-###`) and the human has not answered yet | `Proposed` | (none) |
-| The human answered in the conversation | `Accepted` | `conversation` (with who, when, their words) |
-| The decision is part of your pull request, and the PR body lists it under "Decisions for review" | `Accepted` | `review of PR #<n>` (binds when a human merges the PR) |
-| A reviewer rejects it, or asks for a different choice | Change or remove the entry on the branch and push again (it is not on `main` yet, so this is not a rewrite of history). Add a `Rejected` entry only when the reason is worth keeping so nobody raises it again | |
-| The PR is opened while a question is still open in the conversation | `Proposed`, and the PR body says so; the human answers before the merge, or merges knowing it stays `Proposed` | |
+| Situation | Status |
+| --- | --- |
+| You asked in the conversation (`DECISION NEEDED`, `Q-###`) and the human has not answered yet | `Proposed` |
+| The human answered in the conversation | `Accepted` (with who, when, their words) |
+| The decision is part of your pull request, and the PR body lists it under "Decisions for review" | `Accepted` (binds when a human merges the PR; the reviewer reads it as proposed) |
+| A reviewer rejects it, or asks for a different choice | Change or remove the entry on the branch in a new commit (it is not on `main` yet, so this is not a rewrite of history). Add a `Rejected` entry only when the reason is worth keeping so nobody raises it again |
+| The PR is opened while a question is still open in the conversation | `Proposed`, and the PR body says so; the human answers before the merge, or merges knowing it stays `Proposed` |
 
 Rules for the review route:
 
@@ -37,7 +37,7 @@ Rules for the review route:
 
 1. **Capture the decision exactly.** Who decided, when, in what words, what it replaces. Quote them (short).
 2. **Check for contradictions with other `Accepted` decisions.** If the new decision conflicts with one, supersede it explicitly (step 4) rather than leaving two truths.
-3. **Write the entry** in `history/decision-log.md` from [../templates/decision-entry.md](../templates/decision-entry.md) with status `Accepted`, `Decided by`, `Approval`, the quote, and a `Docs updated` list (filled at step 6). Add it to the index.
+3. **Write the entry** in `history/decision-log.md` from [../templates/decision-entry.md](../templates/decision-entry.md) with status `Accepted`, `Decided by`, the quote, and a `Docs updated` list (filled at step 6). Add it to the index.
 4. **Supersede.** For each entry the new decision replaces, change its status line to `Superseded by DEC-###` (the only status edit allowed; you may also append a dated line to its `Amendments` field — e.g. a human later supplies the rationale or a pinned version — but never change what was decided). Resolved `Proposed` entries become `Accepted` or `Rejected` (with the human's reason).
 5. **Find everything that depends on the old belief.** Search the repo docs for the old term and for the topic (e.g. old technology names, `[TBD]` markers, "Q-###" references, the old rule text). Check at least:
    - `architecture/` (tech-stack, overview, layer docs, glossary)
@@ -64,7 +64,7 @@ Human: "Physics library is Box2D."
 ## Checklist
 
 ```
-[ ] Quote, decider and approval recorded   [ ] Index row added
+[ ] Quote and decider recorded      [ ] Index row added
 [ ] Review-route entries listed under "Decisions for review" in the PR
 [ ] Conflicting/old entries superseded
 [ ] All project docs/state/tasks updated (list in "Docs updated")
