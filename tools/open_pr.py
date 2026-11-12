@@ -8,9 +8,7 @@ approved commit is pushed; DEC-054):
 The branch name carries the story id or issue number (tools/issue_ref.py). From that issue the
 PR gets a `Closes #<issue>` line, the issue's labels (not `type:epic`), its milestone, its
 assignees (or you), and a Conventional Commit title `<type>(<story id or #issue>): <issue title>`
-unless --title is given. A docs, ci or chore branch may have no issue (DEC-056): its PR gets no
-`Closes` line and the title `<type>: <branch description>` unless --title is given. The body is
---body-file, or the PR template. GitHub cannot open a PR
+unless --title is given. The body is --body-file, or the PR template. GitHub cannot open a PR
 for a branch with no commits beyond main, so push a commit first. If the branch already has an
 open PR, it prints that PR and does nothing. Needs the GitHub CLI (`gh`), signed in.
 Rules: docs/guidelines/git-workflow.md
@@ -22,7 +20,7 @@ import re
 import subprocess
 import sys
 
-from issue_ref import branch_type, find_issue, may_skip_issue
+from issue_ref import find_issue, parse
 
 TYPES = ("feat", "fix", "test", "refactor", "perf", "docs", "build", "ci", "chore", "research",
          "revert")
@@ -64,20 +62,14 @@ def title_for(kind, issue_number, issue_title):
 
 
 def body_for(number, body):
-    """Put `Closes #<number>` in the body (replacing the template's placeholder line), or drop
-    the placeholder line when there is no issue."""
+    """Put `Closes #<number>` in the body: replace the template's placeholder line, else prepend."""
     if CLOSES.search(body):
         return body
     lines = body.splitlines()
     for i, line in enumerate(lines):
         if line.startswith("Closes #"):
-            if number is None:
-                del lines[i]
-            else:
-                lines[i] = f"Closes #{number}"
-            return "\n".join(lines).lstrip("\n") + "\n"
-    if number is None:
-        return body
+            lines[i] = f"Closes #{number}"
+            return "\n".join(lines) + "\n"
     return f"Closes #{number}\n\n{body}".rstrip() + "\n"
 
 
@@ -95,21 +87,13 @@ def main():
         print(f"Branch '{branch}' already has PR #{existing[0]['number']}: {existing[0]['url']}")
         return
 
-    kind = branch_type(branch)
     issue = find_issue(gh, repo, branch)
-    if issue is None and not may_skip_issue(branch):
-        raise RuntimeError(f"No issue found for branch '{branch}' (see docs/guidelines/git-workflow.md).")
     if issue is None:
-        number, labels, milestone, assignees = None, [], None, ["@me"]
-        description = branch.partition("/")[2].replace("-", " ")
-        description = re.sub(r"^\d+ ", "", description)
-        title = args.title or f"{kind}: {description[:1].upper()}{description[1:]}"
-    else:
-        number = issue["number"]
-        labels = [label["name"] for label in issue["labels"] if label["name"] != "type:epic"]
-        milestone = issue["milestone"]["title"] if issue.get("milestone") else None
-        assignees = [a["login"] for a in issue["assignees"]] or ["@me"]
-        title = args.title or title_for(type_from(kind, set(labels)), number, issue["title"])
+        raise RuntimeError(f"No issue found for branch '{branch}' (see docs/guidelines/git-workflow.md).")
+    number = issue["number"]
+    labels = [label["name"] for label in issue["labels"] if label["name"] != "type:epic"]
+
+    title = args.title or title_for(type_from(parse(branch)[0], set(labels)), number, issue["title"])
     if not CONVENTIONAL.match(title):
         raise RuntimeError(f"Title is not a Conventional Commit: {title!r}")
     source = args.body_file if args.body_file else TEMPLATE
@@ -119,14 +103,15 @@ def main():
            "--title", title, "--body-file", "-"]
     for label in labels:
         cmd += ["--label", label]
-    if milestone:
-        cmd += ["--milestone", milestone]
+    if issue.get("milestone"):
+        cmd += ["--milestone", issue["milestone"]["title"]]
+    assignees = [a["login"] for a in issue["assignees"]] or ["@me"]
     for person in assignees:
         cmd += ["--assignee", person]
     result = subprocess.run(cmd, input=body, capture_output=True, text=True, encoding="utf-8")
     if result.returncode != 0:
         raise RuntimeError(f"gh pr create failed: {result.stderr.strip()}")
-    print(f"Opened draft PR{f' for #{number}' if number else ''}: {result.stdout.strip()}")
+    print(f"Opened draft PR for #{number}: {result.stdout.strip()}")
 
 
 if __name__ == "__main__":

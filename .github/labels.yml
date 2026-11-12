@@ -44,4 +44,4 @@
 - {name: "priority:low", color: "c2e0c6", description: "Low priority"}
 - {name: "blocked", color: "000000", description: "Waiting on something outside this issue"}
 - {name: "needs-decision", color: "f9d0c4", description: "Needs a team decision before work continues"}
-- {name: "no-issue", color: "ededed", description: "PR without a linked issue, outside docs/ci/chore branches (which need none)"}
+- {name: "no-issue", color: "ededed", description: "PR without a linked issue (chore/ci only)"}

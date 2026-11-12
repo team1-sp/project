@@ -295,4 +295,3 @@
 - **Next:** someone with admin rights checks that the label-sync workflow created `needs-sync` after the merge.
 - **Traps:** a PR opened by a workflow with `GITHUB_TOKEN` triggers no other workflows; that is one reason no workflow opens PRs.
 - **Records:** DEC-052, DEC-053, DEC-054, DEC-055 (all Accepted by Işık Dönger in the conversation on 2026-11-12, except the conflict flag of DEC-055, approved in the review); DEC-025 superseded; DEC-050 amended.
-- **Addendum (same day):** docs, ci and chore branches may go without an issue (`ci/<short-description>`, no `Closes`, title without scope; DEC-056). The `branch-names` ruleset pattern still has to be updated by an admin.

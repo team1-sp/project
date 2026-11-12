@@ -17,12 +17,11 @@ Branch names (DEC-050), lowercase, words joined with `-`, one branch per user st
 - `<type>/us-<x.y>-<short-description>` for an SRS user story, for example `feat/us-15.2-build-settings-file-menu`.
 - `<type>/<issue>-<short-description>` for any other issue, for example `fix/142-door-opens-without-key`.
 - `<type>/pb-<nnn>-…` stays valid for branches started before DEC-050.
-- `docs/<short-description>`, `ci/<short-description>` or `chore/<short-description>` for documentation, pipeline or tooling work that has no issue (DEC-056), for example `ci/update-agent-workflow`. Its PR needs no `Closes` line and its title has no scope: `ci: Update the agent workflow`. These types may still use an issue when there is one.
 
 `tools/issue_ref.py` (used by `tools/check_pr.py`) and the repository's `branch-names` ruleset enforce this pattern:
 
 ```
-^((feat|fix|test|refactor|docs|ci|chore|research)/(us-[0-9]+\.[0-9]+|[0-9]+|pb-[0-9]{3}(\.[0-9]+)?)-[a-z0-9]+(-[a-z0-9]+)*|(docs|ci|chore)/[a-z][a-z0-9]*(-[a-z0-9]+)*)$
+^(feat|fix|test|refactor|docs|ci|chore|research)/(us-[0-9]+\.[0-9]+|[0-9]+|pb-[0-9]{3}(\.[0-9]+)?)-[a-z0-9]+(-[a-z0-9]+)*$
 ```
 
 | Type | Use for |
@@ -57,7 +56,7 @@ Types: `feat`, `fix`, `test`, `refactor`, `perf`, `docs`, `build`, `ci`, `chore`
 
 ## 3. Pull requests
 
-- Body: `Closes #<issue>` (not needed on a `docs/`, `ci/` or `chore/` branch without an issue, DEC-056; elsewhere the `no-issue` label is the exception), what and why, how it was verified, docs updated, and the Definition of Done checklist (template in `.github/pull_request_template.md`).
+- Body: `Closes #<issue>` (or the `no-issue` label for chore/ci), what and why, how it was verified, docs updated, and the Definition of Done checklist (template in `.github/pull_request_template.md`).
 - Open as a draft early; mark ready for review when CI is green. Keep PRs under about 400 changed lines.
 - Review: 1 approval from a code owner (`.github/CODEOWNERS`, DEC-032). The only code owners are Işık Dönger and the advisor, Leyla Sezer (`@leylasezer196`), so every other member's PR needs one of them. Area teammates are listed in CODEOWNERS as people to ask for a review; their approval does not count toward merging. Işık's own PRs need no approval: repository admins merge them through the ruleset's PR bypass. Review practice: `process/code-review.md`.
 - All CI green (`ci-ok`) and conversations resolved before merging. The author squash-merges; the issue closes and moves to Done on the project.
@@ -101,5 +100,4 @@ Increment deliverables get an annotated tag `inc-1`, `inc-2`, `final` on `main`,
 | 2026-10-24 | PR title scope is the PB id: `<type>(PB-<nnn>): …` (DEC-035) | claude-code (PB-002 session) |
 | 2026-10-27 | Only `fix/` branches may use a bare issue number; pattern written out | claude-code |
 | 2026-11-11 | GitHub Projects replaces ClickUp: issue-number branches, story-id PR scopes; creating a branch moves the card to In progress and new PRs are filled from the issue (DEC-050) | claude (issue #126) |
-| 2026-11-12 | `docs/`, `ci/` and `chore/` branches may have no issue: `ci/<short-description>`, PR title without scope (DEC-056) | claude (ci/131) |
 | 2026-11-12 | Agents ask before committing instead of before pushing (DEC-053); `tools/open_pr.py` opens the filled draft PR and the PR fill workflow is removed (DEC-054); merge-conflict rules, `check_ids.py` and the `needs-sync` flag (DEC-055) | claude (ci/131) |

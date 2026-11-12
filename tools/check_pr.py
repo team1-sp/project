@@ -7,7 +7,7 @@ import os
 import re
 import sys
 
-from issue_ref import BRANCH, may_skip_issue  # noqa: E402  (same folder; rules in issue_ref.py)
+from issue_ref import BRANCH  # noqa: E402  (same folder; rules in issue_ref.py)
 EXEMPT_PREFIXES = ("dependabot/",)
 CLOSES = re.compile(r"\b(close[sd]?|fix(e[sd])?|resolve[sd]?) #\d+", re.IGNORECASE)
 
@@ -25,14 +25,13 @@ def main():
             f"Branch '{branch}' does not match <type>/us-<x.y>-<short-description> for a "
             "user story (feat/us-15.2-build-settings-file-menu) or "
             "<type>/<issue>-<short-description> for other issues (fix/142-door-opens), "
-            "or docs|ci|chore/<short-description> for work without an issue "
-            "(ci/update-agent-workflow), all lowercase. "
+            "all lowercase. "
             "Types: feat, fix, test, refactor, docs, ci, chore, research."
         )
-    if not CLOSES.search(body) and "no-issue" not in labels and not may_skip_issue(branch):
+    if not CLOSES.search(body) and "no-issue" not in labels:
         errors.append(
-            "The PR body has no 'Closes #<issue>'. Link the issue; only docs, ci and chore "
-            "branches (or a PR with the no-issue label) may go without one."
+            "The PR body has no 'Closes #<issue>'. Link the issue, or add the "
+            "no-issue label for a chore/ci PR without one."
         )
 
     for error in errors:

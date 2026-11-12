@@ -6,7 +6,7 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
 
 The backlog is the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050). Epics (`EP-xx`) and user stories (`US-x.y`) come from the SRS; each story is a sub-issue of its epic, and its functional requirements are its acceptance criteria.
 
-1. Create the branch for your issue, from **Development → Create a branch** on the issue (edit the suggested name) or by pushing it. Name it after the story: `<type>/us-<x.y>-<short-description>`, for example `feat/us-15.2-build-settings-file-menu`. For an issue that is not a story (a bug, a chore), use its number: `fix/142-door-opens-without-key`. Documentation, pipeline and tooling work needs no issue: name the branch `docs/…`, `ci/…` or `chore/…` with a short description (`ci/update-agent-workflow`), leave out `Closes`, and title the PR without a scope (`ci: Update the agent workflow`) (DEC-056). Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`. Lowercase, words joined with `-`; one branch per story. The `branch-names` ruleset rejects other names.
+1. Create the branch for your issue, from **Development → Create a branch** on the issue (edit the suggested name) or by pushing it. Name it after the story: `<type>/us-<x.y>-<short-description>`, for example `feat/us-15.2-build-settings-file-menu`. For an issue that is not a story (a bug, a chore), use its number: `fix/142-door-opens-without-key`. Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`. Lowercase, words joined with `-`; one branch per story. The `branch-names` ruleset rejects other names.
 2. The **Issue start** workflow reacts at once. If the story is still blocked by open issues, it only comments which ones and leaves the card alone. Otherwise it moves the card to **In progress** on the project, assigns you if nobody is assigned, and comments the checkout command on the issue.
 3. Commit and push, then run `python tools/open_pr.py` on the branch. It opens a draft PR with `Closes #<issue>`, the issue's labels, milestone and assignees, and a title like `feat(US-1.1): Run every simulation tick in a fixed phase order` (DEC-054). GitHub needs at least one commit before a PR can exist. No workflow creates branches, commits or pull requests for you.
 4. Keep the branch in step with `main`: merge `origin/main` into it (no rebase) before each push and before asking for review, and whenever the PR gets the `needs-sync` label. Rules for resolving conflicts: [git-workflow.md §4](docs/guidelines/git-workflow.md#4-merge-conflicts) (DEC-055).
@@ -14,7 +14,7 @@ The backlog is the [GitHub project](https://github.com/orgs/team1-sp/projects/3)
 ## Pull requests
 
 - The PR title is a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/) and becomes the commit on `main`:
-  `feat(US-1.1): Run every simulation tick in a fixed phase order`. The scope is the story id, or the issue number for other issues: `fix(#142): Door opens without the key` (DEC-050). A docs, ci or chore PR without an issue has no scope (DEC-056).
+  `feat(US-1.1): Run every simulation tick in a fixed phase order`. The scope is the story id, or the issue number for other issues: `fix(#142): Door opens without the key` (DEC-050).
 - Keep PRs under about 400 changed lines.
 - Fill in the PR template, including how you verified the change.
 - Mark the PR **ready for review** when CI is green. Reviewers come from [.github/CODEOWNERS](.github/CODEOWNERS).

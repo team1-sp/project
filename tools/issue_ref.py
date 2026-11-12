@@ -4,17 +4,13 @@ Branch names (docs/guidelines/git-workflow.md):
 - <type>/us-<x.y>-<short-description> for an SRS user story, e.g. feat/us-15.2-build-settings
 - <type>/<issue>-<short-description> for any other issue, e.g. fix/142-door-opens-without-key
 - <type>/pb-<nnn>-<short-description>, the old ClickUp form (no issue lookup)
-- docs/<short-description>, ci/<short-description>, chore/<short-description> for work that
-  needs no issue (DEC-056), e.g. ci/update-agent-workflow
 """
 import re
 
 TYPES = ("feat", "fix", "test", "refactor", "docs", "ci", "chore", "research")
-NO_ISSUE_TYPES = ("docs", "ci", "chore")  # may work without an issue (DEC-056)
 # Keep in sync with the "branch-names" ruleset of the repository.
 BRANCH = re.compile(
-    rf"^(({'|'.join(TYPES)})/(us-\d+\.\d+|\d+|pb-\d{{3}}(\.\d+)?)-[a-z0-9]+(-[a-z0-9]+)*"
-    rf"|({'|'.join(NO_ISSUE_TYPES)})/[a-z][a-z0-9]*(-[a-z0-9]+)*)$"
+    rf"^({'|'.join(TYPES)})/(us-\d+\.\d+|\d+|pb-\d{{3}}(\.\d+)?)-[a-z0-9]+(-[a-z0-9]+)*$"
 )
 REF = re.compile(rf"^({'|'.join(TYPES)})/(?:us-(\d+\.\d+)|(\d+))-")
 
@@ -27,17 +23,6 @@ def parse(branch):
     story = f"US-{match.group(2)}" if match.group(2) else None
     number = int(match.group(3)) if match.group(3) else None
     return match.group(1), story, number
-
-
-def branch_type(branch):
-    """Return the type before the slash (`ci` for ci/update-agent-workflow), or None."""
-    head, sep, _ = branch.partition("/")
-    return head if sep and head in TYPES else None
-
-
-def may_skip_issue(branch):
-    """True for docs, ci and chore branches, which need no issue (DEC-056)."""
-    return branch_type(branch) in NO_ISSUE_TYPES
 
 
 def find_issue(gh, repo, branch):
