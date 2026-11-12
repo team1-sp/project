@@ -1,0 +1,31 @@
+# Marks open pull requests that conflict with main (DEC-055): after a merge to main every open
+# PR is checked, and a push to a PR branch re-checks that PR. A conflicting PR gets the
+# `needs-sync` label and one comment; the label is removed once the branch merges main.
+# It never pushes, merges or resolves anything. tools/flag_conflicts.py
+name: Conflict flag
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: conflict-flag-${{ github.event.pull_request.number || 'main' }}
+
+jobs:
+  flag:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Label PRs that conflict with main
+        run: python3 tools/flag_conflicts.py
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}

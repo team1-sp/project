@@ -2,8 +2,8 @@
 
 **Append-only. This log is the single source of truth.** Every architectural, technological, scope or process decision, with rationale, so nobody has to re-argue it. Where any other document (including the course documents under `senior-project/docs/`) disagrees with an `Accepted` entry here, this log wins and the other document must be updated (project docs) or flagged for humans (course docs). Template: [../agents/templates/decision-entry.md](../agents/templates/decision-entry.md). Procedure: [../agents/playbooks/record-decision.md](../agents/playbooks/record-decision.md).
 
-Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejected` · `Superseded by DEC-###`.
-**Humans decide; agents consult.** An entry is `Accepted` only because a human decided it (see `Decided by`). Agents may write `Accepted` solely to record an explicit human decision. To reverse a decision, add a new entry that supersedes it.
+Statuses: `Proposed` (a question is open in the conversation and nobody has answered it yet; binds nobody) · `Accepted` (binding) · `Rejected` · `Superseded by DEC-###`.
+**Humans decide; agents consult.** An entry is `Accepted` only because a human decided it (see `Decided by`). A human approves a decision in one of two places (DEC-052): in the conversation, or in the review of the pull request that adds the entry. An entry added in a pull request is written `Accepted` from the start: the reviewer treats it as proposed, and it binds only once a human merges the PR. On `main`, `Accepted` therefore always means a human approved it, in the conversation or in the review. Writing it `Accepted` saves the extra commit that would otherwise flip `Proposed` to `Accepted` after approval; it does not let an agent decide anything. To reverse a decision, add a new entry that supersedes it.
 
 ## Index
 
@@ -33,7 +33,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-022 | One repository for code and engineering docs; `team1-sp/docs` holds course deliverables only | Accepted | 2026-10-15 |
 | DEC-023 | Build system CMake, test framework GoogleTest | Accepted | 2026-10-15 |
 | DEC-024 | Işık Dönger reviews every PR; area owners are second code owners | Accepted | 2026-10-15 |
-| DEC-025 | AI agents push only after a human approves; humans approve and merge every PR | Accepted | 2026-10-15 |
+| DEC-025 | AI agents push only after a human approves; humans approve and merge every PR | Superseded by DEC-053 | 2026-10-15 |
 | DEC-026 | The semantic layer lives in its own top-level folder, separate from engine and ai-services | Accepted | 2026-10-15 |
 | DEC-027 | Trunk-based git workflow; branch protection deferred, rules kept as a team agreement | Accepted | 2026-10-15 |
 | DEC-028 | GitHub issues are created from ClickUp tasks with ClickUp's GitHub integration | Superseded by DEC-050 | 2026-10-15 |
@@ -60,6 +60,10 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-049 | PB-025: the physics interface is named `IPhysicsAdapter`; bodies are addressed by `BodyId` with `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core` | Accepted | 2026-11-11 |
 | DEC-050 | The backlog moves from ClickUp to one GitHub project built from the SRS; branches use the issue number, PR scopes the story id; creating a branch moves its card to In progress, new PRs are filled from the issue, and no workflow creates branches or PRs | Accepted | 2026-11-11 |
 | DEC-051 | US-1.1: a render frame collects input first, through `IWindow::collectInput()`; raylib is built with `SUPPORT_CUSTOM_FRAME_CONTROL` so that `RaylibWindow` polls, presents and caps the frame rate itself | Accepted | 2026-11-12 |
+| DEC-052 | A decision is `Proposed` only while its question waits for an answer in the conversation; a decision a PR carries is written `Accepted`, listed for review, and binds only when a human merges the PR | Accepted | 2026-11-12 |
+| DEC-053 | AI agents commit only after a human approves the change; after that they push and open or update the draft PR without asking again; humans approve and merge every PR | Accepted | 2026-11-12 |
+| DEC-054 | Agents (and developers) open the draft PR with `tools/open_pr.py` after the first push; the PR fill workflow is removed; no workflow creates commits or PRs | Accepted | 2026-11-12 |
+| DEC-055 | Branches keep in step with `main` by merging it (never rebasing) before each push and before review; collided record ids are renumbered by the later branch and caught by `check_ids.py`; the `Conflict flag` workflow labels open PRs that conflict with `main` | Accepted | 2026-11-12 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -311,7 +315,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-025 — AI agents push only after a human approves
 - **Date:** 2026-10-15
-- **Status:** Accepted
+- **Status:** Superseded by DEC-053
 - **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
 - **Human's words:** "AI agents should only push from a human aprrovement."
 - **Context:** Q-006.
@@ -704,6 +708,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** the Initial Plan names ClickUp as the planning tool (§4.2).
 - **Revisit when:** the team needs more than one project.
 - **Supersedes / Related:** supersedes DEC-028 and the scope rule of DEC-035; related DEC-024, DEC-027, DEC-032.
+- **Amendments:** 2026-11-12 — the PR fill workflow of point 4 is replaced by `tools/open_pr.py`, which the agent or developer runs after the first push (DEC-054). The rest of point 4 stands.
 
 ### DEC-051 — US-1.1: a render frame collects input first; raylib is built with custom frame control
 - **Date:** 2026-11-12
@@ -722,3 +727,70 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none; this follows SRS 6.1.
 - **Revisit when:** a raylib upgrade changes custom frame control, or the renderer moves off raylib.
 - **Supersedes / Related:** DEC-033, DEC-046, DEC-047, R-4, srs.fr.1.1, srs.fr.5.1, US-1.1 (#41).
+
+### DEC-052 — A decision is `Proposed` only while it waits for an answer in the conversation; a decision a PR carries is written `Accepted` and approved in the review
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (ci/131 thread)
+- **Human's words:** "Change the workflow so that decisions are only logged as proposed when waiting for approval through the conversation. Otherwise it should be logged as approved and wait for approval in the review part. This change is not to allow for ai agents to make the decisions themself with bypassing the human!! This is to solve the requiring an additional commit to change the proposed log to accepted." (2026-11-12)
+- **Context:** Agents wrote every decision their change carried as `Proposed`, even though the reviewer of the pull request approves or rejects it anyway. When the reviewer agreed, another commit was needed only to flip the entry to `Accepted` (for example DEC-046 and DEC-047 after PRs #35 and #37, and DEC-051 before PR #130 was opened).
+- **Options considered:**
+  1. Keep `Proposed` until a human approves, then commit the flip. Simple, but costs a commit and a review round for every accepted decision.
+  2. Write the entry `Accepted` in the PR and make the review the approval step: the reviewer treats it as proposed, and the merge accepts it.
+- **Decision:** option 2. `Proposed` means a question is open in the conversation and nobody has answered it. A decision the human made in the conversation is `Accepted`, with their words. A decision a pull request carries is also written `Accepted` (no extra marker, so nothing has to be removed at merge), is listed under "Decisions for review" in the PR body, and binds only once a human merges the PR. A rejected or changed entry is fixed on the branch before the merge. Humans still decide (DEC-017): an agent puts open choices to the human first, and an unlisted entry is not approved by the merge.
+- **Rationale:** the review already is a human approval step, and every PR is merged by a human (DEC-025), so nothing reaches `main` as `Accepted` without a human. The flip commit added no information.
+- **Consequences:** the PR template has a "Decisions for review" section that reviewers check (`process/code-review.md`). Entries may still change on their branch until the merge; once on `main` they are append-only as before.
+- **Docs updated:** `history/decision-log.md` (header), `agents/templates/decision-entry.md`, `agents/playbooks/record-decision.md`, `agents/rules.md` (P-3, section D), `agents/AGENT-PROTOCOL.md` (steps 20 to 21a), `agents/model-compatibility.md`, `agents/communication-protocol.md`, `process/code-review.md`, `.github/pull_request_template.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** a decision that skipped the conversation turns out to need wider discussion than a review gives.
+- **Supersedes / Related:** refines DEC-017 and DEC-025; related DEC-050.
+
+### DEC-053 — AI agents ask before committing, not before pushing
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (ci/131 thread)
+- **Human's words:** "Requiring approval before pushing should be removed. Because after commiting commits cannot be altered and changes will require new commit anyway so pushing isnt effective. Commits should require approval." (2026-11-12)
+- **Context:** DEC-025 made agents ask before every push. By then the commit already exists, and since history is never rewritten (S-2), any requested change is a new commit whether or not the first one was pushed. The approval protected nothing and delayed CI and the draft PR.
+- **Decision:** An AI agent shows the human its change and commits only after the human approves it. Once a commit is approved, the agent pushes it and opens or updates the draft PR without asking again. Merging `main` into the branch with no conflicts, or with only state and history files resolved by the rules of DEC-055, is committed without asking again; a merge that needed any other resolution is shown first. A human approves and merges every PR. Agents never push to `main`, force-push or rewrite history.
+- **Rationale:** the approval belongs where the change becomes permanent, which is the commit.
+- **Consequences:** CI runs and the draft PR exists as soon as the human approves the change.
+- **Docs updated:** `guidelines/git-workflow.md`, `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (step 23a), `agents/state/current-status.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** a pushed commit causes harm that an earlier approval would have stopped.
+- **Supersedes / Related:** supersedes DEC-025; related S-2, DEC-054, DEC-055.
+
+### DEC-054 — Agents open the draft PR with `tools/open_pr.py`; the PR fill workflow is removed
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (ci/131 thread)
+- **Human's words:** "Pr should not be required to be opened manually. ... either after branch creation github actions push an initial commit ... or creation of both branch and pr should be moved to agents instead of github."; on Claude's recommendation of the second: "In point 2, I approve your proposal." (2026-11-12)
+- **Context:** Since DEC-050 a developer opened each PR by hand and the PR fill workflow filled it, but agents already opened and filled their own PRs, so the workflow did nothing. GitHub cannot open a PR for a branch with no commits beyond `main`.
+- **Options considered:**
+  1. After the branch is created, a workflow pushes a "task started" commit and opens a draft PR. Needs the "Allow GitHub Actions to create pull requests" setting rejected in DEC-050 (or a personal token, which makes the token owner the PR author); a PR opened with the workflow token does not trigger CI or other workflows; every local branch falls behind its remote at once; and the start commit edits shared docs, which adds merge conflicts.
+  2. The agent (or developer) opens the PR after the first push, with a local tool that fills it from the issue.
+- **Decision:** option 2. `tools/open_pr.py` opens a draft PR for the current branch with `Closes #<issue>`, the issue's labels, milestone and assignees, and a Conventional Commit title; agents run it right after their first push. `.github/workflows/pr-fill.yml` and `tools/fill_pr.py` are removed. The Issue start workflow still runs on branch creation. No workflow creates branches, commits or PRs.
+- **Rationale:** the PR is opened by the person (or the agent working for them), so authorship is right and CI runs; nothing needs a repository setting or a bot commit.
+- **Consequences:** `docs`, `ci` and `chore` changes without an issue are named after their own PR number (`ci/131-update-agent-workflow`, PR title `ci(#131): Update agent workflow`, `no-issue` label, no `Closes` line); `open_pr.py` does this when the branch number has no issue (Işık Dönger, 2026-11-12: "make sure everything works with ci/pr_number-description branch name and ci(pr-number): description pr name"). A PR opened by hand is no longer filled; `pr-hygiene` (`tools/check_pr.py`) still fails it without a valid title and `Closes #<issue>`.
+- **Docs updated:** `guidelines/git-workflow.md`, `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (step 23a), `agents/state/current-status.md`, `tools/issue_ref.py`; DEC-050 amended.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** humans keep opening PRs by hand and forgetting the fields.
+- **Supersedes / Related:** replaces the PR fill part of DEC-050; related DEC-053.
+
+### DEC-055 — Branches keep in step with `main` by merging it; collided ids are caught in CI; conflicting PRs are flagged
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (ci/131 thread)
+- **Human's words:** "There should be addition to workflow to account for merge conflicts happening because of pr merges while working on the pr."; on Claude's proposal: "In point 3, I approve your proposal but I have a question. This does not solve merge conflicts after ready-for-review ... do you have any proposal to mitigate this." (2026-11-12). The conflict flag answers that question and is approved in the review of this PR.
+- **Context:** PRs merged while another branch is open cause conflicts that the reviewer resolved during review, mostly in docs. Two branches that append to the same log can also merge without any git conflict and still give two entries the same id.
+- **Decision:**
+  1. Before starting, the agent lists open PRs and the files they touch and tells the human about overlap in code or design docs.
+  2. The branch merges `origin/main` (never rebases) before every push, before ready for review and when flagged, then builds and tests again.
+  3. In state and history files both sides are kept and the branch being synced renumbers its own colliding ids. Code and design-doc conflicts are resolved only when both sides fit together; otherwise the agent asks the human.
+  4. `tools/check_ids.py` in the `docs` CI job fails on a duplicate DEC, HND, PRB, Q or TASK id, or a decision or problem entry missing from its index.
+  5. The `Conflict flag` workflow (`tools/flag_conflicts.py`) runs after each merge to `main` and on pushes to PRs: a PR that conflicts with `main` gets the `needs-sync` label and one comment, and the label is removed once it no longer conflicts. The author syncs; the reviewer only re-checks the merge commit; a PR with `needs-sync` is not merged.
+- **Rationale:** conflicts are found by the author, early and in small pieces, instead of by the reviewer at the end.
+- **Consequences:** the `needs-sync` label is added to `.github/labels.yml`. The ruleset option "require branches to be up to date before merging" stays off unless the team turns it on.
+- **Docs updated:** `guidelines/git-workflow.md` §4, `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (steps 14a, 23a), `.github/labels.yml`, `.github/workflows/ci.yml`, `.github/workflows/conflict-flag.yml`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** conflicts still reach review regularly.
+- **Supersedes / Related:** related DEC-053, DEC-054, P-6.

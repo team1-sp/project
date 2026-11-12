@@ -9,11 +9,29 @@ Principle: the decision log is the single source of truth. A decision is finishe
 | Action | Human | Agent |
 | --- | --- | --- |
 | Decide | Yes | **No** — agents consult: present uncertainty, options, recommendation |
-| Write the entry as `Accepted` | Yes | **Yes, but only when recording an explicit human decision**, citing who decided, when, and their words |
-| Write a `Proposed` entry | Yes | Yes (binds nobody) |
+| Write the entry as `Accepted` | Yes | **Yes, but only for a decision a human approves**: one they made in the conversation (cite who, when, their words), or one the agent's pull request lists under "Decisions for review" (see below) |
+| Write a `Proposed` entry | Yes | Yes, while waiting for the human's answer in the conversation (binds nobody) |
 | Edit course documents (`senior-project/docs/`) | Yes | No (S-3) — list them for humans |
 
 If you are not sure the human actually *decided* (vs. "maybe", "I think", "probably"), ask once more: "Shall I record this as the decision?"
+
+## Proposed or Accepted?
+
+DEC-052. Every decision needs a human's approval; the status only says **where** that approval happens. The pull request review is an approval step like the conversation: the reviewer treats every new entry in a PR as proposed, and asks for a change or rejects it like any other part of the diff. Writing the entry `Accepted` on the branch means that when the reviewer agrees, merging the PR is enough, with no extra commit to flip `Proposed` to `Accepted`. **It does not let an agent decide.** Whatever is open still goes to the human (P-3, P-4); nothing an agent chose binds anyone before a human merges it.
+
+| Situation | Status |
+| --- | --- |
+| You asked in the conversation (`DECISION NEEDED`, `Q-###`) and the human has not answered yet | `Proposed` |
+| The human answered in the conversation | `Accepted` (with who, when, their words) |
+| The decision is part of your pull request, and the PR body lists it under "Decisions for review" | `Accepted` (binds when a human merges the PR; the reviewer reads it as proposed) |
+| A reviewer rejects it, or asks for a different choice | Change or remove the entry on the branch in a new commit (it is not on `main` yet, so this is not a rewrite of history). Add a `Rejected` entry only when the reason is worth keeping so nobody raises it again |
+| The PR is opened while a question is still open in the conversation | `Proposed`, and the PR body says so; the human answers before the merge, or merges knowing it stays `Proposed` |
+
+Rules for the review route:
+
+- List every new or changed entry under **Decisions for review** in the PR body, one line each, and name them in your reply to the human. An entry the PR does not list is not approved by the merge.
+- Put a real choice between options to the human in the conversation first (`DECISION NEEDED`) when you cannot continue without it, or when it reaches beyond the PR (architecture, scope, a new dependency, S-5). The review route is for decisions the change itself carries, such as how an interface is named or how a module reads an SRS rule.
+- Fill `Decided by` honestly: the human who chose it in the conversation, or "the PR reviewer" when the PR is the first time a human sees it.
 
 ## Steps
 
@@ -47,6 +65,7 @@ Human: "Physics library is Box2D."
 
 ```
 [ ] Quote and decider recorded      [ ] Index row added
+[ ] Review-route entries listed under "Decisions for review" in the PR
 [ ] Conflicting/old entries superseded
 [ ] All project docs/state/tasks updated (list in "Docs updated")
 [ ] Old term search shows only history mentions

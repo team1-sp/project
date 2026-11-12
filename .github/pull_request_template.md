@@ -1,6 +1,6 @@
 <!-- Title: Conventional Commit; the scope is the story id or the issue number, e.g. "feat(US-1.1): Run every simulation tick in a fixed phase order" or "fix(#142): Door opens without the key" -->
 
-Closes #<!-- issue number; for chore/ci PRs without an issue, add the no-issue label instead -->
+Closes #<!-- issue number; a docs/ci/chore PR without an issue deletes this line and gets the no-issue label (tools/open_pr.py does both) -->
 
 ## What and why
 
@@ -9,6 +9,9 @@ Closes #<!-- issue number; for chore/ci PRs without an issue, add the no-issue l
 
 ## Docs updated
 <!-- Which docs changed, or "none needed". -->
+
+## Decisions for review
+<!-- Every decision-log entry this PR adds or changes, one line each: "DEC-### - what was decided (approval: review of this PR | conversation, who, date)". Entries approved through review are written Accepted and bind only when this PR is merged; ask for a change or a rejection in the review (DEC-052). Write "none" if there are none. -->
 
 ## Definition of Done
 <!-- Full list: docs/process/definition-of-done.md -->
