@@ -281,4 +281,4 @@
 - **Not verified:** macOS and headless Linux (CI after push); typing in the window, since nothing reads input yet.
 - **Next:** US-1.3 (tick phases, srs.fr.1.12 to 1.15) and US-1.4 (pause).
 - **Traps:** with custom frame control raylib's `GetFrameTime()` and `GetFPS()` stay 0; measure time with `FrameClock` or `GetTime()`. Raylib code outside `RaylibWindow` must call `PollInputEvents()` and `SwapScreenBuffer()` itself.
-- **Records:** DEC-051 (Proposed).
+- **Records:** DEC-051 (Accepted by Işık Dönger on 2026-11-12).

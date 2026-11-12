@@ -59,7 +59,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-048 | The editor is the application that hosts `engine::Application` and owns the main window; `sandbox` is a developer and CI test host; games never host the engine | Accepted | 2026-11-11 |
 | DEC-049 | PB-025: the physics interface is named `IPhysicsAdapter`; bodies are addressed by `BodyId` with `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core` | Accepted | 2026-11-11 |
 | DEC-050 | The backlog moves from ClickUp to one GitHub project built from the SRS; branches use the issue number, PR scopes the story id; creating a branch moves its card to In progress, new PRs are filled from the issue, and no workflow creates branches or PRs | Accepted | 2026-11-11 |
-| DEC-051 | US-1.1: a render frame collects input first, through `IWindow::collectInput()`; raylib is built with `SUPPORT_CUSTOM_FRAME_CONTROL` so that `RaylibWindow` polls, presents and caps the frame rate itself | Proposed | 2026-11-12 |
+| DEC-051 | US-1.1: a render frame collects input first, through `IWindow::collectInput()`; raylib is built with `SUPPORT_CUSTOM_FRAME_CONTROL` so that `RaylibWindow` polls, presents and caps the frame rate itself | Accepted | 2026-11-12 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -707,16 +707,18 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-051 — US-1.1: a render frame collects input first; raylib is built with custom frame control
 - **Date:** 2026-11-12
-- **Status:** Proposed
-- **Proposed by:** claude (US-1.1 thread), from srs.fr.1.1  **Recorded by:** claude (US-1.1 thread)
+- **Status:** Accepted
+- **Decided by:** Işık Dönger   **Recorded by:** claude (US-1.1 thread)
+- **Human's words:** "You can log the decision as accepted, push and then create the pr." (2026-11-12, after reviewing the US-1.1 change)
+- **Proposed by:** claude (US-1.1 thread), from srs.fr.1.1
 - **Context:** srs.fr.1.1 orders a normal-mode render frame as (1) collect keyboard input, (2) run the due ticks, (3) render, (4) present. Since PB-011 (DEC-046) the loop ran ticks, `beginFrame`, `renderFrame`, `endFrame`, and `RaylibWindow::endFrame()` called raylib's `EndDrawing()`, which presents, waits for the frame-rate cap and only then polls input. Input was therefore collected at the end of the previous frame, before the wait: the first frame's ticks saw no collected input, and input arriving during the wait reached the ticks one frame late. raylib cannot poll a second time at the start of the frame, because `PollInputEvents()` copies the current key state into the previous one and would erase the key-press edges of the first poll.
 - **Options considered:**
   1. Keep `EndDrawing()` as it is and document that the poll at the end of frame N is step 1 of frame N + 1. No raylib change, but the order is only true by argument, cannot be seen in the interface or tested, and keeps up to one frame of extra input latency.
   2. Build raylib with `SUPPORT_CUSTOM_FRAME_CONTROL=1` (a documented raylib build flag; `config.h` honours a compile definition) and give `IWindow` an explicit `collectInput()`. `EndDrawing()` then only flushes the draw batch; `RaylibWindow` calls `PollInputEvents()` in `collectInput()`, and `SwapScreenBuffer()` plus the frame-rate wait in `presentFrame()`. raylib's own frame timing (`GetFrameTime()`, `GetFPS()`) is no longer updated; the engine does not use it (its loop measures time with `FrameClock`).
-- **Decision (proposed):** option 2. `IWindow` has `collectInput()`, `beginFrame()` and `presentFrame()` (renamed from `endFrame()`); `Application` calls them in the srs.fr.1.1 order, and the game loop tests check that order.
+- **Decision:** option 2. `IWindow` has `collectInput()`, `beginFrame()` and `presentFrame()` (renamed from `endFrame()`); `Application` calls them in the srs.fr.1.1 order, and the game loop tests check that order.
 - **Rationale:** the order of srs.fr.1.1 holds by construction and is tested; input is collected after the frame-rate wait, right before the ticks that use it.
-- **Consequences:** raylib code outside `RaylibWindow` must present and poll itself: the PB-008 spike (`sandbox/src/box2d_raylib.cpp`) now calls `PollInputEvents()`, `SwapScreenBuffer()` and `WaitTime()` and measures its frame time with `GetTime()`. Needs review by Zeynep Ertürk (`engine/rendering-raylib`) and confirmation from Işık Dönger in the US-1.1 pull request. The warning of srs.fr.1.4 still goes to the standard error output until a logger and the Console exist; pause (srs.fr.1.3 "while not paused") is US-1.4.
-- **Docs updated:** `architecture/engine-layer.md`.
+- **Consequences:** raylib code outside `RaylibWindow` must present and poll itself: the PB-008 spike (`sandbox/src/box2d_raylib.cpp`) now calls `PollInputEvents()`, `SwapScreenBuffer()` and `WaitTime()` and measures its frame time with `GetTime()`. Zeynep Ertürk (`engine/rendering-raylib`) should still look at the window wrapper in the US-1.1 pull request. The warning of srs.fr.1.4 still goes to the standard error output until a logger and the Console exist; pause (srs.fr.1.3 "while not paused") is US-1.4.
+- **Docs updated:** `architecture/engine-layer.md`, `testing/test-checklists.md`, `agents/state/handoff-log.md`, `agents/state/current-status.md`.
 - **Course documents affected (for humans):** none; this follows SRS 6.1.
 - **Revisit when:** a raylib upgrade changes custom frame control, or the renderer moves off raylib.
 - **Supersedes / Related:** DEC-033, DEC-046, DEC-047, R-4, srs.fr.1.1, srs.fr.5.1, US-1.1 (#41).
