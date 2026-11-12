@@ -36,7 +36,11 @@ int main(int argc, char** argv) {
     }
 
     InitWindow(screenWidthPixels, screenHeightPixels, "PB-008 spike: Box2D + raylib");
-    SetTargetFPS(60);
+    // raylib is built with SUPPORT_CUSTOM_FRAME_CONTROL (DEC-051): EndDrawing() does not
+    // present, cap the frame rate or poll input, and GetFrameTime() stays 0, so this loop does
+    // each of them itself.
+    constexpr double targetFrameSeconds = 1.0 / 60.0;
+    double previousFrameStart = GetTime();
 
     sandbox::FallingBoxScene scene;
     float accumulatorSeconds = 0.0f;
@@ -44,9 +48,12 @@ int main(int argc, char** argv) {
 
     int frame = 0;
     while (!WindowShouldClose() && (maxFrames == 0 || frame < maxFrames)) {
+        PollInputEvents();
+        const double frameStart = GetTime();
         // Physics runs at a fixed 1/60 s whatever the frame rate is (R-5): the frame time only
         // decides how many fixed steps to run.
-        accumulatorSeconds += GetFrameTime();
+        accumulatorSeconds += static_cast<float>(frameStart - previousFrameStart);
+        previousFrameStart = frameStart;
         if (accumulatorSeconds > maxCatchUpSeconds) {
             accumulatorSeconds = maxCatchUpSeconds;
         }
@@ -67,6 +74,11 @@ int main(int argc, char** argv) {
         DrawText(TextFormat("contacts begun: %d", static_cast<int>(scene.contactBegins().size())),
                  20, 45, 20, DARKGRAY);
         EndDrawing();
+        SwapScreenBuffer();
+        const double drawSeconds = GetTime() - frameStart;
+        if (drawSeconds < targetFrameSeconds) {
+            WaitTime(targetFrameSeconds - drawSeconds);
+        }
         ++frame;
     }
 

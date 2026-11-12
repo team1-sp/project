@@ -26,9 +26,9 @@ struct ApplicationConfig {
 // Use: construct, init(), run(), shutdown(). The simulation and the frame renderer are not
 // owned and must outlive the Application.
 //
-// Normal mode runs render frames: each one runs the ticks that are due, at most 5, then renders
-// and presents the state the last completed tick left. Headless mode runs one tick after the
-// other without a clock.
+// Normal mode runs render frames in the order of srs.fr.1.1: each one collects the keyboard
+// input, runs the ticks that are due, at most 5, then renders and presents the state the last
+// completed tick left. Headless mode runs one tick after the other without a clock.
 class Application {
 public:
     // An application that can only run headless: it cannot reach a window or a renderer (R-6).

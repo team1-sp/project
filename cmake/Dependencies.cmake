@@ -24,6 +24,10 @@ if(ENGINE_WITH_RAYLIB)
         SYSTEM
     )
     FetchContent_MakeAvailable(raylib)
+    # The game loop collects input as the first step of a render frame (srs.fr.1.1, DEC-051).
+    # With this flag EndDrawing() no longer presents, waits or polls input; RaylibWindow does
+    # each of them itself, in the order of srs.fr.1.1. raylib's config.h honours the definition.
+    target_compile_definitions(raylib PRIVATE SUPPORT_CUSTOM_FRAME_CONTROL=1)
 endif()
 
 if(ENGINE_BUILD_TESTS)

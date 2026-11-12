@@ -1,4 +1,4 @@
-// Game loop tests (PB-011, PB-012; srs.fr.1.1 to 1.7, 1.10, 1.15, 7.1, 7.7). A fake window,
+// Game loop tests (PB-011, PB-012, US-1.1; srs.fr.1.1 to 1.7, 1.10, 1.15, 7.1, 7.7). A fake window,
 // simulation and renderer write to one call log, and the fake window moves a scripted clock, so
 // the tests check the order of calls and the ticks per render frame without a real window or
 // real time.
@@ -74,8 +74,9 @@ public:
     [[nodiscard]] bool shouldClose() const override {
         return framesPresented_ > frameTimes_.size();
     }
+    void collectInput() override { log_.push_back("input"); }
     void beginFrame() override { log_.push_back("begin"); }
-    void endFrame() override {
+    void presentFrame() override {
         log_.push_back("present");
         if (framesPresented_ < frameTimes_.size()) {
             realTime_ += frameTimes_[framesPresented_];
@@ -120,17 +121,17 @@ engine::ApplicationConfig headlessConfig(engine::Tick maxTicks) {
 
 } // namespace
 
-// srs.fr.1.1: the due ticks, then render, then present, in every render frame. 50 ms is exactly
-// 3 ticks.
-TEST_F(ApplicationTest, NormalModeFrame_RunsDueTicksThenRenderThenPresent) {
+// srs.fr.1.1: every render frame collects input, runs the due ticks, renders, then presents.
+// 50 ms is exactly 3 ticks.
+TEST_F(ApplicationTest, NormalModeFrame_CollectsInputThenRunsDueTicksThenRendersThenPresents) {
     engine::Application app(simulation_, renderer_, windowFactory({50ms}), timeSource());
     ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
 
     const int exitCode = app.run();
 
     EXPECT_EQ(exitCode, 0);
-    EXPECT_EQ(log_, (CallLog{"open", "begin", "render", "present", "tick 0", "tick 1", "tick 2",
-                             "begin", "render", "present"}));
+    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "input", "tick 0",
+                             "tick 1", "tick 2", "begin", "render", "present"}));
 }
 
 // srs.fr.1.15: a render frame that runs no tick still renders and presents. 10 ms is 0.6 of a
@@ -141,8 +142,9 @@ TEST_F(ApplicationTest, FrameWithNoTickDue_StillRendersAndPresents) {
 
     ASSERT_EQ(app.run(), 0);
 
-    EXPECT_EQ(log_, (CallLog{"open", "begin", "render", "present", "begin", "render", "present",
-                             "tick 0", "begin", "render", "present"}));
+    EXPECT_EQ(log_,
+              (CallLog{"open", "input", "begin", "render", "present", "input", "begin", "render",
+                       "present", "input", "tick 0", "begin", "render", "present"}));
 }
 
 // srs.fr.1.3, 1.4: at most 5 ticks per render frame, however long the frame before it took.
@@ -182,8 +184,8 @@ TEST_F(ApplicationTest, NormalModeWithMaxTicks_StopsAfterThatManyTicks) {
     const int exitCode = app.run();
 
     EXPECT_EQ(exitCode, 0);
-    EXPECT_EQ(log_, (CallLog{"open", "begin", "render", "present", "tick 0", "tick 1", "begin",
-                             "render", "present"}));
+    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "input", "tick 0",
+                             "tick 1", "begin", "render", "present"}));
 }
 
 // srs.fr.1.10: closing the window ends the run with exit code 0 and releases the window.
@@ -195,7 +197,7 @@ TEST_F(ApplicationTest, WindowClosedByUser_RunReturnsZeroAndShutdownClosesWindow
     app.shutdown();
 
     EXPECT_EQ(exitCode, 0);
-    EXPECT_EQ(log_, (CallLog{"open", "begin", "render", "present", "close"}));
+    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "close"}));
 }
 
 TEST_F(ApplicationTest, ShutdownCalledTwice_ClosesWindowOnce) {
