@@ -50,7 +50,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - **Humans decide; agents consult.** Put every real uncertainty to the human (`DECISION NEEDED`); log their decision as `Accepted`; update every doc (`playbooks/record-decision.md`).
 - Course documents are not the truth; the decision log is.
 - Stack is fixed: C++20 / custom ECS / Box2D v3.1.1 (behind the adapter) / Raylib 6.2 (behind the rendering abstraction) / CMake + GoogleTest; `ai-services` uses Python 3.12 (DEC-039). **2D only** — no 3D work.
-- Work through GitHub: branch `<type>/pb-<nnn>-…`, PR with Conventional Commit title, Işık Dönger or an area owner approves, agents push only after a human approves (DEC-024/025/027; `guidelines/git-workflow.md`).
+- Work through GitHub: branch `<type>/pb-<nnn>-…`, PR with Conventional Commit title, Işık Dönger or an area owner approves, agents commit only after a human approves the change, then push and open the draft PR with `tools/open_pr.py` (DEC-024/027/053/054; `guidelines/git-workflow.md`).
 - Raylib must not be initialised in headless mode. The window is opened only through `RaylibWindow::open`, by `Application`, in normal mode.
 - The `editor` is the application that hosts the engine and owns the main window; `sandbox` is only a developer and CI test host; games are built inside the editor (DEC-048).
 - The demo game is `[UNDECIDED]` (Q-016). Do not design or build a demo game, or treat any example (door, key, maze) as its spec, until the team chooses it.

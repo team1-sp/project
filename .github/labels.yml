@@ -20,6 +20,7 @@
 - {name: "area:devops", color: "0e8a16", description: "Build, CI, repo tooling"}
 - {name: "area:qa", color: "0e8a16", description: "Testing, benchmarks, evaluation"}
 - {name: "area:docs", color: "0e8a16", description: "Documentation"}
+- {name: "needs-sync", color: "b60205", description: "Conflicts with main; the author merges main into the branch (DEC-055)"}
 - {name: "type:epic", color: "3e4b9e", description: "SRS epic (EP-xx); its stories are sub-issues"}
 - {name: "type:story", color: "0e8a16", description: "SRS user story (US-x.y); its FRs are the acceptance criteria"}
 - {name: "type:feature", color: "a2eeef", description: "New behaviour"}

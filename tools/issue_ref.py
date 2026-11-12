@@ -1,4 +1,4 @@
-"""Find the issue a work branch belongs to. Shared by start_task.py and fill_pr.py.
+"""Find the issue a work branch belongs to. Shared by start_task.py and open_pr.py.
 
 Branch names (docs/guidelines/git-workflow.md):
 - <type>/us-<x.y>-<short-description> for an SRS user story, e.g. feat/us-15.2-build-settings

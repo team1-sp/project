@@ -104,6 +104,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Relative links point to existing files
         run: python3 tools/check_md_links.py .
+      - name: Record ids are unique (DEC-055)
+        run: python3 tools/check_ids.py .
 
   format:
     needs: changes

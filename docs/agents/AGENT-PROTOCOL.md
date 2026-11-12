@@ -70,6 +70,7 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 12. Write a short plan inside the task entry: goal, files you expect to touch, how you will verify, risks. 3–8 bullets. A plan that is not written down does not exist for the next agent.
 13. Check the plan against [rules.md](rules.md) invariants (layer boundaries, ECS as data hub, adapter, fixed timestep, headless). If the plan violates one → stop, go to "Disagreeing with a decision".
 14. Prefer the **smallest vertical slice** that can be verified. One task = one reviewable change.
+14a. **Check for overlapping work:** list the open PRs and the files they touch (`gh pr list --state open --json number,title,files`). If one changes the same code or design docs as your plan, tell the human before you start ([git-workflow.md §4](../guidelines/git-workflow.md#4-merge-conflicts), DEC-055).
 
 ## Phase 3 — Do
 
@@ -86,6 +87,7 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 21a. **Your change carries a decision nobody had to answer first** (a name, a layout, how a module reads an SRS rule)? → log it `Accepted` and list it under "Decisions for review" in the PR body. The reviewer approves or rejects it with the rest of the diff, and it binds only once a human merges the PR (DEC-052). This saves a follow-up commit; it is not permission to decide open choices yourself (P-3, P-4).
 22. **AI-generated text for a course deliverable?** → append to `history/genai-usage-log.md` (see [guidelines/genai-usage-rules.md](../guidelines/genai-usage-rules.md)).
 23. **Docs affected?** Update the architecture/design/testing doc that your change made wrong. A change that makes a doc lie is not done.
+23a. **Commit, push, PR** ([git-workflow.md](../guidelines/git-workflow.md), DEC-053 to DEC-055): show the human the change and commit only after they approve it. Merge `origin/main` into the branch, build and test again, then push without asking again. After the first push, open the draft PR with `python tools/open_pr.py`. Merge `main` again before marking it ready for review, and whenever the PR gets the `needs-sync` label.
 24. Update the task on the board (`Review` or `Done` or `Blocked`) with a one-paragraph result.
 25. Update `state/current-status.md` (what changed, what is next, `last_updated`, `updated_by`).
 

@@ -282,3 +282,16 @@
 - **Next:** US-1.3 (tick phases, srs.fr.1.12 to 1.15) and US-1.4 (pause).
 - **Traps:** with custom frame control raylib's `GetFrameTime()` and `GetFPS()` stay 0; measure time with `FrameClock` or `GetTime()`. Raylib code outside `RaylibWindow` must call `PollInputEvents()` and `SwapScreenBuffer()` itself.
 - **Records:** DEC-051 (Accepted by Işık Dönger on 2026-11-12).
+
+---
+
+### HND-023 — Decision statuses, commit approval, PR opening and merge conflicts (ci/131)
+- **Date:** 2026-11-12
+- **Agent:** claude (ci/131 thread), working with Işık Dönger
+- **Task:** branch `ci/131-update-agent-and-github-workflow`
+- **Result:** Ready for review. A decision is `Proposed` only while it waits for an answer in the conversation; a decision a PR carries is written `Accepted`, listed under "Decisions for review" in the PR template and approved in the review (DEC-052). Agents ask before committing, not before pushing (DEC-053). `tools/open_pr.py` opens the filled draft PR and the PR fill workflow is gone (DEC-054). Merge-conflict rules in `git-workflow.md` §4, `tools/check_ids.py` in the `docs` CI job, and the `Conflict flag` workflow with the `needs-sync` label (DEC-055).
+- **Verified (Windows 11, Python 3):** `check_ids.py` passes on the repo and fails on a copy with a duplicated DEC id; `open_pr.py --help` runs; the GraphQL query of `flag_conflicts.py` returns the open PRs (read only); `check_md_links.py` passes.
+- **Not verified:** `open_pr.py` creating a real PR and `conflict-flag.yml` labelling a real PR (both need a push; try them on this branch's PR).
+- **Next:** someone with admin rights checks that the label-sync workflow created `needs-sync` after the merge.
+- **Traps:** a PR opened by a workflow with `GITHUB_TOKEN` triggers no other workflows; that is one reason no workflow opens PRs.
+- **Records:** DEC-052, DEC-053, DEC-054, DEC-055 (all Accepted by Işık Dönger in the conversation on 2026-11-12, except the conflict flag of DEC-055, approved in the review); DEC-025 superseded; DEC-050 amended.
