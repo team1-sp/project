@@ -112,9 +112,13 @@ void Application::runNormal() {
 
     // The close request is read only here, between render frames, so the frame in which the
     // user closes the window is always finished (srs.fr.1.10).
+    // Every render frame runs the four steps of srs.fr.1.1 in this order.
     while (!window_->shouldClose() && !reachedMaxTicks()) {
-        // One tick for each whole 1/60 s of real time not simulated yet, at most 5 (srs.fr.1.3).
-        // The clock is read here and nowhere else: ticks never see real time (R-6).
+        // (1) Collect the keyboard input this frame's ticks use.
+        window_->collectInput();
+
+        // (2) One tick for each whole 1/60 s of real time not simulated yet, at most 5
+        // (srs.fr.1.3). The clock is read here and nowhere else: ticks never see real time (R-6).
         const FrameTicks frame = timestep.advance(frameClock_.measureFrame());
         if (frame.warnSlow) {
             logWarning("Simulation is running slower than real time");
@@ -123,12 +127,11 @@ void Application::runNormal() {
             runOneTick();
         }
 
-        // Render and present the state the last completed tick left, also when this frame ran
-        // no tick (srs.fr.1.1, 1.15). endFrame() also collects the input that the next frame's
-        // ticks will use.
+        // (3) Render the state the last completed tick left and (4) present it, also when this
+        // frame ran no tick (srs.fr.1.15).
         window_->beginFrame();
         frameRenderer_->renderFrame();
-        window_->endFrame();
+        window_->presentFrame();
     }
 }
 

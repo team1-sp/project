@@ -15,10 +15,16 @@ std::unique_ptr<IWindow> RaylibWindow::open(const WindowConfig& config) {
     if (!IsWindowReady()) {
         return nullptr;
     }
-    SetTargetFPS(config.targetFramesPerSecond);
 
+    const double targetFrameSeconds =
+        config.targetFramesPerSecond > 0 ? 1.0 / config.targetFramesPerSecond : 0.0;
     // Not make_unique: the constructor is private.
-    return std::unique_ptr<IWindow>(new RaylibWindow());
+    return std::unique_ptr<IWindow>(new RaylibWindow(targetFrameSeconds));
+}
+
+RaylibWindow::RaylibWindow(double targetFrameSeconds)
+    : targetFrameSeconds_(targetFrameSeconds)
+    , lastPresentSeconds_(GetTime()) {
 }
 
 RaylibWindow::~RaylibWindow() {
@@ -29,14 +35,30 @@ bool RaylibWindow::shouldClose() const {
     return WindowShouldClose();
 }
 
+void RaylibWindow::collectInput() {
+    // raylib is built with SUPPORT_CUSTOM_FRAME_CONTROL (DEC-051), so EndDrawing() polls nothing
+    // and this is the only place input is collected.
+    PollInputEvents();
+}
+
 void RaylibWindow::beginFrame() {
     BeginDrawing();
     ClearBackground(RAYWHITE);
 }
 
-void RaylibWindow::endFrame() {
-    // Swaps the buffers, waits for the frame-rate cap and then polls the input events.
+void RaylibWindow::presentFrame() {
+    // With custom frame control EndDrawing() only draws what is batched; presenting and the
+    // frame-rate cap are done here, as EndDrawing() would do them without it.
     EndDrawing();
+    SwapScreenBuffer();
+
+    if (targetFrameSeconds_ > 0.0) {
+        const double frameSeconds = GetTime() - lastPresentSeconds_;
+        if (frameSeconds < targetFrameSeconds_) {
+            WaitTime(targetFrameSeconds_ - frameSeconds);
+        }
+    }
+    lastPresentSeconds_ = GetTime();
 }
 
 } // namespace engine::rendering_raylib

@@ -269,3 +269,16 @@
 - **Next:** PB-026 implements `Box2DPhysicsAdapter` in `engine/physics-box2d/` (also needs PB-012, the fixed-timestep loop).
 - **Traps:** `BodyId` is 64-bit on purpose so the Box2D implementation can pack a `b2BodyId` into it. Collision events and raycasts return `EntityId`, not `BodyId`.
 - **Records:** DEC-049 (Accepted by Işık Dönger on 2026-11-11 during review of PR #33).
+
+---
+
+### HND-022 — Render frame phase order (US-1.1)
+- **Date:** 2026-11-12
+- **Agent:** claude (US-1.1 thread), working with Işık Dönger
+- **Task:** US-1.1 (#41), srs.fr.1.1 to 1.6
+- **Result:** srs.fr.1.2 to 1.6 were already met by PB-011/PB-012. The gap was srs.fr.1.1: input was polled at the end of the previous frame inside raylib's `EndDrawing()`. `IWindow` now has `collectInput()`, `beginFrame()`, `presentFrame()` (was `endFrame()`); `Application` calls collect input, ticks, render, present. raylib is built with `SUPPORT_CUSTOM_FRAME_CONTROL=1`, so `RaylibWindow` polls, swaps and caps the frame rate itself. The PB-008 spike was adapted the same way.
+- **Verified (Windows 11, MSVC, `windows-debug` preset):** builds with no new warnings; `ctest` 53/53; `editor --max-ticks 120` opened the window, ran 120 ticks in about 2 s (frame cap works) and exited with code 0; `box2d_raylib_spike --frames 120` exited with code 0. clang-format 19.1.7 clean.
+- **Not verified:** macOS and headless Linux (CI after push); typing in the window, since nothing reads input yet.
+- **Next:** US-1.3 (tick phases, srs.fr.1.12 to 1.15) and US-1.4 (pause).
+- **Traps:** with custom frame control raylib's `GetFrameTime()` and `GetFPS()` stay 0; measure time with `FrameClock` or `GetTime()`. Raylib code outside `RaylibWindow` must call `PollInputEvents()` and `SwapScreenBuffer()` itself.
+- **Records:** DEC-051 (Accepted by Işık Dönger on 2026-11-12).

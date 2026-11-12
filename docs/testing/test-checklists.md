@@ -6,7 +6,7 @@ Source: Senior Project Guide "Testing Checklist", extended with requirement IDs.
 
 Tests are in `tests/unit/core/`.
 
-- [x] Render frame order: due ticks, render, present (srs.fr.1.1) — `ApplicationTest.NormalModeFrame_RunsDueTicksThenRenderThenPresent`
+- [x] Render frame order: collect input, due ticks, render, present (srs.fr.1.1) — `ApplicationTest.NormalModeFrame_CollectsInputThenRunsDueTicksThenRendersThenPresents`
 - [x] 60 ticks are 1.0 s at 30, 60, 120, 144 and 240 frames per second (ip.fr.1.2, srs.fr.1.2) — `FixedTimestep.OneSecondAtSteadyFrameRates_RunsExactly60Ticks`, `ApplicationTest.OneSecondAtSteadyFrameRates_RunsSixtyTicks`
 - [x] At most 5 ticks per render frame, further whole ticks dropped, part of a tick kept (srs.fr.1.3, 1.4) — `FixedTimestep.FiveSecondSpike_RunsFiveTicksAndDropsTheRest`, `FixedTimestep.MoreThanFiveTicksDue_DropsWholeTicksAndKeepsThePart`
 - [x] Slow-simulation warning at most once per second (srs.fr.1.4) — `FixedTimestep.TicksDroppedEveryFrame_WarnsOncePerSecond`
