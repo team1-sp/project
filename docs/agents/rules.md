@@ -22,7 +22,7 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | --- | --- |
 | P-1 | MUST follow [AGENT-PROTOCOL.md](AGENT-PROTOCOL.md) each session. |
 | P-2 | MUST claim a task on the board before working; MUST release or complete it before ending. |
-| P-3 | MUST NOT make or silently change a decision. **Humans decide; agents consult** (DEC-017). Surface uncertainty with a `DECISION NEEDED` block; log your suggestion `Proposed`; write `Accepted` only to record an explicit human decision (who, when, words), then propagate it everywhere (`playbooks/record-decision.md`). |
+| P-3 | MUST NOT make or silently change a decision. **Humans decide; agents consult** (DEC-017). Surface uncertainty with a `DECISION NEEDED` block and log it `Proposed` while you wait for the answer. Write `Accepted` only for a decision a human approves: one they made in the conversation (who, when, words), or one your PR lists under "Decisions for review" (`Approval: review of PR #<n>`, binding only once a human merges it; DEC-052). Then propagate it everywhere (`playbooks/record-decision.md`). |
 | P-4 | MUST NOT resolve any open choice yourself — anything marked `[TBD]` or not covered by an `Accepted` decision (currently e.g. ECS implementation, build system, Box2D version, test framework). Raise it with the human; write against the abstraction only if that is genuinely neutral. Decided stack: C++ (DEC-013), Box2D (DEC-014), Raylib (DEC-015), 2D only (DEC-016). |
 | P-5 | MUST NOT claim something works unless you ran it. State clearly what was and was not executed. |
 | P-6 | MUST NOT edit or delete past entries in `history/` or `handoff-log.md`. Append a correcting entry (decision entries also allow a dated `Amendments` line). |
@@ -50,5 +50,5 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 - Append to `history/*`, `handoff-log.md`, `open-questions.md`.
 - Edit `testing/`, `troubleshooting/` and `agents/state/` docs.
 - Add tests, fix bugs inside a claimed task, update docs made stale by their change.
-- Propose decisions (`Proposed`, binds nobody) and record human decisions as `Accepted` with propagation.
+- Propose decisions (`Proposed` while the question is open in the conversation, binds nobody), record human decisions as `Accepted` with propagation, and write a decision their PR carries as `Accepted` with `Approval: review of PR #<n>` (the human approves or rejects it in the review; DEC-052).
 - Ask the human questions at any time; that is part of the job.

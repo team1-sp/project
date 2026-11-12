@@ -48,6 +48,7 @@ The docs in this repository must work for strong and weak models, long- and shor
 | Over-eager refactoring | Rule P-8; one task one diff. |
 | Forgetting append-only rule and rewriting logs | Rule P-6; use the templates. |
 | Treating `Proposed` decisions as final | Only `Accepted` binds. |
+| Writing `Accepted` for a choice no human will see | `Accepted` needs a human's approval: in the conversation, or in a PR that lists the entry under "Decisions for review" (DEC-052). Unlisted means unapproved. |
 | Mixing terminology (physics engine vs library vs adapter) | Glossary. |
 
 When you observe a new model-specific failure, add a row here and (if it cost time) a `PRB-###` entry.

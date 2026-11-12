@@ -2,8 +2,8 @@
 
 **Append-only. This log is the single source of truth.** Every architectural, technological, scope or process decision, with rationale, so nobody has to re-argue it. Where any other document (including the course documents under `senior-project/docs/`) disagrees with an `Accepted` entry here, this log wins and the other document must be updated (project docs) or flagged for humans (course docs). Template: [../agents/templates/decision-entry.md](../agents/templates/decision-entry.md). Procedure: [../agents/playbooks/record-decision.md](../agents/playbooks/record-decision.md).
 
-Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejected` · `Superseded by DEC-###`.
-**Humans decide; agents consult.** An entry is `Accepted` only because a human decided it (see `Decided by`). Agents may write `Accepted` solely to record an explicit human decision. To reverse a decision, add a new entry that supersedes it.
+Statuses: `Proposed` (a question is open in the conversation and nobody has answered it yet; binds nobody) · `Accepted` (binding) · `Rejected` · `Superseded by DEC-###`.
+**Humans decide; agents consult.** An entry is `Accepted` only because a human decided it (see `Decided by` and `Approval`). A human approves a decision in one of two places (DEC-052): in the conversation, or in the review of the pull request that adds the entry. An entry added in a pull request is written `Accepted` with `Approval: review of PR #<n>`: the reviewer treats it as proposed, and it binds only once a human merges the PR. Writing it `Accepted` saves the extra commit that would otherwise flip `Proposed` to `Accepted` after approval; it does not let an agent decide anything. To reverse a decision, add a new entry that supersedes it.
 
 ## Index
 
@@ -60,6 +60,7 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-049 | PB-025: the physics interface is named `IPhysicsAdapter`; bodies are addressed by `BodyId` with `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core` | Accepted | 2026-11-11 |
 | DEC-050 | The backlog moves from ClickUp to one GitHub project built from the SRS; branches use the issue number, PR scopes the story id; creating a branch moves its card to In progress, new PRs are filled from the issue, and no workflow creates branches or PRs | Accepted | 2026-11-11 |
 | DEC-051 | US-1.1: a render frame collects input first, through `IWindow::collectInput()`; raylib is built with `SUPPORT_CUSTOM_FRAME_CONTROL` so that `RaylibWindow` polls, presents and caps the frame rate itself | Accepted | 2026-11-12 |
+| DEC-052 | A decision is `Proposed` only while its question waits for an answer in the conversation; a decision a PR carries is written `Accepted`, listed for review, and binds only when a human merges the PR | Accepted | 2026-11-12 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -722,3 +723,21 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none; this follows SRS 6.1.
 - **Revisit when:** a raylib upgrade changes custom frame control, or the renderer moves off raylib.
 - **Supersedes / Related:** DEC-033, DEC-046, DEC-047, R-4, srs.fr.1.1, srs.fr.5.1, US-1.1 (#41).
+
+### DEC-052 — A decision is `Proposed` only while it waits for an answer in the conversation; a decision a PR carries is written `Accepted` and approved in the review
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (ci/131 thread)
+- **Approval:** conversation
+- **Human's words:** "Change the workflow so that decisions are only logged as proposed when waiting for approval through the conversation. Otherwise it should be logged as approved and wait for approval in the review part. This change is not to allow for ai agents to make the decisions themself with bypassing the human!! This is to solve the requiring an additional commit to change the proposed log to accepted." (2026-11-12)
+- **Context:** Agents wrote every decision their change carried as `Proposed`, even though the reviewer of the pull request approves or rejects it anyway. When the reviewer agreed, another commit was needed only to flip the entry to `Accepted` (for example DEC-046 and DEC-047 after PRs #35 and #37, and DEC-051 before PR #130 was opened).
+- **Options considered:**
+  1. Keep `Proposed` until a human approves, then commit the flip. Simple, but costs a commit and a review round for every accepted decision.
+  2. Write the entry `Accepted` in the PR and make the review the approval step: the reviewer treats it as proposed, and the merge accepts it.
+- **Decision:** option 2. `Proposed` means a question is open in the conversation and nobody has answered it. A decision the human made in the conversation is `Accepted` with `Approval: conversation`. A decision a pull request carries is written `Accepted` with `Approval: review of PR #<n>`, is listed under "Decisions for review" in the PR body, and binds only once a human merges the PR. A rejected or changed entry is fixed on the branch before the merge. Humans still decide (DEC-017): an agent puts open choices to the human first, and an unlisted entry is not approved by the merge.
+- **Rationale:** the review already is a human approval step, and every PR is merged by a human (DEC-025), so nothing reaches `main` as `Accepted` without a human. The flip commit added no information.
+- **Consequences:** decision entries get an `Approval` field; the PR template has a "Decisions for review" section that reviewers check (`process/code-review.md`). Entries may still change on their branch until the merge; once on `main` they are append-only as before.
+- **Docs updated:** `history/decision-log.md` (header), `agents/templates/decision-entry.md`, `agents/playbooks/record-decision.md`, `agents/rules.md` (P-3, section D), `agents/AGENT-PROTOCOL.md` (steps 20 to 21a), `agents/model-compatibility.md`, `agents/communication-protocol.md`, `process/code-review.md`, `.github/pull_request_template.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** a decision that skipped the conversation turns out to need wider discussion than a review gives.
+- **Supersedes / Related:** refines DEC-017 and DEC-025; related DEC-050.
