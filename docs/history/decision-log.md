@@ -64,6 +64,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-053 | AI agents commit only after a human approves the change; after that they push and open or update the draft PR without asking again; humans approve and merge every PR | Accepted | 2026-11-12 |
 | DEC-054 | Agents (and developers) open the draft PR with `tools/open_pr.py` after the first push; the PR fill workflow is removed; no workflow creates commits or PRs | Accepted | 2026-11-12 |
 | DEC-055 | Branches keep in step with `main` by merging it (never rebasing) before each push and before review; collided record ids are renumbered by the later branch and caught by `check_ids.py`; the `Conflict flag` workflow labels open PRs that conflict with `main` | Accepted | 2026-11-12 |
+| DEC-056 | `docs`, `ci` and `chore` work may have no issue: branch `<type>/<short-description>`, no `Closes` line, PR title without scope | Accepted | 2026-11-12 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -794,3 +795,17 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none.
 - **Revisit when:** conflicts still reach review regularly.
 - **Supersedes / Related:** related DEC-053, DEC-054, P-6.
+
+### DEC-056 — Docs, ci and chore work may go without an issue
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (ci/131 thread)
+- **Human's words:** "since this is only a ci update, it should not require an issue. types such as ci and docs updates should be able to be created via branch and pr ci/#pr-description. Check if this is the case if not also apply this change and commit." (2026-11-12)
+- **Context:** Since DEC-050 every branch name had to carry a story id or an issue number, and a PR without `Closes #<issue>` needed the `no-issue` label. A small ci or docs change therefore needed an issue created first, or a branch number that pointed at nothing.
+- **Decision:** a `docs/`, `ci/` or `chore/` branch may be named `<type>/<short-description>` (for example `ci/update-agent-workflow`) and needs no issue: its PR has no `Closes` line and a title without scope (`ci: Update the agent workflow`). `tools/check_pr.py` and `tools/open_pr.py` accept such branches; a docs, ci or chore branch with an issue number whose issue does not exist is treated the same way. Other types still need an issue, or the `no-issue` label as an exception.
+- **Rationale:** an issue adds nothing for a change that is planned and reviewed in its PR.
+- **Consequences:** the repository's `branch-names` ruleset must accept the new form; a repository admin updates its pattern to `^((feat|fix|test|refactor|docs|ci|chore|research)/(us-\d+\.\d+|\d+|pb-\d{3}(\.\d+)?)-[a-z0-9]|(docs|ci|chore)/[a-z])`. Such branches do not move a project card (there is none).
+- **Docs updated:** `guidelines/git-workflow.md`, `CONTRIBUTING.md`, `.github/pull_request_template.md`, `.github/labels.yml`, `tools/issue_ref.py`, `tools/check_pr.py`, `tools/open_pr.py`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** issue-less PRs start carrying work that should have been planned.
+- **Supersedes / Related:** refines DEC-050 (branch names); related DEC-054.

@@ -1,6 +1,6 @@
-<!-- Title: Conventional Commit; the scope is the story id or the issue number, e.g. "feat(US-1.1): Run every simulation tick in a fixed phase order" or "fix(#142): Door opens without the key" -->
+<!-- Title: Conventional Commit; the scope is the story id or the issue number, e.g. "feat(US-1.1): Run every simulation tick in a fixed phase order" or "fix(#142): Door opens without the key"; no scope without an issue, e.g. "ci: Update the agent workflow" -->
 
-Closes #<!-- issue number; for chore/ci PRs without an issue, add the no-issue label instead -->
+Closes #<!-- issue number; a docs, ci or chore branch without an issue deletes this line (DEC-056) -->
 
 ## What and why
 
