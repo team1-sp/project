@@ -1,6 +1,6 @@
 <!-- Title: Conventional Commit; the scope is the story id or the issue number, e.g. "feat(US-1.1): Run every simulation tick in a fixed phase order" or "fix(#142): Door opens without the key" -->
 
-Closes #<!-- issue number; for chore/ci PRs without an issue, add the no-issue label instead -->
+Closes #<!-- issue number; a docs/ci/chore PR without an issue deletes this line and gets the no-issue label (tools/open_pr.py does both) -->
 
 ## What and why
 
