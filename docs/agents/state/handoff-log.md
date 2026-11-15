@@ -295,3 +295,16 @@
 - **Next:** someone with admin rights checks that the label-sync workflow created `needs-sync` after the merge.
 - **Traps:** a PR opened by a workflow with `GITHUB_TOKEN` triggers no other workflows; that is one reason no workflow opens PRs.
 - **Records:** DEC-052, DEC-053, DEC-054, DEC-055 (all Accepted by Işık Dönger in the conversation on 2026-11-12, except the conflict flag of DEC-055, approved in the review); DEC-025 superseded; DEC-050 amended.
+
+---
+
+### HND-024 — Windowed and headless runs (US-1.2)
+- **Date:** 2026-11-15
+- **Agent:** claude (US-1.2 thread), working with Işık Dönger
+- **Task:** US-1.2 (#42), srs.fr.1.7 to 1.11
+- **Result:** srs.fr.1.7 and 1.10 were already met. Added `engine::RunError` and its handling in `Application` (message and tick to stderr, run stops at that tick, exit code 1, outcome `Error`; srs.fr.1.11), `Application::outcome()` with `RunOutcome`, `parseRunOptions()` for `--headless`, `--max-ticks`, `--seed`, `--input-recording` (srs.fr.1.8, 7.33), and `WindowConfig::fullscreen` (srs.fr.1.9). The sandbox uses the parser and has `--fullscreen` and `--fail-at-tick N`. DEC-057 lists the choices.
+- **Verified (Linux, GCC 13, Debug, warnings as errors):** full build with raylib, `ctest` 78/78; `headless` preset 66/66; sandbox headless with no `--max-ticks` ran 10 000 ticks; `--fail-at-tick 41` printed `error: tick 41: ...` and exited 1; invalid `--seed` and `--input-recording` exited 2 with no tick; normal mode under Xvfb ran 120 ticks in 2 s and a run error at tick 30 stopped it; `--fullscreen` opened under Xvfb. clang-format 19.1.7 clean.
+- **Not verified:** Windows 11 and macOS (CI after push); fullscreen on a real display.
+- **Next:** Editor parts in their stories: mode switch (US-17.3), Error Pause in Play mode (US-17.2, US-24.1), Rendering settings (US-27.4); the built game reads `parseRunOptions()` (US-28.x).
+- **Traps:** raylib keeps configuration flags after `CloseWindow()`, so a second window in the same process would still open fullscreen. Only `Application` may catch `RunError` (DEC-042).
+- **Records:** DEC-057 (Accepted in the PR, for review).

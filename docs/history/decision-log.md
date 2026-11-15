@@ -64,6 +64,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-053 | AI agents commit only after a human approves the change; after that they push and open or update the draft PR without asking again; humans approve and merge every PR | Accepted | 2026-11-12 |
 | DEC-054 | Agents (and developers) open the draft PR with `tools/open_pr.py` after the first push; the PR fill workflow is removed; no workflow creates commits or PRs | Accepted | 2026-11-12 |
 | DEC-055 | Branches keep in step with `main` by merging it (never rebasing) before each push and before review; collided record ids are renumbered by the later branch and caught by `check_ids.py`; the `Conflict flag` workflow labels open PRs that conflict with `main` | Accepted | 2026-11-12 |
+| DEC-057 | US-1.2: the run mode and run settings come from `parseRunOptions()` in `engine/core`; the game loop catches `engine::RunError`, logs the tick, ends the run with the outcome `Error` and a non-zero exit code; the Editor parts wait for their stories | Accepted | 2026-11-15 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -794,3 +795,24 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none.
 - **Revisit when:** conflicts still reach review regularly.
 - **Supersedes / Related:** related DEC-053, DEC-054, P-6.
+
+### DEC-057 — US-1.2: run options in `engine/core`, run errors end the run in the game loop, Editor parts wait for their stories
+- **Date:** 2026-11-15
+- **Status:** Accepted (carried by the US-1.2 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-1.2 pull request   **Recorded by:** claude (US-1.2 thread)
+- **Human's words:** none yet; listed under "Decisions for review" in the PR.
+- **Proposed by:** claude (US-1.2 thread), from srs.fr.1.7 to 1.11 and DEC-042
+- **Context:** US-1.2 (#42) asks for srs.fr.1.7 to 1.11. Normal and headless mode (srs.fr.1.7) and closing the window (srs.fr.1.10) were built in PB-011 and PB-012. Missing were the command-line run mode and settings of a built game (srs.fr.1.8, 7.33), the fullscreen state of the standalone window (srs.fr.1.9) and the handling of unrecoverable run errors (srs.fr.1.11), which DEC-042 had already given the shape "throw `engine::RunError`, only the game loop catches it". The rest of those requirements needs Editor features that are other stories: the mode switch (srs.fr.17.19, US-17.3, not in Increment 1), Play mode and Error Pause (US-17.2, US-24.1), the Game view (US-20.1) and the project's Rendering settings (srs.fr.27.23, US-27.4).
+- **Decision:**
+  1. `engine/core/run_options.hpp` has `RunOptions` and `parseRunOptions()` for the options of srs.fr.7.33: `--headless`, `--max-ticks N` (1 to 1 000 000, default 10 000 in a headless run), `--seed S` (0 to 4 294 967 295, srs.fr.7.32) and `--input-recording F`. An unknown option or an invalid value gives an error naming the option; the caller writes it to the standard error output, runs no tick and exits non-zero. `parseRunOption()` reads one option, so an application with options of its own (the sandbox's `--fps`) can combine both. The built game (US-28.x) will use it; the sandbox uses it now. The editor does not take `--headless`: its mode comes from the mode switch.
+  2. `--input-recording` is parsed, but the sandbox refuses it with "input recording playback is not built yet" and runs no tick, until playback (srs.fr.5.12 onwards) exists. The seed is parsed and printed; nothing draws random numbers until the gameplay generator (srs.fr.7.5) exists.
+  3. `engine/core/run_error.hpp` has `engine::RunError` (a `std::runtime_error`). `Application::runOneTick()` is the only place it is caught. It writes `error: tick N: <message>` to the standard error output (there is no logger yet), runs no further tick, does not render or present the frame in progress, and `run()` returns exit code 1. The failed tick does not count as executed. Other exceptions are bugs and are not caught. This applies in headless mode and in normal mode outside the Editor; Error Pause in Play mode comes with US-17.2.
+  4. `Application::outcome()` returns a `RunOutcome`: `NotRun`, `WindowClosed`, `MaxTicks` or `Error`, with the report names "Not run", "Window closed", "Max ticks" and "Error" (`runOutcomeName()`). The headless names follow srs.fr.7.16; `Stopped`, `Failure` and `Objective reached` come with US-7.2.
+  5. `WindowConfig` has `fullscreen`, which `RaylibWindow::open` turns into raylib's `FLAG_FULLSCREEN_MODE`. Who fills it from the project's Rendering settings is US-27.4 and US-28.x.
+  6. The sandbox gets `--seed`, `--input-recording`, `--fullscreen` and `--fail-at-tick N` (tick N throws `RunError`, so CI can check srs.fr.1.11 on a real process), and prints the run's mode, seed and outcome.
+- **Rationale:** everything the engine needs for the two run modes is built and tested now, behind the interfaces the Editor and the built game will call, without building Editor features that belong to other stories.
+- **Consequences:** srs.fr.1.8 (Editor mode switch), 1.9 (Rendering settings, Game view) and 1.11 (Error Pause in Play mode) stay partly open after US-1.2; the PR says which parts. A logger (Console, US-24.1) replaces the standard error output later.
+- **Docs updated:** `architecture/engine-layer.md`, `testing/test-checklists.md`, `testing/headless-testing.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** the logger, Play mode or the build pipeline exists.
+- **Supersedes / Related:** DEC-042 (item 8), DEC-046, DEC-047, DEC-048, US-1.2 (#42).

@@ -6,11 +6,15 @@
 
 namespace engine {
 
-// Size, title and frame-rate cap of the application window (srs.fr.1.9). Pixels are a rendering
-// unit; the simulation works in meters (DEC-036).
+// Size, fullscreen state, title and frame-rate cap of the application window (srs.fr.1.9). A
+// standalone game takes the size and the fullscreen state from the project's Rendering settings
+// (srs.fr.27.23) once they exist. Pixels are a rendering unit; the simulation works in meters
+// (DEC-036).
 struct WindowConfig {
     int widthPixels = 800;
     int heightPixels = 450;
+    // Fullscreen at widthPixels x heightPixels instead of a window on the desktop.
+    bool fullscreen = false;
     std::string title = "Aegis";
     // Render frames per second the window waits for; 0 means no cap.
     int targetFramesPerSecond = 60;

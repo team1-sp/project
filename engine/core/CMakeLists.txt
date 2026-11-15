@@ -6,6 +6,7 @@ add_library(engine_core STATIC
     src/fixed_timestep.cpp
     src/frame_clock.cpp
     src/leak_check.cpp
+    src/run_options.cpp
     src/version.cpp
 )
 add_library(engine::core ALIAS engine_core)

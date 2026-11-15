@@ -5,6 +5,7 @@
 
 #include "engine/core/fixed_timestep.hpp"
 #include "engine/core/frame_renderer.hpp"
+#include "engine/core/run_error.hpp"
 #include "engine/core/simulation.hpp"
 
 namespace engine {
@@ -24,7 +25,26 @@ void logWarning(const char* message) {
     std::fprintf(stderr, "warning: %s\n", message);
 }
 
+// srs.fr.1.11: the message and the number of the tick that was running.
+void logRunError(Tick tick, const char* message) {
+    std::fprintf(stderr, "error: tick %llu: %s\n", static_cast<unsigned long long>(tick), message);
+}
+
 } // namespace
+
+const char* runOutcomeName(RunOutcome outcome) {
+    switch (outcome) {
+    case RunOutcome::NotRun:
+        return "Not run";
+    case RunOutcome::WindowClosed:
+        return "Window closed";
+    case RunOutcome::MaxTicks:
+        return "Max ticks";
+    case RunOutcome::Error:
+        return "Error";
+    }
+    return "Unknown";
+}
 
 Application::Application(ISimulation& simulation)
     : simulation_(simulation) {
@@ -78,17 +98,22 @@ int Application::run() {
 
     // The tick counter is 0 when a run starts (srs.fr.1.5).
     ticksExecuted_ = 0;
+    outcome_ = RunOutcome::NotRun;
     if (config_.headless) {
         runHeadless();
     } else {
         runNormal();
     }
-    return exitCodeOk;
+    return outcome_ == RunOutcome::Error ? exitCodeError : exitCodeOk;
 }
 
 void Application::shutdown() {
     window_.reset();
     initialised_ = false;
+}
+
+RunOutcome Application::outcome() const {
+    return outcome_;
 }
 
 Tick Application::ticksExecuted() const {
@@ -102,8 +127,11 @@ double Application::simulatedSeconds() const {
 void Application::runHeadless() {
     // Simulated time: ticks run back to back, with no clock and no waiting (srs.fr.7.4).
     while (!reachedMaxTicks()) {
-        runOneTick();
+        if (!runOneTick()) {
+            return;
+        }
     }
+    outcome_ = RunOutcome::MaxTicks;
 }
 
 void Application::runNormal() {
@@ -113,7 +141,12 @@ void Application::runNormal() {
     // The close request is read only here, between render frames, so the frame in which the
     // user closes the window is always finished (srs.fr.1.10).
     // Every render frame runs the four steps of srs.fr.1.1 in this order.
-    while (!window_->shouldClose() && !reachedMaxTicks()) {
+    while (!window_->shouldClose()) {
+        if (reachedMaxTicks()) {
+            outcome_ = RunOutcome::MaxTicks;
+            return;
+        }
+
         // (1) Collect the keyboard input this frame's ticks use.
         window_->collectInput();
 
@@ -124,7 +157,11 @@ void Application::runNormal() {
             logWarning("Simulation is running slower than real time");
         }
         for (int i = 0; i < frame.ticksToRun && !reachedMaxTicks(); ++i) {
-            runOneTick();
+            // A run error ends the run at this tick boundary; the frame is not rendered, so
+            // nothing presents state the failed tick left half-changed (srs.fr.1.11).
+            if (!runOneTick()) {
+                return;
+            }
         }
 
         // (3) Render the state the last completed tick left and (4) present it, also when this
@@ -133,13 +170,22 @@ void Application::runNormal() {
         frameRenderer_->renderFrame();
         window_->presentFrame();
     }
+    outcome_ = RunOutcome::WindowClosed;
 }
 
-void Application::runOneTick() {
+bool Application::runOneTick() {
     // The tick's number is the counter's value at its start; the counter goes up only after the
-    // tick has completed (srs.fr.1.5).
-    simulation_.runTick(ticksExecuted_);
+    // tick has completed (srs.fr.1.5), so a tick that fails is not counted.
+    try {
+        simulation_.runTick(ticksExecuted_);
+    } catch (const RunError& error) {
+        // The game loop is the only place RunError is caught (DEC-042).
+        logRunError(ticksExecuted_, error.what());
+        outcome_ = RunOutcome::Error;
+        return false;
+    }
     ++ticksExecuted_;
+    return true;
 }
 
 bool Application::reachedMaxTicks() const {

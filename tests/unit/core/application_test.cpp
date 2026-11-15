@@ -1,7 +1,7 @@
-// Game loop tests (PB-011, PB-012, US-1.1; srs.fr.1.1 to 1.7, 1.10, 1.15, 7.1, 7.7). A fake window,
-// simulation and renderer write to one call log, and the fake window moves a scripted clock, so
-// the tests check the order of calls and the ticks per render frame without a real window or
-// real time.
+// Game loop tests (PB-011, PB-012, US-1.1, US-1.2; srs.fr.1.1 to 1.11, 1.15, 7.1, 7.7). A fake
+// window, simulation and renderer write to one call log, and the fake window moves a scripted
+// clock, so the tests check the order of calls and the ticks per render frame without a real window
+// or real time.
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -15,6 +15,7 @@
 
 #include "engine/core/application.hpp"
 #include "engine/core/frame_renderer.hpp"
+#include "engine/core/run_error.hpp"
 #include "engine/core/simulation.hpp"
 #include "engine/core/tick.hpp"
 #include "engine/core/window.hpp"
@@ -232,6 +233,7 @@ TEST_F(ApplicationTest, WindowConfigGiven_FactoryReceivesIt) {
     config.window.heightPixels = 720;
     config.window.title = "test window";
     config.window.targetFramesPerSecond = 144;
+    config.window.fullscreen = true;
 
     ASSERT_TRUE(app.init(config));
 
@@ -239,6 +241,7 @@ TEST_F(ApplicationTest, WindowConfigGiven_FactoryReceivesIt) {
     EXPECT_EQ(received.heightPixels, 720);
     EXPECT_EQ(received.title, "test window");
     EXPECT_EQ(received.targetFramesPerSecond, 144);
+    EXPECT_TRUE(received.fullscreen);
 }
 
 // srs.fr.1.7, 7.1, 7.7: a headless run opens no window, renders nothing and stops at maxTicks.
@@ -329,4 +332,123 @@ TEST_F(ApplicationTest, RunBeforeInit_ReturnsErrorCodeAndRunsNoTick) {
 
     EXPECT_NE(app.run(), 0);
     EXPECT_TRUE(log_.empty());
+}
+
+// srs.fr.1.11: a run error ends a headless run at the failed tick's boundary with a non-zero exit
+// code and the outcome Error. The failed tick is not counted as executed (srs.fr.1.5).
+TEST_F(ApplicationTest, HeadlessTickThrowsRunError_RunStopsAtThatTickWithOutcomeError) {
+    engine::Application app(simulation_);
+    simulation_.onTick = [&] {
+        if (app.ticksExecuted() == 2) {
+            throw engine::RunError("invalid entity handle");
+        }
+    };
+    ASSERT_TRUE(app.init(headlessConfig(10)));
+
+    const int exitCode = app.run();
+
+    EXPECT_NE(exitCode, 0);
+    EXPECT_EQ(app.outcome(), engine::RunOutcome::Error);
+    EXPECT_EQ(log_, (CallLog{"tick 0", "tick 1", "tick 2"}));
+    EXPECT_EQ(app.ticksExecuted(), 2u);
+}
+
+// srs.fr.1.11: the log gets the error message and the number of the tick that was running.
+TEST_F(ApplicationTest, RunError_LogsMessageAndTickNumber) {
+    engine::Application app(simulation_);
+    simulation_.onTick = [&] {
+        if (app.ticksExecuted() == 7) {
+            throw engine::RunError("PlayerMovement: entity 12 has no Velocity component");
+        }
+    };
+    ASSERT_TRUE(app.init(headlessConfig(10)));
+
+    testing::internal::CaptureStderr();
+    (void)app.run();
+    const std::string logged = testing::internal::GetCapturedStderr();
+
+    EXPECT_EQ(logged, "error: tick 7: PlayerMovement: entity 12 has no Velocity component\n");
+}
+
+// srs.fr.1.11: in normal mode the run also ends at the failed tick's boundary. The frame is not
+// rendered or presented; shutdown() still closes the window.
+TEST_F(ApplicationTest, NormalModeTickThrowsRunError_StopsWithoutRenderingThatFrame) {
+    engine::Application app(simulation_, renderer_, windowFactory({50ms, 50ms}), timeSource());
+    simulation_.onTick = [&] {
+        if (app.ticksExecuted() == 1) {
+            throw engine::RunError("access check failed");
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    const int exitCode = app.run();
+    app.shutdown();
+
+    EXPECT_NE(exitCode, 0);
+    EXPECT_EQ(app.outcome(), engine::RunOutcome::Error);
+    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "input", "tick 0",
+                             "tick 1", "close"}));
+}
+
+TEST_F(ApplicationTest, RunErrorInFirstRun_SecondRunStartsAgainAndCanEndNormally) {
+    engine::Application app(simulation_);
+    bool failNextTick = true;
+    simulation_.onTick = [&] {
+        if (failNextTick) {
+            failNextTick = false;
+            throw engine::RunError("failed once");
+        }
+    };
+    ASSERT_TRUE(app.init(headlessConfig(2)));
+
+    EXPECT_NE(app.run(), 0);
+    EXPECT_EQ(app.run(), 0);
+
+    EXPECT_EQ(app.outcome(), engine::RunOutcome::MaxTicks);
+    EXPECT_EQ(log_, (CallLog{"tick 0", "tick 0", "tick 1"}));
+}
+
+TEST_F(ApplicationTest, BeforeRun_OutcomeIsNotRun) {
+    engine::Application app(simulation_);
+    ASSERT_TRUE(app.init(headlessConfig(1)));
+
+    EXPECT_EQ(app.outcome(), engine::RunOutcome::NotRun);
+}
+
+// srs.fr.7.7: a headless run that reaches its maximum ends with the outcome Max ticks.
+TEST_F(ApplicationTest, HeadlessRunReachesMaxTicks_OutcomeIsMaxTicks) {
+    engine::Application app(simulation_);
+    ASSERT_TRUE(app.init(headlessConfig(3)));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_EQ(app.outcome(), engine::RunOutcome::MaxTicks);
+}
+
+// srs.fr.1.10: closing the window is a normal end, with its own outcome.
+TEST_F(ApplicationTest, WindowClosedByUser_OutcomeIsWindowClosed) {
+    engine::Application app(simulation_, renderer_, windowFactory({50ms}), timeSource());
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_EQ(app.outcome(), engine::RunOutcome::WindowClosed);
+}
+
+TEST_F(ApplicationTest, NormalModeWithMaxTicks_OutcomeIsMaxTicks) {
+    engine::Application app(simulation_, renderer_, windowFactory({50ms, 50ms}), timeSource());
+    engine::ApplicationConfig config;
+    config.maxTicks = 2;
+    ASSERT_TRUE(app.init(config));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_EQ(app.outcome(), engine::RunOutcome::MaxTicks);
+}
+
+TEST(RunOutcomeName, EveryOutcome_HasItsReportName) {
+    EXPECT_STREQ(engine::runOutcomeName(engine::RunOutcome::NotRun), "Not run");
+    EXPECT_STREQ(engine::runOutcomeName(engine::RunOutcome::WindowClosed), "Window closed");
+    EXPECT_STREQ(engine::runOutcomeName(engine::RunOutcome::MaxTicks), "Max ticks");
+    EXPECT_STREQ(engine::runOutcomeName(engine::RunOutcome::Error), "Error");
 }

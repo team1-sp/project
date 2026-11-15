@@ -1,23 +1,36 @@
 // Sandbox: the smallest application on the engine's game loop (PB-011, PB-012). It is not the
-// demo game, which the team has not chosen yet (Q-016).
+// demo game, which the team has not chosen yet (Q-016). It is a developer and CI host (DEC-048):
+// it reads the run options a built game reads (srs.fr.1.8, 7.33) plus a few of its own.
 //
-// Usage: sandbox [--headless] [--max-ticks N] [--fps N]
-//   --headless     run ticks without a window; stops after 10 000 ticks unless --max-ticks is given
-//   --max-ticks N  stop after N ticks (1 to 1 000 000); without it, normal mode runs until the
-//                  window is closed
-//   --fps N        cap the render frame rate at N frames per second (0 to 1000, 0 = no cap;
-//                  default 60). The simulation runs at 60 ticks per second whatever N is.
+// Usage: sandbox [--headless] [--max-ticks N] [--seed S] [--input-recording F] [--fps N]
+//                [--fullscreen] [--fail-at-tick N]
+//   --headless          run ticks without a window; stops after 10 000 ticks unless --max-ticks
+//                       is given
+//   --max-ticks N       stop after N ticks (1 to 1 000 000); without it, normal mode runs until
+//                       the window is closed
+//   --seed S            the run's seed (0 to 4 294 967 295, default 0); nothing draws random
+//                       numbers yet
+//   --input-recording F accepted by the parser, but refused: playback is not built yet
+//   --fps N             cap the render frame rate at N frames per second (0 to 1000, 0 = no cap;
+//                       default 60). The simulation runs at 60 ticks per second whatever N is.
+//   --fullscreen        open the window fullscreen
+//   --fail-at-tick N    tick N throws engine::RunError, to try the run error path (srs.fr.1.11)
 #include <charconv>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <vector>
 
 #include "engine/core/application.hpp"
 #include "engine/core/frame_clock.hpp"
 #include "engine/core/leak_check.hpp"
+#include "engine/core/run_error.hpp"
+#include "engine/core/run_options.hpp"
 #include "engine/core/simulation.hpp"
 #include "engine/core/tick.hpp"
 #include "engine/core/version.hpp"
@@ -28,22 +41,37 @@
 
 namespace {
 
-// The option names, default and range of --max-ticks are those srs.fr.7.33 gives a built game.
-constexpr engine::Tick defaultHeadlessMaxTicks = 10'000;
-constexpr engine::Tick largestMaxTicks = 1'000'000;
 constexpr std::uint64_t largestFramesPerSecond = 1'000;
 
 constexpr int exitCodeStartFailed = 1;
 constexpr int exitCodeBadOption = 2;
 
-// Stands in for the simulation until the ECS exists: a tick only records that it ran.
+// The sandbox's settings: the run options of a built game and the sandbox's own.
+struct SandboxOptions {
+    engine::RunOptions run;
+    int framesPerSecond = 60;
+    bool fullscreen = false;
+    std::optional<engine::Tick> failAtTick;
+};
+
+// Stands in for the simulation until the ECS exists: a tick only records that it ran, or throws
+// the run error --fail-at-tick asks for, as a system that breaks an invariant would.
 class TickCountingSimulation final : public engine::ISimulation {
 public:
-    void runTick(engine::Tick tick) override { ticksExecuted_ = tick + 1; }
+    explicit TickCountingSimulation(std::optional<engine::Tick> failAtTick)
+        : failAtTick_(failAtTick) {}
+
+    void runTick(engine::Tick tick) override {
+        if (failAtTick_ == tick) {
+            throw engine::RunError("sandbox: --fail-at-tick asked this tick to fail");
+        }
+        ticksExecuted_ = tick + 1;
+    }
 
     [[nodiscard]] engine::Tick ticksExecuted() const { return ticksExecuted_; }
 
 private:
+    std::optional<engine::Tick> failAtTick_;
     engine::Tick ticksExecuted_ = 0;
 };
 
@@ -55,35 +83,56 @@ bool parseWholeNumber(std::string_view text, std::uint64_t lowest, std::uint64_t
     return parsed.ec == std::errc{} && parsed.ptr == end && value >= lowest && value <= largest;
 }
 
-// Fills `config` from the command line. Returns false, after naming the option on the standard
-// error output, when an option is unknown or its value is not valid.
-bool parseOptions(int argc, char** argv, engine::ApplicationConfig& config) {
-    for (int i = 1; i < argc; ++i) {
-        const std::string_view option(argv[i]);
+// Fills `options` from the command line. Returns false, after naming the option on the standard
+// error output, when an option is unknown or its value is not valid (srs.fr.7.33).
+bool parseOptions(const std::vector<std::string_view>& args, SandboxOptions& options) {
+    for (std::size_t i = 0; i < args.size(); ++i) {
+        std::string error;
+        switch (engine::parseRunOption(args, i, options.run, error)) {
+        case engine::RunOptionParse::Parsed:
+            continue;
+        case engine::RunOptionParse::Invalid:
+            std::fprintf(stderr, "error: %s\n", error.c_str());
+            return false;
+        case engine::RunOptionParse::NotARunOption:
+            break;
+        }
+
+        const std::string_view option = args[i];
         std::uint64_t value = 0;
-        if (option == "--headless") {
-            config.headless = true;
-        } else if (option == "--max-ticks" && i + 1 < argc) {
-            if (!parseWholeNumber(argv[++i], 1, largestMaxTicks, value)) {
-                std::fprintf(stderr, "error: --max-ticks needs a whole number from 1 to 1000000\n");
-                return false;
-            }
-            config.maxTicks = value;
-        } else if (option == "--fps" && i + 1 < argc) {
-            if (!parseWholeNumber(argv[++i], 0, largestFramesPerSecond, value)) {
+        if (option == "--fps") {
+            if (i + 1 >= args.size() ||
+                !parseWholeNumber(args[++i], 0, largestFramesPerSecond, value)) {
                 std::fprintf(stderr, "error: --fps needs a whole number from 0 to 1000\n");
                 return false;
             }
-            config.window.targetFramesPerSecond = static_cast<int>(value);
+            options.framesPerSecond = static_cast<int>(value);
+        } else if (option == "--fullscreen") {
+            options.fullscreen = true;
+        } else if (option == "--fail-at-tick") {
+            if (i + 1 >= args.size() ||
+                !parseWholeNumber(args[++i], 0, engine::largestMaxTicks, value)) {
+                std::fprintf(stderr,
+                             "error: --fail-at-tick needs a whole number from 0 to 1000000\n");
+                return false;
+            }
+            options.failAtTick = value;
         } else {
-            std::fprintf(stderr, "error: unknown or incomplete option %s\n", argv[i]);
+            std::fprintf(stderr, "error: unknown option %.*s\n", static_cast<int>(option.size()),
+                         option.data());
             return false;
         }
     }
 
-    if (config.headless && config.maxTicks == 0) {
-        config.maxTicks = defaultHeadlessMaxTicks;
+    // The engine cannot play input recordings yet (srs.fr.5.12 is not built), so the option is
+    // refused before any tick rather than silently running with the input source None.
+    if (!options.run.inputRecordingPath.empty()) {
+        std::fprintf(stderr, "error: --input-recording: input recording playback is not built "
+                             "yet\n");
+        return false;
     }
+
+    engine::applyRunOptionDefaults(options.run);
     return true;
 }
 
@@ -112,17 +161,26 @@ void printVersion(const char* name, engine::Version version) {
 int main(int argc, char** argv) {
     engine::enableLeakReportAtExit();
 
-    engine::ApplicationConfig config;
-    config.window.title = "Aegis sandbox";
-    if (!parseOptions(argc, argv, config)) {
+    SandboxOptions options;
+    if (!parseOptions(engine::commandLineArguments(argc, argv), options)) {
         return exitCodeBadOption;
     }
+
+    engine::ApplicationConfig config;
+    config.headless = options.run.headless;
+    config.maxTicks = options.run.maxTicks;
+    config.window.title = "Aegis sandbox";
+    config.window.targetFramesPerSecond = options.framesPerSecond;
+    config.window.fullscreen = options.fullscreen;
 
     printVersion("engine", engine::engineVersion());
     printVersion("box2d", engine::physics_box2d::linkedBox2dVersion());
     printVersion("raylib", engine::rendering_raylib::linkedRaylibVersion());
 
-    TickCountingSimulation simulation;
+    std::printf("mode: %s, seed: %lu\n", config.headless ? "headless" : "normal",
+                static_cast<unsigned long>(options.run.seed));
+
+    TickCountingSimulation simulation(options.failAtTick);
     // The sandbox's own measurement of real time, one reading per render frame, for display.
     engine::FrameClock frameClock;
     std::uint64_t renderFrames = 0;
@@ -140,6 +198,7 @@ int main(int argc, char** argv) {
     const int exitCode = app.run();
     app.shutdown();
 
+    std::printf("outcome: %s\n", engine::runOutcomeName(app.outcome()));
     std::printf("ticks executed: %llu (%.2f s simulated)\n",
                 static_cast<unsigned long long>(app.ticksExecuted()), app.simulatedSeconds());
     if (renderFrames > 0) {
