@@ -9,6 +9,10 @@ std::unique_ptr<IWindow> RaylibWindow::open(const WindowConfig& config) {
         return nullptr;
     }
 
+    // Configuration flags are read by InitWindow only, so they are set right before it.
+    if (config.fullscreen) {
+        SetConfigFlags(FLAG_FULLSCREEN_MODE);
+    }
     InitWindow(config.widthPixels, config.heightPixels, config.title.c_str());
     // InitWindow reports a failure only through this flag. CloseWindow must not run for a window
     // that never became ready, so the object is created only after the check.

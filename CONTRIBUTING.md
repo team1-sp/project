@@ -33,7 +33,7 @@ The backlog is the [GitHub project](https://github.com/orgs/team1-sp/projects/3)
 
 ## AI agents
 
-An agent commits only after a human approves the change; once approved, it pushes and opens or updates the draft PR without asking again (DEC-053). A human approves and merges every PR an agent opens. See `docs/agents/rules.md` (S-2).
+An agent working on a member's own computer commits and pushes only after that member approves the change; an agent working in its own cloud copy of the repository commits, pushes and opens or updates the draft PR without asking (DEC-058). A human approves and merges every PR an agent opens. See `docs/agents/rules.md` (S-2).
 
 ## Issues
 

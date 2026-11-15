@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-11-11
-updated_by: claude (PB-025 session, merged with main)
+last_updated: 2026-11-15
+updated_by: claude (US-1.2 thread)
 ---
 
 # Current Status
@@ -24,11 +24,12 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 
 ## Decisions status (details: `history/decision-log.md`)
 
-- **Accepted:** core entries DEC-001…009 and DEC-013…036 as indexed in the decision log; Python 3.12 with pinned `ai-services` tooling (DEC-039); gRPC/protobuf behind `AgentBridge` for the engine-to-Python bridge (DEC-038, ADR-002); the ECS decisions from the PB-010 review (DEC-040…044); no own LLM (DEC-045); the PB-025 physics interface choices (DEC-049); the US-1.1 render frame order with raylib custom frame control (DEC-051).
+- **Accepted:** core entries DEC-001…009 and DEC-013…036 as indexed in the decision log; Python 3.12 with pinned `ai-services` tooling (DEC-039); gRPC/protobuf behind `AgentBridge` for the engine-to-Python bridge (DEC-038, ADR-002); the ECS decisions from the PB-010 review (DEC-040…044); no own LLM (DEC-045); the PB-025 physics interface choices (DEC-049); the US-1.1 render frame order with raylib custom frame control (DEC-051); the workflow decisions DEC-052 to DEC-055. In review: DEC-057 (US-1.2). DEC-058 (commit approval only on a member's computer) decided by Işık Dönger on 2026-11-15.
 - **Proposed / deferred by the human ("too early"):** MCP later (DEC-010); LLM-instructive component metadata (Q-013). Agents do not raise these.
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
 
 ## In progress / next
+- **US-1.2 (#42): windowed and headless runs** — Review. `RunError` handling in the game loop (srs.fr.1.11), `parseRunOptions()` for `--headless`/`--max-ticks`/`--seed`/`--input-recording` (srs.fr.1.8, 7.33), `WindowConfig::fullscreen`; DEC-057 in the PR for review. Editor parts wait for US-17.2, US-17.3, US-27.4.
 0. **TASK-006 (ClickUp PB-011, PB-012): window, game loop and fixed timestep** — Done: PR #35 and #37 merged 2026-11-10; DEC-046 and DEC-047 accepted 2026-11-11.
 1. **TASK-018 (ClickUp PB-122): the editor hosts `Application` and opens the main window** — Review, issue #38, branch `feat/pb-122-make-the-editor-host-the-application-and` (DEC-048).
 2. **TASK-019 (ClickUp PB-025): physics adapter interface** — Review, issue #32, PR #33. `engine/physics/` with `IPhysicsAdapter`, `Vec2`/`EntityId` in `engine/core`, include check in CI. Next: PB-026 (Box2D implementation, needs PB-012).
@@ -50,7 +51,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - **Humans decide; agents consult.** Put every real uncertainty to the human (`DECISION NEEDED`); log their decision as `Accepted`; update every doc (`playbooks/record-decision.md`).
 - Course documents are not the truth; the decision log is.
 - Stack is fixed: C++20 / custom ECS / Box2D v3.1.1 (behind the adapter) / Raylib 6.2 (behind the rendering abstraction) / CMake + GoogleTest; `ai-services` uses Python 3.12 (DEC-039). **2D only** — no 3D work.
-- Work through GitHub: branch `<type>/pb-<nnn>-…`, PR with Conventional Commit title, Işık Dönger or an area owner approves, agents commit only after a human approves the change, then push and open the draft PR with `tools/open_pr.py` (DEC-024/027/053/054; `guidelines/git-workflow.md`).
+- Work through GitHub: branch `<type>/pb-<nnn>-…`, PR with Conventional Commit title, Işık Dönger or an area owner approves, agents on a member's computer commit and push only after that member approves, agents in a cloud copy commit and push without asking, then open the draft PR with `tools/open_pr.py` (DEC-024/027/053/054/058; `guidelines/git-workflow.md`).
 - Raylib must not be initialised in headless mode. The window is opened only through `RaylibWindow::open`, by `Application`, in normal mode.
 - The `editor` is the application that hosts the engine and owns the main window; `sandbox` is only a developer and CI test host; games are built inside the editor (DEC-048).
 - The demo game is `[UNDECIDED]` (Q-016). Do not design or build a demo game, or treat any example (door, key, maze) as its spec, until the team chooses it.
