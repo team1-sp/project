@@ -1,6 +1,6 @@
 # Git Workflow
 
-Status: **Accepted** (DEC-024, DEC-027, 2026-10-15; DEC-053 to DEC-055, 2026-11-12). The repo keeps contribution history per member (course requirement), so **commit authorship matters**. Short version for contributors: [CONTRIBUTING.md](../../CONTRIBUTING.md).
+Status: **Accepted** (DEC-024, DEC-027, 2026-10-15; DEC-053 to DEC-055, 2026-11-12; DEC-058, 2026-11-15). The repo keeps contribution history per member (course requirement), so **commit authorship matters**. Short version for contributors: [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## 1. Branching
 
@@ -41,7 +41,7 @@ The `pr-hygiene` CI job rejects other names (`tools/check_pr.py`).
 
 **Dependencies:** stories have "blocked by" links. Creating a branch for a story whose blockers are still open only gets a warning comment, and the `dependencies` CI job (`tools/check_blockers.py`) fails while any blocker is open, so `ci-ok` and the `main` ruleset block the merge. After a blocker closes, re-run the job or push again.
 
-**Agents** commit only after a human approves the change (DEC-053, replacing the push approval of DEC-025): a commit cannot be changed afterwards without rewriting history, so the approval belongs before the commit. Once a commit is approved, the agent pushes it and opens or updates the draft PR without asking again. A human still approves and merges every PR (S-2). Agents never push to `main`, force-push or rewrite history.
+**Agents** ask before committing only when they work on a member's own computer (DEC-058, refining DEC-053): there, changes land in the member's working copy and local branches, so the agent shows the change and commits and pushes only after the member approves. An agent that works in its own cloud copy of the repository commits and pushes to the story branch without asking, and opens or updates the draft PR; the review of the PR is the approval step. A human still approves and merges every PR (S-2). Agents never push to `main`, force-push or rewrite history.
 
 ## 2. Commits and PR titles
 
@@ -82,7 +82,7 @@ After the merge, build and run the tests again before pushing.
 
 - State and history files (`agents/state/*`, `history/*`, `testing/test-checklists.md`): keep **both** sides' entries. If both added the same id (DEC, HND, PRB, Q, TASK), the branch being synced renumbers its own entries and every reference to them. The `docs` CI job runs `tools/check_ids.py`, which fails on a duplicate id or a decision or problem entry missing from its index, because two appends can merge without any git conflict and still collide.
 - Code and design docs: resolve only when both sides clearly fit together, then test. When they contradict each other (two designs, two decisions), stop and ask the human; do not pick a side.
-- An agent commits a merge without asking again when it had no conflicts, or only conflicts in state and history files resolved as above. A merge that needed any other resolution is shown to the human before it is committed (DEC-053).
+- An agent commits a merge without asking again when it had no conflicts, or only conflicts in state and history files resolved as above. A merge that needed any other resolution is shown to the human before it is committed (DEC-053), also in a cloud copy (DEC-058).
 
 **After ready for review:** the `Conflict flag` workflow (`tools/flag_conflicts.py`) runs after every merge to `main`. Each open PR that now conflicts gets the `needs-sync` label and one comment; the label goes away by itself once a push resolves it. The author (or the agent working on the PR) syncs as above and pushes; the reviewer then only needs to look at the merge commit, not the whole PR again. A PR with `needs-sync` is not merged.
 
@@ -102,3 +102,4 @@ Increment deliverables get an annotated tag `inc-1`, `inc-2`, `final` on `main`,
 | 2026-10-27 | Only `fix/` branches may use a bare issue number; pattern written out | claude-code |
 | 2026-11-11 | GitHub Projects replaces ClickUp: issue-number branches, story-id PR scopes; creating a branch moves the card to In progress and new PRs are filled from the issue (DEC-050) | claude (issue #126) |
 | 2026-11-12 | Agents ask before committing instead of before pushing (DEC-053); `tools/open_pr.py` opens the filled draft PR and the PR fill workflow is removed (DEC-054); merge-conflict rules, `check_ids.py` and the `needs-sync` flag (DEC-055) | claude (ci/131) |
+| 2026-11-15 | Agents ask before committing only on a member's computer; in a cloud copy they commit and push without asking (DEC-058) | claude (US-1.2 thread) |

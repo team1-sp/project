@@ -65,6 +65,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-054 | Agents (and developers) open the draft PR with `tools/open_pr.py` after the first push; the PR fill workflow is removed; no workflow creates commits or PRs | Accepted | 2026-11-12 |
 | DEC-055 | Branches keep in step with `main` by merging it (never rebasing) before each push and before review; collided record ids are renumbered by the later branch and caught by `check_ids.py`; the `Conflict flag` workflow labels open PRs that conflict with `main` | Accepted | 2026-11-12 |
 | DEC-057 | US-1.2: the run mode and run settings come from `parseRunOptions()` in `engine/core`; the game loop catches `engine::RunError`, logs the tick, ends the run with the outcome `Error` and a non-zero exit code; the Editor parts wait for their stories | Accepted | 2026-11-15 |
+| DEC-058 | Agents ask before committing only when they work on a member's computer; in their own cloud copy of the repository they commit and push without asking | Accepted | 2026-11-15 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -816,3 +817,17 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none; this follows SRS 6.1.
 - **Revisit when:** the logger, Play mode or the build pipeline exists.
 - **Supersedes / Related:** DEC-042 (item 8), DEC-046, DEC-047, DEC-048, US-1.2 (#42).
+
+### DEC-058 — Agents ask before committing only on a member's computer; in a cloud copy they commit and push without asking
+- **Date:** 2026-11-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (US-1.2 thread)
+- **Human's words:** "if worked on the local commit/pushes should ask for permissions. otherwise it should be auto commit/pushed" (2026-11-15)
+- **Context:** DEC-053 made every agent ask before committing. Agents running in a cloud session work in their own clone of the repository: their commits change nothing on a member's computer and reach `main` only through a PR that a human reviews and merges, so the approval added a wait without protecting anything. An agent working on a member's own computer changes that member's working copy and local branches.
+- **Decision:** An agent working on a member's own computer (folder access or a session on the device) shows the change and commits and pushes only after that member approves. An agent working in its own cloud copy of the repository commits and pushes to the story branch without asking, then opens or updates the draft PR with `tools/open_pr.py`. Everything else in DEC-053 stays: a merge of `main` that needed a resolution beyond the state and history file rules of DEC-055 is shown first; a human approves and merges every PR; agents never push to `main`, force-push or rewrite history.
+- **Rationale:** the approval belongs where an agent's commit touches a member's own files; in a cloud copy the PR review is the approval step.
+- **Consequences:** cloud agents' changes appear on the branch and in the draft PR as soon as they are built and tested.
+- **Docs updated:** `guidelines/git-workflow.md` §1, `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (step 23a), `agents/state/current-status.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** a cloud agent's push causes harm that an approval would have stopped.
+- **Supersedes / Related:** refines DEC-053; related DEC-052, DEC-054, DEC-055, S-2.
