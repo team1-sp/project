@@ -321,3 +321,17 @@
 - **Next:** US-5.1 pushes key transitions into `Application::keyboardQueue()`; the ECS scheduler implements `runPhase()`; recording playback (US-5.4) and the agent become `IInputSource`s.
 - **Traps:** `TickContext::input` is a reference to the loop's state and is valid only during the phase call. A scripted input source must answer by tick number, not by call count, so that normal and headless runs read it the same way.
 - **Records:** DEC-059 (Accepted in the PR, for review).
+
+---
+
+### HND-026 — Pause, resume and step (US-1.4)
+- **Date:** 2026-11-16
+- **Agent:** claude (US-1.4 thread), working with Işık Dönger
+- **Task:** US-1.4 (#44), srs.fr.1.16 to 1.18
+- **Result:** `Application::requestPause()`, `resume()`, `requestStep()` and `isPaused()`. A pause takes effect at the next tick boundary, also from inside a tick; the frame's unstarted ticks are dropped and the part of a tick is kept. While paused the timestep gets no time; `resume()` takes the paused part of the next frame time off with the new `FrameClock::sinceFrameStart()`, so no paused time is simulated and no slow-simulation warning follows. Each step runs one tick in the next render frame without the accumulator. Headless runs cannot pause. DEC-060 lists the choices.
+- **Verified (Linux, GCC 13, Debug, warnings as errors):** `headless` preset build, `ctest` 102/102 (11 new tests). clang-format 19.1.7 clean.
+- **Not verified:** Windows 11 and macOS (CI after push); the editor build with raylib (CI); a real Pause button, since Play mode is US-17.2.
+- **Next:** US-17.2 wires Pause, Step and the toolbar counter to these calls; US-24.1 calls `requestPause()` from the tick that logs the first error.
+- **Traps:** call the pause functions on the loop's thread only. `resume()` must be called when the user resumes, not deferred to the next frame, or the time until that frame counts as paused.
+- **Records:** DEC-060 (Accepted in the PR, for review).
+

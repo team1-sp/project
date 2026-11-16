@@ -97,16 +97,22 @@ int Application::run() {
         return exitCodeError;
     }
 
-    // The tick counter is 0 when a run starts (srs.fr.1.5), no action is held and nothing is
-    // queued from an earlier run.
+    // The tick counter is 0 when a run starts (srs.fr.1.5), no action is held, nothing is
+    // queued from an earlier run and the run is not paused.
     ticksExecuted_ = 0;
     inputState_ = InputActionState{};
     keyboardQueue_.clear();
     outcome_ = RunOutcome::NotRun;
+    pauseRequested_ = false;
+    paused_ = false;
+    stepsRequested_ = 0;
+    pausedSinceFrameStart_ = std::chrono::nanoseconds::zero();
     if (config_.headless) {
         runHeadless();
     } else {
+        runningNormal_ = true;
         runNormal();
+        runningNormal_ = false;
     }
     return outcome_ == RunOutcome::Error ? exitCodeError : exitCodeOk;
 }
@@ -122,6 +128,45 @@ RunOutcome Application::outcome() const {
 
 KeyboardQueue& Application::keyboardQueue() {
     return keyboardQueue_;
+}
+
+bool Application::requestPause() {
+    if (!runningNormal_) {
+        return false;
+    }
+    if (!paused_) {
+        pauseRequested_ = true;
+    }
+    return true;
+}
+
+bool Application::resume() {
+    if (pauseRequested_) {
+        // The pause has not taken effect yet: no tick boundary has passed, nothing was discarded.
+        pauseRequested_ = false;
+        return true;
+    }
+    if (!paused_) {
+        return false;
+    }
+    paused_ = false;
+    stepsRequested_ = 0;
+    // srs.fr.1.18: real time counts again from now. The next frame time also holds the time
+    // since the last measurement, which was paused; it is taken off before the accumulator.
+    pausedSinceFrameStart_ = frameClock_.sinceFrameStart();
+    return true;
+}
+
+bool Application::requestStep() {
+    if (!paused_) {
+        return false;
+    }
+    ++stepsRequested_;
+    return true;
+}
+
+bool Application::isPaused() const {
+    return paused_;
 }
 
 Tick Application::ticksExecuted() const {
@@ -162,18 +207,13 @@ void Application::runNormal() {
             keyboardQueue_.clear();
         }
 
-        // (2) One tick for each whole 1/60 s of real time not simulated yet, at most 5
-        // (srs.fr.1.3). The clock is read here and nowhere else: ticks never see real time (R-6).
-        const FrameTicks frame = timestep.advance(frameClock_.measureFrame());
-        if (frame.warnSlow) {
-            logWarning("Simulation is running slower than real time");
-        }
-        for (int i = 0; i < frame.ticksToRun && !reachedMaxTicks(); ++i) {
-            // A run error ends the run at this tick boundary; the frame is not rendered, so
-            // nothing presents state the failed tick left half-changed (srs.fr.1.11).
-            if (!runOneTick()) {
-                return;
-            }
+        // (2) Run the ticks of this frame. The clock is read here and nowhere else: ticks never
+        // see real time (R-6). It is read while paused too, so that the frame times stay true.
+        // A run error ends the run at that tick boundary; the frame is not rendered, so nothing
+        // presents state the failed tick left half-changed (srs.fr.1.11).
+        const std::chrono::nanoseconds frameTime = frameClock_.measureFrame();
+        if (!(paused_ ? runRequestedSteps() : runDueTicks(timestep, frameTime))) {
+            return;
         }
 
         // (3) Render the state the last completed tick left and (4) present it, also when this
@@ -183,6 +223,53 @@ void Application::runNormal() {
         window_->presentFrame();
     }
     outcome_ = RunOutcome::WindowClosed;
+}
+
+bool Application::runDueTicks(FixedTimestep& timestep, std::chrono::nanoseconds frameTime) {
+    // srs.fr.1.18: the part of the frame time before resume() was paused and is not simulated.
+    const std::chrono::nanoseconds realDelta = frameTime - pausedSinceFrameStart_;
+    pausedSinceFrameStart_ = std::chrono::nanoseconds::zero();
+
+    // One tick for each whole 1/60 s of real time not simulated yet, at most 5 (srs.fr.1.3).
+    const FrameTicks frame = timestep.advance(realDelta);
+    if (frame.warnSlow) {
+        logWarning("Simulation is running slower than real time");
+    }
+    for (int i = 0; i < frame.ticksToRun && !reachedMaxTicks(); ++i) {
+        // srs.fr.1.16: a pause request takes effect at the tick boundary. The frame's ticks that
+        // have not started are whole ticks of the accumulator and are dropped with this loop;
+        // the timestep keeps only the part of a tick left over.
+        if (pauseRequested_) {
+            break;
+        }
+        if (!runOneTick()) {
+            return false;
+        }
+    }
+    // A request made during the frame's last tick, or before a frame that runs no tick, takes
+    // effect at this boundary as well.
+    if (pauseRequested_) {
+        enterPause();
+    }
+    return true;
+}
+
+bool Application::runRequestedSteps() {
+    // srs.fr.1.17, 17.14: each step runs one tick and leaves the accumulator as it is, so the
+    // timestep is not called at all while paused.
+    while (stepsRequested_ > 0 && !reachedMaxTicks()) {
+        --stepsRequested_;
+        if (!runOneTick()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void Application::enterPause() {
+    pauseRequested_ = false;
+    paused_ = true;
+    stepsRequested_ = 0;
 }
 
 bool Application::runOneTick() {

@@ -67,6 +67,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-057 | US-1.2: the run mode and run settings come from `parseRunOptions()` in `engine/core`; the game loop catches `engine::RunError`, logs the tick, ends the run with the outcome `Error` and a non-zero exit code; the Editor parts wait for their stories | Accepted | 2026-11-15 |
 | DEC-058 | Agents ask before committing only when they work on a member's computer; in their own cloud copy of the repository they commit and push without asking | Accepted | 2026-11-15 |
 | DEC-059 | US-1.3: the game loop runs every tick as the seven tick phases through `ISimulation::runPhase()`; `TickPhase` lives in `engine/core`; the loop builds each tick's input action state from the run's `IInputSource` (keyboard queue, None, later recording and agent) | Accepted | 2026-11-16 |
+| DEC-060 | US-1.4: `Application::requestPause()`, `resume()`, `requestStep()` and `isPaused()` pause a normal-mode run at the next tick boundary, drop the frame's unstarted ticks, keep the part of a tick, add no paused time and run one tick per step without the accumulator | Accepted | 2026-11-16 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -857,3 +858,26 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none; this follows SRS 6.1.
 - **Revisit when:** the ECS scheduler, the Input Map or recording playback is built.
 - **Supersedes / Related:** DEC-041, DEC-042 (items 2, 4), DEC-046 (item 2), DEC-047, DEC-057, US-1.3 (#43).
+
+### DEC-060 — US-1.4: pause, resume and step in the game loop
+- **Date:** 2026-11-16
+- **Status:** Accepted (carried by the US-1.4 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-1.4 pull request   **Recorded by:** claude (US-1.4 thread)
+- **Human's words:** none yet; listed under "Decisions for review" in the PR.
+- **Proposed by:** claude (US-1.4 thread), from srs.fr.1.16 to 1.18, 17.12 to 17.14, 24.6 and DEC-047
+- **Context:** US-1.4 (#44) asks that a pause takes effect at the next tick boundary, drops the whole ticks still due and keeps the part of a tick (srs.fr.1.16), adds no real time while paused (srs.fr.1.17) and measures real time again from the resume, so the pause neither simulates paused time nor causes the slow-simulation warning (srs.fr.1.18). Step (srs.fr.17.14) runs one tick without the accumulator. The Pause and Step buttons, Ctrl+Shift+P and Ctrl+Alt+P belong to Play mode (US-17.2), and Error Pause to US-24.1; this story gives them the engine calls. `FixedTimestep` already holds only the part of a tick between frames: the whole ticks of a frame live in the loop's `FrameTicks`.
+- **Options considered:**
+  1. How the paused time is kept out: (a) keep reading the frame clock every frame, give the timestep nothing while paused, and on resume take off the part of the next frame time that passed before the resume; (b) restart the frame clock on resume. (a) is chosen: frame times stay true for FPS and render frame time, and `FrameClock::sinceFrameStart()` is the only addition.
+  2. Where the pause is checked: (a) before every tick of a frame and once after the frame's ticks; (b) only between frames. (a) is chosen: srs.fr.24.6 needs a pause asked for inside a tick to stop the frame's remaining ticks.
+- **Decision:**
+  1. `Application::requestPause()` asks for a pause. The loop checks the request before each tick of a render frame and after the frame's ticks; at that boundary the pause takes effect: the frame's ticks that have not started are dropped (they are the accumulator's whole ticks) and `FixedTimestep` keeps the part of a tick. Render frames go on, collecting input and rendering the last completed tick.
+  2. While paused, the frame clock is still read every frame, but `FixedTimestep::advance()` is not called, so no real time and no warning interval reach it.
+  3. `resume()` ends the pause and stores `FrameClock::sinceFrameStart()`, the paused part of the next frame time, which the next frame takes off before it calls `advance()`. A `resume()` before the pause has taken effect cancels the request.
+  4. `requestStep()` while paused counts one step; the next render frame runs one tick per step through `runOneTick()` and renders it, without calling the timestep. A step can reach `maxTicks` or throw `RunError` like any tick.
+  5. The calls act only during a normal-mode `run()` and return false otherwise: headless runs have no Pause (srs.fr.17.28 enables it only in Play mode). A new run starts unpaused. They are called on the loop's thread, from input collection, from a tick or from rendering; the Editor's controls come with US-17.2 and Error Pause with US-24.1.
+- **Rationale:** the timestep stays exact and unchanged: pause and step only decide whether it is called and with how much time, so no paused time and no rounding enter the accumulator.
+- **Consequences:** Play mode's Pause, Step and the toolbar counter (US-17.2) and Error Pause (US-24.1) call these functions. The sandbox has no pause control.
+- **Docs updated:** `architecture/engine-layer.md`, `testing/test-checklists.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** the Editor's Play mode controls or Error Pause are built, or the game loop moves to another thread than the Editor's UI.
+- **Supersedes / Related:** DEC-047, DEC-057, DEC-059, US-1.4 (#44).

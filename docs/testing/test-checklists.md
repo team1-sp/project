@@ -2,7 +2,7 @@
 
 Source: Senior Project Guide "Testing Checklist", extended with requirement IDs. Tick items by linking the test name (`[x] test name — file`). Items stay in this file; progress is also visible in tests.
 
-## Game loop (ip.fr.1.*, srs.fr.1.1 to 1.15)
+## Game loop (ip.fr.1.*, srs.fr.1.1 to 1.18)
 
 Tests are in `tests/unit/core/`.
 
@@ -23,7 +23,12 @@ Tests are in `tests/unit/core/`.
 - [ ] Editor Play mode: a run error Error-Pauses at that tick, Pause and Step disabled until Stop (srs.fr.1.11, 24.6) — needs Play mode (US-17.2)
 - [x] Command-line run options `--headless`, `--max-ticks` (default 10 000), `--seed`, `--input-recording`; an invalid or unknown option is refused with an error naming it and no tick runs (srs.fr.1.8, 7.32, 7.33) — `RunOptions.*`, `Sandbox.HeadlessWithoutMaxTicks_RunsTenThousandTicks`, `Sandbox.InvalidSeed_ExitsNonZeroWithoutTicks`
 - [ ] Standalone window size and fullscreen from the project's Rendering settings (srs.fr.1.9, 27.23) — `WindowConfig::fullscreen` exists and reaches the window factory (`ApplicationTest.WindowConfigGiven_FactoryReceivesIt`); the settings need projects
-- [ ] Pause, resume and step (srs.fr.1.16 to 1.18)
+- [x] A pause takes effect at the next tick boundary, also from inside a tick; whole ticks due are dropped and the part of a tick is kept (srs.fr.1.16, 24.6) — `ApplicationTest.PauseRequestedDuringATick_NoFurtherTickStarts`, `ApplicationTest.PauseAndResume_DiscardWholeTicksKeepTheFractionAndSimulateNoPausedTime`
+- [x] While paused no real time is added and no slow-simulation warning is logged (srs.fr.1.17) — `ApplicationTest.WhilePaused_LongFramesRunNoTickAndDoNotWarn`
+- [x] Resume measures real time from the moment of resuming and continues from the kept fraction (srs.fr.1.18) — `ApplicationTest.PauseAndResume_DiscardWholeTicksKeepTheFractionAndSimulateNoPausedTime`, `ApplicationTest.ResumeDuringAFrame_PausedPartOfTheNextFrameTimeIsNotSimulated`, `FrameClock.SinceFrameStart_IsTheTimeSinceTheLastMeasurement`
+- [x] Step while paused runs exactly one tick per step without changing the accumulator (srs.fr.17.14, 1.17) — `ApplicationTest.StepWhilePaused_RunsExactlyOneTickAndLeavesTheAccumulator`, `ApplicationTest.TwoStepsInOneFrame_RunTwoTicks`, `ApplicationTest.StepReachesMaxTicks_RunEndsWithMaxTicks`
+- [x] Step and resume do nothing while running; a headless run cannot pause; a new run starts unpaused — `ApplicationTest.StepOrResumeWhileRunning_ChangeNothing`, `ApplicationTest.HeadlessRunOrNoRun_CannotBePaused`, `ApplicationTest.SecondRun_StartsUnpaused`
+- [ ] Editor Pause, Step and Ctrl+Shift+P / Ctrl+Alt+P in Play mode (srs.fr.17.12 to 17.14) — needs Play mode (US-17.2)
 
 ## ECS (ip.fr.2.*)
 
