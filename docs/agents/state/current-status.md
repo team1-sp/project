@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-11-16
-updated_by: claude (US-1.4 thread)
+updated_by: claude (ci/136 thread)
 ---
 
 # Current Status
@@ -24,7 +24,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 
 ## Decisions status (details: `history/decision-log.md`)
 
-- **Accepted:** core entries DEC-001…009 and DEC-013…036 as indexed in the decision log; Python 3.12 with pinned `ai-services` tooling (DEC-039); gRPC/protobuf behind `AgentBridge` for the engine-to-Python bridge (DEC-038, ADR-002); the ECS decisions from the PB-010 review (DEC-040…044); no own LLM (DEC-045); the PB-025 physics interface choices (DEC-049); the US-1.1 render frame order with raylib custom frame control (DEC-051); the workflow decisions DEC-052 to DEC-055. DEC-057 (US-1.2, merged in PR #133); DEC-059 (US-1.3, merged in PR #134). In review: DEC-060 (US-1.4). DEC-058 (commit approval only on a member's computer) decided by Işık Dönger on 2026-11-15.
+- **Accepted:** core entries DEC-001…009 and DEC-013…036 as indexed in the decision log; Python 3.12 with pinned `ai-services` tooling (DEC-039); gRPC/protobuf behind `AgentBridge` for the engine-to-Python bridge (DEC-038, ADR-002); the ECS decisions from the PB-010 review (DEC-040…044); no own LLM (DEC-045); the PB-025 physics interface choices (DEC-049); the US-1.1 render frame order with raylib custom frame control (DEC-051); the workflow decisions DEC-052 to DEC-055. DEC-057 (US-1.2, merged in PR #133); DEC-059 (US-1.3, merged in PR #134). In review: DEC-060 (US-1.4); DEC-061 (where agents work) and DEC-062 (Epic close workflow) in the ci/136 PR. DEC-058 (commit approval only on a member's computer) decided by Işık Dönger on 2026-11-15.
 - **Proposed / deferred by the human ("too early"):** MCP later (DEC-010); LLM-instructive component metadata (Q-013). Agents do not raise these.
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
 

@@ -30,6 +30,7 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | P-8 | SHOULD keep changes small: one task, one reviewable diff. No drive-by refactors. |
 | P-9 | MUST update documentation that your change invalidates, in the same task. After any human decision, update **every** affected document (`playbooks/record-decision.md`). |
 | P-11 | MUST tell the human about every material uncertainty or document conflict, in your reply — not only in a file. Course documents (Initial Plan etc.) are not authoritative; the decision log is. |
+| P-12 | SHOULD do code and repository docs work in your own cloud copy of the repository; MUST work on a member's computer only when the files, tools or signed-in accounts exist only there, or the member asks, and there MUST ask before every commit and push (DEC-058, DEC-061; `guidelines/git-workflow.md` §1). |
 | P-10 | MUST NOT leave the repo with failing build/tests without a `Blocked` task describing it. |
 
 ## C. Safety and scope rules

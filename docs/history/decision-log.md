@@ -68,6 +68,8 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-058 | Agents ask before committing only when they work on a member's computer; in their own cloud copy of the repository they commit and push without asking | Accepted | 2026-11-15 |
 | DEC-059 | US-1.3: the game loop runs every tick as the seven tick phases through `ISimulation::runPhase()`; `TickPhase` lives in `engine/core`; the loop builds each tick's input action state from the run's `IInputSource` (keyboard queue, None, later recording and agent) | Accepted | 2026-11-16 |
 | DEC-060 | US-1.4: `Application::requestPause()`, `resume()`, `requestStep()` and `isPaused()` pause a normal-mode run at the next tick boundary, drop the frame's unstarted ticks, keep the part of a tick, add no paused time and run one tick per step without the accumulator | Accepted | 2026-11-16 |
+| DEC-061 | Agents do code work in their own cloud copy of the repository by default; they work on a member's computer (folder access or Remote Control) only when the work needs that computer or the member asks | Accepted | 2026-11-16 |
+| DEC-062 | The `Epic close` workflow closes an epic once all of its sub-issues are closed and its "Later stories" list is empty; with later stories left it stays open with the `increment-done` label | Accepted | 2026-11-16 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -881,3 +883,38 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none; this follows SRS 6.1.
 - **Revisit when:** the Editor's Play mode controls or Error Pause are built, or the game loop moves to another thread than the Editor's UI.
 - **Supersedes / Related:** DEC-047, DEC-057, DEC-059, US-1.4 (#44).
+
+### DEC-061 — Agents do code work in a cloud copy by default, on a member's computer only when the work needs it
+- **Date:** 2026-11-16
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager) asked for the rule; the wording below is for review in the ci/136 pull request   **Recorded by:** claude (ci/136 thread)
+- **Human's words:** "Adding a rule when the agents work on the local and when work on the cloud." (2026-11-16)
+- **Context:** Agents can work in two places: in their own cloud copy of `team1-sp/project` (a Claude Code cloud session), or on a member's own computer, through folder access or a Remote Control session. DEC-058 already says how commits differ between the two, but nothing said which place to pick.
+- **Options considered:**
+  1. Cloud copy by default — cheaper and faster to start, can build, run the tests, commit, push and open the PR itself; the member only runs `git pull`. Cannot reach files that live only on the member's computer, local tools or signed-in accounts.
+  2. Member's computer by default — uses the member's own setup, but every commit and push waits for their approval (DEC-058), the computer must stay on, and the agent changes their working copy.
+- **Decision:** Code and repository docs work happens in the agent's own cloud copy by default: build, test, commit, merge `origin/main`, push and open the draft PR there, without asking (DEC-058); the member then runs `git pull`. An agent works on a member's computer only when (a) the files live only there, such as the Word deliverables in `docs/deliverables` on the member's computer, (b) the work needs a tool, program or signed-in account that exists only there (Visual Studio, a Windows-only check, the member's GitHub or ClickUp login), or (c) the member asks for it. On the member's computer it prefers folder access for reading and editing files, uses Remote Control only to run commands there, and commits or pushes only after the member approves (DEC-058). In a cloud session `tools/open_pr.py` fails, because it uses `gh repo view` and GraphQL is blocked there (HTTP 403): the agent opens the draft PR with the GitHub `create_pull_request` tool, with the same title and body `open_pr.py` would build, then sets labels, milestone and assignee with `gh api -X PATCH repos/team1-sp/project/issues/<pr>`.
+- **Rationale:** most work is code and docs in the repository, which the cloud copy handles end to end without waiting on anyone; the member's computer is used only for what nothing else can reach.
+- **Consequences:** members `git pull` the branch to look at cloud work locally. Work that needs Windows-only checks still relies on CI's Windows job or a member's computer.
+- **Docs updated:** `guidelines/git-workflow.md` §1, `agents/AGENT-PROTOCOL.md` (steps 5a, 23a), `agents/rules.md` (P-12), `CONTRIBUTING.md`, `agents/state/current-status.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** cloud sessions can run GraphQL (then `open_pr.py` works there too), or a cloud copy cannot build something the team needs.
+- **Supersedes / Related:** related DEC-054, DEC-058.
+
+### DEC-062 — The `Epic close` workflow closes an epic once all of its stories are done, and marks it `increment-done` while only later stories are left
+- **Date:** 2026-11-16
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager), 2026-11-16, in the conversation (option 2 chosen); the rest of the details are for review in the ci/136 pull request   **Recorded by:** claude (ci/136 thread)
+- **Human's words:** "Adding an action that auto closes user epic issues that are sub-issues are closed." (2026-11-16); on epics with later stories: chose "Keep open, add increment-done" (2026-11-16)
+- **Context:** Epics (`EP-xx`, label `type:epic`) are parent issues whose stories are GitHub sub-issues (DEC-050). Stories close when their PRs merge; epics stayed open until someone closed them by hand (EP-01 was closed by hand on 2026-11-16). Stories not planned yet are a "Later stories" checklist in the epic's body, not sub-issues.
+- **Options considered:**
+  1. Close as soon as all sub-issues are closed, reopen by hand when a later story is planned — simple, but the board says the epic is done while SRS stories are still left, and Actions cannot trigger on a sub-issue being linked, so reopening cannot be automated reliably.
+  2. Keep the epic open while unchecked later stories remain, and mark the in-between state with an `increment-done` label — the board stays honest, nothing has to be reopened, and a label needs no `PROJECT_TOKEN`.
+  3. Same as 2 without a label — nothing shows that the epic has no planned work left.
+- **Decision:** option 2. `.github/workflows/epic-close.yml` runs `tools/close_epics.py` when an issue is closed, reopened or edited: it checks the issue itself if it is an epic, then its parent (found with the sub-issues API). For an open `type:epic` issue with at least one sub-issue: while any sub-issue is open, it stays open without `increment-done`; when all are closed but the "Later stories" section still has unchecked items (items that only link an issue are not counted), it stays open and gets `increment-done`; when all are closed and no later stories are left, it is commented on and closed as completed (and the check goes one level up). Run by hand (`workflow_dispatch`, optional dry run), it checks every open epic. Closed epics are never reopened. It uses the workflow's own token; the project's built-in "Item closed" workflow moves the card to Done, so it needs no `PROJECT_TOKEN`.
+- **Rationale:** an epic covers all of its SRS stories, so it is closed only when all of them are done; the label still shows that an Increment's part of it is finished.
+- **Consequences:** converting a later story to a sub-issue edits the epic's body, which runs the check and takes the label off. An epic with no sub-issues never changes by itself. EP-01 (#40) was closed by hand on 2026-11-16 with US-1.5 still in its later stories; under this rule it would be open with `increment-done`, and the workflow leaves it closed unless someone reopens it.
+- **Docs updated:** `guidelines/git-workflow.md` §1, `CONTRIBUTING.md`, `.github/labels.yml`, `agents/state/current-status.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** later stories are planned as sub-issues up front, or GitHub Actions can trigger on sub-issue links.
+- **Supersedes / Related:** related DEC-050.
