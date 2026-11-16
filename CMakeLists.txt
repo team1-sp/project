@@ -21,6 +21,7 @@ set(AEGIS_BRIDGE_PYTHON_EXECUTABLE "" CACHE FILEPATH
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(CompilerWarnings)
 include(Dependencies)
+include(EmbedFile)
 
 add_subdirectory(engine)
 

@@ -262,11 +262,12 @@ std::vector<Command> buildToolbar() {
         toolbarCommand("Scale", plain(Key::R)),
         toolbarCommand("Rect", plain(Key::T)),
         toolbarCommand("Pivot", plain(Key::Z)),
-        toolbarCommand("Local", plain(Key::X)),
+        toolbarCommand("Global", plain(Key::X)),
+        toolbarCommand("Snap", ctrl(Key::Backslash)),
         toolbarCommand("Play", ctrl(Key::P)),
         toolbarCommand("Pause", ctrlShift(Key::P)),
         toolbarCommand("Step", Shortcut{Key::P, true, false, true}),
-        toolbarCommand("AI", ctrlShift(Key::A)),
+        toolbarCommand("AI Assistant", ctrlShift(Key::A)),
     };
 }
 

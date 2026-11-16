@@ -17,12 +17,19 @@ if(ENGINE_WITH_RAYLIB)
     add_executable(editor
         src/main.cpp
         src/main_window_view.cpp
+        src/theme.cpp
     )
     target_link_libraries(editor PRIVATE
         editor::core
         engine::core
         engine::rendering_raylib
         imgui
+        rlimgui_icons
     )
     engine_set_warnings(editor)
+    # The fonts of the UI design live inside the executable (DEC-064).
+    embed_file(editor interRegularTtf ${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/Inter-Regular.ttf)
+    embed_file(editor interSemiBoldTtf ${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/Inter-SemiBold.ttf)
+    embed_file(editor jetBrainsMonoTtf
+               ${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/JetBrainsMono-Regular.ttf)
 endif()

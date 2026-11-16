@@ -17,8 +17,13 @@ public:
     // Called once per render frame, between ImGui::NewFrame() and ImGui::Render(), to build the
     // frame's interface with the imgui.h functions.
     using DrawUi = std::function<void()>;
+    // Called once, right after the Dear ImGui context is created, to load the fonts and set the
+    // style. `uiScale` is the display's scale factor (1 at 100 %); fonts and sizes are multiplied
+    // by it. The backend merges its Font Awesome icons into the last font loaded. Empty: Dear
+    // ImGui's default font and dark style.
+    using SetupUi = std::function<void(float uiScale)>;
 
-    explicit ImGuiRenderer(DrawUi drawUi);
+    explicit ImGuiRenderer(DrawUi drawUi, SetupUi setupUi = {});
     ~ImGuiRenderer() override;
 
     ImGuiRenderer(const ImGuiRenderer&) = delete;
@@ -28,7 +33,10 @@ public:
     void releaseGraphics() override;
 
 private:
+    void start();
+
     DrawUi drawUi_;
+    SetupUi setupUi_;
     bool started_ = false;
     // raylib time, in seconds, of the previous render frame; Dear ImGui animates with the
     // difference.

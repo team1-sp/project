@@ -71,6 +71,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-061 | Agents do code work in their own cloud copy of the repository by default; they work on a member's computer (folder access or Remote Control) only when the work needs that computer or the member asks | Accepted | 2026-11-16 |
 | DEC-062 | The `Epic close` workflow closes an epic once all of its sub-issues are closed and its "Later stories" list is empty; with later stories left it stays open with the `increment-done` label | Accepted | 2026-11-16 |
 | DEC-063 | US-14.1: the Editor's interface is drawn with Dear ImGui v1.93.0 (docking branch) through rlImGui inside `engine/rendering-raylib`; the window-free menu model and session live in `editor_core`; unbuilt menu items are disabled; `Application` gets `confirmClose`, `requestClose()` and `setWindowTitle()` | Accepted | 2026-11-16 |
+| DEC-064 | US-14.1: the Editor takes the look of the Figma design: Inter and JetBrains Mono embedded in the executable from `editor/assets/fonts`, the design's palette and sizes as the Dear ImGui style, Font Awesome icons on the toolbar | Accepted | 2026-11-16 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -939,8 +940,29 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
   5. `engine/core`: `ApplicationConfig::confirmClose` is asked when the user asks to close the window and can keep it open; `Application::requestClose()` ends a normal-mode run after the render frame (File > Exit, after its own check); `Application::setWindowTitle()` and `IWindow::setTitle()` change the title; `WindowConfig::escapeClosesWindow` lets the Editor keep Escape (Stop Headless Run, D-06); `IFrameRenderer::releaseGraphics()` runs right before the window closes.
   6. `EditorSession::confirmClose()` returns true with nothing unsaved. With unsaved items it keeps the Editor open and flags a request for the Unsaved Changes dialog (F-01), which closes the Editor itself when it comes with US-15.x. Stopping a simulation operation first (srs.fr.15.25) comes with Play mode.
 - **Rationale:** Dear ImGui is the common choice for engine editors, covers srs.fr.14.5 and the later docking requirements out of the box, and keeps raylib inside its adapter target. Keeping the menu model and session out of Dear ImGui lets the tests check srs.fr.14.2 to 14.6 without a window.
-- **Consequences:** two new pinned dependencies (changing their versions is a decision, coding-standards §6). The Editor has no project until the Project Hub (US-13.x), so it shows "No project open". The default font has no em dash; the tick counter uses a hyphen until a font is chosen. Docking by drag, floating panels and saved layouts (srs.fr.14.12 to 14.27) build on this dock space.
+- **Consequences:** two new pinned dependencies (changing their versions is a decision, coding-standards §6). The Editor has no project until the Project Hub (US-13.x), so it shows "No project open". Fonts and colours follow in DEC-064. Docking by drag, floating panels and saved layouts (srs.fr.14.12 to 14.27) build on this dock space.
 - **Docs updated:** `architecture/tech-stack.md`, `architecture/engine-layer.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
 - **Course documents affected (for humans):** none; this follows SRS 6.1.
 - **Revisit when:** the human chooses another UI library, floating panels outside the main window are built (rlImGui has no multi-viewport support), or a font is chosen.
 - **Supersedes / Related:** DEC-033, DEC-048, DEC-051, US-14.1 (#77).
+
+### DEC-064 — US-14.1: the Editor's theme follows the Figma design
+- **Date:** 2026-11-16
+- **Status:** Accepted (carried by the US-14.1 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-14.1 pull request   **Recorded by:** claude (US-14.1 thread)
+- **Human's words:** Işık Dönger, US-14.1 thread, 2026-11-17: "first build on top of the already built ImGui and adds the theme to make it look like the figma design so I can see how far off it will be."
+- **Proposed by:** claude (US-14.1 thread), from the B-01, B-02 and C-01 frames and the palette of `aegis-figma-update-6`
+- **Context:** the first version used Dear ImGui's stock dark style and its ASCII-only pixel font, so it looked unlike the design. The design uses Inter (Regular, Semi Bold) and JetBrains Mono, a grey palette with a #3a79bb accent, 3 px corners and icons on the toolbar.
+- **Options considered:**
+  1. Fonts: (a) commit the three TTF files (about 1.1 MB, SIL Open Font License) and embed them in the executable; (b) download the release archives at configure time (Inter's is 34 MB); (c) load them from files beside the executable. (a) is chosen: it builds offline, keeps `editor.exe` a single file, and `.gitattributes` already treats `*.ttf` as binary assets.
+- **Decision:**
+  1. `editor/assets/fonts/` holds Inter 4.1 Regular and Semi Bold and JetBrains Mono 2.304 Regular with their licenses and a README naming the sources. `cmake/EmbedFile.cmake` (`embed_file()`) turns each into a generated C++ array linked into `editor`.
+  2. `editor/src/theme.cpp` (`applyTheme()`) loads the fonts at 13 px and sets Dear ImGui's colours and sizes from the design's palette: panels #282828, bars #232323, tabs #2d2d2d / #3c3c3c with a #3a79bb top line, selection #2c5d87, text #e6e6e6, 3 px corners. `ImGuiRenderer` takes a setup callback for this and scales fonts and sizes by the display's DPI scale.
+  3. rlImGui's Font Awesome 6 icons are turned back on and merged into Inter Regular; the toolbar uses them, laid out as in C-01 (tools left, mode switch, run buttons and tick counter centre, AI Assistant and Layout right). The status bar shows the mode, the FPS and the AI service state (offline) at the right.
+  4. Dear ImGui's dock window-menu button is hidden; the design's ⋮ menu (E-07) comes with the docking stories.
+- **Rationale:** shows how close Dear ImGui gets to the design (asked by the human) with styling only, no custom widgets.
+- **Consequences:** the window's title bar stays the operating system's, not the design's custom one. Disabled controls are drawn at 45 % opacity (srs.fr.14.5), so the toolbar looks fainter than the design, which shows them enabled.
+- **Docs updated:** `editor/assets/fonts/README.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** the design changes its fonts or palette, or a light theme is wanted.
+- **Supersedes / Related:** DEC-063, US-14.1 (#77).

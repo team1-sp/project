@@ -21,7 +21,7 @@ enum class Key {
     // clang-format off
     A, B, C, D, E, F, H, N, O, P, Q, R, S, T, V, W, X, Y, Z,
     Digit1, Digit2, Digit3, Digit4, Digit5, Digit6,
-    F2, F4, Delete, Escape, Comma,
+    F2, F4, Delete, Escape, Comma, Backslash,
     // clang-format on
 };
 

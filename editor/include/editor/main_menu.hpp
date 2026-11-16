@@ -57,8 +57,9 @@ struct Menu {
 // `actions` must outlive the menus.
 [[nodiscard]] std::vector<Menu> buildMainMenu(IEditorActions& actions);
 
-// The toolbar controls of C-01, left to right. None of their features are built yet, so all of
-// them are disabled (srs.fr.14.5); they come with the Scene view and Play mode stories.
+// The toolbar buttons of C-01, left to right: the five transform tools, the Pivot, Global and Snap
+// toggles, Play, Pause and Step, and AI Assistant. None of their features are built yet, so all
+// of them are disabled (srs.fr.14.5); they come with the Scene view, Play mode and AI stories.
 [[nodiscard]] std::vector<Command> buildToolbar();
 
 } // namespace editor

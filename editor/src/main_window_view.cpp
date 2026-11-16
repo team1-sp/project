@@ -2,10 +2,14 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdio>
 #include <utility>
 
 #include <imgui.h>
 #include <imgui_internal.h>
+
+#include "theme.hpp"
+#include <IconsFontAwesome6.h>
 
 namespace editor {
 
@@ -14,12 +18,13 @@ namespace {
 constexpr const char* dockSpaceName = "MainDockSpace";
 
 // Indexed by Key, in the order of its enumerators.
-constexpr std::array<ImGuiKey, 30> imguiKeys = {
-    ImGuiKey_A, ImGuiKey_B,  ImGuiKey_C,  ImGuiKey_D,      ImGuiKey_E,      ImGuiKey_F,
-    ImGuiKey_H, ImGuiKey_N,  ImGuiKey_O,  ImGuiKey_P,      ImGuiKey_Q,      ImGuiKey_R,
-    ImGuiKey_S, ImGuiKey_T,  ImGuiKey_V,  ImGuiKey_W,      ImGuiKey_X,      ImGuiKey_Y,
-    ImGuiKey_Z, ImGuiKey_1,  ImGuiKey_2,  ImGuiKey_3,      ImGuiKey_4,      ImGuiKey_5,
-    ImGuiKey_6, ImGuiKey_F2, ImGuiKey_F4, ImGuiKey_Delete, ImGuiKey_Escape, ImGuiKey_Comma,
+constexpr std::array<ImGuiKey, 31> imguiKeys = {
+    ImGuiKey_A,         ImGuiKey_B,  ImGuiKey_C,  ImGuiKey_D,      ImGuiKey_E,      ImGuiKey_F,
+    ImGuiKey_H,         ImGuiKey_N,  ImGuiKey_O,  ImGuiKey_P,      ImGuiKey_Q,      ImGuiKey_R,
+    ImGuiKey_S,         ImGuiKey_T,  ImGuiKey_V,  ImGuiKey_W,      ImGuiKey_X,      ImGuiKey_Y,
+    ImGuiKey_Z,         ImGuiKey_1,  ImGuiKey_2,  ImGuiKey_3,      ImGuiKey_4,      ImGuiKey_5,
+    ImGuiKey_6,         ImGuiKey_F2, ImGuiKey_F4, ImGuiKey_Delete, ImGuiKey_Escape, ImGuiKey_Comma,
+    ImGuiKey_Backslash,
 };
 
 // Dear ImGui's Ctrl stands for Cmd on macOS (ConfigMacOSXBehaviors), as srs.fr.14.6 asks.
@@ -165,42 +170,111 @@ void MainWindowView::drawMenuEntries(const std::vector<MenuEntry>& entries) {
 }
 
 void MainWindowView::drawToolbar() {
-    constexpr ImGuiWindowFlags barFlags =
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
-    // The tools, the gizmo toggles and the run controls form three groups (C-01).
-    constexpr std::size_t lastToolIndex = 4;
-    constexpr std::size_t lastToggleIndex = 6;
-    constexpr std::size_t lastRunIndex = 9;
+    constexpr ImGuiWindowFlags barFlags = ImGuiWindowFlags_NoScrollbar |
+                                          ImGuiWindowFlags_NoSavedSettings |
+                                          ImGuiWindowFlags_NoScrollWithMouse;
+    // Buttons of C-01 by their index in buildToolbar(), with the design's icons.
+    constexpr std::array<const char*, 12> icons = {
+        ICON_FA_HAND,          ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT,
+        ICON_FA_ROTATE,        ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER,
+        ICON_FA_VECTOR_SQUARE, ICON_FA_CROSSHAIRS,
+        ICON_FA_GLOBE,         ICON_FA_TABLE_CELLS,
+        ICON_FA_PLAY,          ICON_FA_PAUSE,
+        ICON_FA_FORWARD_STEP,  ICON_FA_WAND_MAGIC,
+    };
+    // Pivot, Global, Snap and AI Assistant show their name beside the icon.
+    constexpr std::size_t firstToggle = 5;
+    constexpr std::size_t firstRunButton = 8;
+    constexpr std::size_t aiButton = 11;
 
     ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const float height = ImGui::GetFrameHeight();
-    if (ImGui::BeginViewportSideBar("##Toolbar", viewport, ImGuiDir_Up, height, barFlags)) {
-        if (ImGui::BeginMenuBar()) {
-            for (std::size_t i = 0; i < toolbar_.size(); ++i) {
-                const Command& command = toolbar_[i];
-                ImGui::BeginDisabled(!command.isEnabled());
-                if (ImGui::Button(command.label.c_str())) {
-                    command.run();
-                }
-                ImGui::EndDisabled();
-                const std::optional<Shortcut> shortcut = command.shortcutOn(platform_);
-                if (shortcut && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled |
-                                                     ImGuiHoveredFlags_ForTooltip)) {
-                    ImGui::SetTooltip("%s (%s)", command.label.c_str(),
-                                      shortcutText(*shortcut, platform_).c_str());
-                }
-                if (i == lastToolIndex || i == lastToggleIndex || i == lastRunIndex) {
-                    ImGui::Separator();
-                }
-                if (i == lastRunIndex) {
-                    // The tick counter before the first tick (srs.fr.17.15). The default font has
-                    // no em dash, so a hyphen stands in for it.
-                    ImGui::TextDisabled("Tick - \xC2\xB7 0 executed \xC2\xB7 0.00 s");
-                    ImGui::Separator();
-                }
+    const ImGuiStyle& style = ImGui::GetStyle();
+    const float height = ImGui::GetFrameHeight() + 2.0F * style.WindowPadding.y;
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+    const bool open =
+        ImGui::BeginViewportSideBar("##Toolbar", viewport, ImGuiDir_Up, height, barFlags);
+    ImGui::PopStyleColor();
+    if (open && toolbar_.size() == icons.size()) {
+        const auto button = [this, &icons](std::size_t index) {
+            const Command& command = toolbar_[index];
+            const bool named =
+                (index >= firstToggle && index < firstRunButton) || index == aiButton;
+            const std::string label = std::string(icons.at(index)) +
+                                      (named ? " " + command.label : std::string()) + "##" +
+                                      command.label;
+            ImGui::BeginDisabled(!command.isEnabled());
+            if (index == aiButton) {
+                ImGui::PushStyleColor(ImGuiCol_Button, themeColor::aiButton);
             }
-            ImGui::EndMenuBar();
+            if (ImGui::Button(label.c_str())) {
+                command.run();
+            }
+            if (index == aiButton) {
+                ImGui::PopStyleColor();
+            }
+            ImGui::EndDisabled();
+            const std::optional<Shortcut> shortcut = command.shortcutOn(platform_);
+            if (shortcut && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled |
+                                                 ImGuiHoveredFlags_ForTooltip)) {
+                ImGui::SetTooltip("%s (%s)", command.label.c_str(),
+                                  shortcutText(*shortcut, platform_).c_str());
+            }
+        };
+        const auto groupGap = [&style] { ImGui::SameLine(0.0F, style.ItemSpacing.x * 3.0F); };
+
+        // Left: transform tools, then the Pivot, Global and Snap toggles.
+        for (std::size_t i = 0; i < firstRunButton; ++i) {
+            button(i);
+            if (i + 1 == firstToggle) {
+                groupGap();
+            } else {
+                ImGui::SameLine(0.0F, 2.0F);
+            }
         }
+
+        // Centre: the Normal / Headless mode switch, Play, Pause, Step and the tick counter
+        // (srs.fr.17.15, before the first tick).
+        const char* tickText = "Tick \xE2\x80\x94 \xC2\xB7 0 executed \xC2\xB7 0.00 s";
+        ImGui::PushFont(themeFonts().mono, 0.0F);
+        const float tickWidth = ImGui::CalcTextSize(tickText).x;
+        ImGui::PopFont();
+        const float centreWidth = ImGui::CalcTextSize("NormalHeadless").x +
+                                  4.0F * style.FramePadding.x + 3.0F * ImGui::GetFrameHeight() +
+                                  tickWidth + 8.0F * style.ItemSpacing.x;
+        const float centreX = (ImGui::GetWindowWidth() - centreWidth) * 0.5F;
+        if (centreX > ImGui::GetCursorPosX()) {
+            ImGui::SetCursorPosX(centreX);
+        }
+        ImGui::BeginDisabled();
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_Header));
+        ImGui::Button("Normal");
+        ImGui::PopStyleColor();
+        ImGui::SameLine(0.0F, 0.0F);
+        ImGui::Button("Headless");
+        ImGui::EndDisabled();
+        groupGap();
+        for (std::size_t i = firstRunButton; i < aiButton; ++i) {
+            button(i);
+            ImGui::SameLine(0.0F, 2.0F);
+        }
+        groupGap();
+        ImGui::PushFont(themeFonts().mono, 0.0F);
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(themeColor::mutedText), "%s", tickText);
+        ImGui::PopFont();
+
+        // Right: AI Assistant and the layout menu.
+        const std::string layoutLabel = std::string("Layout: Default ") + ICON_FA_CARET_DOWN;
+        const float rightWidth =
+            ImGui::CalcTextSize((std::string(icons.at(aiButton)) + " AI Assistant").c_str()).x +
+            ImGui::CalcTextSize(layoutLabel.c_str()).x + 4.0F * style.FramePadding.x +
+            style.ItemSpacing.x;
+        ImGui::SameLine(ImGui::GetWindowWidth() - rightWidth - style.WindowPadding.x);
+        button(aiButton);
+        ImGui::SameLine();
+        ImGui::BeginDisabled();
+        ImGui::Button(layoutLabel.c_str());
+        ImGui::EndDisabled();
     }
     ImGui::End();
 }
@@ -212,7 +286,28 @@ void MainWindowView::drawStatusBar() {
     const float height = ImGui::GetFrameHeight();
     if (ImGui::BeginViewportSideBar("##StatusBar", viewport, ImGuiDir_Down, height, barFlags)) {
         if (ImGui::BeginMenuBar()) {
-            ImGui::TextUnformatted(session_.isProjectOpen() ? "Edit" : "No project open");
+            const ImVec4 muted = ImGui::ColorConvertU32ToFloat4(themeColor::mutedText);
+            ImGui::TextColored(muted, ICON_FA_CIRCLE_INFO " %s",
+                               session_.isProjectOpen() ? "" : "No project open");
+
+            // The mode, the frame rate and the AI service state, at the right (B-01).
+            char fps[32];
+            std::snprintf(fps, sizeof fps, "FPS %.0f",
+                          static_cast<double>(ImGui::GetIO().Framerate));
+            const char* mode = "Edit mode";
+            const char* ai = ICON_FA_CIRCLE " AI service: offline";
+            const ImGuiStyle& style = ImGui::GetStyle();
+            const float rightWidth = ImGui::CalcTextSize(mode).x + ImGui::CalcTextSize(fps).x +
+                                     ImGui::CalcTextSize(ai).x + 4.0F * style.ItemSpacing.x * 2.0F;
+            ImGui::SameLine(ImGui::GetWindowWidth() - rightWidth);
+            ImGui::TextColored(muted, "%s", mode);
+            ImGui::SameLine(0.0F, style.ItemSpacing.x * 3.0F);
+            ImGui::TextColored(muted, "%s", fps);
+            ImGui::SameLine(0.0F, style.ItemSpacing.x * 3.0F);
+            ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(themeColor::offlineDot),
+                               ICON_FA_CIRCLE);
+            ImGui::SameLine(0.0F, 4.0F);
+            ImGui::TextColored(muted, "AI service: offline");
             ImGui::EndMenuBar();
         }
     }
@@ -225,10 +320,15 @@ void MainWindowView::drawPanels() {
     if (frameIndex_ == 0) {
         buildDefaultLayout(dockSpaceId, viewport);
     }
-    ImGui::DockSpaceOverViewport(dockSpaceId, &viewport);
+    // The design opens the panel tab menu (E-07) from a ⋮ button, which comes with the docking
+    // stories, so Dear ImGui's own window menu button is hidden.
+    ImGuiWindowClass panelClass;
+    panelClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton;
+    ImGui::DockSpaceOverViewport(dockSpaceId, &viewport, ImGuiDockNodeFlags_None, &panelClass);
 
     for (int i = 0; i < panelCount; ++i) {
         const auto panel = static_cast<Panel>(i);
+        ImGui::SetNextWindowClass(&panelClass);
         // The Default layout starts with Scene and Project in front of Game and Console. Dear
         // ImGui docks the panels in the first frame, so they are brought to the front in the
         // second.

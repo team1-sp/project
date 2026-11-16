@@ -8,8 +8,27 @@
 
 namespace engine::rendering_raylib {
 
-ImGuiRenderer::ImGuiRenderer(DrawUi drawUi)
-    : drawUi_(std::move(drawUi)) {
+namespace {
+
+// rlImGui takes the font loader as a plain function pointer, so the renderer that is starting
+// leaves its loader and scale here for the moment rlImGui calls it.
+const ImGuiRenderer::SetupUi* startingSetup = nullptr;
+float startingScale = 1.0F;
+
+void loadFonts() {
+    if (startingSetup != nullptr && *startingSetup) {
+        (*startingSetup)(startingScale);
+    } else {
+        ImGui::GetIO().Fonts->AddFontDefault();
+        ImGui::StyleColorsDark();
+    }
+}
+
+} // namespace
+
+ImGuiRenderer::ImGuiRenderer(DrawUi drawUi, SetupUi setupUi)
+    : drawUi_(std::move(drawUi))
+    , setupUi_(std::move(setupUi)) {
 }
 
 ImGuiRenderer::~ImGuiRenderer() {
@@ -23,9 +42,7 @@ void ImGuiRenderer::renderFrame() {
     const double now = GetTime();
     double deltaSeconds = now - lastFrameSeconds_;
     if (!started_) {
-        rlImGuiSetup(true);
-        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-        started_ = true;
+        start();
         deltaSeconds = firstFrameSeconds;
     }
     lastFrameSeconds_ = now;
@@ -40,6 +57,28 @@ void ImGuiRenderer::renderFrame() {
         drawUi_();
     }
     rlImGuiEnd();
+}
+
+void ImGuiRenderer::start() {
+    // On macOS, and on windows opened with the high-DPI flag, raylib already works in scaled
+    // pixels; elsewhere sizes follow the display's scale, as rlImGui does for its default font.
+    float scale = 1.0F;
+#if !defined(__APPLE__)
+    if (!IsWindowState(FLAG_WINDOW_HIGHDPI)) {
+        scale = GetWindowScaleDPI().y;
+    }
+#endif
+    startingSetup = &setupUi_;
+    startingScale = scale > 0.0F ? scale : 1.0F;
+    rlImGuiSetLoadFontsCallback(loadFonts);
+    // Creates the context and calls loadFonts(); the second half adds the icons and the backend.
+    rlImGuiBeginInitImGui();
+    rlImGuiEndInitImGui();
+    rlImGuiSetLoadFontsCallback(nullptr);
+    startingSetup = nullptr;
+
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    started_ = true;
 }
 
 void ImGuiRenderer::releaseGraphics() {

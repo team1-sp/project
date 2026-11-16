@@ -8,9 +8,9 @@ namespace editor {
 namespace {
 
 // Indexed by Key, in the order of its enumerators.
-constexpr std::array<const char*, 30> keyNames = {
-    "A", "B", "C", "D", "E", "F", "H", "N", "O", "P", "Q",  "R",  "S",   "T",   "V",
-    "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "F2", "F4", "Del", "Esc", ",",
+constexpr std::array<const char*, 31> keyNames = {
+    "A", "B", "C", "D", "E", "F", "H", "N", "O", "P",  "Q",  "R",   "S",   "T", "V",  "W",
+    "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "F2", "F4", "Del", "Esc", ",", "\\",
 };
 
 } // namespace

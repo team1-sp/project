@@ -23,6 +23,7 @@
 #include "engine/rendering_raylib/imgui_renderer.hpp"
 #include "engine/rendering_raylib/raylib_window.hpp"
 #include "main_window_view.hpp"
+#include "theme.hpp"
 
 namespace {
 
@@ -88,7 +89,8 @@ int main(int argc, char** argv) {
     editor::MainWindowView mainWindow(
         session, [&runningApp] { runningApp->requestClose(); },
         [&runningApp](const std::string& title) { runningApp->setWindowTitle(title); });
-    engine::rendering_raylib::ImGuiRenderer renderer([&mainWindow] { mainWindow.draw(); });
+    engine::rendering_raylib::ImGuiRenderer renderer([&mainWindow] { mainWindow.draw(); },
+                                                     editor::applyTheme);
 
     engine::Application app(simulation, renderer, engine::rendering_raylib::RaylibWindow::open);
     runningApp = &app;

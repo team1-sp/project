@@ -360,4 +360,5 @@
 - **Not verified:** Windows 11 and macOS (CI after push); Cmd shortcuts on a real Mac; the title with a real project (no Project Hub yet).
 - **Next:** US-15.x adds F-01 and reads `EditorSession::isUnsavedChangesDialogRequested()`; the Project Hub calls `openProject()`; the docking and layout stories build on the dock space in `MainWindowView`.
 - **Traps:** rlImGui must be shut down before the window closes, which `Application::shutdown()` does through `releaseGraphics()`. Dear ImGui docks the panels during the first frame, so bringing tabs to the front works from the second frame on. The default font has ASCII and Latin-1 only.
-- **Records:** DEC-063 (Accepted in the PR, for review).
+- **Theme (same PR):** the editor now uses Inter and JetBrains Mono (embedded from `editor/assets/fonts`), the Figma palette and Font Awesome toolbar icons (DEC-064); `figma-vs-editor.png` in the thread compares it with B-02.
+- **Records:** DEC-063, DEC-064 (Accepted in the PR, for review).
