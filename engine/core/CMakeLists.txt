@@ -5,8 +5,11 @@ add_library(engine_core STATIC
     src/application.cpp
     src/fixed_timestep.cpp
     src/frame_clock.cpp
+    src/input_actions.cpp
+    src/input_source.cpp
     src/leak_check.cpp
     src/run_options.cpp
+    src/tick_phase.cpp
     src/version.cpp
 )
 add_library(engine::core ALIAS engine_core)

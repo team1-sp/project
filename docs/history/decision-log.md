@@ -66,6 +66,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-055 | Branches keep in step with `main` by merging it (never rebasing) before each push and before review; collided record ids are renumbered by the later branch and caught by `check_ids.py`; the `Conflict flag` workflow labels open PRs that conflict with `main` | Accepted | 2026-11-12 |
 | DEC-057 | US-1.2: the run mode and run settings come from `parseRunOptions()` in `engine/core`; the game loop catches `engine::RunError`, logs the tick, ends the run with the outcome `Error` and a non-zero exit code; the Editor parts wait for their stories | Accepted | 2026-11-15 |
 | DEC-058 | Agents ask before committing only when they work on a member's computer; in their own cloud copy of the repository they commit and push without asking | Accepted | 2026-11-15 |
+| DEC-059 | US-1.3: the game loop runs every tick as the seven tick phases through `ISimulation::runPhase()`; `TickPhase` lives in `engine/core`; the loop builds each tick's input action state from the run's `IInputSource` (keyboard queue, None, later recording and agent) | Accepted | 2026-11-16 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -831,3 +832,28 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none.
 - **Revisit when:** a cloud agent's push causes harm that an approval would have stopped.
 - **Supersedes / Related:** refines DEC-053; related DEC-052, DEC-054, DEC-055, S-2.
+
+### DEC-059 — US-1.3: the game loop runs the seven tick phases itself and gives every tick its input action state
+- **Date:** 2026-11-16
+- **Status:** Accepted (carried by the US-1.3 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-1.3 pull request   **Recorded by:** claude (US-1.3 thread)
+- **Human's words:** none yet; listed under "Decisions for review" in the PR.
+- **Proposed by:** claude (US-1.3 thread), from srs.fr.1.12 to 1.15, srs.fr.5.5 to 5.7, 5.11 and DEC-041, DEC-042
+- **Context:** US-1.3 (#43) asks that every tick runs the same seven phases in the same order in normal and headless mode (srs.fr.1.12, 1.13), that the input application phase gives the tick the input action state of its input source (srs.fr.1.14) and that a frame without a tick still renders the last completed tick (srs.fr.1.15, already met in US-1.1). `ISimulation::runTick(tick)` left the phase order to whoever implements it, so nothing in the loop guaranteed it. `TickPhase` was only designed, inside `engine/ecs` (`ecs-api-design.md` §8), which does not exist yet. Nothing in the engine held input actions or input sources. Key bindings and the Input Map are US-5.1; focus loss is US-5.3; recordings are US-5.4.
+- **Options considered:**
+  1. Who runs the phases: (a) the game loop calls `ISimulation::runPhase(phase, context)` once per phase; (b) keep `runTick()` and let the ECS run its phases inside it. (a) is chosen: the loop owns the order, both modes reach the simulation through one function, and the ECS `SystemScheduler::runPhase()` maps onto it one to one.
+  2. Where input transitions come from: (a) an `IInputSource` interface that the loop asks once per tick, with a `KeyboardQueue` for normal mode and `NoInputSource` for None; (b) pass input through `IWindow`. (a) is chosen: recordings and the agent (srs.fr.5.3, 5.11, 9.51) become sources too, and headless mode, which has no window, uses the same path.
+- **Decision:**
+  1. `engine/core/tick_phase.hpp` has `enum class TickPhase` (InputApplication, GameplayInput, PhysicsSyncIn, PhysicsStep, PhysicsSyncOut, GameplayRules, TelemetryRecording), `tickPhases` in execution order and `tickPhaseName()` with the names the schema uses. The ECS uses this type instead of defining its own.
+  2. `ISimulation::runTick(tick)` is replaced by `runPhase(TickPhase, const TickContext&)`. `Application::runOneTick()`, the only function both modes use to run a tick, calls it for each phase of `tickPhases` in order. `TickContext` holds the tick number and the tick's `InputActionState`. The PhysicsStep phase is still called: the ECS-backed simulation steps the Physics Adapter there and runs no systems (DEC-041 said "the game loop calls `adapter.step(1/60)`"; the loop now does so through this call).
+  3. A phase that throws `engine::RunError` ends the tick there: the later phases of that tick do not run and the tick is not counted (srs.fr.1.11 as in DEC-057).
+  4. `engine/core/input_actions.hpp` has the Phase 1 actions of DEC-042 item 4 (`InputAction`: MoveUp, MoveDown, MoveLeft, MoveRight, Interact), `InputTransition` and `InputActionState`, whose `applyTick()` follows srs.fr.5.6 and 5.7. The Input Map (US-5.1, srs.fr.5.22 onwards) replaces the fixed list.
+  5. `engine/core/input_source.hpp` has `IInputSource::takeTransitions(tick, out)`, `NoInputSource` and `KeyboardQueue` (srs.fr.5.5: transitions of frames that run no tick stay queued; the first tick afterwards takes them all). Before phase 1 of each tick, `Application` takes the transitions from the run's source and applies them to the run's `InputActionState`. `ApplicationConfig::inputSource` selects a source; without one, normal mode uses the keyboard queue (`Application::keyboardQueue()`) and headless mode uses None (srs.fr.7.3). While another source is active, the keyboard queue is emptied every render frame (srs.fr.5.11). A new run starts with nothing held and nothing queued.
+  6. Nothing pushes keyboard transitions yet: turning raylib keys into actions needs the default bindings and the Input Map (srs.fr.5.1, 5.28; US-5.1). Focus-lost markers (US-5.3), recording playback (US-5.4) and the agent source come with their stories as `IInputSource` implementations or additions.
+  7. The sandbox prints `tick phases run: N`, so CI checks seven phases per tick on a real process.
+- **Rationale:** the phase order is fixed in one place that both run modes share, so they cannot drift apart, and every later input source plugs into the same tick input path.
+- **Consequences:** `editor`, `sandbox` and the tests implement `runPhase()`. `ecs-api-design.md` §8 now points to `engine/core` for `TickPhase`. US-5.1 fills the keyboard queue from the window.
+- **Docs updated:** `architecture/engine-layer.md`, `design/ecs-api-design.md`, `design/ecs-design.md`, `design/physics-adapter-design.md`, `testing/test-checklists.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** the ECS scheduler, the Input Map or recording playback is built.
+- **Supersedes / Related:** DEC-041, DEC-042 (items 2, 4), DEC-046 (item 2), DEC-047, DEC-057, US-1.3 (#43).

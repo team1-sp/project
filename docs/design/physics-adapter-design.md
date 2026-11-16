@@ -80,7 +80,7 @@ Dynamic body falls under gravity · static body does not move · collider produc
 | Tick phase | Who | What |
 | --- | --- | --- |
 | PhysicsSyncIn | `PhysicsSyncIn` system | In the order of srs.fr.3.61: destroy bodies of entities destroyed or disabled earlier (reported by the adapter's `IWorldObserver`); create bodies for new entities with a collider, ascending `EntityId`; apply shape, body-type and material changes, the Unlockable sensor rule (srs.fr.6.10); apply pending Position and Velocity writes, then forces and impulses; clear the pending marks it applied |
-| PhysicsStep | game loop | `adapter.step(1/60)`; no systems run |
+| PhysicsStep | game loop, through `ISimulation::runPhase(PhysicsStep)` (DEC-059) | `adapter.step(1/60)`; no systems run |
 | PhysicsSyncOut | `PhysicsSyncOut` system | Write position, rotation and velocity of dynamic bodies back to the ECS without marking them pending, skipping components with a pending write; publish one `CollisionEvent` per begin/end contact, sorted by (`EntityId` a, `EntityId` b) |
 
 Both systems declare their reads, writes and publishes (`ecs-api-design.md` §8, §10), so the Semantic Graph shows every physics read and write. Each World gets its own adapter instance, passed to the two systems' factories.

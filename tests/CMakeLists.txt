@@ -6,7 +6,10 @@ add_executable(engine_tests
     unit/core/application_test.cpp
     unit/core/fixed_timestep_test.cpp
     unit/core/frame_clock_test.cpp
+    unit/core/input_actions_test.cpp
+    unit/core/input_source_test.cpp
     unit/core/run_options_test.cpp
+    unit/core/tick_phase_test.cpp
     unit/core/version_test.cpp
     unit/bridge/agent_bridge_test.cpp
     unit/physics/physics_adapter_test.cpp
@@ -38,6 +41,12 @@ if(TARGET sandbox)
     add_test(NAME Sandbox.HeadlessRun_ExitsCleanly COMMAND sandbox --headless --max-ticks 600)
     set_tests_properties(Sandbox.HeadlessRun_ExitsCleanly PROPERTIES
         FAIL_REGULAR_EXPRESSION "Detected memory leaks")
+
+    # US-1.3, srs.fr.1.12: a headless run runs the seven tick phases of every tick.
+    add_test(NAME Sandbox.HeadlessRun_RunsSevenPhasesPerTick
+             COMMAND sandbox --headless --max-ticks 600)
+    set_tests_properties(Sandbox.HeadlessRun_RunsSevenPhasesPerTick PROPERTIES
+        PASS_REGULAR_EXPRESSION "tick phases run: 4200\n")
 
     # US-1.2, srs.fr.7.33: a headless run without --max-ticks stops at 10 000 ticks.
     add_test(NAME Sandbox.HeadlessWithoutMaxTicks_RunsTenThousandTicks

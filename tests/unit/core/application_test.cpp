@@ -1,4 +1,4 @@
-// Game loop tests (PB-011, PB-012, US-1.1, US-1.2; srs.fr.1.1 to 1.11, 1.15, 7.1, 7.7). A fake
+// Game loop tests (PB-011, PB-012, US-1.1, US-1.2, US-1.3; srs.fr.1.1 to 1.15, 7.1, 7.7). A fake
 // window, simulation and renderer write to one call log, and the fake window moves a scripted
 // clock, so the tests check the order of calls and the ticks per render frame without a real window
 // or real time.
@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -15,9 +16,12 @@
 
 #include "engine/core/application.hpp"
 #include "engine/core/frame_renderer.hpp"
+#include "engine/core/input_actions.hpp"
+#include "engine/core/input_source.hpp"
 #include "engine/core/run_error.hpp"
 #include "engine/core/simulation.hpp"
 #include "engine/core/tick.hpp"
+#include "engine/core/tick_phase.hpp"
 #include "engine/core/window.hpp"
 #include "even_frame_times.hpp"
 
@@ -29,23 +33,64 @@ using std::chrono::nanoseconds;
 using CallLog = std::vector<std::string>;
 using FrameTimes = std::vector<nanoseconds>;
 
+using engine::InputAction;
+using engine::InputTransition;
+using engine::TickPhase;
+
+// One tick phase as the simulation saw it.
+struct PhaseRecord {
+    engine::Tick tick = 0;
+    TickPhase phase = TickPhase::InputApplication;
+    engine::InputActionState input;
+
+    friend bool operator==(const PhaseRecord&, const PhaseRecord&) = default;
+};
+
+// Writes "tick N" to the call log when tick N starts, and keeps every phase it runs.
 class FakeSimulation final : public engine::ISimulation {
 public:
     explicit FakeSimulation(CallLog& log)
         : log_(log) {}
 
-    void runTick(engine::Tick tick) override {
-        log_.push_back("tick " + std::to_string(tick));
-        if (onTick) {
+    void runPhase(TickPhase phase, const engine::TickContext& context) override {
+        if (phase == TickPhase::InputApplication) {
+            log_.push_back("tick " + std::to_string(context.tick));
+        }
+        phases.push_back({context.tick, phase, context.input});
+        if (phase == TickPhase::InputApplication && onTick) {
             onTick();
+        }
+        if (onPhase) {
+            onPhase(phase);
         }
     }
 
-    // Called inside every tick, for tests that look at the application while a tick runs.
+    // Called in the first phase of every tick, for tests that look at the application while a
+    // tick runs.
     std::function<void()> onTick;
+    // Called in every phase, after it is recorded.
+    std::function<void(TickPhase)> onPhase;
+    std::vector<PhaseRecord> phases;
 
 private:
     CallLog& log_;
+};
+
+// An input source with a fixed list of transitions per tick, like a recording.
+class ScriptedInputSource final : public engine::IInputSource {
+public:
+    explicit ScriptedInputSource(std::map<engine::Tick, std::vector<InputTransition>> script)
+        : script_(std::move(script)) {}
+
+    void takeTransitions(engine::Tick tick, std::vector<InputTransition>& transitions) override {
+        const auto entry = script_.find(tick);
+        if (entry != script_.end()) {
+            transitions.insert(transitions.end(), entry->second.begin(), entry->second.end());
+        }
+    }
+
+private:
+    std::map<engine::Tick, std::vector<InputTransition>> script_;
 };
 
 class FakeFrameRenderer final : public engine::IFrameRenderer {
@@ -53,7 +98,14 @@ public:
     explicit FakeFrameRenderer(CallLog& log)
         : log_(log) {}
 
-    void renderFrame() override { log_.push_back("render"); }
+    void renderFrame() override {
+        log_.push_back("render");
+        if (onRender) {
+            onRender();
+        }
+    }
+
+    std::function<void()> onRender;
 
 private:
     CallLog& log_;
@@ -65,17 +117,26 @@ private:
 // which makes a run frameTimes.size() + 1 render frames long.
 class FakeWindow final : public engine::IWindow {
 public:
-    FakeWindow(CallLog& log, nanoseconds& realTime, FrameTimes frameTimes)
+    // `onCollectInput`, if set, is called with the render frame's index in collectInput(), where
+    // a real window would push the frame's keyboard transitions.
+    FakeWindow(CallLog& log, nanoseconds& realTime, FrameTimes frameTimes,
+               std::function<void(std::size_t)> onCollectInput = {})
         : log_(log)
         , realTime_(realTime)
-        , frameTimes_(std::move(frameTimes)) {}
+        , frameTimes_(std::move(frameTimes))
+        , onCollectInput_(std::move(onCollectInput)) {}
 
     ~FakeWindow() override { log_.push_back("close"); }
 
     [[nodiscard]] bool shouldClose() const override {
         return framesPresented_ > frameTimes_.size();
     }
-    void collectInput() override { log_.push_back("input"); }
+    void collectInput() override {
+        log_.push_back("input");
+        if (onCollectInput_) {
+            onCollectInput_(framesPresented_);
+        }
+    }
     void beginFrame() override { log_.push_back("begin"); }
     void presentFrame() override {
         log_.push_back("present");
@@ -89,6 +150,7 @@ private:
     CallLog& log_;
     nanoseconds& realTime_;
     FrameTimes frameTimes_;
+    std::function<void(std::size_t)> onCollectInput_;
     std::size_t framesPresented_ = 0;
 };
 
@@ -99,7 +161,12 @@ protected:
         return [this, frameTimes = std::move(frameTimes)](
                    const engine::WindowConfig&) -> std::unique_ptr<engine::IWindow> {
             log_.push_back("open");
-            return std::make_unique<FakeWindow>(log_, realTime_, frameTimes);
+            return std::make_unique<FakeWindow>(log_, realTime_, frameTimes,
+                                                [this](std::size_t frame) {
+                                                    if (onCollectInput) {
+                                                        onCollectInput(frame);
+                                                    }
+                                                });
         };
     }
 
@@ -107,6 +174,8 @@ protected:
         return [this] { return realTime_; };
     }
 
+    // Called in step 1 of every render frame with the frame's index.
+    std::function<void(std::size_t)> onCollectInput;
     CallLog log_;
     nanoseconds realTime_{0};
     FakeSimulation simulation_{log_};
@@ -451,4 +520,286 @@ TEST(RunOutcomeName, EveryOutcome_HasItsReportName) {
     EXPECT_STREQ(engine::runOutcomeName(engine::RunOutcome::WindowClosed), "Window closed");
     EXPECT_STREQ(engine::runOutcomeName(engine::RunOutcome::MaxTicks), "Max ticks");
     EXPECT_STREQ(engine::runOutcomeName(engine::RunOutcome::Error), "Error");
+}
+
+// US-1.3 (srs.fr.1.12 to 1.15): the tick phases and the input of every tick.
+
+namespace {
+
+constexpr InputTransition down(InputAction action) {
+    return {action, true};
+}
+
+constexpr InputTransition up(InputAction action) {
+    return {action, false};
+}
+
+// The phases tick `tick` runs, in order.
+std::vector<TickPhase> phasesOfTick(const std::vector<PhaseRecord>& records, engine::Tick tick) {
+    std::vector<TickPhase> phases;
+    for (const PhaseRecord& record : records) {
+        if (record.tick == tick) {
+            phases.push_back(record.phase);
+        }
+    }
+    return phases;
+}
+
+const std::vector<TickPhase> allPhasesInOrder(engine::tickPhases.begin(), engine::tickPhases.end());
+
+} // namespace
+
+// srs.fr.1.12: every tick runs the seven tick phases, in their fixed order, one tick after the
+// other.
+TEST_F(ApplicationTest, HeadlessTick_RunsTheSevenPhasesInOrder) {
+    engine::Application app(simulation_);
+    ASSERT_TRUE(app.init(headlessConfig(2)));
+
+    ASSERT_EQ(app.run(), 0);
+
+    ASSERT_EQ(simulation_.phases.size(), 2 * engine::tickPhaseCount);
+    EXPECT_EQ(phasesOfTick(simulation_.phases, 0), allPhasesInOrder);
+    EXPECT_EQ(phasesOfTick(simulation_.phases, 1), allPhasesInOrder);
+    EXPECT_EQ(simulation_.phases[engine::tickPhaseCount - 1].tick, 0u);
+    EXPECT_EQ(simulation_.phases[engine::tickPhaseCount].tick, 1u);
+}
+
+TEST_F(ApplicationTest, NormalModeTick_RunsTheSevenPhasesInOrder) {
+    engine::Application app(simulation_, renderer_, windowFactory({50ms}), timeSource());
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    ASSERT_EQ(app.run(), 0);
+
+    ASSERT_EQ(simulation_.phases.size(), 3 * engine::tickPhaseCount);
+    for (const engine::Tick tick : {0u, 1u, 2u}) {
+        EXPECT_EQ(phasesOfTick(simulation_.phases, tick), allPhasesInOrder);
+    }
+}
+
+// The goal of US-1.3: with the same input source, a headless run and a normal-mode run give the
+// simulation exactly the same phases, ticks and input states, whatever the render frames do.
+TEST_F(ApplicationTest, SameInputSource_HeadlessAndNormalModeRunIdenticalPhases) {
+    const std::map<engine::Tick, std::vector<InputTransition>> script = {
+        {0, {down(InputAction::MoveRight)}},
+        {3, {down(InputAction::Interact), up(InputAction::Interact)}},
+        {4, {up(InputAction::MoveRight), down(InputAction::MoveUp)}},
+        {8, {up(InputAction::MoveUp)}},
+    };
+    constexpr engine::Tick ticks = 10;
+
+    ScriptedInputSource headlessInput(script);
+    engine::ApplicationConfig headless = headlessConfig(ticks);
+    headless.inputSource = &headlessInput;
+    engine::Application headlessApp(simulation_);
+    ASSERT_TRUE(headlessApp.init(headless));
+    ASSERT_EQ(headlessApp.run(), 0);
+    const std::vector<PhaseRecord> headlessPhases = simulation_.phases;
+
+    // Uneven render frames: 0, 1, 3 and 5 ticks per frame.
+    simulation_.phases.clear();
+    ScriptedInputSource normalInput(script);
+    engine::ApplicationConfig normal;
+    normal.maxTicks = ticks;
+    normal.inputSource = &normalInput;
+    engine::Application normalApp(simulation_, renderer_, windowFactory({10ms, 10ms, 50ms, 5s, 5s}),
+                                  timeSource());
+    ASSERT_TRUE(normalApp.init(normal));
+    ASSERT_EQ(normalApp.run(), 0);
+
+    EXPECT_EQ(simulation_.phases.size(), ticks * engine::tickPhaseCount);
+    EXPECT_EQ(simulation_.phases, headlessPhases);
+}
+
+// srs.fr.1.14: the input state is built before phase 1 and is the same in all seven phases.
+TEST_F(ApplicationTest, InputState_IsTheSameInEveryPhaseOfATick) {
+    ScriptedInputSource input({{0, {down(InputAction::MoveLeft)}}});
+    engine::ApplicationConfig config = headlessConfig(1);
+    config.inputSource = &input;
+    engine::Application app(simulation_);
+    ASSERT_TRUE(app.init(config));
+
+    ASSERT_EQ(app.run(), 0);
+
+    ASSERT_EQ(simulation_.phases.size(), engine::tickPhaseCount);
+    for (const PhaseRecord& record : simulation_.phases) {
+        EXPECT_TRUE(record.input.pressed(InputAction::MoveLeft));
+        EXPECT_TRUE(record.input.held(InputAction::MoveLeft));
+    }
+}
+
+// srs.fr.1.14, 5.6, 5.7: pressed and released last one tick; held lasts until an up transition.
+TEST_F(ApplicationTest, HeldAction_StaysHeldInTicksWithoutTransitions) {
+    ScriptedInputSource input(
+        {{0, {down(InputAction::MoveDown)}}, {3, {up(InputAction::MoveDown)}}});
+    engine::ApplicationConfig config = headlessConfig(5);
+    config.inputSource = &input;
+    engine::Application app(simulation_);
+    ASSERT_TRUE(app.init(config));
+
+    ASSERT_EQ(app.run(), 0);
+
+    std::vector<bool> pressed;
+    std::vector<bool> held;
+    std::vector<bool> released;
+    for (const PhaseRecord& record : simulation_.phases) {
+        if (record.phase == TickPhase::InputApplication) {
+            pressed.push_back(record.input.pressed(InputAction::MoveDown));
+            held.push_back(record.input.held(InputAction::MoveDown));
+            released.push_back(record.input.released(InputAction::MoveDown));
+        }
+    }
+    EXPECT_EQ(pressed, (std::vector<bool>{true, false, false, false, false}));
+    EXPECT_EQ(held, (std::vector<bool>{true, true, true, false, false}));
+    EXPECT_EQ(released, (std::vector<bool>{false, false, false, true, false}));
+}
+
+// srs.fr.1.14 with srs.fr.5.5: in normal mode the keyboard transitions of render frames that run
+// no tick stay queued, and the first tick afterwards consumes all of them, in order. 10 ms is
+// 0.6 of a tick, so the first tick runs in the third frame.
+TEST_F(ApplicationTest, KeyboardTransitionsOfFramesWithoutTick_GoToTheNextTick) {
+    engine::Application app(simulation_, renderer_, windowFactory({10ms, 10ms, 10ms}),
+                            timeSource());
+    onCollectInput = [&](std::size_t frame) {
+        if (frame == 0) {
+            app.keyboardQueue().push(down(InputAction::Interact));
+        } else if (frame == 1) {
+            app.keyboardQueue().push(up(InputAction::Interact));
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    ASSERT_EQ(app.run(), 0);
+
+    // Tick 0 consumed down, up: pressed and released but not held (srs.fr.5.6).
+    ASSERT_FALSE(simulation_.phases.empty());
+    const engine::InputActionState& tick0 = simulation_.phases.front().input;
+    EXPECT_EQ(simulation_.phases.front().tick, 0u);
+    EXPECT_TRUE(tick0.pressed(InputAction::Interact));
+    EXPECT_TRUE(tick0.released(InputAction::Interact));
+    EXPECT_FALSE(tick0.held(InputAction::Interact));
+    EXPECT_TRUE(app.keyboardQueue().empty());
+}
+
+// srs.fr.5.5: when one render frame runs several ticks, only the first consumes the keyboard
+// transitions.
+TEST_F(ApplicationTest, FrameWithSeveralTicks_OnlyTheFirstTickGetsTheKeyboardTransitions) {
+    engine::Application app(simulation_, renderer_, windowFactory({50ms}), timeSource());
+    onCollectInput = [&](std::size_t frame) {
+        if (frame == 1) {
+            app.keyboardQueue().push(down(InputAction::MoveUp));
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    ASSERT_EQ(app.run(), 0);
+
+    std::vector<bool> pressed;
+    std::vector<bool> held;
+    for (const PhaseRecord& record : simulation_.phases) {
+        if (record.phase == TickPhase::InputApplication) {
+            pressed.push_back(record.input.pressed(InputAction::MoveUp));
+            held.push_back(record.input.held(InputAction::MoveUp));
+        }
+    }
+    EXPECT_EQ(pressed, (std::vector<bool>{true, false, false}));
+    EXPECT_EQ(held, (std::vector<bool>{true, true, true}));
+}
+
+// srs.fr.5.11: while another input source is active, the keyboard is ignored.
+TEST_F(ApplicationTest, NormalModeWithAnotherSource_IgnoresTheKeyboard) {
+    ScriptedInputSource input({});
+    engine::Application app(simulation_, renderer_, windowFactory({10ms, 50ms}), timeSource());
+    onCollectInput = [&](std::size_t /*frame*/) {
+        app.keyboardQueue().push(down(InputAction::MoveRight));
+    };
+    engine::ApplicationConfig config;
+    config.inputSource = &input;
+    ASSERT_TRUE(app.init(config));
+
+    ASSERT_EQ(app.run(), 0);
+
+    ASSERT_FALSE(simulation_.phases.empty());
+    for (const PhaseRecord& record : simulation_.phases) {
+        EXPECT_FALSE(record.input.held(InputAction::MoveRight));
+    }
+    EXPECT_TRUE(app.keyboardQueue().empty());
+}
+
+// srs.fr.7.3: a headless run without a source uses None, never the keyboard.
+TEST_F(ApplicationTest, HeadlessWithoutSource_TicksGetNoInput) {
+    engine::Application app(simulation_);
+    ASSERT_TRUE(app.init(headlessConfig(2)));
+    app.keyboardQueue().push(down(InputAction::MoveLeft));
+    simulation_.onTick = [&] { app.keyboardQueue().push(down(InputAction::MoveLeft)); };
+
+    ASSERT_EQ(app.run(), 0);
+
+    for (const PhaseRecord& record : simulation_.phases) {
+        EXPECT_EQ(record.input, engine::InputActionState{});
+    }
+}
+
+// A second run starts with no action held.
+TEST_F(ApplicationTest, SecondRun_StartsWithNoActionHeld) {
+    ScriptedInputSource input({{0, {down(InputAction::MoveRight)}}});
+    engine::ApplicationConfig config = headlessConfig(1);
+    config.inputSource = &input;
+    engine::Application app(simulation_);
+    ASSERT_TRUE(app.init(config));
+    ASSERT_EQ(app.run(), 0);
+    ASSERT_TRUE(simulation_.phases.back().input.held(InputAction::MoveRight));
+
+    // A source with no transitions: anything still held would have come from the first run.
+    ScriptedInputSource none({});
+    config.inputSource = &none;
+    app.shutdown();
+    ASSERT_TRUE(app.init(config));
+    simulation_.phases.clear();
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_FALSE(simulation_.phases.back().input.held(InputAction::MoveRight));
+}
+
+// srs.fr.1.11 with srs.fr.1.12: a phase that throws a run error ends the tick there; the later
+// phases of that tick do not run and the tick is not counted.
+TEST_F(ApplicationTest, PhaseThrowsRunError_LaterPhasesOfThatTickDoNotRun) {
+    engine::Application app(simulation_);
+    simulation_.onPhase = [&](TickPhase phase) {
+        if (app.ticksExecuted() == 1 && phase == TickPhase::PhysicsSyncOut) {
+            throw engine::RunError("PhysicsSyncOut: body of entity 3 is missing");
+        }
+    };
+    ASSERT_TRUE(app.init(headlessConfig(5)));
+
+    testing::internal::CaptureStderr();
+    EXPECT_NE(app.run(), 0);
+    const std::string logged = testing::internal::GetCapturedStderr();
+
+    EXPECT_EQ(logged, "error: tick 1: PhysicsSyncOut: body of entity 3 is missing\n");
+    EXPECT_EQ(app.ticksExecuted(), 1u);
+    EXPECT_EQ(phasesOfTick(simulation_.phases, 1),
+              (std::vector<TickPhase>{TickPhase::InputApplication, TickPhase::GameplayInput,
+                                      TickPhase::PhysicsSyncIn, TickPhase::PhysicsStep,
+                                      TickPhase::PhysicsSyncOut}));
+}
+
+// srs.fr.1.15: a render frame draws the state of the last completed tick: every tick that ran
+// before it has finished all seven phases, also in frames that run no tick.
+TEST_F(ApplicationTest, RenderFrame_SeesOnlyCompletedTicks) {
+    engine::Application app(simulation_, renderer_, windowFactory({10ms, 50ms, 10ms}),
+                            timeSource());
+    std::vector<std::size_t> phasesSeenByFrame;
+    renderer_.onRender = [&] {
+        phasesSeenByFrame.push_back(simulation_.phases.size());
+        if (!simulation_.phases.empty()) {
+            EXPECT_EQ(simulation_.phases.back().phase, TickPhase::TelemetryRecording);
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    ASSERT_EQ(app.run(), 0);
+
+    // Frames run 0, 0, 3 and 1 ticks (10 ms carries over 0.6 of a tick).
+    EXPECT_EQ(phasesSeenByFrame, (std::vector<std::size_t>{0, 0, 3 * engine::tickPhaseCount,
+                                                           4 * engine::tickPhaseCount}));
 }

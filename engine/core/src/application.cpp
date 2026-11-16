@@ -7,6 +7,7 @@
 #include "engine/core/frame_renderer.hpp"
 #include "engine/core/run_error.hpp"
 #include "engine/core/simulation.hpp"
+#include "engine/core/tick_phase.hpp"
 
 namespace engine {
 
@@ -96,8 +97,11 @@ int Application::run() {
         return exitCodeError;
     }
 
-    // The tick counter is 0 when a run starts (srs.fr.1.5).
+    // The tick counter is 0 when a run starts (srs.fr.1.5), no action is held and nothing is
+    // queued from an earlier run.
     ticksExecuted_ = 0;
+    inputState_ = InputActionState{};
+    keyboardQueue_.clear();
     outcome_ = RunOutcome::NotRun;
     if (config_.headless) {
         runHeadless();
@@ -114,6 +118,10 @@ void Application::shutdown() {
 
 RunOutcome Application::outcome() const {
     return outcome_;
+}
+
+KeyboardQueue& Application::keyboardQueue() {
+    return keyboardQueue_;
 }
 
 Tick Application::ticksExecuted() const {
@@ -147,8 +155,12 @@ void Application::runNormal() {
             return;
         }
 
-        // (1) Collect the keyboard input this frame's ticks use.
+        // (1) Collect the keyboard input this frame's ticks use. While another input source is
+        // active the keyboard is ignored (srs.fr.5.11), so nothing stays queued for later.
         window_->collectInput();
+        if (&inputSource() != &keyboardQueue_) {
+            keyboardQueue_.clear();
+        }
 
         // (2) One tick for each whole 1/60 s of real time not simulated yet, at most 5
         // (srs.fr.1.3). The clock is read here and nowhere else: ticks never see real time (R-6).
@@ -176,16 +188,40 @@ void Application::runNormal() {
 bool Application::runOneTick() {
     // The tick's number is the counter's value at its start; the counter goes up only after the
     // tick has completed (srs.fr.1.5), so a tick that fails is not counted.
+    const Tick tick = ticksExecuted_;
     try {
-        simulation_.runTick(ticksExecuted_);
+        // The tick's input action state, from the transitions its source gives it, by the rules
+        // of srs.fr.5.6 (srs.fr.1.14). It is built before phase 1 and does not change during the
+        // tick.
+        tickTransitions_.clear();
+        inputSource().takeTransitions(tick, tickTransitions_);
+        inputState_.applyTick(tickTransitions_);
+
+        // The seven tick phases of srs.fr.1.12, in order. Headless and normal mode both come
+        // here, so they run the same phases in the same order.
+        const TickContext context{tick, inputState_};
+        for (const TickPhase phase : tickPhases) {
+            simulation_.runPhase(phase, context);
+        }
     } catch (const RunError& error) {
         // The game loop is the only place RunError is caught (DEC-042).
-        logRunError(ticksExecuted_, error.what());
+        logRunError(tick, error.what());
         outcome_ = RunOutcome::Error;
         return false;
     }
     ++ticksExecuted_;
     return true;
+}
+
+IInputSource& Application::inputSource() {
+    if (config_.inputSource != nullptr) {
+        return *config_.inputSource;
+    }
+    // srs.fr.7.3: the keyboard is not a source in headless mode.
+    if (config_.headless) {
+        return noInput_;
+    }
+    return keyboardQueue_;
 }
 
 bool Application::reachedMaxTicks() const {

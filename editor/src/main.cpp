@@ -16,6 +16,7 @@
 #include "engine/core/leak_check.hpp"
 #include "engine/core/simulation.hpp"
 #include "engine/core/tick.hpp"
+#include "engine/core/tick_phase.hpp"
 #include "engine/core/version.hpp"
 #include "engine/rendering_raylib/raylib_window.hpp"
 #include "engine/rendering_raylib/status_text_renderer.hpp"
@@ -30,7 +31,7 @@ constexpr int exitCodeBadOption = 2;
 // No project is open yet, so a tick has nothing to simulate.
 class NoProjectSimulation final : public engine::ISimulation {
 public:
-    void runTick(engine::Tick /*tick*/) override {}
+    void runPhase(engine::TickPhase /*phase*/, const engine::TickContext& /*context*/) override {}
 };
 
 // Fills `config` from the command line. Returns false, after naming the option on the standard
