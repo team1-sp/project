@@ -18,6 +18,9 @@ struct WindowConfig {
     std::string title = "Aegis";
     // Render frames per second the window waits for; 0 means no cap.
     int targetFramesPerSecond = 60;
+    // Pressing Escape asks to close the window, as the close button does. The Editor turns this
+    // off: Escape has other uses there (srs.fr.14.3).
+    bool escapeClosesWindow = true;
 };
 
 // The application window of normal mode (srs.fr.1.7). engine/core knows only this interface;
@@ -31,7 +34,8 @@ class IWindow {
 public:
     virtual ~IWindow() = default;
 
-    // True once the user has asked to close the window.
+    // True when the user asked to close the window during the last collectInput(). The request
+    // is not kept: when the application decides not to close, the next collectInput() clears it.
     [[nodiscard]] virtual bool shouldClose() const = 0;
     // Step 1 of a render frame: collects the keyboard input and window events the operating
     // system has queued since the previous call (srs.fr.1.1, 5.1).
@@ -41,6 +45,8 @@ public:
     // Step 4 of a render frame: presents the image, then waits for the frame-rate cap. It
     // collects no input.
     virtual void presentFrame() = 0;
+    // Changes the title shown in the window's title bar (srs.fr.14.2).
+    virtual void setTitle(const std::string& title) = 0;
 };
 
 // Opens a window, or returns nullptr when it cannot be created. Application calls it once in

@@ -103,6 +103,7 @@ int Application::run() {
     inputState_ = InputActionState{};
     keyboardQueue_.clear();
     outcome_ = RunOutcome::NotRun;
+    closeRequested_ = false;
     pauseRequested_ = false;
     paused_ = false;
     stepsRequested_ = 0;
@@ -118,6 +119,9 @@ int Application::run() {
 }
 
 void Application::shutdown() {
+    if (window_ && frameRenderer_ != nullptr) {
+        frameRenderer_->releaseGraphics();
+    }
     window_.reset();
     initialised_ = false;
 }
@@ -128,6 +132,22 @@ RunOutcome Application::outcome() const {
 
 KeyboardQueue& Application::keyboardQueue() {
     return keyboardQueue_;
+}
+
+bool Application::requestClose() {
+    if (!runningNormal_) {
+        return false;
+    }
+    closeRequested_ = true;
+    return true;
+}
+
+bool Application::setWindowTitle(const std::string& title) {
+    if (!window_) {
+        return false;
+    }
+    window_->setTitle(title);
+    return true;
 }
 
 bool Application::requestPause() {
@@ -191,10 +211,14 @@ void Application::runNormal() {
     FixedTimestep timestep;
     frameClock_.start();
 
-    // The close request is read only here, between render frames, so the frame in which the
-    // user closes the window is always finished (srs.fr.1.10).
+    // The close requests are read only here, between render frames, so the frame in which the
+    // user closes the window is always finished (srs.fr.1.10). A close the application does not
+    // confirm is dropped, and the window stays open (srs.fr.14.3).
     // Every render frame runs the four steps of srs.fr.1.1 in this order.
-    while (!window_->shouldClose()) {
+    while (!closeRequested_) {
+        if (window_->shouldClose() && (!config_.confirmClose || config_.confirmClose())) {
+            break;
+        }
         if (reachedMaxTicks()) {
             outcome_ = RunOutcome::MaxTicks;
             return;

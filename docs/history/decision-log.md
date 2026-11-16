@@ -70,6 +70,9 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-060 | US-1.4: `Application::requestPause()`, `resume()`, `requestStep()` and `isPaused()` pause a normal-mode run at the next tick boundary, drop the frame's unstarted ticks, keep the part of a tick, add no paused time and run one tick per step without the accumulator | Accepted | 2026-11-16 |
 | DEC-061 | Agents do code work in their own cloud copy of the repository by default; they work on a member's computer (folder access or Remote Control) only when the work needs that computer or the member asks | Accepted | 2026-11-16 |
 | DEC-062 | The `Epic close` workflow closes an epic once all of its sub-issues are closed and its "Later stories" list is empty; with later stories left it stays open with the `increment-done` label | Accepted | 2026-11-16 |
+| DEC-063 | US-14.1: the Editor's interface is drawn with Dear ImGui v1.93.0 (docking branch) through rlImGui inside `engine/rendering-raylib`; the window-free menu model and session live in `editor_core`; unbuilt menu items are disabled; `Application` gets `confirmClose`, `requestClose()` and `setWindowTitle()` | Accepted | 2026-11-16 |
+| DEC-064 | US-14.1: the Editor takes the look of the Figma design: Inter and JetBrains Mono embedded in the executable from `editor/assets/fonts`, the design's palette and sizes as the Dear ImGui style, Font Awesome icons on the toolbar | Accepted | 2026-11-16 |
+| DEC-065 | srs.fr.14.15 is reworded: a panel tab dragged out of its dock becomes a floating panel inside the main window, not a separate operating-system window | Accepted | 2026-11-17 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -918,3 +921,65 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none.
 - **Revisit when:** later stories are planned as sub-issues up front, or GitHub Actions can trigger on sub-issue links.
 - **Supersedes / Related:** related DEC-050.
+
+### DEC-063 — US-14.1: the Editor's main window with Dear ImGui
+- **Date:** 2026-11-16
+- **Status:** Accepted (carried by the US-14.1 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (library choice, 2026-11-17); the rest by the reviewer of the US-14.1 pull request   **Recorded by:** claude (US-14.1 thread)
+- **Human's words:** Işık Dönger, US-14.1 thread, 2026-11-17, after seeing the themed editor: "okey it looks good. then I approve ImGui+rIlmGui."
+
+- **Proposed by:** claude (US-14.1 thread), from srs.fr.14.1 to 14.6, 14.12 to 14.27, 15.15, 15.22 and the B-01, C-01 and D-01 to D-09 frames
+- **Context:** US-14.1 (#77) asks for the main window with the menu bar, toolbar, the Default panel layout and the status bar (srs.fr.14.1), the project and scene in the title with "*" for unsaved changes (14.2), the unsaved-changes check before closing (14.3), the nine menus (14.4), disabled items in muted text with no hover effect (14.5) and Ctrl/Cmd shortcuts (14.6). raylib draws shapes and text but has no menus, tabs or docking, and no UI library had been chosen (tech-stack.md). Later stories need tab docking, splitting and floating panels (srs.fr.14.12 to 14.15). No project, scene or Unsaved Changes dialog (F-01) exists yet.
+- **Options considered:**
+  1. UI library: (a) Dear ImGui, docking branch, with the rlImGui backend for raylib; (b) raygui, raylib's own immediate-mode GUI; (c) our own widgets drawn with raylib. (a) is chosen: menus, disabled items, tabs and the dock builder are built in, and the docking stories reuse them; (b) and (c) have no menus or docking. The choice was offered to the human with (a) recommended.
+  2. Where the backend lives: rlImGui includes raylib.h, so it is built in `engine/rendering-raylib` (R-4); the editor uses only `imgui.h`.
+  3. What a not-yet-built menu item does: (a) show it disabled; (b) leave it out. (a) is chosen: the menus match D-01 to D-09 now, and srs.fr.14.5 already says an item is disabled while its condition is not met.
+- **Decision:**
+  1. Dear ImGui v1.93.0-docking and rlImGui (commit 5c17e70, no release tags) are fetched by `cmake/Dependencies.cmake` only when raylib is on. `imgui` is a static library target of the core files; `rlimgui` is built in `engine/rendering-raylib` without our warning flags, with the icon font left out. `engine::rendering_raylib::ImGuiRenderer` is the `IFrameRenderer` that owns the Dear ImGui context: it creates it in the first render frame, measures the frame time itself (custom frame control, DEC-051, leaves raylib's frame time unset) and releases it in `releaseGraphics()`.
+  2. `editor_core` (always built, linked by the tests) holds the window-free parts: `Command` (label, shortcut, enabled condition, action), `shortcutText()` with Ctrl on Windows and Cmd on macOS (srs.fr.14.6; Exit is Alt+F4 / Cmd+Q, srs.fr.15.15), the nine menus and the C-01 toolbar from `buildMainMenu()` and `buildToolbar()`, and `EditorSession` with the project, active scene, unsaved items (srs.fr.15.24), the window title (srs.fr.14.2: "Aegis Editor 0.1 — <project> — <scene>*", following B-01) and `confirmClose()`.
+  3. A command without an enabled condition is a feature not built yet and is drawn disabled (srs.fr.14.5); an empty submenu (Open Recent) is disabled too. Enabled now: File > Exit and Window > General's six panels (Ctrl+1 to Ctrl+6). The toolbar is all disabled until the Scene view and Play mode stories.
+  4. `MainWindowView` (editor, Dear ImGui) draws the menu bar, the toolbar and the status bar as viewport side bars and the panels in a dock space with the Default layout of srs.fr.14.1, built with the dock builder at start: Hierarchy left, Scene and Game centre, Inspector right, Project and Console bottom. No imgui.ini is written until the layout stories save layouts. Enabled commands also run from their shortcuts.
+  5. `engine/core`: `ApplicationConfig::confirmClose` is asked when the user asks to close the window and can keep it open; `Application::requestClose()` ends a normal-mode run after the render frame (File > Exit, after its own check); `Application::setWindowTitle()` and `IWindow::setTitle()` change the title; `WindowConfig::escapeClosesWindow` lets the Editor keep Escape (Stop Headless Run, D-06); `IFrameRenderer::releaseGraphics()` runs right before the window closes.
+  6. `EditorSession::confirmClose()` returns true with nothing unsaved. With unsaved items it keeps the Editor open and flags a request for the Unsaved Changes dialog (F-01), which closes the Editor itself when it comes with US-15.x. Stopping a simulation operation first (srs.fr.15.25) comes with Play mode.
+- **Rationale:** Dear ImGui is the common choice for engine editors, covers srs.fr.14.5 and the later docking requirements out of the box, and keeps raylib inside its adapter target. Keeping the menu model and session out of Dear ImGui lets the tests check srs.fr.14.2 to 14.6 without a window.
+- **Consequences:** two new pinned dependencies (changing their versions is a decision, coding-standards §6). The Editor has no project until the Project Hub (US-13.x), so it shows "No project open". Fonts and colours follow in DEC-064. Docking by drag, floating panels and saved layouts (srs.fr.14.12 to 14.27) build on this dock space.
+- **Docs updated:** `architecture/tech-stack.md`, `architecture/engine-layer.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** panels in separate operating-system windows are wanted again (rlImGui has no multi-viewport support, DEC-065).
+- **Supersedes / Related:** DEC-033, DEC-048, DEC-051, US-14.1 (#77).
+
+### DEC-064 — US-14.1: the Editor's theme follows the Figma design
+- **Date:** 2026-11-16
+- **Status:** Accepted (carried by the US-14.1 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-14.1 pull request   **Recorded by:** claude (US-14.1 thread)
+- **Human's words:** Işık Dönger, US-14.1 thread, 2026-11-17: "first build on top of the already built ImGui and adds the theme to make it look like the figma design so I can see how far off it will be."
+- **Proposed by:** claude (US-14.1 thread), from the B-01, B-02 and C-01 frames and the palette of `aegis-figma-update-6`
+- **Context:** the first version used Dear ImGui's stock dark style and its ASCII-only pixel font, so it looked unlike the design. The design uses Inter (Regular, Semi Bold) and JetBrains Mono, a grey palette with a #3a79bb accent, 3 px corners and icons on the toolbar.
+- **Options considered:**
+  1. Fonts: (a) commit the three TTF files (about 1.1 MB, SIL Open Font License) and embed them in the executable; (b) download the release archives at configure time (Inter's is 34 MB); (c) load them from files beside the executable. (a) is chosen: it builds offline, keeps `editor.exe` a single file, and `.gitattributes` already treats `*.ttf` as binary assets.
+- **Decision:**
+  1. `editor/assets/fonts/` holds Inter 4.1 Regular and Semi Bold and JetBrains Mono 2.304 Regular with their licenses and a README naming the sources. `cmake/EmbedFile.cmake` (`embed_file()`) turns each into a generated C++ array linked into `editor`.
+  2. `editor/src/theme.cpp` (`applyTheme()`) loads the fonts at 13 px and sets Dear ImGui's colours and sizes from the design's palette: panels #282828, bars #232323, tabs #2d2d2d / #3c3c3c with a #3a79bb top line, selection #2c5d87, text #e6e6e6, 3 px corners. `ImGuiRenderer` takes a setup callback for this and scales fonts and sizes by the display's DPI scale.
+  3. rlImGui's Font Awesome 6 icons are turned back on and merged into Inter Regular; the toolbar uses them, laid out as in C-01 (tools left, mode switch, run buttons and tick counter centre, AI Assistant and Layout right). The status bar shows the mode, the FPS and the AI service state (offline) at the right.
+  4. Dear ImGui's dock window-menu button is hidden; the design's ⋮ menu (E-07) comes with the docking stories.
+- **Rationale:** shows how close Dear ImGui gets to the design (asked by the human) with styling only, no custom widgets.
+- **Consequences:** the window's title bar stays the operating system's, not the design's custom one. Disabled controls are drawn at 45 % opacity (srs.fr.14.5), so the toolbar looks fainter than the design, which shows them enabled.
+- **Docs updated:** `editor/assets/fonts/README.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** the design changes its fonts or palette, or a light theme is wanted.
+- **Supersedes / Related:** DEC-063, US-14.1 (#77).
+
+### DEC-065 — srs.fr.14.15: floating panels stay inside the main window
+- **Date:** 2026-11-17
+- **Status:** Accepted
+- **Decided by:** Işık Dönger   **Recorded by:** claude (US-14.1 thread)
+- **Human's words:** US-14.1 thread, 2026-11-17: "I also decide changing srs.fr.14.15 wording to floating panel inside the main window."
+- **Proposed by:** claude (US-14.1 thread)
+- **Context:** srs.fr.14.15 said that a panel tab dragged outside the main window becomes a floating window. With Dear ImGui and rlImGui (DEC-063) that needs multi-viewport support, which rlImGui lacks because raylib manages one window. The options put to the human were (a) reword the requirement to a floating panel inside the main window, (b) replace rlImGui with Dear ImGui's GLFW and OpenGL backends (about 3 to 5 days, more risk on macOS), (c) leave the requirement out of scope.
+- **Decision:** (a). srs.fr.14.15 now reads: "When the user drags a panel tab out of its dock and drops it where no dock accepts it, the Editor shall show the panel as a floating panel inside the main window." Dear ImGui's docking already behaves this way.
+- **Rationale:** costs nothing, keeps the requirement testable and keeps option (b) open for a later increment.
+- **Consequences:** the docking story that holds srs.fr.14.15 is met by Dear ImGui's floating docked windows. A panel cannot be moved to another monitor without the main window spanning it.
+- **Docs updated:** `history/decision-log.md`. Agents in this repository do not change the SRS or other deliverables in team1-sp/docs; the team updates the SRS wording there.
+- **Course documents affected (for humans):** SRS A, srs.fr.14.15 (Section 6.1).
+- **Revisit when:** separate operating-system windows are wanted, which needs option (b).
+- **Supersedes / Related:** DEC-063.

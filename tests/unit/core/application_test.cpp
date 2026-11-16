@@ -1,4 +1,5 @@
-// Game loop tests (PB-011, PB-012, US-1.1 to US-1.4; srs.fr.1.1 to 1.18, 7.1, 7.7). A fake
+// Game loop tests (PB-011, PB-012, US-1.1 to US-1.4, US-14.1; srs.fr.1.1 to 1.18, 7.1, 7.7, 14.2,
+// 14.3). A fake
 // window, simulation and renderer write to one call log, and the fake window moves a scripted
 // clock, so the tests check the order of calls and the ticks per render frame without a real window
 // or real time.
@@ -104,6 +105,7 @@ public:
             onRender();
         }
     }
+    void releaseGraphics() override { log_.push_back("release"); }
 
     std::function<void()> onRender;
 
@@ -138,6 +140,7 @@ public:
         }
     }
     void beginFrame() override { log_.push_back("begin"); }
+    void setTitle(const std::string& title) override { log_.push_back("title " + title); }
     void presentFrame() override {
         log_.push_back("present");
         if (framesPresented_ < frameTimes_.size()) {
@@ -267,9 +270,10 @@ TEST_F(ApplicationTest, WindowClosedByUser_RunReturnsZeroAndShutdownClosesWindow
     app.shutdown();
 
     EXPECT_EQ(exitCode, 0);
-    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "close"}));
+    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "release", "close"}));
 }
 
+// The renderer releases what it loaded through the window right before the window closes.
 TEST_F(ApplicationTest, ShutdownCalledTwice_ClosesWindowOnce) {
     engine::Application app(simulation_, renderer_, windowFactory({}), timeSource());
     ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
@@ -277,7 +281,7 @@ TEST_F(ApplicationTest, ShutdownCalledTwice_ClosesWindowOnce) {
     app.shutdown();
     app.shutdown();
 
-    EXPECT_EQ(log_, (CallLog{"open", "close"}));
+    EXPECT_EQ(log_, (CallLog{"open", "release", "close"}));
 }
 
 TEST_F(ApplicationTest, DestroyedWithoutShutdown_ClosesWindow) {
@@ -286,7 +290,7 @@ TEST_F(ApplicationTest, DestroyedWithoutShutdown_ClosesWindow) {
         ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
     }
 
-    EXPECT_EQ(log_, (CallLog{"open", "close"}));
+    EXPECT_EQ(log_, (CallLog{"open", "release", "close"}));
 }
 
 TEST_F(ApplicationTest, WindowConfigGiven_FactoryReceivesIt) {
@@ -456,7 +460,7 @@ TEST_F(ApplicationTest, NormalModeTickThrowsRunError_StopsWithoutRenderingThatFr
     EXPECT_NE(exitCode, 0);
     EXPECT_EQ(app.outcome(), engine::RunOutcome::Error);
     EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "input", "tick 0",
-                             "tick 1", "close"}));
+                             "tick 1", "release", "close"}));
 }
 
 TEST_F(ApplicationTest, RunErrorInFirstRun_SecondRunStartsAgainAndCanEndNormally) {
@@ -1036,4 +1040,69 @@ TEST_F(ApplicationTest, SecondRun_StartsUnpaused) {
 
     EXPECT_FALSE(app.isPaused());
     EXPECT_EQ(app.ticksExecuted(), 3u);
+}
+
+// US-14.1, srs.fr.14.3: a close the application does not confirm is dropped and the run goes on;
+// the window is asked again at the next close request. The fake window asks to close in every
+// frame after its script, so two refusals add two render frames.
+TEST_F(ApplicationTest, CloseNotConfirmed_KeepsRunningUntilConfirmed) {
+    engine::Application app(simulation_, renderer_, windowFactory({10ms}), timeSource());
+    engine::ApplicationConfig config;
+    int confirmCalls = 0;
+    config.confirmClose = [&confirmCalls] { return ++confirmCalls == 3; };
+    ASSERT_TRUE(app.init(config));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_EQ(confirmCalls, 3);
+    EXPECT_EQ(app.outcome(), engine::RunOutcome::WindowClosed);
+    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "input", "begin",
+                             "render", "present", "input", "begin", "render", "present", "input",
+                             "begin", "render", "present"}));
+}
+
+// US-14.1, srs.fr.15.15: requestClose() ends the run after the current render frame without
+// asking confirmClose, which the caller has already applied.
+TEST_F(ApplicationTest, RequestCloseDuringFrame_EndsRunAfterThatFrame) {
+    engine::Application app(simulation_, renderer_, windowFactory({10ms, 10ms, 10ms}),
+                            timeSource());
+    engine::ApplicationConfig config;
+    bool confirmAsked = false;
+    config.confirmClose = [&confirmAsked] {
+        confirmAsked = true;
+        return true;
+    };
+    renderer_.onRender = [&app] { EXPECT_TRUE(app.requestClose()); };
+    ASSERT_TRUE(app.init(config));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_FALSE(confirmAsked);
+    EXPECT_EQ(app.outcome(), engine::RunOutcome::WindowClosed);
+    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present"}));
+}
+
+// requestClose() acts only during a normal-mode run.
+TEST_F(ApplicationTest, RequestCloseOutsideNormalRun_ChangesNothing) {
+    engine::Application app(simulation_, renderer_, windowFactory({10ms}), timeSource());
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+    EXPECT_FALSE(app.requestClose());
+
+    ASSERT_EQ(app.run(), 0);
+
+    // The earlier call did not end the run early: both frames ran.
+    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "input", "begin",
+                             "render", "present"}));
+    EXPECT_FALSE(app.requestClose());
+}
+
+// US-14.1, srs.fr.14.2: the title reaches the window once it is open.
+TEST_F(ApplicationTest, SetWindowTitle_ReachesOpenWindowOnly) {
+    engine::Application app(simulation_, renderer_, windowFactory({}), timeSource());
+    EXPECT_FALSE(app.setWindowTitle("before init"));
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    EXPECT_TRUE(app.setWindowTitle("Aegis Editor 0.1"));
+
+    EXPECT_EQ(log_, (CallLog{"open", "title Aegis Editor 0.1"}));
 }
