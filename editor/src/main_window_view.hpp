@@ -8,6 +8,7 @@
 #include "editor/command.hpp"
 #include "editor/editor_session.hpp"
 #include "editor/main_menu.hpp"
+#include "editor/status_bar.hpp"
 
 namespace editor {
 
@@ -22,8 +23,9 @@ public:
     // Shows a new title in the main window's title bar.
     using SetTitle = std::function<void(const std::string&)>;
 
-    // `session` must outlive the view.
-    MainWindowView(EditorSession& session, CloseEditor closeEditor, SetTitle setTitle);
+    // `session` and `status` must outlive the view.
+    MainWindowView(EditorSession& session, const EditorStatus& status, CloseEditor closeEditor,
+                   SetTitle setTitle);
 
     // Builds this render frame's interface. Call it between ImGui::NewFrame() and ImGui::Render().
     void draw();
@@ -41,6 +43,7 @@ private:
     void drawPanels();
 
     EditorSession& session_;
+    const EditorStatus& status_;
     CloseEditor closeEditor_;
     SetTitle setTitle_;
     Platform platform_;

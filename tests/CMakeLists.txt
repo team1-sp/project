@@ -12,6 +12,7 @@ add_executable(engine_tests
     unit/core/tick_phase_test.cpp
     unit/core/version_test.cpp
     unit/editor/main_menu_test.cpp
+    unit/editor/status_bar_test.cpp
     unit/bridge/agent_bridge_test.cpp
     unit/physics/physics_adapter_test.cpp
     unit/physics-box2d/box2d_info_test.cpp

@@ -1,8 +1,10 @@
 #include "main_window_view.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cfloat>
 #include <cstddef>
-#include <cstdio>
+#include <string>
 #include <utility>
 
 #include <imgui.h>
@@ -71,8 +73,10 @@ void buildDefaultLayout(ImGuiID dockSpaceId, const ImGuiViewport& viewport) {
 
 } // namespace
 
-MainWindowView::MainWindowView(EditorSession& session, CloseEditor closeEditor, SetTitle setTitle)
+MainWindowView::MainWindowView(EditorSession& session, const EditorStatus& status,
+                               CloseEditor closeEditor, SetTitle setTitle)
     : session_(session)
+    , status_(status)
     , closeEditor_(std::move(closeEditor))
     , setTitle_(std::move(setTitle))
     , platform_(currentPlatform())
@@ -280,36 +284,135 @@ void MainWindowView::drawToolbar() {
 }
 
 void MainWindowView::drawStatusBar() {
-    constexpr ImGuiWindowFlags barFlags =
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const float height = ImGui::GetFrameHeight();
-    if (ImGui::BeginViewportSideBar("##StatusBar", viewport, ImGuiDir_Down, height, barFlags)) {
-        if (ImGui::BeginMenuBar()) {
-            const ImVec4 muted = ImGui::ColorConvertU32ToFloat4(themeColor::mutedText);
-            ImGui::TextColored(muted, ICON_FA_CIRCLE_INFO " %s",
-                               session_.isProjectOpen() ? "" : "No project open");
+    constexpr ImGuiWindowFlags barFlags = ImGuiWindowFlags_NoScrollbar |
+                                          ImGuiWindowFlags_NoSavedSettings |
+                                          ImGuiWindowFlags_NoScrollWithMouse;
+    const ImGuiStyle& style = ImGui::GetStyle();
+    // Each item has this much room on both sides for its hover background; items are this far
+    // apart (B-01: about 16 px from one text to the next).
+    const float itemPadding = style.ItemInnerSpacing.x;
+    const float itemGap = style.ItemSpacing.x;
+    const float dotDiameter = ImGui::GetFontSize() * 0.6F;
+    const float dotGap = style.ItemInnerSpacing.x;
 
-            // The mode, the frame rate and the AI service state, at the right (B-01).
-            char fps[32];
-            std::snprintf(fps, sizeof fps, "FPS %.0f",
-                          static_cast<double>(ImGui::GetIO().Framerate));
-            const char* mode = "Edit mode";
-            const char* ai = ICON_FA_CIRCLE " AI service: offline";
-            const ImGuiStyle& style = ImGui::GetStyle();
-            const float rightWidth = ImGui::CalcTextSize(mode).x + ImGui::CalcTextSize(fps).x +
-                                     ImGui::CalcTextSize(ai).x + 4.0F * style.ItemSpacing.x * 2.0F;
-            ImGui::SameLine(ImGui::GetWindowWidth() - rightWidth);
-            ImGui::TextColored(muted, "%s", mode);
-            ImGui::SameLine(0.0F, style.ItemSpacing.x * 3.0F);
-            ImGui::TextColored(muted, "%s", fps);
-            ImGui::SameLine(0.0F, style.ItemSpacing.x * 3.0F);
-            ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(themeColor::offlineDot),
-                               ICON_FA_CIRCLE);
-            ImGui::SameLine(0.0F, 4.0F);
-            ImGui::TextColored(muted, "AI service: offline");
-            ImGui::EndMenuBar();
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, themeColor::statusBarBg);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(style.WindowPadding.x, 0.0F));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0F, 0.0F));
+    const bool open = ImGui::BeginViewportSideBar("##StatusBar", viewport, ImGuiDir_Down,
+                                                  ImGui::GetFrameHeight(), barFlags);
+    ImGui::PopStyleVar(3);
+    ImGui::PopStyleColor();
+    if (!open) {
+        ImGui::End();
+        return;
+    }
+
+    const StatusBar bar =
+        buildStatusBar(status_, static_cast<double>(ImGui::GetIO().Framerate), *this);
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    const ImVec2 windowPos = ImGui::GetWindowPos();
+    const ImVec2 windowSize = ImGui::GetWindowSize();
+    drawList->AddLine(windowPos, ImVec2(windowPos.x + windowSize.x, windowPos.y),
+                      themeColor::statusBarBorder);
+
+    const auto dotColour = [](StatusDot dot) {
+        switch (dot) {
+        case StatusDot::Green:
+            return themeColor::onlineDot;
+        case StatusDot::Red:
+            return themeColor::recordingDot;
+        case StatusDot::Grey:
+        case StatusDot::None:
+            break;
         }
+        return themeColor::offlineDot;
+    };
+    // The width of the item's text and dot, without the padding.
+    const auto contentWidth = [&](const StatusItem& item, const std::string& text) {
+        return ImGui::CalcTextSize(text.c_str()).x +
+               (item.dot != StatusDot::None ? dotDiameter + dotGap : 0.0F);
+    };
+    // Draws one item at the cursor, at most `maxWidth` wide; text that does not fit ends in "...".
+    // A clickable item highlights under the mouse, shows its target as a tooltip and runs it when
+    // clicked (srs.fr.14.7, 14.9, 14.10).
+    const auto drawItem = [&](const StatusItem& item, const std::string& text, const char* id,
+                              float maxWidth) {
+        const float width = std::min(contentWidth(item, text), maxWidth);
+        if (width <= 0.0F) {
+            return;
+        }
+        const ImVec2 size(width + 2.0F * itemPadding, windowSize.y);
+        const ImVec2 min = ImGui::GetCursorScreenPos();
+        const ImVec2 max(min.x + size.x, min.y + size.y);
+        bool hovered = false;
+        if (item.isClickable()) {
+            if (ImGui::InvisibleButton(id, size)) {
+                item.click.run();
+            }
+            hovered = ImGui::IsItemHovered();
+            if (hovered) {
+                ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+                ImGui::SetTooltip("%s", item.click.label.c_str());
+            }
+        } else {
+            ImGui::Dummy(size);
+        }
+        if (hovered) {
+            drawList->AddRectFilled(ImVec2(min.x, min.y + 2.0F), ImVec2(max.x, max.y - 1.0F),
+                                    themeColor::statusHover, style.FrameRounding);
+        }
+        float x = min.x + itemPadding;
+        const float centreY = min.y + size.y * 0.5F;
+        if (item.dot != StatusDot::None) {
+            drawList->AddCircleFilled(ImVec2(x + dotDiameter * 0.5F, centreY), dotDiameter * 0.5F,
+                                      dotColour(item.dot));
+            x += dotDiameter + dotGap;
+        }
+        const ImU32 textColour = item.colour == StatusTextColour::Warning ? themeColor::warningText
+                                                                          : themeColor::statusText;
+        const float textTop = centreY - ImGui::GetFontSize() * 0.5F;
+        const ImVec2 textMax(min.x + itemPadding + width, max.y);
+        ImGui::PushStyleColor(ImGuiCol_Text, textColour);
+        if (width < contentWidth(item, text)) {
+            ImGui::RenderTextEllipsis(drawList, ImVec2(x, textTop), textMax, textMax.x,
+                                      text.c_str(), nullptr, nullptr);
+        } else {
+            drawList->AddText(ImVec2(x, textTop), textColour, text.c_str());
+        }
+        ImGui::PopStyleColor();
+    };
+
+    // The right-hand items first, so the message knows how much room is left for it.
+    float rightWidth = 0.0F;
+    for (const StatusItem& item : bar.right) {
+        rightWidth += contentWidth(item, item.text) + 2.0F * itemPadding;
+    }
+    if (!bar.right.empty()) {
+        rightWidth += itemGap * static_cast<float>(bar.right.size() - 1);
+    }
+    const float contentLeft = ImGui::GetCursorPosX();
+    const float rightX =
+        std::max(contentLeft, windowSize.x - style.WindowPadding.x + itemPadding - rightWidth);
+
+    // Left: the last Console message (srs.fr.14.7).
+    if (!bar.message.text.empty()) {
+        ImGui::SetCursorPosX(contentLeft - itemPadding);
+        const std::string text = ICON_FA_CIRCLE_INFO " " + bar.message.text;
+        const float maxWidth = rightX - itemGap - contentLeft - itemPadding;
+        drawItem(bar.message, text, "##StatusMessage", maxWidth);
+    }
+
+    // Right: debug flags, REC, mode, FPS, entities and the AI service.
+    ImGui::SetCursorPos(ImVec2(rightX, 0.0F));
+    for (std::size_t i = 0; i < bar.right.size(); ++i) {
+        if (i > 0) {
+            ImGui::SameLine(0.0F, itemGap);
+        }
+        const std::string id = "##StatusItem" + std::to_string(i);
+        ImGui::SetCursorPosY(0.0F);
+        drawItem(bar.right[i], bar.right[i].text, id.c_str(), FLT_MAX);
     }
     ImGui::End();
 }
