@@ -342,9 +342,9 @@
 - **Date:** 2026-11-16
 - **Agent:** claude (ci/136 thread), working with Işık Dönger
 - **Task:** no issue (PR #136, `no-issue` label)
-- **Result:** DEC-061: agents do code and repository docs work in their own cloud copy by default and use a member's computer only when the files, tools or signed-in accounts exist only there or the member asks; the cloud fallback for `tools/open_pr.py` is written down (git-workflow §1, AGENT-PROTOCOL 5a and 23a, rules P-12, CONTRIBUTING). DEC-062: `.github/workflows/epic-close.yml` runs `tools/close_epics.py` on every closed issue and closes the parent epic once all its sub-issues are closed; run by hand it checks every open epic, with a dry run option.
+- **Result:** DEC-061: agents do code and repository docs work in their own cloud copy by default and use a member's computer only when the files, tools or signed-in accounts exist only there or the member asks; the cloud fallback for `tools/open_pr.py` is written down (git-workflow §1, AGENT-PROTOCOL 5a and 23a, rules P-12, CONTRIBUTING). DEC-062: `.github/workflows/epic-close.yml` runs `tools/close_epics.py` on closed, reopened and edited issues: it closes an epic once all its sub-issues are closed and no later stories are left, and otherwise labels it `increment-done` while only later stories are left; run by hand it checks every open epic, with a dry run option.
 - **Verified:** `tools/close_epics.py` with `DRY_RUN=true` against the live repository: the sweep checked 35 open epics and would close none (none has all sub-issues closed); the issue mode found EP-01 (#40, already closed) as the parent of #44 and EP-02 (#45) as the parent of #46 with 6 open sub-issues. `check_ids.py` and `check_md_links.py` pass.
 - **Not verified:** a real close by the workflow; that happens when the last open sub-issue of an epic closes after the merge.
-- **Next:** reopen an epic by hand when a later story is added to it as a sub-issue.
+- **Next:** EP-01 (#40) was closed by hand with US-1.5 still in its later stories; reopen it if the team wants it to carry `increment-done`.
 - **Traps:** a close made with the workflow's own token starts no other workflow run, so the script walks up the parent chain itself.
 - **Records:** DEC-061, DEC-062 (Accepted in the PR, for review).

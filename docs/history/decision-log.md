@@ -69,7 +69,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-059 | US-1.3: the game loop runs every tick as the seven tick phases through `ISimulation::runPhase()`; `TickPhase` lives in `engine/core`; the loop builds each tick's input action state from the run's `IInputSource` (keyboard queue, None, later recording and agent) | Accepted | 2026-11-16 |
 | DEC-060 | US-1.4: `Application::requestPause()`, `resume()`, `requestStep()` and `isPaused()` pause a normal-mode run at the next tick boundary, drop the frame's unstarted ticks, keep the part of a tick, add no paused time and run one tick per step without the accumulator | Accepted | 2026-11-16 |
 | DEC-061 | Agents do code work in their own cloud copy of the repository by default; they work on a member's computer (folder access or Remote Control) only when the work needs that computer or the member asks | Accepted | 2026-11-16 |
-| DEC-062 | The `Epic close` workflow closes an epic once all of its sub-issues are closed; the "Later stories" checklist is not counted | Accepted | 2026-11-16 |
+| DEC-062 | The `Epic close` workflow closes an epic once all of its sub-issues are closed and its "Later stories" list is empty; with later stories left it stays open with the `increment-done` label | Accepted | 2026-11-16 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -901,16 +901,20 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Revisit when:** cloud sessions can run GraphQL (then `open_pr.py` works there too), or a cloud copy cannot build something the team needs.
 - **Supersedes / Related:** related DEC-054, DEC-058.
 
-### DEC-062 — The `Epic close` workflow closes an epic once all of its sub-issues are closed
+### DEC-062 — The `Epic close` workflow closes an epic once all of its stories are done, and marks it `increment-done` while only later stories are left
 - **Date:** 2026-11-16
 - **Status:** Accepted
-- **Decided by:** Işık Dönger (Project Manager) asked for it; the details below are for review in the ci/136 pull request   **Recorded by:** claude (ci/136 thread)
-- **Human's words:** "Adding an action that auto closes user epic issues that are sub-issues are closed." (2026-11-16)
+- **Decided by:** Işık Dönger (Project Manager), 2026-11-16, in the conversation (option 2 chosen); the rest of the details are for review in the ci/136 pull request   **Recorded by:** claude (ci/136 thread)
+- **Human's words:** "Adding an action that auto closes user epic issues that are sub-issues are closed." (2026-11-16); on epics with later stories: chose "Keep open, add increment-done" (2026-11-16)
 - **Context:** Epics (`EP-xx`, label `type:epic`) are parent issues whose stories are GitHub sub-issues (DEC-050). Stories close when their PRs merge; epics stayed open until someone closed them by hand (EP-01 was closed by hand on 2026-11-16). Stories not planned yet are a "Later stories" checklist in the epic's body, not sub-issues.
-- **Decision:** `.github/workflows/epic-close.yml` runs `tools/close_epics.py` whenever an issue is closed: it finds the issue's parent with the sub-issues API and, if the parent is an open `type:epic` issue with at least one sub-issue and all of them closed, comments and closes it as completed (and checks one level up). Run by hand (`workflow_dispatch`, optional dry run), it checks every open epic. Only sub-issues count; the "Later stories" checklist does not, so a story planned later is converted to a sub-issue and the epic reopened by hand. It uses the workflow's own token; the project's built-in "Item closed" workflow moves the card to Done, so it needs no `PROJECT_TOKEN`.
-- **Rationale:** matches how EP-01 was closed by hand, and keeps the board in step without anyone remembering to close epics.
-- **Consequences:** an epic closes as soon as its Increment's stories close, even with later stories still unplanned. An epic with no sub-issues never closes by itself.
-- **Docs updated:** `guidelines/git-workflow.md` §1, `CONTRIBUTING.md`, `agents/state/current-status.md`.
+- **Options considered:**
+  1. Close as soon as all sub-issues are closed, reopen by hand when a later story is planned — simple, but the board says the epic is done while SRS stories are still left, and Actions cannot trigger on a sub-issue being linked, so reopening cannot be automated reliably.
+  2. Keep the epic open while unchecked later stories remain, and mark the in-between state with an `increment-done` label — the board stays honest, nothing has to be reopened, and a label needs no `PROJECT_TOKEN`.
+  3. Same as 2 without a label — nothing shows that the epic has no planned work left.
+- **Decision:** option 2. `.github/workflows/epic-close.yml` runs `tools/close_epics.py` when an issue is closed, reopened or edited: it checks the issue itself if it is an epic, then its parent (found with the sub-issues API). For an open `type:epic` issue with at least one sub-issue: while any sub-issue is open, it stays open without `increment-done`; when all are closed but the "Later stories" section still has unchecked items (items that only link an issue are not counted), it stays open and gets `increment-done`; when all are closed and no later stories are left, it is commented on and closed as completed (and the check goes one level up). Run by hand (`workflow_dispatch`, optional dry run), it checks every open epic. Closed epics are never reopened. It uses the workflow's own token; the project's built-in "Item closed" workflow moves the card to Done, so it needs no `PROJECT_TOKEN`.
+- **Rationale:** an epic covers all of its SRS stories, so it is closed only when all of them are done; the label still shows that an Increment's part of it is finished.
+- **Consequences:** converting a later story to a sub-issue edits the epic's body, which runs the check and takes the label off. An epic with no sub-issues never changes by itself. EP-01 (#40) was closed by hand on 2026-11-16 with US-1.5 still in its later stories; under this rule it would be open with `increment-done`, and the workflow leaves it closed unless someone reopens it.
+- **Docs updated:** `guidelines/git-workflow.md` §1, `CONTRIBUTING.md`, `.github/labels.yml`, `agents/state/current-status.md`.
 - **Course documents affected (for humans):** none.
-- **Revisit when:** later stories are planned as sub-issues up front, or the team wants epics to stay open until every SRS story is done.
+- **Revisit when:** later stories are planned as sub-issues up front, or GitHub Actions can trigger on sub-issue links.
 - **Supersedes / Related:** related DEC-050.

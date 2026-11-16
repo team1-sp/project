@@ -1,12 +1,13 @@
-# Close an epic (type:epic) once all of its sub-issues are closed.
-# On every closed issue it checks that issue's parent; run it by hand to check every open epic.
-# The project's built-in "Item closed" workflow then moves the epic's card to Done, so no
-# PROJECT_TOKEN is needed. tools/close_epics.py, docs/guidelines/git-workflow.md
+# Close an epic (type:epic) once all of its sub-issues are closed and no later stories are left;
+# with later stories left it only adds the increment-done label (DEC-062).
+# On a closed, reopened or edited issue it checks that issue (if it is an epic) and its parent;
+# run it by hand to check every open epic. The project's built-in "Item closed" workflow moves a
+# closed epic's card to Done, so no PROJECT_TOKEN is needed. tools/close_epics.py, docs/guidelines/git-workflow.md
 name: Epic close
 
 on:
   issues:
-    types: [closed]
+    types: [closed, reopened, edited]
   workflow_dispatch:
     inputs:
       dry_run:
