@@ -52,6 +52,7 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 5. Find your task:
    - A human gave you a task → find or create the matching `TASK-###` on the task board.
    - No instructions → take the highest-priority task with status `Ready`. Never take a task someone else has `Claimed` (unless the claim is stale, see [communication-protocol.md](communication-protocol.md)).
+5a. **Pick where to work** (DEC-061, [git-workflow.md §1](../guidelines/git-workflow.md)): code and repository docs in your own cloud copy of the repository by default; a member's computer (folder access to edit files, Remote Control to run commands) only when the files, tools or signed-in accounts exist only there, or the member asks.
 6. **Claim** the task on the task board *before* starting work (status `Claimed`, your agent ID, today's date).
 
 ## Phase 1 — Understand (read-only)
@@ -87,7 +88,7 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 21a. **Your change carries a decision nobody had to answer first** (a name, a layout, how a module reads an SRS rule)? → log it `Accepted` and list it under "Decisions for review" in the PR body. The reviewer approves or rejects it with the rest of the diff, and it binds only once a human merges the PR (DEC-052). This saves a follow-up commit; it is not permission to decide open choices yourself (P-3, P-4).
 22. **AI-generated text for a course deliverable?** → append to `history/genai-usage-log.md` (see [guidelines/genai-usage-rules.md](../guidelines/genai-usage-rules.md)).
 23. **Docs affected?** Update the architecture/design/testing doc that your change made wrong. A change that makes a doc lie is not done.
-23a. **Commit, push, PR** ([git-workflow.md](../guidelines/git-workflow.md), DEC-053 to DEC-055, DEC-058): working on a member's own computer, show them the change and commit and push only after they approve it; working in your own cloud copy of the repository, commit and push without asking. Merge `origin/main` into the branch, build and test again, then push. After the first push, open the draft PR with `python tools/open_pr.py`. Merge `main` again before marking it ready for review, and whenever the PR gets the `needs-sync` label.
+23a. **Commit, push, PR** ([git-workflow.md](../guidelines/git-workflow.md), DEC-053 to DEC-055, DEC-058, DEC-061): working on a member's own computer, show them the change and commit and push only after they approve it; working in your own cloud copy of the repository, commit and push without asking. Merge `origin/main` into the branch, build and test again, then push. After the first push, open the draft PR with `python tools/open_pr.py`; in a cloud session it fails (GraphQL is blocked), so open it with the GitHub `create_pull_request` tool and set labels, milestone and assignee with `gh api -X PATCH` (DEC-061). Merge `main` again before marking it ready for review, and whenever the PR gets the `needs-sync` label.
 24. Update the task on the board (`Review` or `Done` or `Blocked`) with a one-paragraph result.
 25. Update `state/current-status.md` (what changed, what is next, `last_updated`, `updated_by`).
 

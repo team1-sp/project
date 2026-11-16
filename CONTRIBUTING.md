@@ -19,7 +19,7 @@ The backlog is the [GitHub project](https://github.com/orgs/team1-sp/projects/3)
 - Fill in the PR template, including how you verified the change.
 - Mark the PR **ready for review** when CI is green. Reviewers come from [.github/CODEOWNERS](.github/CODEOWNERS).
 - One approval from Işık Dönger or the advisor, Leyla Sezer (the code owners) is needed; area teammates are welcome to review too, but their approval does not count. Işık's own PRs need no approval. Reviews happen within 1 working day; comments are labelled `blocker`, `should`, `nit` or `question`, and only `blocker` holds up approval.
-- The author squash-merges. The issue closes and its card moves to **Done** on the project by itself.
+- The author squash-merges. The issue closes and its card moves to **Done** on the project by itself. When the last open sub-issue of an epic closes, the `Epic close` workflow closes the epic too (DEC-062).
 
 ## Code style and Definition of Done
 
@@ -33,7 +33,7 @@ The backlog is the [GitHub project](https://github.com/orgs/team1-sp/projects/3)
 
 ## AI agents
 
-An agent working on a member's own computer commits and pushes only after that member approves the change; an agent working in its own cloud copy of the repository commits, pushes and opens or updates the draft PR without asking (DEC-058). A human approves and merges every PR an agent opens. See `docs/agents/rules.md` (S-2).
+An agent working on a member's own computer commits and pushes only after that member approves the change; an agent working in its own cloud copy of the repository commits, pushes and opens or updates the draft PR without asking (DEC-058). Agents do code work in their own cloud copy by default and use a member's computer only when the work needs it or the member asks (DEC-061). A human approves and merges every PR an agent opens. See `docs/agents/rules.md` (S-2).
 
 ## Issues
 
