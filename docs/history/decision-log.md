@@ -72,6 +72,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-062 | The `Epic close` workflow closes an epic once all of its sub-issues are closed and its "Later stories" list is empty; with later stories left it stays open with the `increment-done` label | Accepted | 2026-11-16 |
 | DEC-063 | US-14.1: the Editor's interface is drawn with Dear ImGui v1.93.0 (docking branch) through rlImGui inside `engine/rendering-raylib`; the window-free menu model and session live in `editor_core`; unbuilt menu items are disabled; `Application` gets `confirmClose`, `requestClose()` and `setWindowTitle()` | Accepted | 2026-11-16 |
 | DEC-064 | US-14.1: the Editor takes the look of the Figma design: Inter and JetBrains Mono embedded in the executable from `editor/assets/fonts`, the design's palette and sizes as the Dear ImGui style, Font Awesome icons on the toolbar | Accepted | 2026-11-16 |
+| DEC-065 | srs.fr.14.15 is reworded: a panel tab dragged out of its dock becomes a floating panel inside the main window, not a separate operating-system window | Accepted | 2026-11-17 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -924,8 +925,9 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 ### DEC-063 — US-14.1: the Editor's main window with Dear ImGui
 - **Date:** 2026-11-16
 - **Status:** Accepted (carried by the US-14.1 pull request; binds once a human merges it, DEC-052)
-- **Decided by:** the reviewer of the US-14.1 pull request   **Recorded by:** claude (US-14.1 thread)
-- **Human's words:** none yet; the UI library was put to Işık Dönger as a choice in the US-14.1 thread and is listed under "Decisions for review" in the PR.
+- **Decided by:** Işık Dönger (library choice, 2026-11-17); the rest by the reviewer of the US-14.1 pull request   **Recorded by:** claude (US-14.1 thread)
+- **Human's words:** Işık Dönger, US-14.1 thread, 2026-11-17, after seeing the themed editor: "okey it looks good. then I approve ImGui+rIlmGui."
+
 - **Proposed by:** claude (US-14.1 thread), from srs.fr.14.1 to 14.6, 14.12 to 14.27, 15.15, 15.22 and the B-01, C-01 and D-01 to D-09 frames
 - **Context:** US-14.1 (#77) asks for the main window with the menu bar, toolbar, the Default panel layout and the status bar (srs.fr.14.1), the project and scene in the title with "*" for unsaved changes (14.2), the unsaved-changes check before closing (14.3), the nine menus (14.4), disabled items in muted text with no hover effect (14.5) and Ctrl/Cmd shortcuts (14.6). raylib draws shapes and text but has no menus, tabs or docking, and no UI library had been chosen (tech-stack.md). Later stories need tab docking, splitting and floating panels (srs.fr.14.12 to 14.15). No project, scene or Unsaved Changes dialog (F-01) exists yet.
 - **Options considered:**
@@ -943,7 +945,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Consequences:** two new pinned dependencies (changing their versions is a decision, coding-standards §6). The Editor has no project until the Project Hub (US-13.x), so it shows "No project open". Fonts and colours follow in DEC-064. Docking by drag, floating panels and saved layouts (srs.fr.14.12 to 14.27) build on this dock space.
 - **Docs updated:** `architecture/tech-stack.md`, `architecture/engine-layer.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
 - **Course documents affected (for humans):** none; this follows SRS 6.1.
-- **Revisit when:** the human chooses another UI library, floating panels outside the main window are built (rlImGui has no multi-viewport support), or a font is chosen.
+- **Revisit when:** panels in separate operating-system windows are wanted again (rlImGui has no multi-viewport support, DEC-065).
 - **Supersedes / Related:** DEC-033, DEC-048, DEC-051, US-14.1 (#77).
 
 ### DEC-064 — US-14.1: the Editor's theme follows the Figma design
@@ -966,3 +968,18 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none.
 - **Revisit when:** the design changes its fonts or palette, or a light theme is wanted.
 - **Supersedes / Related:** DEC-063, US-14.1 (#77).
+
+### DEC-065 — srs.fr.14.15: floating panels stay inside the main window
+- **Date:** 2026-11-17
+- **Status:** Accepted
+- **Decided by:** Işık Dönger   **Recorded by:** claude (US-14.1 thread)
+- **Human's words:** US-14.1 thread, 2026-11-17: "I also decide changing srs.fr.14.15 wording to floating panel inside the main window."
+- **Proposed by:** claude (US-14.1 thread)
+- **Context:** srs.fr.14.15 said that a panel tab dragged outside the main window becomes a floating window. With Dear ImGui and rlImGui (DEC-063) that needs multi-viewport support, which rlImGui lacks because raylib manages one window. The options put to the human were (a) reword the requirement to a floating panel inside the main window, (b) replace rlImGui with Dear ImGui's GLFW and OpenGL backends (about 3 to 5 days, more risk on macOS), (c) leave the requirement out of scope.
+- **Decision:** (a). srs.fr.14.15 now reads: "When the user drags a panel tab out of its dock and drops it where no dock accepts it, the Editor shall show the panel as a floating panel inside the main window." Dear ImGui's docking already behaves this way.
+- **Rationale:** costs nothing, keeps the requirement testable and keeps option (b) open for a later increment.
+- **Consequences:** the docking story that holds srs.fr.14.15 is met by Dear ImGui's floating docked windows. A panel cannot be moved to another monitor without the main window spanning it.
+- **Docs updated:** SRS A, Section 6.1 (team1-sp/docs), `history/decision-log.md`.
+- **Course documents affected (for humans):** SRS A (srs.fr.14.15 wording; the Change History table of the Word file).
+- **Revisit when:** separate operating-system windows are wanted, which needs option (b).
+- **Supersedes / Related:** DEC-063.
