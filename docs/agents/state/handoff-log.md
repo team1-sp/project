@@ -308,3 +308,16 @@
 - **Next:** Editor parts in their stories: mode switch (US-17.3), Error Pause in Play mode (US-17.2, US-24.1), Rendering settings (US-27.4); the built game reads `parseRunOptions()` (US-28.x).
 - **Traps:** raylib keeps configuration flags after `CloseWindow()`, so a second window in the same process would still open fullscreen. Only `Application` may catch `RunError` (DEC-042).
 - **Records:** DEC-057 (Accepted in the PR, for review).
+
+---
+
+### HND-025 — The same tick phases in normal and headless mode (US-1.3)
+- **Date:** 2026-11-16
+- **Agent:** claude (US-1.3 thread), working with Işık Dönger
+- **Task:** US-1.3 (#43), srs.fr.1.12 to 1.15
+- **Result:** `TickPhase` and `tickPhases` in `engine/core/tick_phase.hpp`. `ISimulation::runTick(tick)` is now `runPhase(phase, TickContext)`, and `Application::runOneTick()`, used by both run modes, calls it for the seven phases in order. Before phase 1 it takes the tick's transitions from the run's `IInputSource` and applies them to the run's `InputActionState` (srs.fr.5.6, 5.7). `KeyboardQueue` (srs.fr.5.5) is the default source in normal mode, `NoInputSource` in headless mode; `ApplicationConfig::inputSource` sets another and the keyboard is then ignored. A phase that throws `RunError` ends its tick. The sandbox prints `tick phases run: N`. DEC-059 lists the choices. srs.fr.1.15 was already met by US-1.1; a test now checks that the renderer only sees completed ticks.
+- **Verified (Linux, GCC 13, Debug, warnings as errors):** full build with raylib, `ctest` 104/104; `headless` preset 91/91; sandbox headless 600 ticks printed `tick phases run: 4200`; sandbox normal mode under Xvfb ran 120 ticks (840 phases) in 2 s; editor under Xvfb ran 60 ticks and exited 0. clang-format 19.1.7 clean.
+- **Not verified:** Windows 11 and macOS (CI after push); real key presses, since nothing turns keys into actions yet.
+- **Next:** US-5.1 pushes key transitions into `Application::keyboardQueue()`; the ECS scheduler implements `runPhase()`; recording playback (US-5.4) and the agent become `IInputSource`s.
+- **Traps:** `TickContext::input` is a reference to the loop's state and is valid only during the phase call. A scripted input source must answer by tick number, not by call count, so that normal and headless runs read it the same way.
+- **Records:** DEC-059 (Accepted in the PR, for review).

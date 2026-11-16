@@ -1,8 +1,11 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "engine/core/frame_clock.hpp"
+#include "engine/core/input_actions.hpp"
+#include "engine/core/input_source.hpp"
 #include "engine/core/tick.hpp"
 #include "engine/core/window.hpp"
 
@@ -37,6 +40,11 @@ struct ApplicationConfig {
     Tick maxTicks = 0;
     // Used in normal mode only.
     WindowConfig window;
+    // The run's input source (srs.fr.5.11): a recording or the agent. Not owned; it must outlive
+    // the run. nullptr selects the default: the keyboard queue in normal mode, None in headless
+    // mode, which has no keyboard (srs.fr.7.3). While another source is given, the keyboard is
+    // ignored.
+    IInputSource* inputSource = nullptr;
 };
 
 // Owns the application window and runs the game loop (srs.fr.1.1 to 1.11, 1.15).
@@ -45,7 +53,9 @@ struct ApplicationConfig {
 //
 // Normal mode runs render frames in the order of srs.fr.1.1: each one collects the keyboard
 // input, runs the ticks that are due, at most 5, then renders and presents the state the last
-// completed tick left. Headless mode runs one tick after the other without a clock.
+// completed tick left. Headless mode runs one tick after the other without a clock. Both modes
+// run every tick through the same function, runOneTick(), which builds the tick's input action
+// state and runs the seven tick phases of srs.fr.1.12 in order (srs.fr.1.13, 1.14).
 class Application {
 public:
     // An application that can only run headless: it cannot reach a window or a renderer (R-6).
@@ -87,11 +97,18 @@ public:
     // Why the last run ended; NotRun before the first run.
     [[nodiscard]] RunOutcome outcome() const;
 
+    // The keyboard queue of normal mode (srs.fr.5.5). Keyboard input collection, step 1 of a
+    // render frame, pushes the frame's action transitions here; the next tick takes them all.
+    // Turning keys into actions is the Input Map's job (srs.fr.5.1, US-5.1).
+    [[nodiscard]] KeyboardQueue& keyboardQueue();
+
 private:
     void runHeadless();
     void runNormal();
-    // Runs one tick. Returns false, after logging the error, when the tick threw RunError.
+    // Runs one tick: builds its input action state from the run's input source, then runs the
+    // tick phases in order. Returns false, after logging the error, when the tick threw RunError.
     [[nodiscard]] bool runOneTick();
+    [[nodiscard]] IInputSource& inputSource();
     [[nodiscard]] bool reachedMaxTicks() const;
 
     ISimulation& simulation_;
@@ -100,6 +117,13 @@ private:
     FrameClock frameClock_;
     ApplicationConfig config_;
     std::unique_ptr<IWindow> window_;
+    KeyboardQueue keyboardQueue_;
+    NoInputSource noInput_;
+    // The input action state of the running or last completed tick; held actions carry over
+    // from tick to tick (srs.fr.5.7).
+    InputActionState inputState_;
+    // Reused by every tick, so a tick allocates nothing once it has grown.
+    std::vector<InputTransition> tickTransitions_;
     Tick ticksExecuted_ = 0;
     RunOutcome outcome_ = RunOutcome::NotRun;
     bool initialised_ = false;

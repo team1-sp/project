@@ -2,7 +2,7 @@
 
 Source: Senior Project Guide "Testing Checklist", extended with requirement IDs. Tick items by linking the test name (`[x] test name — file`). Items stay in this file; progress is also visible in tests.
 
-## Game loop (ip.fr.1.*, srs.fr.1.1 to 1.10)
+## Game loop (ip.fr.1.*, srs.fr.1.1 to 1.15)
 
 Tests are in `tests/unit/core/`.
 
@@ -13,7 +13,12 @@ Tests are in `tests/unit/core/`.
 - [x] Tick counter starts at 0 and goes up after each completed tick; simulated time is the counter times 1/60 s (srs.fr.1.5, 1.6) — `ApplicationTest.DuringATick_TickCounterIsThatTicksNumber`, `ApplicationTest.HeadlessSixtyTicks_SimulatedTimeIsOneSecond`
 - [x] Headless: no window, no rendering, stops at the maximum number of ticks (ip.fr.1.4, srs.fr.1.7, 7.1, 7.7) — `ApplicationTest.HeadlessMode_RunsMaxTicksWithoutWindowOrRendering`, `Sandbox.HeadlessRun_ExitsCleanly`
 - [x] Closing the window ends the run with exit code 0 and releases the window (ip.fr.1.3, srs.fr.1.10) — `ApplicationTest.WindowClosedByUser_RunReturnsZeroAndShutdownClosesWindow`
-- [x] A render frame with no tick due still renders and presents (srs.fr.1.15) — `ApplicationTest.FrameWithNoTickDue_StillRendersAndPresents`
+- [x] A render frame with no tick due still renders and presents the last completed tick (srs.fr.1.15) — `ApplicationTest.FrameWithNoTickDue_StillRendersAndPresents`, `ApplicationTest.RenderFrame_SeesOnlyCompletedTicks`
+- [x] Every tick runs the seven tick phases in their fixed order, in headless and normal mode (srs.fr.1.12) — `TickPhases.*`, `ApplicationTest.HeadlessTick_RunsTheSevenPhasesInOrder`, `ApplicationTest.NormalModeTick_RunsTheSevenPhasesInOrder`, `Sandbox.HeadlessRun_RunsSevenPhasesPerTick`
+- [x] With the same input source, headless and normal mode give the simulation identical phases, ticks and input states (srs.fr.1.12, 1.13, R-6) — `ApplicationTest.SameInputSource_HeadlessAndNormalModeRunIdenticalPhases`
+- [x] A phase that throws a run error ends its tick; later phases do not run (srs.fr.1.11, 1.12) — `ApplicationTest.PhaseThrowsRunError_LaterPhasesOfThatTickDoNotRun`
+- [x] Each tick gets the input action state of its source, built by srs.fr.5.6 before phase 1 and unchanged during the tick; keyboard transitions of frames without a tick go to the next tick; headless uses None; another source makes the keyboard ignored (srs.fr.1.14, 5.5, 5.7, 5.11, 7.3) — `InputActionState.*`, `KeyboardQueue.*`, `NoInputSource.*`, `ApplicationTest.InputState_IsTheSameInEveryPhaseOfATick`, `ApplicationTest.HeldAction_StaysHeldInTicksWithoutTransitions`, `ApplicationTest.KeyboardTransitionsOfFramesWithoutTick_GoToTheNextTick`, `ApplicationTest.FrameWithSeveralTicks_OnlyTheFirstTickGetsTheKeyboardTransitions`, `ApplicationTest.NormalModeWithAnotherSource_IgnoresTheKeyboard`, `ApplicationTest.HeadlessWithoutSource_TicksGetNoInput`
+- [ ] Real key presses reach the keyboard queue through the Input Map (srs.fr.1.14, 5.1) — needs US-5.1
 - [x] Unrecoverable run error: message and tick logged, run stops at that tick, non-zero exit code, outcome Error (srs.fr.1.11) — `ApplicationTest.HeadlessTickThrowsRunError_RunStopsAtThatTickWithOutcomeError`, `ApplicationTest.RunError_LogsMessageAndTickNumber`, `ApplicationTest.NormalModeTickThrowsRunError_StopsWithoutRenderingThatFrame`, `Sandbox.RunError_ExitsNonZero`, `Sandbox.RunError_LogsMessageAndTick`
 - [ ] Editor Play mode: a run error Error-Pauses at that tick, Pause and Step disabled until Stop (srs.fr.1.11, 24.6) — needs Play mode (US-17.2)
 - [x] Command-line run options `--headless`, `--max-ticks` (default 10 000), `--seed`, `--input-recording`; an invalid or unknown option is refused with an error naming it and no tick runs (srs.fr.1.8, 7.32, 7.33) — `RunOptions.*`, `Sandbox.HeadlessWithoutMaxTicks_RunsTenThousandTicks`, `Sandbox.InvalidSeed_ExitsNonZeroWithoutTicks`

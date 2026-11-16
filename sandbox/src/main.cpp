@@ -33,6 +33,7 @@
 #include "engine/core/run_options.hpp"
 #include "engine/core/simulation.hpp"
 #include "engine/core/tick.hpp"
+#include "engine/core/tick_phase.hpp"
 #include "engine/core/version.hpp"
 #include "engine/physics_box2d/box2d_info.hpp"
 #include "engine/rendering_raylib/raylib_info.hpp"
@@ -54,25 +55,32 @@ struct SandboxOptions {
     std::optional<engine::Tick> failAtTick;
 };
 
-// Stands in for the simulation until the ECS exists: a tick only records that it ran, or throws
-// the run error --fail-at-tick asks for, as a system that breaks an invariant would.
+// Stands in for the simulation until the ECS exists: every tick phase only counts that it ran, and
+// the gameplay rules phase of the tick --fail-at-tick names throws a run error, as a system that
+// breaks an invariant would.
 class TickCountingSimulation final : public engine::ISimulation {
 public:
     explicit TickCountingSimulation(std::optional<engine::Tick> failAtTick)
         : failAtTick_(failAtTick) {}
 
-    void runTick(engine::Tick tick) override {
-        if (failAtTick_ == tick) {
+    void runPhase(engine::TickPhase phase, const engine::TickContext& context) override {
+        if (phase == engine::TickPhase::GameplayRules && failAtTick_ == context.tick) {
             throw engine::RunError("sandbox: --fail-at-tick asked this tick to fail");
         }
-        ticksExecuted_ = tick + 1;
+        ++phasesRun_;
+        // The tick is complete once its last phase has run.
+        if (phase == engine::TickPhase::TelemetryRecording) {
+            ticksExecuted_ = context.tick + 1;
+        }
     }
 
     [[nodiscard]] engine::Tick ticksExecuted() const { return ticksExecuted_; }
+    [[nodiscard]] std::uint64_t phasesRun() const { return phasesRun_; }
 
 private:
     std::optional<engine::Tick> failAtTick_;
     engine::Tick ticksExecuted_ = 0;
+    std::uint64_t phasesRun_ = 0;
 };
 
 // Reads a whole number from `lowest` to `largest`. Returns false for anything else.
@@ -201,6 +209,8 @@ int main(int argc, char** argv) {
     std::printf("outcome: %s\n", engine::runOutcomeName(app.outcome()));
     std::printf("ticks executed: %llu (%.2f s simulated)\n",
                 static_cast<unsigned long long>(app.ticksExecuted()), app.simulatedSeconds());
+    // srs.fr.1.12: seven tick phases per tick, in either mode.
+    std::printf("tick phases run: %llu\n", static_cast<unsigned long long>(simulation.phasesRun()));
     if (renderFrames > 0) {
         const double realSeconds = toSeconds(frameClock.totalTime());
         std::printf("real time: %.2f s in %llu render frames (%.2f ms per frame)\n", realSeconds,

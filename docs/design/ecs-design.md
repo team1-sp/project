@@ -57,7 +57,7 @@ Each tick runs the phases of srs.fr.1.12 in order. In each phase: systems run in
 | 1 | InputApplication | `InputApplication` (engine) | the tick's input source: keyboard queue, recording, agent or none (srs.fr.5.7) | `InputState` | — |
 | 2 | GameplayInput | `PlayerMovement` | `InputState`, `PlayerInput` | `Velocity` (pending write, srs.fr.6.1) | — |
 | 3 | PhysicsSyncIn | `PhysicsSyncIn` (engine) | `Position`, `Velocity`, `RigidBody`, colliders, `Unlockable` | adapter bodies; clears pending marks | — |
-| 4 | PhysicsStep | none; the game loop calls `adapter.step(1/60)` | — | — | — |
+| 4 | PhysicsStep | none; the game loop calls `runPhase(PhysicsStep)` and the simulation calls `adapter.step(1/60)` (DEC-059) | — | — | — |
 | 5 | PhysicsSyncOut | `PhysicsSyncOut` (engine) | adapter bodies | `Position`, `Velocity` (untracked write-back) | publishes `Collision` |
 | 5 | (dispatch) | `Collect` handler | `Collectible`, `PlayerInput` | `Inventory`; toggles enabled | handles `Collision`, publishes `ItemCollected` (srs.fr.6.2) |
 | 5 | (dispatch) | `Objective` handler | `Objective`, `PlayerInput` | — | handles `Collision`, publishes `ObjectiveReached` (srs.fr.6.5) |

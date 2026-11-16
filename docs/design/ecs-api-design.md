@@ -308,8 +308,10 @@ each<A, B, C>(fn):
 
 ## 8. Systems (D-10)
 
+`TickPhase` is defined in `engine/core/tick_phase.hpp` (DEC-059), because the game loop owns the phase order: `Application` calls `ISimulation::runPhase(phase, context)` for each phase in order, and the ECS simulation forwards it to `SystemScheduler::runPhase()`.
+
 ```cpp
-enum class TickPhase : std::uint8_t {   // srs.fr.1.12, in execution order
+enum class TickPhase : std::uint8_t {   // srs.fr.1.12, in execution order (engine/core)
     InputApplication,
     GameplayInput,
     PhysicsSyncIn,
