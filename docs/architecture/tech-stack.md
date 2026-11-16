@@ -21,6 +21,7 @@
 | World units | **Meters, y up, 32 pixels per meter; renderer alone converts to screen space** | DEC-036 |
 | Engine to AI-service protocol | **gRPC/protobuf** behind the engine's `AgentBridge` interface; optional pybind11 local-RL path only if profiling justifies it | DEC-038 (ADR-002) |
 | Language models | **No own model.** Users supply their own provider account, subscription and API key; only free-tier or local use is guaranteed. Which providers are supported is PB-068 | DEC-045 |
+| Editor UI | **Dear ImGui v1.93.0 (docking branch)** with the **rlImGui** raylib backend (commit 5c17e70), the backend only inside `engine/rendering-raylib` | DEC-063 |
 | Scope | **2D only.** 3D is future work; keep the seams (adapter, rendering abstraction, ECS) so it stays possible, build nothing 3D | DEC-016 |
 
 ## 2. Still open (ask the human; do not decide)
@@ -71,3 +72,4 @@ The engine is not directly coupled to Box2D or Raylib. The Physics Adapter and t
 | 2026-11-04 | PB-065 adds benchmark evidence and provisional ADR-002/DEC-038; protocol remains open | Codex |
 | 2026-11-04 | Merged the two AI-protocol rows, removed the world-units row (decided in DEC-036), Python decision cited as DEC-039 after renumbering | claude (PR #23 review) |
 | 2026-11-04 | gRPC/protobuf protocol accepted and moved to Decided (DEC-038) | claude (PR #23 review) |
+| 2026-11-16 | Editor UI: Dear ImGui with rlImGui (DEC-063, US-14.1) | claude (US-14.1 thread) |

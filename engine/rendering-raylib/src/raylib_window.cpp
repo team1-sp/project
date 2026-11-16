@@ -19,6 +19,9 @@ std::unique_ptr<IWindow> RaylibWindow::open(const WindowConfig& config) {
     if (!IsWindowReady()) {
         return nullptr;
     }
+    if (!config.escapeClosesWindow) {
+        SetExitKey(KEY_NULL);
+    }
 
     const double targetFrameSeconds =
         config.targetFramesPerSecond > 0 ? 1.0 / config.targetFramesPerSecond : 0.0;
@@ -37,6 +40,10 @@ RaylibWindow::~RaylibWindow() {
 
 bool RaylibWindow::shouldClose() const {
     return WindowShouldClose();
+}
+
+void RaylibWindow::setTitle(const std::string& title) {
+    SetWindowTitle(title.c_str());
 }
 
 void RaylibWindow::collectInput() {

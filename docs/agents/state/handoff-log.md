@@ -348,3 +348,16 @@
 - **Next:** EP-01 (#40) was closed by hand with US-1.5 still in its later stories; reopen it if the team wants it to carry `increment-done`.
 - **Traps:** a close made with the workflow's own token starts no other workflow run, so the script walks up the parent chain itself.
 - **Records:** DEC-061, DEC-062 (Accepted in the PR, for review).
+
+---
+
+### HND-028 — Editor main window (US-14.1)
+- **Date:** 2026-11-16
+- **Agent:** claude (US-14.1 thread), working with Işık Dönger
+- **Task:** US-14.1 (#77), srs.fr.14.1 to 14.6
+- **Result:** The editor draws its main window with Dear ImGui v1.93.0-docking through rlImGui (`engine::rendering_raylib::ImGuiRenderer`): the menu bar with File, Edit, Assets, Entity, Component, Run, AI, Window and Help (items of D-01 to D-09, unbuilt ones disabled), the C-01 toolbar (all disabled for now), the Default layout (Hierarchy left, Scene and Game centre, Inspector right, Project and Console bottom) and a status bar. `editor_core` has the window-free menu model, `shortcutText()` (Ctrl/Cmd) and `EditorSession` (title, unsaved items, `confirmClose()`). `Application` got `confirmClose`, `requestClose()`, `setWindowTitle()`; `WindowConfig::escapeClosesWindow`; `IFrameRenderer::releaseGraphics()`. DEC-063 lists the choices.
+- **Verified (Linux, GCC 13, Debug, warnings as errors, raylib on):** build, `ctest` 130/130 (14 new or changed tests). The editor under Xvfb: the layout of srs.fr.14.1, File and Window menus with muted disabled items, Ctrl+6 brings Console to the front, Escape does not close, File > Exit ends the run with exit code 0, title "Aegis Editor 0.1". clang-format 19.1.7 clean, `check_includes.py` passes.
+- **Not verified:** Windows 11 and macOS (CI after push); Cmd shortcuts on a real Mac; the title with a real project (no Project Hub yet).
+- **Next:** US-15.x adds F-01 and reads `EditorSession::isUnsavedChangesDialogRequested()`; the Project Hub calls `openProject()`; the docking and layout stories build on the dock space in `MainWindowView`.
+- **Traps:** rlImGui must be shut down before the window closes, which `Application::shutdown()` does through `releaseGraphics()`. Dear ImGui docks the panels during the first frame, so bringing tabs to the front works from the second frame on. The default font has ASCII and Latin-1 only.
+- **Records:** DEC-063 (Accepted in the PR, for review).

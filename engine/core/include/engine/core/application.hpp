@@ -1,7 +1,9 @@
 #pragma once
 
 #include <chrono>
+#include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "engine/core/frame_clock.hpp"
@@ -47,6 +49,10 @@ struct ApplicationConfig {
     // mode, which has no keyboard (srs.fr.7.3). While another source is given, the keyboard is
     // ignored.
     IInputSource* inputSource = nullptr;
+    // Normal mode: asked each time the user asks to close the window (srs.fr.1.10). It returns
+    // true to close the window and end the run, or false to keep running; the Editor applies its
+    // unsaved-changes check here (srs.fr.14.3). Empty: the window always closes.
+    std::function<bool()> confirmClose;
 };
 
 // Owns the application window and runs the game loop (srs.fr.1.1 to 1.18).
@@ -116,6 +122,14 @@ public:
     // True from the tick boundary at which a pause took effect until resume().
     [[nodiscard]] bool isPaused() const;
 
+    // Ends a normal-mode run after the current render frame, as closing the window does, without
+    // asking confirmClose: the caller has made its checks (File > Exit, srs.fr.15.15). The
+    // outcome is WindowClosed. Returns false, changing nothing, outside a normal-mode run.
+    bool requestClose();
+    // Changes the title of the application window (srs.fr.14.2). Returns false when no window is
+    // open: in headless mode or before init().
+    bool setWindowTitle(const std::string& title);
+
     // The tick counter (srs.fr.1.5): 0 when a run starts, one more after every completed tick.
     // While a tick runs, this is that tick's number.
     [[nodiscard]] Tick ticksExecuted() const;
@@ -161,6 +175,7 @@ private:
     bool initialised_ = false;
     // True while run() runs the normal-mode loop: only then can it pause.
     bool runningNormal_ = false;
+    bool closeRequested_ = false;
     bool pauseRequested_ = false;
     bool paused_ = false;
     // Steps asked for while paused and not run yet.

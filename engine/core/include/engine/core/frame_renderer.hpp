@@ -11,6 +11,9 @@ public:
     virtual ~IFrameRenderer() = default;
 
     virtual void renderFrame() = 0;
+    // Releases what the renderer loaded through the window (textures, fonts). Application calls
+    // it right before the window closes, as nothing loaded through it can be released after.
+    virtual void releaseGraphics() {}
 };
 
 } // namespace engine

@@ -1,6 +1,7 @@
 // Editor: the application that hosts the engine and owns its main window (DEC-048). Games,
 // including the demo game, are built and run inside it; they never host the engine themselves.
-// Panels, projects and the run controls follow in later backlog items (PB-110 to PB-113).
+// The main window has the menu bar, toolbar, panels and status bar of srs.fr.14.1 (US-14.1),
+// drawn with Dear ImGui (DEC-063); the panels' contents come with their own stories.
 //
 // Usage: editor [--max-ticks N]
 //   --max-ticks N  close the window after N ticks (1 to 1 000 000); without it, the editor runs
@@ -12,14 +13,16 @@
 #include <string_view>
 #include <system_error>
 
+#include "editor/editor_session.hpp"
 #include "engine/core/application.hpp"
 #include "engine/core/leak_check.hpp"
 #include "engine/core/simulation.hpp"
 #include "engine/core/tick.hpp"
 #include "engine/core/tick_phase.hpp"
 #include "engine/core/version.hpp"
+#include "engine/rendering_raylib/imgui_renderer.hpp"
 #include "engine/rendering_raylib/raylib_window.hpp"
-#include "engine/rendering_raylib/status_text_renderer.hpp"
+#include "main_window_view.hpp"
 
 namespace {
 
@@ -63,10 +66,16 @@ bool parseOptions(int argc, char** argv, engine::ApplicationConfig& config) {
 int main(int argc, char** argv) {
     engine::enableLeakReportAtExit();
 
+    editor::EditorSession session;
+
     engine::ApplicationConfig config;
     config.window.widthPixels = 1280;
     config.window.heightPixels = 720;
-    config.window.title = "Aegis Editor";
+    config.window.title = session.mainWindowTitle();
+    // Escape stops a headless run in the Editor (D-06); it must not close the main window.
+    config.window.escapeClosesWindow = false;
+    // Closing the main window applies the unsaved-changes check first (srs.fr.14.3).
+    config.confirmClose = [&session] { return session.confirmClose(); };
     if (!parseOptions(argc, argv, config)) {
         return exitCodeBadOption;
     }
@@ -75,10 +84,14 @@ int main(int argc, char** argv) {
     std::printf("editor %d.%d.%d\n", version.major, version.minor, version.patch);
 
     NoProjectSimulation simulation;
-    engine::rendering_raylib::StatusTextRenderer renderer(
-        [] { return std::string("No project open"); });
+    engine::Application* runningApp = nullptr;
+    editor::MainWindowView mainWindow(
+        session, [&runningApp] { runningApp->requestClose(); },
+        [&runningApp](const std::string& title) { runningApp->setWindowTitle(title); });
+    engine::rendering_raylib::ImGuiRenderer renderer([&mainWindow] { mainWindow.draw(); });
 
     engine::Application app(simulation, renderer, engine::rendering_raylib::RaylibWindow::open);
+    runningApp = &app;
     if (!app.init(config)) {
         return exitCodeStartFailed;
     }

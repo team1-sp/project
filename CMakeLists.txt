@@ -25,8 +25,9 @@ include(Dependencies)
 add_subdirectory(engine)
 
 # The editor and the sandbox open a window, so the headless preset builds neither (R-4, R-6).
+# editor/ is always added for its window-free logic, editor_core, which the tests use.
+add_subdirectory(editor)
 if(ENGINE_WITH_RAYLIB)
-    add_subdirectory(editor)
     add_subdirectory(sandbox)
 endif()
 

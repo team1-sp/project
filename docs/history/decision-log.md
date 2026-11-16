@@ -70,6 +70,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-060 | US-1.4: `Application::requestPause()`, `resume()`, `requestStep()` and `isPaused()` pause a normal-mode run at the next tick boundary, drop the frame's unstarted ticks, keep the part of a tick, add no paused time and run one tick per step without the accumulator | Accepted | 2026-11-16 |
 | DEC-061 | Agents do code work in their own cloud copy of the repository by default; they work on a member's computer (folder access or Remote Control) only when the work needs that computer or the member asks | Accepted | 2026-11-16 |
 | DEC-062 | The `Epic close` workflow closes an epic once all of its sub-issues are closed and its "Later stories" list is empty; with later stories left it stays open with the `increment-done` label | Accepted | 2026-11-16 |
+| DEC-063 | US-14.1: the Editor's interface is drawn with Dear ImGui v1.93.0 (docking branch) through rlImGui inside `engine/rendering-raylib`; the window-free menu model and session live in `editor_core`; unbuilt menu items are disabled; `Application` gets `confirmClose`, `requestClose()` and `setWindowTitle()` | Accepted | 2026-11-16 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -918,3 +919,28 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none.
 - **Revisit when:** later stories are planned as sub-issues up front, or GitHub Actions can trigger on sub-issue links.
 - **Supersedes / Related:** related DEC-050.
+
+### DEC-063 — US-14.1: the Editor's main window with Dear ImGui
+- **Date:** 2026-11-16
+- **Status:** Accepted (carried by the US-14.1 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-14.1 pull request   **Recorded by:** claude (US-14.1 thread)
+- **Human's words:** none yet; the UI library was put to Işık Dönger as a choice in the US-14.1 thread and is listed under "Decisions for review" in the PR.
+- **Proposed by:** claude (US-14.1 thread), from srs.fr.14.1 to 14.6, 14.12 to 14.27, 15.15, 15.22 and the B-01, C-01 and D-01 to D-09 frames
+- **Context:** US-14.1 (#77) asks for the main window with the menu bar, toolbar, the Default panel layout and the status bar (srs.fr.14.1), the project and scene in the title with "*" for unsaved changes (14.2), the unsaved-changes check before closing (14.3), the nine menus (14.4), disabled items in muted text with no hover effect (14.5) and Ctrl/Cmd shortcuts (14.6). raylib draws shapes and text but has no menus, tabs or docking, and no UI library had been chosen (tech-stack.md). Later stories need tab docking, splitting and floating panels (srs.fr.14.12 to 14.15). No project, scene or Unsaved Changes dialog (F-01) exists yet.
+- **Options considered:**
+  1. UI library: (a) Dear ImGui, docking branch, with the rlImGui backend for raylib; (b) raygui, raylib's own immediate-mode GUI; (c) our own widgets drawn with raylib. (a) is chosen: menus, disabled items, tabs and the dock builder are built in, and the docking stories reuse them; (b) and (c) have no menus or docking. The choice was offered to the human with (a) recommended.
+  2. Where the backend lives: rlImGui includes raylib.h, so it is built in `engine/rendering-raylib` (R-4); the editor uses only `imgui.h`.
+  3. What a not-yet-built menu item does: (a) show it disabled; (b) leave it out. (a) is chosen: the menus match D-01 to D-09 now, and srs.fr.14.5 already says an item is disabled while its condition is not met.
+- **Decision:**
+  1. Dear ImGui v1.93.0-docking and rlImGui (commit 5c17e70, no release tags) are fetched by `cmake/Dependencies.cmake` only when raylib is on. `imgui` is a static library target of the core files; `rlimgui` is built in `engine/rendering-raylib` without our warning flags, with the icon font left out. `engine::rendering_raylib::ImGuiRenderer` is the `IFrameRenderer` that owns the Dear ImGui context: it creates it in the first render frame, measures the frame time itself (custom frame control, DEC-051, leaves raylib's frame time unset) and releases it in `releaseGraphics()`.
+  2. `editor_core` (always built, linked by the tests) holds the window-free parts: `Command` (label, shortcut, enabled condition, action), `shortcutText()` with Ctrl on Windows and Cmd on macOS (srs.fr.14.6; Exit is Alt+F4 / Cmd+Q, srs.fr.15.15), the nine menus and the C-01 toolbar from `buildMainMenu()` and `buildToolbar()`, and `EditorSession` with the project, active scene, unsaved items (srs.fr.15.24), the window title (srs.fr.14.2: "Aegis Editor 0.1 — <project> — <scene>*", following B-01) and `confirmClose()`.
+  3. A command without an enabled condition is a feature not built yet and is drawn disabled (srs.fr.14.5); an empty submenu (Open Recent) is disabled too. Enabled now: File > Exit and Window > General's six panels (Ctrl+1 to Ctrl+6). The toolbar is all disabled until the Scene view and Play mode stories.
+  4. `MainWindowView` (editor, Dear ImGui) draws the menu bar, the toolbar and the status bar as viewport side bars and the panels in a dock space with the Default layout of srs.fr.14.1, built with the dock builder at start: Hierarchy left, Scene and Game centre, Inspector right, Project and Console bottom. No imgui.ini is written until the layout stories save layouts. Enabled commands also run from their shortcuts.
+  5. `engine/core`: `ApplicationConfig::confirmClose` is asked when the user asks to close the window and can keep it open; `Application::requestClose()` ends a normal-mode run after the render frame (File > Exit, after its own check); `Application::setWindowTitle()` and `IWindow::setTitle()` change the title; `WindowConfig::escapeClosesWindow` lets the Editor keep Escape (Stop Headless Run, D-06); `IFrameRenderer::releaseGraphics()` runs right before the window closes.
+  6. `EditorSession::confirmClose()` returns true with nothing unsaved. With unsaved items it keeps the Editor open and flags a request for the Unsaved Changes dialog (F-01), which closes the Editor itself when it comes with US-15.x. Stopping a simulation operation first (srs.fr.15.25) comes with Play mode.
+- **Rationale:** Dear ImGui is the common choice for engine editors, covers srs.fr.14.5 and the later docking requirements out of the box, and keeps raylib inside its adapter target. Keeping the menu model and session out of Dear ImGui lets the tests check srs.fr.14.2 to 14.6 without a window.
+- **Consequences:** two new pinned dependencies (changing their versions is a decision, coding-standards §6). The Editor has no project until the Project Hub (US-13.x), so it shows "No project open". The default font has no em dash; the tick counter uses a hyphen until a font is chosen. Docking by drag, floating panels and saved layouts (srs.fr.14.12 to 14.27) build on this dock space.
+- **Docs updated:** `architecture/tech-stack.md`, `architecture/engine-layer.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** the human chooses another UI library, floating panels outside the main window are built (rlImGui has no multi-viewport support), or a font is chosen.
+- **Supersedes / Related:** DEC-033, DEC-048, DEC-051, US-14.1 (#77).
