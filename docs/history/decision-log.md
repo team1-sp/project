@@ -979,7 +979,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Decision:** (a). srs.fr.14.15 now reads: "When the user drags a panel tab out of its dock and drops it where no dock accepts it, the Editor shall show the panel as a floating panel inside the main window." Dear ImGui's docking already behaves this way.
 - **Rationale:** costs nothing, keeps the requirement testable and keeps option (b) open for a later increment.
 - **Consequences:** the docking story that holds srs.fr.14.15 is met by Dear ImGui's floating docked windows. A panel cannot be moved to another monitor without the main window spanning it.
-- **Docs updated:** SRS A, Section 6.1 (team1-sp/docs), `history/decision-log.md`.
-- **Course documents affected (for humans):** SRS A (srs.fr.14.15 wording; the Change History table of the Word file).
+- **Docs updated:** `history/decision-log.md`. Agents in this repository do not change the SRS or other deliverables in team1-sp/docs; the team updates the SRS wording there.
+- **Course documents affected (for humans):** SRS A, srs.fr.14.15 (Section 6.1).
 - **Revisit when:** separate operating-system windows are wanted, which needs option (b).
 - **Supersedes / Related:** DEC-063.
