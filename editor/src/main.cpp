@@ -1,7 +1,8 @@
 // Editor: the application that hosts the engine and owns its main window (DEC-048). Games,
 // including the demo game, are built and run inside it; they never host the engine themselves.
 // The main window has the menu bar, toolbar, panels and status bar of srs.fr.14.1 (US-14.1),
-// drawn with Dear ImGui (DEC-063); the panels' contents come with their own stories.
+// drawn with Dear ImGui (DEC-063); the status bar shows the Editor's state (US-14.2) and the
+// panels' contents come with their own stories.
 //
 // Usage: editor [--max-ticks N]
 //   --max-ticks N  close the window after N ticks (1 to 1 000 000); without it, the editor runs
@@ -14,6 +15,7 @@
 #include <system_error>
 
 #include "editor/editor_session.hpp"
+#include "editor/status_bar.hpp"
 #include "engine/core/application.hpp"
 #include "engine/core/leak_check.hpp"
 #include "engine/core/simulation.hpp"
@@ -68,6 +70,9 @@ int main(int argc, char** argv) {
     engine::enableLeakReportAtExit();
 
     editor::EditorSession session;
+    // What the status bar shows (srs.fr.14.7 to 14.11); the Console, Play mode, scene, AI
+    // service, telemetry and debug flag stories fill it in.
+    editor::EditorStatus status;
 
     engine::ApplicationConfig config;
     config.window.widthPixels = 1280;
@@ -87,7 +92,7 @@ int main(int argc, char** argv) {
     NoProjectSimulation simulation;
     engine::Application* runningApp = nullptr;
     editor::MainWindowView mainWindow(
-        session, [&runningApp] { runningApp->requestClose(); },
+        session, status, [&runningApp] { runningApp->requestClose(); },
         [&runningApp](const std::string& title) { runningApp->setWindowTitle(title); });
     engine::rendering_raylib::ImGuiRenderer renderer([&mainWindow] { mainWindow.draw(); },
                                                      editor::applyTheme);

@@ -73,6 +73,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-063 | US-14.1: the Editor's interface is drawn with Dear ImGui v1.93.0 (docking branch) through rlImGui inside `engine/rendering-raylib`; the window-free menu model and session live in `editor_core`; unbuilt menu items are disabled; `Application` gets `confirmClose`, `requestClose()` and `setWindowTitle()` | Accepted | 2026-11-16 |
 | DEC-064 | US-14.1: the Editor takes the look of the Figma design: Inter and JetBrains Mono embedded in the executable from `editor/assets/fonts`, the design's palette and sizes as the Dear ImGui style, Font Awesome icons on the toolbar | Accepted | 2026-11-16 |
 | DEC-065 | srs.fr.14.15 is reworded: a panel tab dragged out of its dock becomes a floating panel inside the main window, not a separate operating-system window | Accepted | 2026-11-17 |
+| DEC-066 | US-14.2: the status bar is built from a window-free `EditorStatus` model in `editor_core` (message, debug flags in orange, REC, mode, FPS, entities, AI service dot); clicking the message opens the Console; the AI and REC clicks wait for their panels | Accepted | 2026-11-17 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -983,3 +984,25 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** SRS A, srs.fr.14.15 (Section 6.1).
 - **Revisit when:** separate operating-system windows are wanted, which needs option (b).
 - **Supersedes / Related:** DEC-063.
+
+### DEC-066 — US-14.2: the status bar shows the Editor's state from a window-free model
+- **Date:** 2026-11-17
+- **Status:** Accepted (carried by the US-14.2 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-14.2 pull request   **Recorded by:** claude (US-14.2 thread)
+- **Human's words:** Işık Dönger, US-14.2 thread, 2026-11-17: "Can you start on the US-14.2."
+- **Proposed by:** claude (US-14.2 thread), from srs.fr.14.7 to 14.11 and the status bars of the B-01, B-02, B-04, B-08 and C-08c frames and the B-01 and D-06 spec cards
+- **Context:** US-14.2 (#78) asks the status bar for the last Console message (14.7), the mode, FPS and entity count (14.8), the AI service dot (14.9), a red REC while telemetry records (14.10) and the active debug flags in orange (14.11). None of the sources exist yet: the Console log is US-24.1, Play mode EP-17, scenes and entities EP-02/EP-18, the AI service settings US-33.5, the Telemetry panel EP-30 and debug flags EP-12. The design shows no frame with debug flags on, and none with an empty message.
+- **Options considered:**
+  1. Click targets that are not built yet (Project Settings F-04, the Telemetry panel): (a) keep the item visible but not clickable until its story, like a disabled menu item (srs.fr.14.5); (b) add empty action methods now. (a) is chosen: no dead calls.
+  2. Where the debug flags go: (a) first in the right-hand group, before REC; (b) in the message area. (a) is chosen: the message area changes with every log line, so the flags would be hidden.
+- **Decision:**
+  1. `editor_core` gets `EditorStatus` (last Console message, `EditorMode` Edit/Play/Paused/Headless, headless ticks per second, optional entity count, `AiServiceState` and service name, telemetry recording, active debug flag names) and `buildStatusBar()`, which turns it into a `StatusBar`: the message at the left and, at the right, debug flags, REC, mode, FPS, entities and AI service, in this order. Each `StatusItem` has its text, a muted or warning colour, an optional dot and a `Command` for its click. The stories that own each source fill `EditorStatus`; the Editor owns one in `main.cpp`.
+  2. Texts follow the design: "Edit mode", "Play mode", "Paused", "Headless run"; "FPS —" in Edit mode, the render frame rate in Play mode and while paused, "FPS 2 840 ticks/s" in a headless run; "Entities 24", "Entities —" with no scene; "AI service: offline" (grey #6a6a6a dot), "AI service: connected" or "AI service: local · connected" (green #6bcb3c dot); "REC telemetry" with a red #e04a4a dot; flag names joined by commas in #e0b03c. Numbers are grouped in threes with a space. No message is shown while the Console has none.
+  3. Clicking the message opens the Console panel (srs.fr.14.7). The AI service and REC items name their targets but stay unclickable until US-33.5 and EP-30 add them. A clickable item highlights under the mouse, shows a hand cursor and its target as a tooltip. A message too long for the room left is cut with "...".
+  4. `MainWindowView` draws the bar 22 px high in #2a2a2a with a #1a1a1a line above and #a8a8a8 text, from the B-01 palette.
+- **Rationale:** the tests check srs.fr.14.7 to 14.11 without a window, and each later story only sets one field.
+- **Consequences:** a fresh Editor shows "Edit mode · FPS — · Entities — · AI service: offline" and no message. srs.fr.14.9 and 14.10's clicks are met once US-33.5 and EP-30 enable them.
+- **Docs updated:** `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** the design adds a frame with debug flags on, or the Console story wants severity icons in the status bar.
+- **Supersedes / Related:** DEC-063, DEC-064, US-14.1 (#77), US-14.2 (#78).

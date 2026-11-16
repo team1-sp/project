@@ -362,3 +362,16 @@
 - **Traps:** rlImGui must be shut down before the window closes, which `Application::shutdown()` does through `releaseGraphics()`. Dear ImGui docks the panels during the first frame, so bringing tabs to the front works from the second frame on. The default font has ASCII and Latin-1 only.
 - **Theme (same PR):** the editor now uses Inter and JetBrains Mono (embedded from `editor/assets/fonts`), the Figma palette and Font Awesome toolbar icons (DEC-064); `figma-vs-editor.png` in the thread compares it with B-02.
 - **Records:** DEC-063, DEC-064 (Accepted in the PR, for review).
+
+---
+
+### HND-029 — Editor status bar (US-14.2)
+- **Date:** 2026-11-17
+- **Agent:** claude (US-14.2 thread), working with Işık Dönger
+- **Task:** US-14.2 (#78), srs.fr.14.7 to 14.11
+- **Result:** `editor/include/editor/status_bar.hpp`: `EditorStatus` and `buildStatusBar()` build the status bar's items (message, debug flags, REC, mode, FPS, entities, AI service) with their colours, dots and click commands. `MainWindowView` draws them in the B-01 style; clicking the message opens the Console. DEC-066 lists the choices.
+- **Verified (Linux, GCC 13, Debug, warnings as errors, raylib on):** build, `ctest` 139/139 (9 new tests). The editor under Xvfb with every field filled in by a temporary local patch (not committed): all items in the design's order and colours, hover highlight and tooltip on the message, clicking it brings Console to the front.
+- **Not verified:** Windows 11 and macOS (CI after push).
+- **Next:** US-24.1 sets `lastConsoleMessage`; US-17.2 sets `mode`; the scene stories set `entityCount`; US-33.5 sets the AI state and enables the AI item's click (F-04 at AI and Privacy); EP-30 enables REC's click; the debug flag story fills `activeDebugFlags`.
+- **Traps:** `EditorStatus` is read every render frame; set it from the Editor's thread only.
+- **Records:** DEC-066 (Accepted in the PR, for review).

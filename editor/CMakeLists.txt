@@ -1,9 +1,11 @@
 # Editor logic that needs no window: the menu model, the shortcuts and the session state
-# (US-14.1). It links neither raylib nor Dear ImGui, so the tests use it in every preset.
+# (US-14.1), and the status bar's items (US-14.2). It links neither raylib nor Dear ImGui, so
+# the tests use it in every preset.
 add_library(editor_core STATIC
     src/command.cpp
     src/editor_session.cpp
     src/main_menu.cpp
+    src/status_bar.cpp
 )
 add_library(editor::core ALIAS editor_core)
 target_include_directories(editor_core PUBLIC include)
