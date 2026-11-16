@@ -45,4 +45,8 @@ std::chrono::nanoseconds FrameClock::totalTime() const {
     return frameStartedAt_ - startedAt_;
 }
 
+std::chrono::nanoseconds FrameClock::sinceFrameStart() const {
+    return std::max(now_(), frameStartedAt_) - frameStartedAt_;
+}
+
 } // namespace engine

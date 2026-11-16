@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <vector>
 
@@ -11,6 +12,7 @@
 
 namespace engine {
 
+class FixedTimestep;
 class IFrameRenderer;
 class ISimulation;
 
@@ -47,15 +49,17 @@ struct ApplicationConfig {
     IInputSource* inputSource = nullptr;
 };
 
-// Owns the application window and runs the game loop (srs.fr.1.1 to 1.11, 1.15).
+// Owns the application window and runs the game loop (srs.fr.1.1 to 1.18).
 // Use: construct, init(), run(), shutdown(). The simulation and the frame renderer are not
 // owned and must outlive the Application.
 //
 // Normal mode runs render frames in the order of srs.fr.1.1: each one collects the keyboard
 // input, runs the ticks that are due, at most 5, then renders and presents the state the last
-// completed tick left. Headless mode runs one tick after the other without a clock. Both modes
-// run every tick through the same function, runOneTick(), which builds the tick's input action
-// state and runs the seven tick phases of srs.fr.1.12 in order (srs.fr.1.13, 1.14).
+// completed tick left. While paused, a render frame runs only the steps asked for and adds no
+// real time to the accumulator (srs.fr.1.16 to 1.18). Headless mode runs one tick after the
+// other without a clock. Both modes run every tick through the same function, runOneTick(),
+// which builds the tick's input action state and runs the seven tick phases of srs.fr.1.12 in
+// order (srs.fr.1.13, 1.14).
 class Application {
 public:
     // An application that can only run headless: it cannot reach a window or a renderer (R-6).
@@ -89,6 +93,29 @@ public:
     // the destructor calls it too.
     void shutdown();
 
+    // Pause, resume and step (srs.fr.1.16 to 1.18, 17.12 to 17.14). They act only on a running
+    // normal-mode run, in which Play mode's Pause and Step and Error Pause call them, from the
+    // render frame's input collection or from inside a tick; they return false and change nothing
+    // in headless mode or outside run(). A new run starts unpaused.
+    //
+    // Asks the game loop to pause at the next tick boundary (srs.fr.1.16): asked from inside a
+    // tick, the pause takes effect when that tick has completed, even when the render frame had
+    // more ticks to run. Then no further tick starts, the whole ticks of real time not simulated
+    // yet are discarded and the part of a tick left over is kept. Render frames go on and keep
+    // showing the last completed tick. Returns true when the run is paused or will pause.
+    bool requestPause();
+    // Ends a pause, or cancels a pause request that has not taken effect yet (srs.fr.1.18). Real
+    // time is measured again from this moment and the kept part of a tick carries on, so no
+    // paused time is simulated and the pause causes no "Simulation is running slower than real
+    // time" warning. Returns false when the run was neither paused nor about to pause.
+    bool resume();
+    // While paused, asks for one more tick (srs.fr.17.14): the next render frame runs it, without
+    // reading or changing the real-time accumulator (srs.fr.1.17), and renders its result. Each
+    // call is one tick. Returns false, asking for nothing, when the run is not paused.
+    bool requestStep();
+    // True from the tick boundary at which a pause took effect until resume().
+    [[nodiscard]] bool isPaused() const;
+
     // The tick counter (srs.fr.1.5): 0 when a run starts, one more after every completed tick.
     // While a tick runs, this is that tick's number.
     [[nodiscard]] Tick ticksExecuted() const;
@@ -110,6 +137,11 @@ private:
     [[nodiscard]] bool runOneTick();
     [[nodiscard]] IInputSource& inputSource();
     [[nodiscard]] bool reachedMaxTicks() const;
+    // Step (2) of a running and of a paused render frame.
+    [[nodiscard]] bool runDueTicks(FixedTimestep& timestep, std::chrono::nanoseconds frameTime);
+    [[nodiscard]] bool runRequestedSteps();
+    // Makes a pending pause request take effect at this tick boundary.
+    void enterPause();
 
     ISimulation& simulation_;
     IFrameRenderer* frameRenderer_ = nullptr;
@@ -127,6 +159,15 @@ private:
     Tick ticksExecuted_ = 0;
     RunOutcome outcome_ = RunOutcome::NotRun;
     bool initialised_ = false;
+    // True while run() runs the normal-mode loop: only then can it pause.
+    bool runningNormal_ = false;
+    bool pauseRequested_ = false;
+    bool paused_ = false;
+    // Steps asked for while paused and not run yet.
+    int stepsRequested_ = 0;
+    // The real time between the last frame measurement and resume(): it was paused, so it is
+    // taken off the next frame time before the accumulator gets it (srs.fr.1.18).
+    std::chrono::nanoseconds pausedSinceFrameStart_{};
 };
 
 } // namespace engine

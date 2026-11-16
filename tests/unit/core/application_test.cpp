@@ -1,4 +1,4 @@
-// Game loop tests (PB-011, PB-012, US-1.1, US-1.2, US-1.3; srs.fr.1.1 to 1.15, 7.1, 7.7). A fake
+// Game loop tests (PB-011, PB-012, US-1.1 to US-1.4; srs.fr.1.1 to 1.18, 7.1, 7.7). A fake
 // window, simulation and renderer write to one call log, and the fake window moves a scripted
 // clock, so the tests check the order of calls and the ticks per render frame without a real window
 // or real time.
@@ -802,4 +802,238 @@ TEST_F(ApplicationTest, RenderFrame_SeesOnlyCompletedTicks) {
     // Frames run 0, 0, 3 and 1 ticks (10 ms carries over 0.6 of a tick).
     EXPECT_EQ(phasesSeenByFrame, (std::vector<std::size_t>{0, 0, 3 * engine::tickPhaseCount,
                                                            4 * engine::tickPhaseCount}));
+}
+
+// ---- Pause, resume and step (US-1.4; srs.fr.1.16 to 1.18, 17.12 to 17.14) ----
+
+// srs.fr.1.16, 24.6: a pause asked for during a tick takes effect when that tick has completed,
+// even though the render frame had more ticks to run. 80 ms is 4.8 ticks, so the second frame
+// would run 4.
+TEST_F(ApplicationTest, PauseRequestedDuringATick_NoFurtherTickStarts) {
+    engine::Application app(simulation_, renderer_, windowFactory({80ms, 80ms, 80ms}),
+                            timeSource());
+    simulation_.onTick = [&] {
+        if (app.ticksExecuted() == 1) {
+            EXPECT_TRUE(app.requestPause());
+            EXPECT_FALSE(app.isPaused());
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_TRUE(app.isPaused());
+    EXPECT_EQ(app.ticksExecuted(), 2u);
+    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "input", "tick 0",
+                             "tick 1", "begin", "render", "present", "input", "begin", "render",
+                             "present", "input", "begin", "render", "present"}));
+}
+
+// srs.fr.1.16 to 1.18 together. The first frame leaves half a tick (25 ms is 1.5 ticks). The
+// pause, asked for before the third frame's ticks, discards the 3 whole ticks due then and keeps
+// the half. A second of paused time adds nothing and does not warn. After the resume, 10 ms
+// (0.6 of a tick) plus the kept half make exactly one tick.
+TEST_F(ApplicationTest, PauseAndResume_DiscardWholeTicksKeepTheFractionAndSimulateNoPausedTime) {
+    engine::Application app(simulation_, renderer_, windowFactory({25ms, 50ms, 1s, 10ms}),
+                            timeSource());
+    onCollectInput = [&](std::size_t frame) {
+        if (frame == 2) {
+            EXPECT_TRUE(app.requestPause());
+        }
+        if (frame == 3) {
+            EXPECT_TRUE(app.isPaused());
+            EXPECT_TRUE(app.resume());
+            EXPECT_FALSE(app.isPaused());
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    testing::internal::CaptureStderr();
+    ASSERT_EQ(app.run(), 0);
+    const std::string logged = testing::internal::GetCapturedStderr();
+
+    EXPECT_EQ(logged, "");
+    EXPECT_EQ(log_, (CallLog{"open",  "input",  "begin",  "render",  "present",    // frame 0
+                             "input", "tick 0", "begin",  "render",  "present",    // frame 1
+                             "input", "begin",  "render", "present",               // frame 2
+                             "input", "begin",  "render", "present",               // frame 3
+                             "input", "tick 1", "begin",  "render",  "present"})); // frame 4
+}
+
+// srs.fr.1.17: however long the pause lasts, no paused time reaches the accumulator; without
+// the pause, 5 s would have run 5 ticks a frame and warned that the simulation is slow.
+TEST_F(ApplicationTest, WhilePaused_LongFramesRunNoTickAndDoNotWarn) {
+    engine::Application app(simulation_, renderer_, windowFactory({5s, 5s, 5s}), timeSource());
+    onCollectInput = [&](std::size_t frame) {
+        if (frame == 0) {
+            EXPECT_TRUE(app.requestPause());
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    testing::internal::CaptureStderr();
+    ASSERT_EQ(app.run(), 0);
+    const std::string logged = testing::internal::GetCapturedStderr();
+
+    EXPECT_EQ(logged, "");
+    EXPECT_EQ(app.ticksExecuted(), 0u);
+    EXPECT_TRUE(app.isPaused());
+}
+
+// srs.fr.1.18: the real time between the last frame measurement and the resume was paused. Here
+// the resume comes during rendering, 1 s after the frame's measurement, and the frame after it
+// takes 1 s plus 10 ms: only the 10 ms (0.6 of a tick) counts, so no tick is due yet.
+TEST_F(ApplicationTest, ResumeDuringAFrame_PausedPartOfTheNextFrameTimeIsNotSimulated) {
+    engine::Application app(simulation_, renderer_, windowFactory({10ms, 10ms, 10ms}),
+                            timeSource());
+    std::size_t framesRendered = 0;
+    onCollectInput = [&](std::size_t frame) {
+        if (frame == 0) {
+            EXPECT_TRUE(app.requestPause());
+        }
+    };
+    renderer_.onRender = [&] {
+        if (framesRendered++ == 1) {
+            realTime_ += 1s;
+            EXPECT_TRUE(app.resume());
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    ASSERT_EQ(app.run(), 0);
+
+    // Frame 2 counts 10 ms (0.6 of a tick), frame 3 another 10 ms: one tick, in frame 3.
+    EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present",      // frame 0
+                             "input", "begin", "render", "present",              // frame 1, resume
+                             "input", "begin", "render", "present",              // frame 2
+                             "input", "tick 0", "begin", "render", "present"})); // frame 3
+}
+
+// srs.fr.17.14, 1.17: Step while paused runs exactly one tick in the next render frame, renders
+// it and leaves the accumulator as it is: after the resume, the half tick kept by the pause and
+// 10 ms make one more tick, as without the step.
+TEST_F(ApplicationTest, StepWhilePaused_RunsExactlyOneTickAndLeavesTheAccumulator) {
+    engine::Application app(simulation_, renderer_, windowFactory({25ms, 1s, 1s, 1s, 10ms}),
+                            timeSource());
+    onCollectInput = [&](std::size_t frame) {
+        if (frame == 1) {
+            EXPECT_TRUE(app.requestPause());
+        }
+        if (frame == 2) {
+            EXPECT_TRUE(app.requestStep());
+        }
+        if (frame == 4) {
+            EXPECT_TRUE(app.resume());
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_EQ(log_, (CallLog{"open",  "input",  "begin",  "render",  "present",    // 0
+                             "input", "begin",  "render", "present",               // 1
+                             "input", "tick 0", "begin",  "render",  "present",    // 2
+                             "input", "begin",  "render", "present",               // 3
+                             "input", "begin",  "render", "present",               // 4
+                             "input", "tick 1", "begin",  "render",  "present"})); // 5
+    EXPECT_EQ(app.ticksExecuted(), 2u);
+}
+
+// srs.fr.17.14: each Step is one tick; two steps asked for in one frame run two ticks.
+TEST_F(ApplicationTest, TwoStepsInOneFrame_RunTwoTicks) {
+    engine::Application app(simulation_, renderer_, windowFactory({10ms, 10ms}), timeSource());
+    onCollectInput = [&](std::size_t frame) {
+        if (frame == 0) {
+            EXPECT_TRUE(app.requestPause());
+        }
+        if (frame == 1) {
+            EXPECT_TRUE(app.requestStep());
+            EXPECT_TRUE(app.requestStep());
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_EQ(app.ticksExecuted(), 2u);
+    EXPECT_TRUE(app.isPaused());
+}
+
+// Step and resume do nothing while the run is not paused; a resume before the pause takes
+// effect cancels it, so the ticks run as if no pause had been asked for.
+TEST_F(ApplicationTest, StepOrResumeWhileRunning_ChangeNothing) {
+    engine::Application app(simulation_, renderer_, windowFactory({50ms, 50ms}), timeSource());
+    onCollectInput = [&](std::size_t frame) {
+        EXPECT_FALSE(app.requestStep());
+        if (frame == 1) {
+            EXPECT_FALSE(app.resume());
+            EXPECT_TRUE(app.requestPause());
+            EXPECT_TRUE(app.resume());
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_EQ(app.ticksExecuted(), 6u);
+    EXPECT_FALSE(app.isPaused());
+}
+
+// Pause belongs to Play mode, which is a normal-mode run: a headless run cannot be paused, and
+// outside run() nothing can.
+TEST_F(ApplicationTest, HeadlessRunOrNoRun_CannotBePaused) {
+    engine::Application app(simulation_);
+    simulation_.onTick = [&] { EXPECT_FALSE(app.requestPause()); };
+    EXPECT_FALSE(app.requestPause());
+    ASSERT_TRUE(app.init(headlessConfig(3)));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_EQ(app.ticksExecuted(), 3u);
+    EXPECT_FALSE(app.isPaused());
+    EXPECT_FALSE(app.requestPause());
+}
+
+// A step that reaches the run's maximum number of ticks ends the run like any other tick.
+TEST_F(ApplicationTest, StepReachesMaxTicks_RunEndsWithMaxTicks) {
+    engine::Application app(simulation_, renderer_, windowFactory({10ms, 10ms, 10ms}),
+                            timeSource());
+    onCollectInput = [&](std::size_t frame) {
+        if (frame == 0) {
+            EXPECT_TRUE(app.requestPause());
+        }
+        if (frame == 1) {
+            EXPECT_TRUE(app.requestStep());
+        }
+    };
+    engine::ApplicationConfig config;
+    config.maxTicks = 1;
+    ASSERT_TRUE(app.init(config));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_EQ(app.outcome(), engine::RunOutcome::MaxTicks);
+    EXPECT_EQ(app.ticksExecuted(), 1u);
+}
+
+// A run that ended paused does not make the next run start paused.
+TEST_F(ApplicationTest, SecondRun_StartsUnpaused) {
+    engine::Application app(simulation_, renderer_, windowFactory({50ms}), timeSource());
+    bool pauseInFirstRun = true;
+    onCollectInput = [&](std::size_t frame) {
+        if (frame == 0 && pauseInFirstRun) {
+            EXPECT_TRUE(app.requestPause());
+        }
+    };
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+    ASSERT_EQ(app.run(), 0);
+    ASSERT_EQ(app.ticksExecuted(), 0u);
+    app.shutdown();
+
+    pauseInFirstRun = false;
+    ASSERT_TRUE(app.init(engine::ApplicationConfig{}));
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_FALSE(app.isPaused());
+    EXPECT_EQ(app.ticksExecuted(), 3u);
 }

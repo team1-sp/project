@@ -29,6 +29,9 @@ public:
     [[nodiscard]] std::chrono::nanoseconds frameTime() const;
     // Real time from start() to the last measureFrame().
     [[nodiscard]] std::chrono::nanoseconds totalTime() const;
+    // Reads the clock: the real time since the last measureFrame(), or since start() before the
+    // first frame. This is the part of the next frame time that has already passed.
+    [[nodiscard]] std::chrono::nanoseconds sinceFrameStart() const;
 
 private:
     TimeSource now_;

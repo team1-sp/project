@@ -83,3 +83,19 @@ TEST(FrameClock, SteadyClock_FrameTimesAreNeverNegative) {
     }
     EXPECT_GE(clock.totalTime(), 0ns);
 }
+
+// US-1.4: sinceFrameStart() is the part of the next frame time that has already passed; it does
+// not end the frame.
+TEST(FrameClock, SinceFrameStart_IsTheTimeSinceTheLastMeasurement) {
+    nanoseconds now = 5s;
+    engine::FrameClock clock([&now] { return now; });
+
+    EXPECT_EQ(clock.sinceFrameStart(), 0ns);
+    now += 10ms;
+    EXPECT_EQ(clock.sinceFrameStart(), 10ms);
+    now += 6ms;
+    EXPECT_EQ(clock.measureFrame(), 16ms);
+    now += 4ms;
+    EXPECT_EQ(clock.sinceFrameStart(), 4ms);
+    EXPECT_EQ(clock.frameTime(), 16ms);
+}
