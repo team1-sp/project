@@ -312,17 +312,20 @@ more reproducibly.
 
 ### 6.2 What context the bridge can provide
 
-| Tier | Context | Source in Aegis | Status |
+| Tier | Context | Source in Aegis | Status (2026-11-22) |
 | --- | --- | --- | --- |
-| C0 | Per-tick observation bytes and one action id | `AgentBridge::Exchange(Observation) -> Action` in `proto/agent_bridge.proto` | Implemented seam; payload is opaque bytes |
-| C1 | Structured per-tick state: the components `AgentObservationSystem` declares it reads | `ecs-api-design.md` §16, item 2 | Designed, later than Phase 1 |
-| C2 | Session schema: component names, fields, units, descriptions, systems with `reads`/`writes`, event types | `Schema` record (§12), sent once per session (§16) | Designed; schema record is Phase 1 telemetry |
-| C3 | Event stream: typed events with sequence number, tick, phase, publisher, entities and payload | Event bus and `event` telemetry records | Designed; Phase 1 |
-| C4 | Semantic Graph: static structure (`System —writes→ Component`) plus tick-stamped runtime edges (`collidedWith`, `triggered`) | `semantic-layer.md` §2 | Planned (roadmap phase 10); only `structureForAssistant()` exists (DEC-067) |
-| C5 | Episode control: seed, `World::snapshot()`/`restore()`, input-only actions, deterministic replay | `ecs-api-design.md` §16; DEC-005 | Designed, later than Phase 1 |
+| C0 | Per-tick observation bytes and one action id | `AgentBridge::Exchange(Observation) -> Action` in `proto/agent_bridge.proto` | **Implemented** (the only tier in code); payload is opaque bytes |
+| C1 | Structured per-tick state: the components `AgentObservationSystem` declares it reads | `ecs-api-design.md` §16, item 2 (D-25) | **Already proposed** in the ECS design; built later than Phase 1 |
+| C2 | Session schema: component names, fields, units, descriptions, systems with `reads`/`writes`, event types | `Schema` record (§12), sent once per session (§16) | **Already proposed**: the schema record is decided Phase 1 telemetry (DEC-042) and §16 already sends it once per session over the bridge. Only the action mask is new here |
+| C3 | Event stream: typed events with sequence number, tick, phase, publisher, entities and payload | Event bus and `event` telemetry records | **Events already decided** (Phase 1 telemetry, DEC-042); sending them over the bridge to the agent is **new** here |
+| C4 | Semantic Graph: static structure (`System —writes→ Component`) plus tick-stamped runtime edges (`collidedWith`, `triggered`) | `semantic-layer.md` §2 | **Graph already planned** (roadmap phase 10; only `structureForAssistant()` exists, DEC-067); using it for test goals and a playtest query call is **new** here |
+| C5 | Episode control: seed, `World::snapshot()`/`restore()`, input-only actions, deterministic replay | `ecs-api-design.md` §16 (D-24); DEC-005 | **Already proposed** (snapshot/restore for episode reset); the reset/restore RPCs are **new** here |
 
-C0 is all the current proto carries. C1 to C5 are what makes the layer "AI-native"
-for testing.
+Only C0 is in code today. C1, C2 and C5 were already proposed in the ECS design
+(`ecs-api-design.md` D-24, D-25, §16; the D-choices still wait for team acceptance in
+PB-010.3), and the schema and event records are decided telemetry (DEC-042). What this
+section adds is using them **for testing**, plus a few new contract pieces: the action
+mask, events over the bridge, episode-control RPCs and a graph query (section 6.6).
 
 ### 6.3 How each tier can improve autonomous testing
 
