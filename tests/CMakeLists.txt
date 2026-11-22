@@ -17,6 +17,11 @@ add_executable(engine_tests
     unit/bridge/agent_bridge_test.cpp
     unit/assistant/chat_store_test.cpp
     unit/assistant/read_only_assistant_test.cpp
+    unit/assistant/grounded/citations_test.cpp
+    unit/assistant/grounded/context_assembly_test.cpp
+    unit/assistant/grounded/diagnosis_test.cpp
+    unit/assistant/grounded/evidence_test.cpp
+    unit/assistant/grounded/grounded_assistant_test.cpp
     unit/physics/physics_adapter_test.cpp
     unit/physics-box2d/box2d_info_test.cpp
 )
