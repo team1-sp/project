@@ -499,3 +499,26 @@
   HND-032/033.
 - **Verified:** see the PR #145 merge commit.
 - **Next:** CI and human review of PR #145.
+
+---
+
+### HND-037 — Restore the AI Settings entry point after the US-33.5 merge
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/118-assistant
+- **Task:** TASK-024, GitHub #118, PR #145
+- **Goal:** Fix AI > AI Settings... doing nothing when the Editor has no project-backed settings
+  controller yet.
+- **Result:** Project Settings and AI Settings remain available and open the AI and Privacy shell;
+  without a project controller the shell says `No project open`, while an injected US-33.5
+  controller continues to render the full settings controls. The status-bar AI target uses the
+  same action.
+- **Verified:** targeted Editor CTest 29/29, complete headless CTest 237/237, the macOS Editor build,
+  clang-format 19, include policy, record IDs, documentation links and `git diff --check` passed.
+- **Not verified:** interactive clicking through the standalone raylib window because the
+  computer-use harness could not bind to that process; CI and Windows compilation remain pending.
+- **Repo state:** the human approved the completed diff for commit and push to
+  `feat/118-open-ai-assistant` under DEC-053/058.
+- **Next:** check PR #145 CI and address any review findings.
+- **Traps:** do not construct a settings controller with a fake path merely to enable the command;
+  project opening owns the real per-user project path and bridge factory.
+- **Records:** PRB-003 repeat occurrence; no new decision or open question.

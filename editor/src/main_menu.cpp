@@ -81,7 +81,7 @@ Menu fileMenu(IEditorActions& actions) {
 Menu editMenu(IEditorActions& actions) {
     MenuEntry projectSettings;
     projectSettings.command.label = "Project Settings...";
-    projectSettings.command.enabled = [&actions] { return actions.canOpenAiPrivacySettings(); };
+    projectSettings.command.enabled = always;
     projectSettings.command.run = [&actions] { actions.openAiPrivacySettings(); };
     projectSettings.separatorBefore = true;
     return Menu{"Edit",
@@ -185,7 +185,7 @@ Menu aiMenu(IEditorActions& actions) {
 
     MenuEntry aiSettings;
     aiSettings.command.label = "AI Settings...";
-    aiSettings.command.enabled = [&actions] { return actions.canOpenAiPrivacySettings(); };
+    aiSettings.command.enabled = always;
     aiSettings.command.run = [&actions] { actions.openAiPrivacySettings(); };
     aiSettings.separatorBefore = true;
 

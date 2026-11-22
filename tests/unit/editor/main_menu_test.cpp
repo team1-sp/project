@@ -33,14 +33,12 @@ public:
     void askAboutSelection() override { calls.push_back("ask selection"); }
     [[nodiscard]] bool canDiagnoseLastRun() const override { return runAvailable; }
     void diagnoseLastRun() override { calls.push_back("diagnose run"); }
-    [[nodiscard]] bool canOpenAiPrivacySettings() const override { return settingsAvailable; }
     void openAiPrivacySettings() override { calls.push_back("open AI settings"); }
 
     std::vector<std::string> calls;
     bool selectionAvailable = false;
     bool runAvailable = false;
     bool assistantOpen = false;
-    bool settingsAvailable = false;
 };
 
 const Menu& menuTitled(const std::vector<Menu>& menus, const char* title) {
@@ -109,11 +107,11 @@ TEST(MainMenuTest, ItemsNotBuiltYet_AreDisabled) {
         }
     }
 
-    // AI Settings... is enabled only when a project settings controller exists (US-33.5).
-    EXPECT_EQ(enabled,
-              (std::vector<std::string>{"File > Exit", "AI > Open Assistant", "Window > Scene",
-                                        "Window > Game", "Window > Hierarchy", "Window > Inspector",
-                                        "Window > Project", "Window > Console"}));
+    EXPECT_EQ(enabled, (std::vector<std::string>{"File > Exit", "Edit > Project Settings...",
+                                                 "AI > Open Assistant", "AI > AI Settings...",
+                                                 "Window > Scene", "Window > Game",
+                                                 "Window > Hierarchy", "Window > Inspector",
+                                                 "Window > Project", "Window > Console"}));
 }
 
 // File > Exit and Window > General call the Editor's actions.
@@ -151,7 +149,6 @@ TEST(MainMenuTest, AiContextCommandsFollowSelectionAndRunAvailability) {
 
 TEST(MainMenuTest, AiOpenAndSettingsCommandsCallTheirEditorActions) {
     RecordingActions actions;
-    actions.settingsAvailable = true;
     const std::vector<Menu> menus = editor::buildMainMenu(actions);
     const Menu& ai = menuTitled(menus, "AI");
 
@@ -163,7 +160,6 @@ TEST(MainMenuTest, AiOpenAndSettingsCommandsCallTheirEditorActions) {
 
 TEST(MainMenuTest, ProjectAndAiSettingsUseTheSameAvailableAction) {
     RecordingActions actions;
-    actions.settingsAvailable = true;
     const std::vector<Menu> menus = editor::buildMainMenu(actions);
 
     const editor::Command& projectSettings =

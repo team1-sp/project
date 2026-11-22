@@ -89,7 +89,6 @@ TEST_F(EntryPointTest, CtrlShiftACommand_OpensAndClosesAssistantPanel) {
             return entryPoints.canDiagnoseLastRun();
         }
         void diagnoseLastRun() override { entryPoints.diagnoseLastRun(); }
-        [[nodiscard]] bool canOpenAiPrivacySettings() const override { return false; }
         void openAiPrivacySettings() override {}
         editor::AssistantEntryPoints& entryPoints;
     } actions(entryPoints);

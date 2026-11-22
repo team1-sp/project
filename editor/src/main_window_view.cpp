@@ -168,15 +168,11 @@ void MainWindowView::diagnoseLastRun() {
     assistant_.diagnoseLastRun();
 }
 
-bool MainWindowView::canOpenAiPrivacySettings() const {
-    return aiSettings_ != nullptr;
-}
-
 void MainWindowView::openAiPrivacySettings() {
+    projectSettingsOpen_ = true;
     if (aiSettings_ == nullptr) {
         return;
     }
-    projectSettingsOpen_ = true;
     aiSettings_->openTab();
     std::snprintf(serviceAddress_.data(), serviceAddress_.size(), "%s",
                   aiSettings_->addressDraft().c_str());
@@ -691,7 +687,7 @@ void MainWindowView::drawConsolePanel() {
 }
 
 void MainWindowView::drawProjectSettings() {
-    if (!projectSettingsOpen_ || aiSettings_ == nullptr) {
+    if (!projectSettingsOpen_) {
         return;
     }
 
@@ -702,6 +698,11 @@ void MainWindowView::drawProjectSettings() {
     }
 
     ImGui::SeparatorText("AI and Privacy");
+    if (aiSettings_ == nullptr) {
+        ImGui::TextDisabled("No project open");
+        ImGui::End();
+        return;
+    }
     ImGui::TextUnformatted("Service address");
     ImGui::SetNextItemWidth(-130.0F);
     if (ImGui::InputText("##AiServiceAddress", serviceAddress_.data(), serviceAddress_.size())) {

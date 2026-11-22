@@ -130,7 +130,7 @@ StatusBar buildStatusBar(const EditorStatus& status, double renderFramesPerSecon
         ai.dot = StatusDot::Grey;
     }
     ai.click.label = "Open Project Settings at AI and Privacy";
-    ai.click.enabled = [&actions] { return actions.canOpenAiPrivacySettings(); };
+    ai.click.enabled = [] { return true; };
     ai.click.run = [&actions] { actions.openAiPrivacySettings(); };
     bar.right.push_back(std::move(ai));
 
