@@ -442,6 +442,86 @@
 - **Traps:** never add a mutating method to the query seams; keep Start and tick 0 distinct; a debug flag is a cause only with an injection record and an observed effect. Fixture members that depend on a path must get it in their declaration (PRB-006).
 - **Records:** DEC-070 (part 1 decided in the conversation; parts 2–6 for review), PRB-006.
 
+---
+
+### HND-034 — AI Assistant Editor entry points (US-33.1)
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/118-assistant
+- **Task:** TASK-024, GitHub #118
+- **Goal:** Implement the five AI Editor entry points without taking ownership of grounded answers,
+  full chat/context management, consent-dialog internals, settings internals or new transport.
+- **Result:** Done locally; awaiting human approval to commit, push and open the draft PR.
+- **Files changed:** `editor_core` assistant entry-point/selection seams, existing menu/toolbar and
+  thin ImGui shell, focused tests/CMake, and mandatory agent records.
+- **Verified:** targeted Editor CTest 31/31; complete headless CTest 163/163; macOS `editor` build;
+  two-tick windowed smoke run; clang-format 19 dry run; include, ID and Markdown-link checks; diff
+  check. All passed. No Python files changed.
+- **Not verified:** interactive clicking/focus on Windows or macOS; CI and Windows compiler pending
+  the PR. Typed event/finding and run-report producers await their owning stories.
+- **Repo state:** branch `feat/118-open-ai-assistant`; clean builds/tests; changes uncommitted by
+  DEC-053/058 until the human approves the completed diff.
+- **Next:** approve the diff; merge latest `origin/main` if it moved; commit, push, run
+  `tools/open_pr.py` with the requested title/body, and check CI.
+- **Traps:** Diagnose has no AgentBridge/assistant dependency; it can route only through
+  `IConsentAwareQuestionSender`. #72's public interfaces were not changed.
+- **Records:** PRB-003 repeat occurrence; no decision or open question created.
+
+---
+
+### HND-035 — AI Assistant entry points pushed for review
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/118-assistant
+- **Task:** TASK-024, GitHub #118
+- **Goal:** Commit and publish the human-approved US-33.1 implementation.
+- **Result:** Commit `0c96323` pushed to `feat/118-open-ai-assistant`; draft PR #145 opened with
+  `Closes #118`, the acceptance checklist and verification results.
+- **Files changed:** no implementation changes after HND-034; live task/status records now point to
+  PR #145.
+- **Verified:** latest `origin/main` remained the branch base; pre-commit ID/link/diff checks passed;
+  GitHub accepted the branch and created the draft PR.
+- **Not verified:** GitHub CI and human review are pending.
+- **Repo state:** branch pushed and tracking `origin/feat/118-open-ai-assistant`; draft PR #145 open.
+- **Next:** watch CI, address review findings, and let a human mark ready/merge when approved.
+- **Traps:** none beyond HND-034.
+- **Records:** no new decision, problem or open question.
+
+---
+
+### HND-036 — Merge `main` (US-33.5, US-11.1) into the US-33.1 branch
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/118-merge
+- **Task:** TASK-024, GitHub #118, PR #145
+- **Result:** Resolved conflicts with PRs #143 and #144. The US-33.1 placeholder Project Settings
+  shell is removed; AI > AI Settings... uses US-33.5's `canOpenAiPrivacySettings()` /
+  `openAiPrivacySettings()`, and `AssistantEntryPoints::openAiSettings()` requests are forwarded by
+  `MainWindowView` to the same AI and Privacy window. `IEditorActions::openAiSettings()` is gone.
+  Records renumbered: this story is TASK-024 and HND-034/035, since `main` used TASK-022/023 and
+  HND-032/033.
+- **Verified:** see the PR #145 merge commit.
+- **Next:** CI and human review of PR #145.
+
+---
+
+### HND-037 — Restore the AI Settings entry point after the US-33.5 merge
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/118-assistant
+- **Task:** TASK-024, GitHub #118, PR #145
+- **Goal:** Fix AI > AI Settings... doing nothing when the Editor has no project-backed settings
+  controller yet.
+- **Result:** Project Settings and AI Settings remain available and open the AI and Privacy shell;
+  without a project controller the shell says `No project open`, while an injected US-33.5
+  controller continues to render the full settings controls. The status-bar AI target uses the
+  same action.
+- **Verified:** targeted Editor CTest 29/29, complete headless CTest 237/237, the macOS Editor build,
+  clang-format 19, include policy, record IDs, documentation links and `git diff --check` passed.
+- **Not verified:** interactive clicking through the standalone raylib window because the
+  computer-use harness could not bind to that process; CI and Windows compilation remain pending.
+- **Repo state:** the human approved the completed diff for commit and push to
+  `feat/118-open-ai-assistant` under DEC-053/058.
+- **Next:** check PR #145 CI and address any review findings.
+- **Traps:** do not construct a settings controller with a fake path merely to enable the command;
+  project opening owns the real per-user project path and bridge factory.
+- **Records:** PRB-003 repeat occurrence; no new decision or open question.
 ### HND-039 — Check record ids locally with git hooks (#147)
 - **Date:** 2026-11-22
 - **Agent:** claude-code/opus-5.5/147-hooks

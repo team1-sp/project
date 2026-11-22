@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "editor/ai_privacy_settings.hpp"
+#include "editor/assistant_entry_points.hpp"
 #include "editor/command.hpp"
 #include "editor/console_model.hpp"
 #include "editor/editor_session.hpp"
@@ -28,6 +29,7 @@ public:
 
     // `session` and `status` must outlive the view.
     MainWindowView(EditorSession& session, EditorStatus& status, ConsoleModel& console,
+                   AssistantEntryPoints& assistant, ProjectSettingsState& projectSettings,
                    IExternalCodeEditor& externalEditor, IEntityNavigator& entityNavigator,
                    CloseEditor closeEditor, SetTitle setTitle,
                    AiPrivacySettingsController* aiSettings = nullptr);
@@ -37,7 +39,12 @@ public:
 
     void exit() override;
     void showPanel(Panel panel) override;
-    [[nodiscard]] bool canOpenAiPrivacySettings() const override;
+    void openAssistant() override;
+    void toggleAssistant() override;
+    [[nodiscard]] bool canAskAboutSelection() const override;
+    void askAboutSelection() override;
+    [[nodiscard]] bool canDiagnoseLastRun() const override;
+    void diagnoseLastRun() override;
     void openAiPrivacySettings() override;
 
 private:
@@ -48,12 +55,17 @@ private:
     void drawToolbar();
     void drawStatusBar();
     void drawPanels();
+    void drawAssistantPanel();
     void drawConsolePanel();
     void drawProjectSettings();
+    // Turns an AI-and-Privacy request from the assistant entry points into the settings window.
+    void openRequestedProjectSettings();
 
     EditorSession& session_;
     EditorStatus& status_;
     ConsoleModel& console_;
+    AssistantEntryPoints& assistant_;
+    ProjectSettingsState& projectSettings_;
     IExternalCodeEditor& externalEditor_;
     IEntityNavigator& entityNavigator_;
     AiPrivacySettingsController* aiSettings_;
@@ -66,6 +78,8 @@ private:
     // The panel that showPanel() asked to bring to the front in the next frame.
     std::optional<Panel> panelToFocus_;
     std::array<char, 256> consoleSearch_{};
+    std::array<char, 1024> assistantDraft_{};
+    std::string shownAssistantDraft_;
     std::array<char, 512> serviceAddress_{};
     bool projectSettingsOpen_ = false;
     // Render frames drawn so far, counted up to 2.

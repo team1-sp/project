@@ -25,11 +25,15 @@ public:
     void showPanel(Panel panel) override {
         calls.push_back(std::string("show ") + editor::panelName(panel));
     }
-    [[nodiscard]] bool canOpenAiPrivacySettings() const override { return settingsAvailable; }
+    void openAssistant() override {}
+    void toggleAssistant() override {}
+    [[nodiscard]] bool canAskAboutSelection() const override { return false; }
+    void askAboutSelection() override {}
+    [[nodiscard]] bool canDiagnoseLastRun() const override { return false; }
+    void diagnoseLastRun() override {}
     void openAiPrivacySettings() override { calls.push_back("open AI settings"); }
 
     std::vector<std::string> calls;
-    bool settingsAvailable = false;
 };
 
 std::vector<std::string> rightTexts(const StatusBar& bar) {
@@ -112,10 +116,9 @@ TEST(StatusBarTest, ShowsTheAiServiceAsAGreenOrGreyDot) {
               "AI service: local \xC2\xB7 connected");
 }
 
-// srs.fr.14.9: US-33.5 enables this target when a project settings controller is available.
-TEST(StatusBarTest, AiServiceClickOpensAiPrivacySettingsWhenAvailable) {
+// srs.fr.14.9: the target opens Project Settings even before a project supplies its controller.
+TEST(StatusBarTest, AiServiceClickOpensAiPrivacySettings) {
     RecordingActions actions;
-    actions.settingsAvailable = true;
     const StatusItem ai = buildStatusBar(EditorStatus{}, 60.0, actions).right.back();
     EXPECT_EQ(ai.click.label, "Open Project Settings at AI and Privacy");
     ASSERT_TRUE(ai.isClickable());

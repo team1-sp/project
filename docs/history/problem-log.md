@@ -81,6 +81,14 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 - **Keywords:** pip, PyPI, setuptools 84.2.1, no matching distribution, nodename nor servname, sandbox, network
 - **Related:** TASK-017, PB-006, DEC-039
 - **Occurrences:** 2026-11-22 — codex/gpt-5/104-console — CMake FetchContent for the fresh US-24.1 worktree failed with `fatal: unable to access 'https://github.com/erincatto/box2d.git/': Could not resolve host: github.com`; rerunning the headless workflow with approved network access succeeded. The full macOS configure later stalled while fetching; it completed using the same pinned sources already present in the sibling `project-us-11-2` build through `FETCHCONTENT_SOURCE_DIR_*` cache variables. 2026-11-22 — codex/gpt-5/121-ai-privacy — the fresh headless and macOS US-33.5 configurations hit the same DNS error; approved access completed headless, and the macOS build reused the pinned sibling sources through the same cache variables.
+- **Occurrence:** 2026-11-22 — codex/gpt-5/118-assistant — the first windowed Editor
+  build failed while fetching pinned ImGui with `fatal: unable to access
+  'https://github.com/ocornut/imgui.git/': Could not resolve host: github.com` and `Failed to
+  clone repository`; rerunning the same build with approved network access succeeded.
+- **Occurrence:** 2026-11-22 — codex/gpt-5/118-assistant — configuring the isolated worktree while
+  fixing the AI Settings entry point failed while fetching pinned Box2D with `fatal: unable to
+  access 'https://github.com/erincatto/box2d.git/': Could not resolve host: github.com`; rerunning
+  the same headless configure/build with approved network access succeeded.
 - **Amendments:** 2026-11-04 — renumbered from PRB-002 by Işık Dönger while merging `main` into the PB-065 branch, because both branches had created a PRB-002.
 
 ---

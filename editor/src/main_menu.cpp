@@ -81,7 +81,7 @@ Menu fileMenu(IEditorActions& actions) {
 Menu editMenu(IEditorActions& actions) {
     MenuEntry projectSettings;
     projectSettings.command.label = "Project Settings...";
-    projectSettings.command.enabled = [&actions] { return actions.canOpenAiPrivacySettings(); };
+    projectSettings.command.enabled = always;
     projectSettings.command.run = [&actions] { actions.openAiPrivacySettings(); };
     projectSettings.separatorBefore = true;
     return Menu{"Edit",
@@ -168,20 +168,36 @@ Menu runMenu() {
 
 // D-07.
 Menu aiMenu(IEditorActions& actions) {
-    MenuEntry settings;
-    settings.command.label = "AI Settings...";
-    settings.command.enabled = [&actions] { return actions.canOpenAiPrivacySettings(); };
-    settings.command.run = [&actions] { actions.openAiPrivacySettings(); };
-    settings.separatorBefore = true;
+    MenuEntry openAssistant;
+    openAssistant.command.label = "Open Assistant";
+    openAssistant.command.enabled = always;
+    openAssistant.command.run = [&actions] { actions.openAssistant(); };
+
+    MenuEntry askAboutSelection;
+    askAboutSelection.command.label = "Ask about Selection";
+    askAboutSelection.command.enabled = [&actions] { return actions.canAskAboutSelection(); };
+    askAboutSelection.command.run = [&actions] { actions.askAboutSelection(); };
+
+    MenuEntry diagnoseLastRun;
+    diagnoseLastRun.command.label = "Diagnose Last Run";
+    diagnoseLastRun.command.enabled = [&actions] { return actions.canDiagnoseLastRun(); };
+    diagnoseLastRun.command.run = [&actions] { actions.diagnoseLastRun(); };
+
+    MenuEntry aiSettings;
+    aiSettings.command.label = "AI Settings...";
+    aiSettings.command.enabled = always;
+    aiSettings.command.run = [&actions] { actions.openAiPrivacySettings(); };
+    aiSettings.separatorBefore = true;
+
     return Menu{"AI",
                 {
-                    notBuilt("Open Assistant"),
-                    notBuilt("Ask about Selection"),
-                    notBuilt("Diagnose Last Run"),
+                    std::move(openAssistant),
+                    std::move(askAboutSelection),
+                    std::move(diagnoseLastRun),
                     notBuilt("Open Semantic Graph", std::nullopt, true),
                     notBuilt("Rebuild Graph"),
                     notBuilt("Export Graph..."),
-                    std::move(settings),
+                    std::move(aiSettings),
                 }};
 }
 
@@ -264,8 +280,8 @@ std::vector<Menu> buildMainMenu(IEditorActions& actions) {
     return menus;
 }
 
-std::vector<Command> buildToolbar() {
-    return {
+std::vector<Command> buildToolbar(IEditorActions& actions) {
+    std::vector<Command> commands = {
         toolbarCommand("Hand", plain(Key::Q)),
         toolbarCommand("Move", plain(Key::W)),
         toolbarCommand("Rotate", plain(Key::E)),
@@ -279,6 +295,9 @@ std::vector<Command> buildToolbar() {
         toolbarCommand("Step", Shortcut{Key::P, true, false, true}),
         toolbarCommand("AI Assistant", ctrlShift(Key::A)),
     };
+    commands.back().enabled = always;
+    commands.back().run = [&actions] { actions.toggleAssistant(); };
+    return commands;
 }
 
 } // namespace editor

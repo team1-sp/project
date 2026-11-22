@@ -3,6 +3,7 @@
 # the tests use it in every preset.
 add_library(editor_core STATIC
     src/ai_privacy_settings.cpp
+    src/assistant_entry_points.cpp
     src/command.cpp
     src/console_model.cpp
     src/editor_session.cpp

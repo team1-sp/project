@@ -33,8 +33,13 @@ public:
     virtual void exit() = 0;
     // Opens the panel, or brings it to the front if it is open (srs.fr.14.22).
     virtual void showPanel(Panel panel) = 0;
-    // Opens Project Settings at AI and Privacy when a project settings controller is available.
-    [[nodiscard]] virtual bool canOpenAiPrivacySettings() const = 0;
+    virtual void openAssistant() = 0;
+    virtual void toggleAssistant() = 0;
+    [[nodiscard]] virtual bool canAskAboutSelection() const = 0;
+    virtual void askAboutSelection() = 0;
+    [[nodiscard]] virtual bool canDiagnoseLastRun() const = 0;
+    virtual void diagnoseLastRun() = 0;
+    // Opens Project Settings at AI and Privacy, with project-backed controls when available.
     virtual void openAiPrivacySettings() = 0;
 };
 
@@ -61,8 +66,8 @@ struct Menu {
 [[nodiscard]] std::vector<Menu> buildMainMenu(IEditorActions& actions);
 
 // The toolbar buttons of C-01, left to right: the five transform tools, the Pivot, Global and Snap
-// toggles, Play, Pause and Step, and AI Assistant. None of their features are built yet, so all
-// of them are disabled (srs.fr.14.5); they come with the Scene view, Play mode and AI stories.
-[[nodiscard]] std::vector<Command> buildToolbar();
+// toggles, Play, Pause and Step, and AI Assistant. Only the AI Assistant entry point is enabled;
+// the other controls come with the Scene view and Play mode stories.
+[[nodiscard]] std::vector<Command> buildToolbar(IEditorActions& actions);
 
 } // namespace editor

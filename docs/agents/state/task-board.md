@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-11-22
-updated_by: claude-code/opus-5.5/us111
+updated_by: claude-code/opus-5.5/118-merge
 ---
 
 # Task Board
@@ -36,6 +36,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-021 | Filter, search and inspect Console log messages — US-24.1 #104 | Done (PR #142) | codex/gpt-5/104-console | TASK-006, #77 | srs.fr.24.1–24.11 |
 | TASK-022 | Configure the AI service and data sharing per project — US-33.5 #121 | Done (PR #143) | codex/gpt-5/121-ai-privacy | TASK-020 | srs.fr.33.28–33.33 |
 | TASK-023 | Assistant answers that cite ticks, entities and source lines — US-11.1 #71 | Review | claude-code/opus-5.5/us111 | TASK-020 | srs.fr.11.1–11.7 |
+| TASK-024 | Open the AI Assistant with context from the current selection — US-33.1 #118 | Review (draft PR #145) | codex/gpt-5/118-assistant | #72, #77 | srs.fr.33.1–33.4 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -252,3 +253,43 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Verification:** see HND-033.
 - **Result:** see HND-033 and DEC-070. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips are implemented by their own stories against the new seams.
 - **Links:** GitHub #71, DEC-070, PRB-006
+
+### TASK-024 — Open the AI Assistant with context from the current selection (US-33.1 #118)
+- **Status:** Review (draft PR #145)
+- **Claimed by:** codex/gpt-5/118-assistant on 2026-11-22
+- **Serves:** srs.fr.33.1–33.4, srs.fr.17.22, srs.fr.33.35, srs.fr.33.41
+- **Depends on:** GitHub issues #72 and #77 (both merged); TASK-022 (US-33.5) for the AI and Privacy window
+- **Touches:** narrow `editor_core` command/state seams, thin Dear ImGui menu/shortcut integration,
+  focused unit/headless tests, and mandatory agent records
+- **Goal:** Add the five AI editor entry points and route them through existing assistant, selection,
+  run-report and project-settings interfaces without implementing downstream stories.
+- **Plan:**
+  - Read only the named SRS clauses and locate the existing menu/shortcut, panel, selection,
+    run-report, settings and #72 public interfaces with `rg`.
+  - Add window-independent command state/orchestration and only the smallest injectable seams for
+    downstream commands that do not yet exist.
+  - Keep Dear ImGui rendering to menu enablement, shortcut dispatch and panel focus/draft wiring.
+  - Cover open/focus/toggle, eligible selections, typed contexts, consent-aware diagnosis routing,
+    settings navigation and disabled/no-op paths with fakes.
+  - Run affected unit/headless targets first, then repository-required formatting/static/diff checks.
+- **Risks:** #71 and #121 are active concurrently; avoid their owned files and do not change #72's
+  public interfaces without reporting first.
+- **Verification:** affected editor unit tests, relevant headless tests, formatting/static checks and
+  `git diff --check`.
+- **Acceptance criteria:**
+  - [x] Open Assistant opens/focuses the right-dock panel and message box; Ctrl+Shift+A toggles it.
+  - [x] Ask about Selection is enabled only for typed entity/event/finding selections, attaches the
+    Selection context, drafts `Why…`, and does not send.
+  - [x] Diagnose Last Run is enabled only with a report, derives the typed last-600-tick context,
+    and submits a new diagnosis only through `IConsentAwareQuestionSender`.
+  - [x] AI Settings opens the US-33.5 AI and Privacy window (merged from `main`).
+  - [x] `editor_core` has no assistant-service/AgentBridge dependency, so entry points cannot bypass
+    consent or call the AI service directly.
+- **Result:** Added window-independent entry-point orchestration, typed selection and Last run
+  contexts, the consent-aware/settings seams, dynamic menu and toolbar commands, a thin Assistant
+  panel/message box, routing to the US-33.5 AI and Privacy window, and focused fake-backed tests. #72's public
+  interfaces were not changed; #71, #119, #120 and #121 internals remain out of scope.
+- **Verified:** targeted Editor tests and complete headless tests passed before review. After the
+  US-33.5 merge, the AI Settings regression fix passed targeted 29/29 and complete headless
+  237/237 tests plus the macOS Editor build; final static checks are recorded in HND-037.
+- **Links:** GitHub #118, draft PR #145.
