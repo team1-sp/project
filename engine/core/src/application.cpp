@@ -5,6 +5,7 @@
 
 #include "engine/core/fixed_timestep.hpp"
 #include "engine/core/frame_renderer.hpp"
+#include "engine/core/logging.hpp"
 #include "engine/core/run_error.hpp"
 #include "engine/core/simulation.hpp"
 #include "engine/core/tick_phase.hpp"
@@ -16,19 +17,22 @@ namespace {
 constexpr int exitCodeOk = 0;
 constexpr int exitCodeError = 1;
 
-// The engine has no logger yet, so errors and warnings go straight to the standard error
-// output.
-void logError(const char* message) {
-    std::fprintf(stderr, "error: %s\n", message);
-}
+void writeLog(ILogSink* sink, LogSeverity severity, const char* message,
+              std::optional<Tick> tick = std::nullopt) {
+    if (sink != nullptr) {
+        sink->write(LogEntry{severity, message, tick, std::nullopt, std::nullopt, std::nullopt});
+        return;
+    }
 
-void logWarning(const char* message) {
-    std::fprintf(stderr, "warning: %s\n", message);
-}
-
-// srs.fr.1.11: the message and the number of the tick that was running.
-void logRunError(Tick tick, const char* message) {
-    std::fprintf(stderr, "error: tick %llu: %s\n", static_cast<unsigned long long>(tick), message);
+    const char* level = severity == LogSeverity::Error     ? "error"
+                        : severity == LogSeverity::Warning ? "warning"
+                                                           : "info";
+    if (tick) {
+        std::fprintf(stderr, "%s: tick %llu: %s\n", level, static_cast<unsigned long long>(*tick),
+                     message);
+    } else {
+        std::fprintf(stderr, "%s: %s\n", level, message);
+    }
 }
 
 } // namespace
@@ -65,23 +69,27 @@ Application::~Application() {
 
 bool Application::init(const ApplicationConfig& config) {
     if (initialised_) {
-        logError("Application::init was called twice without a shutdown");
+        writeLog(config.logSink, LogSeverity::Error,
+                 "Application::init was called twice without a shutdown");
         return false;
     }
 
     if (config.headless) {
         if (config.maxTicks == 0) {
-            logError("a headless run needs a maximum number of ticks, or it never ends");
+            writeLog(config.logSink, LogSeverity::Error,
+                     "a headless run needs a maximum number of ticks, or it never ends");
             return false;
         }
     } else {
         if (frameRenderer_ == nullptr || !createWindow_) {
-            logError("normal mode needs a frame renderer and a window factory");
+            writeLog(config.logSink, LogSeverity::Error,
+                     "normal mode needs a frame renderer and a window factory");
             return false;
         }
         window_ = createWindow_(config.window);
         if (window_ == nullptr) {
-            logError("the application window could not be opened");
+            writeLog(config.logSink, LogSeverity::Error,
+                     "the application window could not be opened");
             return false;
         }
     }
@@ -93,7 +101,8 @@ bool Application::init(const ApplicationConfig& config) {
 
 int Application::run() {
     if (!initialised_) {
-        logError("Application::run was called before a successful init");
+        writeLog(config_.logSink, LogSeverity::Error,
+                 "Application::run was called before a successful init");
         return exitCodeError;
     }
 
@@ -257,7 +266,8 @@ bool Application::runDueTicks(FixedTimestep& timestep, std::chrono::nanoseconds 
     // One tick for each whole 1/60 s of real time not simulated yet, at most 5 (srs.fr.1.3).
     const FrameTicks frame = timestep.advance(realDelta);
     if (frame.warnSlow) {
-        logWarning("Simulation is running slower than real time");
+        writeLog(config_.logSink, LogSeverity::Warning,
+                 "Simulation is running slower than real time", ticksExecuted_);
     }
     for (int i = 0; i < frame.ticksToRun && !reachedMaxTicks(); ++i) {
         // srs.fr.1.16: a pause request takes effect at the tick boundary. The frame's ticks that
@@ -316,7 +326,7 @@ bool Application::runOneTick() {
         }
     } catch (const RunError& error) {
         // The game loop is the only place RunError is caught (DEC-042).
-        logRunError(tick, error.what());
+        writeLog(config_.logSink, LogSeverity::Error, error.what(), tick);
         outcome_ = RunOutcome::Error;
         return false;
     }

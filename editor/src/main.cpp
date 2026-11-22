@@ -10,11 +10,15 @@
 #include <charconv>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <string_view>
 #include <system_error>
 
+#include "editor/console_model.hpp"
 #include "editor/editor_session.hpp"
+#include "editor/entity_navigation.hpp"
+#include "editor/external_code_editor.hpp"
 #include "editor/status_bar.hpp"
 #include "engine/core/application.hpp"
 #include "engine/core/leak_check.hpp"
@@ -73,6 +77,16 @@ int main(int argc, char** argv) {
     // What the status bar shows (srs.fr.14.7 to 14.11); the Console, Play mode, scene, AI
     // service, telemetry and debug flag stories fill it in.
     editor::EditorStatus status;
+    engine::Application* runningApp = nullptr;
+    editor::ConsoleModel console(status, [&runningApp] {
+        if (runningApp != nullptr) {
+            (void)runningApp->requestPause();
+        }
+    });
+    const char* configuredEditor = std::getenv("AEGIS_CODE_EDITOR");
+    editor::ProcessExternalCodeEditor externalEditor(configuredEditor != nullptr ? configuredEditor
+                                                                                 : "code");
+    editor::EntityNavigation entityNavigation;
 
     engine::ApplicationConfig config;
     config.window.widthPixels = 1280;
@@ -82,6 +96,7 @@ int main(int argc, char** argv) {
     config.window.escapeClosesWindow = false;
     // Closing the main window applies the unsaved-changes check first (srs.fr.14.3).
     config.confirmClose = [&session] { return session.confirmClose(); };
+    config.logSink = &console;
     if (!parseOptions(argc, argv, config)) {
         return exitCodeBadOption;
     }
@@ -90,9 +105,9 @@ int main(int argc, char** argv) {
     std::printf("editor %d.%d.%d\n", version.major, version.minor, version.patch);
 
     NoProjectSimulation simulation;
-    engine::Application* runningApp = nullptr;
     editor::MainWindowView mainWindow(
-        session, status, [&runningApp] { runningApp->requestClose(); },
+        session, status, console, externalEditor, entityNavigation,
+        [&runningApp] { runningApp->requestClose(); },
         [&runningApp](const std::string& title) { runningApp->setWindowTitle(title); });
     engine::rendering_raylib::ImGuiRenderer renderer([&mainWindow] { mainWindow.draw(); },
                                                      editor::applyTheme);

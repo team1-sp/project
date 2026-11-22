@@ -1,6 +1,6 @@
 # Repository Structure
 
-**Current reality `[VERIFIED 2026-11-04]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002: `CMakeLists.txt`, `CMakePresets.json`, `cmake/`, `engine/core/`, `engine/physics-box2d/`, `engine/rendering-raylib/`, `editor/`, `sandbox/` and `tests/unit/`. PB-006 adds the `ai-services/` Python 3.12 package skeleton. PB-025 adds `engine/physics/` (the `IPhysicsAdapter` interface) and `tools/check_includes.py`. The other folders below are created as their PRs land.
+**Current reality `[VERIFIED 2026-11-22]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002: `CMakeLists.txt`, `CMakePresets.json`, `cmake/`, `engine/core/`, `engine/physics-box2d/`, `engine/rendering-raylib/`, `editor/`, `sandbox/` and `tests/unit/`. PB-006 adds the `ai-services/` Python 3.12 package skeleton. PB-025 adds `engine/physics/` (the `IPhysicsAdapter` interface) and `tools/check_includes.py`. US-24.1 adds the canonical structured log contract in `engine/core` and the window-free Console model, platform launch and entity-navigation seams in `editor_core`. The other folders below are created as their PRs land.
 
 Related repos on the team's machines (separate git repos):
 
@@ -65,3 +65,4 @@ Dependency checks: only `physics-box2d` includes Box2D and only `rendering-rayli
 | 2026-10-27 | `games/demo-maze/` removed (the team never chose it as the demo); its smoke window moved to `sandbox/`; demo game undecided (Q-016) | claude-code |
 | 2026-11-04 | Added the Python 3.12 `ai-services/` package skeleton (PB-006, DEC-039) | codex/gpt-5/pb006 |
 | 2026-11-10 | `engine/physics/` and `tools/check_includes.py` exist (PB-025) | claude (PB-025 session) |
+| 2026-11-22 | Structured logging lives in `engine/core`; the Console model and navigation/launcher seams live in `editor_core` (US-24.1, DEC-067) | codex/gpt-5/104-console |

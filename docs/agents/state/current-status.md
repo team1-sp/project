@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-11-16
-updated_by: claude (US-14.1 thread)
+last_updated: 2026-11-22
+updated_by: codex/gpt-5/104-console
 ---
 
 # Current Status
@@ -8,7 +8,7 @@ updated_by: claude (US-14.1 thread)
 Snapshot of the project. Overwrite this file each session (keep it short). History belongs in `handoff-log.md`. **The truth is the `Accepted` entries in `history/decision-log.md`.**
 
 ## One-line summary
-Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The custom ECS is designed (PB-010, merged; Phase 1 slice this semester, DEC-043) but not built. PB-011 adds the application window and the game loop (`Application`, `IWindow`, `RaylibWindow`) and PB-012 the fixed 1/60 s timestep (`FrameClock`, `FixedTimestep`, the tick counter); both are in review on local branches. The Python 3.12 `ai-services` package is a skeleton; AI capabilities remain deferred. **The demo game is undecided** (Q-016).
+Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The fixed game loop, tick phases, pause API, Editor main window and status bar are merged on `main`. US-24.1 adds the structured Console model and fills the existing Console panel on its review branch. The custom ECS is designed but not built. The Python 3.12 `ai-services` package is a skeleton. **The demo game is undecided** (Q-016).
 
 ## Phase
 Roadmap phase **1 — Project and technology decisions**: all exit criteria are met (see `plan.md`); the human confirms closing it. Phase 2 starts with the skeleton (TASK-005).
@@ -24,14 +24,15 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 
 ## Decisions status (details: `history/decision-log.md`)
 
-- **Accepted:** core entries DEC-001…009 and DEC-013…036 as indexed in the decision log; Python 3.12 with pinned `ai-services` tooling (DEC-039); gRPC/protobuf behind `AgentBridge` for the engine-to-Python bridge (DEC-038, ADR-002); the ECS decisions from the PB-010 review (DEC-040…044); no own LLM (DEC-045); the PB-025 physics interface choices (DEC-049); the US-1.1 render frame order with raylib custom frame control (DEC-051); the workflow decisions DEC-052 to DEC-055. DEC-057 (US-1.2, merged in PR #133); DEC-059 (US-1.3, merged in PR #134). In review: DEC-060 (US-1.4); DEC-061 (where agents work) and DEC-062 (Epic close workflow) in the ci/136 PR; DEC-063 and DEC-064 (US-14.1, Dear ImGui for the Editor and its Figma theme); DEC-066 (US-14.2, the status bar). DEC-058 (commit approval only on a member's computer) decided by Işık Dönger on 2026-11-15.
+- **Accepted:** core entries DEC-001…009 and DEC-013…066 as indexed in the decision log, except entries explicitly marked Proposed or Superseded. US-1.2 through US-1.4, the Editor main window and the status bar are merged in PRs #133–#138. In review: DEC-067 (US-24.1 structured Console contract). DEC-058 and DEC-061 govern agent work on a member's computer versus a cloud copy.
 - **Proposed / deferred by the human ("too early"):** MCP later (DEC-010); LLM-instructive component metadata (Q-013). Agents do not raise these.
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
 
 ## In progress / next
-- **US-14.2 (#78): status bar with the editor's current state** — Review. `EditorStatus` and `buildStatusBar()` in `editor_core` (srs.fr.14.7 to 14.11); clicking the message opens the Console. The AI service and REC clicks wait for US-33.5 and EP-30; the sources (Console, Play mode, scenes, telemetry, debug flags) fill `EditorStatus` in their stories. DEC-066 in the PR for review.
-- **US-14.1 (#77): Editor main window with menus, toolbar and panels** — Review. Dear ImGui with rlImGui (DEC-063); the nine menus of D-01 to D-09 with unbuilt items disabled, the C-01 toolbar, the Default panel layout, the status bar, the title with project, scene and "*", the unsaved-changes check on close, Ctrl/Cmd shortcuts. F-01 waits for US-15.x, the project for the Project Hub (US-13.x).
-- **US-1.4 (#44): pause, resume and step** — Review. `Application::requestPause()`, `resume()`, `requestStep()`, `isPaused()` (srs.fr.1.16 to 1.18, 17.14); DEC-060 in the PR for review. Play mode controls wait for US-17.2, Error Pause for US-24.1.
+- **US-24.1 (#104): structured Console logging** — Review. Canonical `LogEntry` and optional `ILogSink` in `engine/core`; window-free owning `ConsoleModel`, non-mutating filters/search/collapse, selection/details, Error Pause and Play lifecycle seams, external-editor and entity navigation abstractions in `editor_core`; ImGui Console panel filled. DEC-067 is carried for PR review. US-17.2 (#85) calls the implemented Play start/stop seam when its controller lands.
+- **US-14.2 (#78): status bar with the editor's current state** — Done (PR #138). `EditorStatus` and `buildStatusBar()` in `editor_core` (srs.fr.14.7 to 14.11); clicking the message opens the Console. The AI service and REC clicks wait for US-33.5 and EP-30; the sources (Console, Play mode, scenes, telemetry, debug flags) fill `EditorStatus` in their stories.
+- **US-14.1 (#77): Editor main window with menus, toolbar and panels** — Done (PR #137). Dear ImGui with rlImGui (DEC-063); the nine menus of D-01 to D-09 with unbuilt items disabled, the C-01 toolbar, the Default panel layout, the status bar, the title with project, scene and "*", the unsaved-changes check on close, Ctrl/Cmd shortcuts. F-01 waits for US-15.x, the project for the Project Hub (US-13.x).
+- **US-1.4 (#44): pause, resume and step** — Done (PR #135). `Application::requestPause()`, `resume()`, `requestStep()`, `isPaused()` (srs.fr.1.16 to 1.18, 17.14). Play mode controls wait for US-17.2; US-24.1 uses the pause API for Error Pause.
 - **US-1.3 (#43): the same tick phases in normal and headless mode** — Done (PR #134). `TickPhase` in `engine/core`; `Application::runOneTick()` builds the tick's `InputActionState` from the run's `IInputSource` (keyboard queue, None) and calls `ISimulation::runPhase()` for the seven phases in order (srs.fr.1.12 to 1.15); DEC-059 in the PR for review. Keys reach the keyboard queue with US-5.1.
 - **US-1.2 (#42): windowed and headless runs** — Done (PR #133). `RunError` handling in the game loop (srs.fr.1.11), `parseRunOptions()` for `--headless`/`--max-ticks`/`--seed`/`--input-recording` (srs.fr.1.8, 7.33), `WindowConfig::fullscreen`; DEC-057 in the PR for review. Editor parts wait for US-17.2, US-17.3, US-27.4.
 0. **TASK-006 (ClickUp PB-011, PB-012): window, game loop and fixed timestep** — Done: PR #35 and #37 merged 2026-11-10; DEC-046 and DEC-047 accepted 2026-11-11.

@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-11-11
-updated_by: claude (PB-025 session, merged with main)
+last_updated: 2026-11-22
+updated_by: codex/gpt-5/104-console
 ---
 
 # Task Board
@@ -32,6 +32,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-017 | Create the Python `ai-services` project skeleton — ClickUp PB-006 | Review | codex/gpt-5/pb006 | TASK-012 | AI layer tooling |
 | TASK-018 | Editor hosts `Application` and opens the main window — ClickUp PB-122 | Review (issue #38) | Işık Dönger + claude (PB-122 thread) | TASK-006 | ip.fr.1.3, srs.fr.1.13, DEC-048 |
 | TASK-019 | Define the physics adapter interface — ClickUp PB-025 | Review | Zeynep Ertürk + claude (PB-025 session) | TASK-016 | ip.fr.3.1, R-3 |
+| TASK-020 | Filter, search and inspect Console log messages — US-24.1 #104 | Review | codex/gpt-5/104-console | TASK-006, #77 | srs.fr.24.1–24.11 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -145,3 +146,26 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Status:** Review (2026-11-10). Zeynep Ertürk + claude (PB-025 session)
 - **Acceptance:** the adapter interface with the required operations; no Box2D header outside the adapter implementation; reviewed and documented.
 - **Result:** `engine::physics` target (header-only) with `BodyDesc`, `BodyId`, `BodyState`, `CollisionEvent`, `RaycastHit` and `IPhysicsAdapter`; `Vec2` and `EntityId` in `engine/core`; `tools/check_includes.py` in CI; 4 contract tests with a fake adapter. Name kept as `IPhysicsAdapter` (ClickUp said `IPhysicsWorld`). Choices accepted by Işık as DEC-049. See HND-021.
+
+### TASK-020 — Filter, search and inspect Console log messages (US-24.1 #104)
+- **Status:** Review
+- **Claimed by:** codex/gpt-5/104-console on 2026-11-22
+- **Serves:** srs.fr.24.1–24.11
+- **Depends on:** TASK-006, GitHub issue #77 (closed)
+- **Touches:** `engine/core`, `editor`, `tests`, CMake, Console architecture/testing docs and agent state
+- **Goal:** Add a window-independent structured Console model, render it in the existing Editor Console panel, and integrate logging, pause, play lifecycle, source launching, entity navigation and EditorStatus without implementing US-24.2.
+- **Acceptance criteria:**
+  - [x] Every criterion srs.fr.24.1–24.11 is implemented and covered by focused headless tests.
+  - [x] Console view operations never mutate the canonical insertion-ordered log entries.
+  - [x] Error Pause uses `Application::requestPause()` and stops at the first-error tick boundary.
+  - [x] External editor and entity navigation actions use injectable interfaces.
+  - [x] The existing Editor Console panel and `EditorStatus.lastConsoleMessage` use the model.
+- **Plan:**
+  - srs.fr.24.1–24.3: add canonical `LogEntry`/severity/source/entity types and an insertion-ordered owning `ConsoleModel` with counters, selection, clear and status-message updates.
+  - srs.fr.24.4–24.6: add a Play-start lifecycle seam for Clear on Play and per-run Error Pause gating, injected with the existing `Application::requestPause()` API so the loop owns the tick boundary.
+  - srs.fr.24.5, 24.7–24.9: compute non-mutating collapsed/filtered/searched rows, case-insensitive substring search, full-field collapse identity, and selected detail data.
+  - srs.fr.24.10–24.11: route activation through injectable external-editor and entity-navigation interfaces and connect them to the ImGui Console panel.
+  - Route structured `Application` errors and warnings to an optional sink while preserving stderr fallback for headless operation; add focused tests and docs; run all available format/build/test/static/link/diff checks.
+- **Verification:** Repository configure/build/test presets, complete affected headless suite, clang-format 19, static/include checks, documentation-link checks, `git diff --check`, and a windowed Editor check if supported.
+- **Result:** Added canonical owning `LogEntry`/`ILogSink`, the window-free `ConsoleModel`, the complete ImGui panel, first-error tick-boundary pause through `Application::requestPause()`, Play lifecycle events, production external-editor launching, shared entity selection, status integration, focused tests and DEC-067/docs. Verified with `cmake --workflow --preset headless` (138/138), full `macos-debug` build plus `ctest --preset macos-debug` (151/151), clang-format 19.1.7, include/link/id checks and `git diff --check`. The standalone raylib window launched successfully; the computer-use harness could not bind to that non-bundle process for visual interaction.
+- **Links:** GitHub #104, DEC-067

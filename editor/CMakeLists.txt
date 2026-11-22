@@ -3,7 +3,10 @@
 # the tests use it in every preset.
 add_library(editor_core STATIC
     src/command.cpp
+    src/console_model.cpp
     src/editor_session.cpp
+    src/entity_navigation.cpp
+    src/external_code_editor.cpp
     src/main_menu.cpp
     src/status_bar.cpp
 )

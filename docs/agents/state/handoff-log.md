@@ -375,3 +375,18 @@
 - **Next:** US-24.1 sets `lastConsoleMessage`; US-17.2 sets `mode`; the scene stories set `entityCount`; US-33.5 sets the AI state and enables the AI item's click (F-04 at AI and Privacy); EP-30 enables REC's click; the debug flag story fills `activeDebugFlags`.
 - **Traps:** `EditorStatus` is read every render frame; set it from the Editor's thread only.
 - **Records:** DEC-066 (Accepted in the PR, for review).
+
+---
+
+### HND-030 — Console log filtering, search and inspection (US-24.1)
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/104-console
+- **Task:** TASK-020, GitHub #104, srs.fr.24.1 to 24.11
+- **Result:** Done, awaiting commit/push approval and PR review. Canonical `engine::LogEntry`/`ILogSink`; owning, window-free `ConsoleModel`; ImGui toolbar/tab counts, Clear/Clear on Play, full-field Collapse, filters, case-insensitive search, detail pane; tick-boundary Error Pause; external editor and entity navigation seams; status integration.
+- **Files changed:** `engine/core` logging/Application, `editor` core/view/main, focused tests/CMake, Console architecture/testing docs and agent records.
+- **Verified:** `cmake --workflow --preset headless` 138/138; `cmake --build --preset macos-debug && ctest --preset macos-debug` 151/151; full macOS Editor target; clang-format 19.1.7 dry-run; `check_includes.py`, `check_md_links.py`, `check_ids.py`, `git diff --check`. Editor window launched and initialized raylib/OpenGL successfully.
+- **Not verified:** Windows CI; visual interaction could not be automated because the computer-use harness could not bind the standalone non-bundle raylib process.
+- **Repo state:** uncommitted review-ready changes on `feat/us-24.1-filter-search-inspect-console-log-messages`, based on `origin/main` f861579.
+- **Next:** get the member's commit/push approval; commit, fetch and merge newer `origin/main` if any, rerun checks, push, open the draft PR with the requested title/body and list DEC-067 under Decisions for review; inspect CI.
+- **Traps:** #85 must call `onPlayStarted()`/`onPlayStopped()` at its Play transitions. Collapse includes tick, stack, source and entity, so same text at different ticks stays separate. `AEGIS_CODE_EDITOR` overrides the default `code` executable.
+- **Records:** DEC-067 (Accepted in the PR, for review); PRB-003 occurrence.
