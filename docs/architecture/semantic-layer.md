@@ -8,6 +8,12 @@ US-11.2 adds only `SemanticGraphView::structureForAssistant() const`, a read-onl
 graph structure for manual design suggestions. It does not implement graph storage, queries or
 grounded diagnosis (DEC-067).
 
+US-11.1 defines the read-only queries this layer must answer for grounded assistant answers:
+`aegis::assistant::SemanticGraphQuery` (entity facts, a neighbourhood of at most 500 nodes within two
+relations, explicit nodes, component-type facts) and `RunTelemetryQuery` (the latest run's report,
+debug-injection, creation, event, write and sample records). Both return copies through `const`
+operations; the graph and recording stories implement them (DEC-069).
+
 ## 1. Sub-layers
 
 | Sub-layer | Responsibility | Input | Output |

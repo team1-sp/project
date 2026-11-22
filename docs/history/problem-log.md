@@ -20,6 +20,7 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 | PRB-003 | Clean Python environment could not download pinned build dependencies in the sandbox | Tooling | Solved | 2026-11-04 |
 | PRB-004 | Bridge benchmark did not build or run on Windows (vcpkg ZeroMQ name, gRPC C4996, pybind11 output folder, missing .exe lookup) | Build | Solved | 2026-11-04 |
 | PRB-005 | Generated protobuf code failed AppleClang warnings-as-errors | Build / AgentBridge | Solved | 2026-11-22 |
+| PRB-006 | Test fixture wrote a chat file into the build folder: store built from a path member before it was set | Tests / Assistant | Solved | 2026-11-22 |
 
 ---
 
@@ -132,5 +133,29 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
   -Wnullability-extension, warnings as errors, agent_bridge.pb.cc
 - **Related:** DEC-038, DEC-067, TASK-020
 - **Occurrences:** US-11.2 local gRPC build
+
+---
+
+### PRB-006 — Test fixture wrote a chat file into the build folder
+- **Date:** 2026-11-22
+- **Area:** Tests / Assistant
+- **Status:** Solved
+- **Symptom:** `GroundedAssistantTest.Ask_UnauthorizedContextSendsNothingAndLeavesChatUnchanged` failed with
+  `Value of: std::filesystem::exists(store.chatFilePath("grounded")) Actual: true Expected: false`,
+  and `build/headless/tests/assistant/chats/grounded.chat` appeared.
+- **Context:** US-11.1 tests, headless preset. The fixture declared `std::filesystem::path root;`,
+  set it in `SetUp()`, and built `FixedUserProjectPaths rootPaths{root}` and `ChatStore` as members.
+- **Root cause:** members are initialised before `SetUp()` runs, so the store copied an empty path
+  and wrote chats relative to the test's working directory, shared by all tests.
+- **Solution:** initialise `root` in its declaration from the current test name, before the paths
+  and store members, and only clear it in `SetUp()`.
+- **How verified:** removed the stray folder, rebuilt; all 207 tests pass and no chat file appears
+  under `build/`.
+- **Prevention:** in fixtures, give any member another member depends on its value in its
+  declaration, never in `SetUp()`.
+- **Keywords:** GoogleTest fixture, member initialisation order, SetUp, ChatStore, userLocalArea,
+  temp_directory_path
+- **Related:** TASK-022, DEC-067
+- **Occurrences:** US-11.1 tests
 
 ---

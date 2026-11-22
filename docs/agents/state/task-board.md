@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-11-22
-updated_by: codex/gpt-5/118-assistant
+updated_by: claude-code/opus-5.5/119-chat
 ---
 
 # Task Board
@@ -33,8 +33,9 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-018 | Editor hosts `Application` and opens the main window — ClickUp PB-122 | Review (issue #38) | Işık Dönger + claude (PB-122 thread) | TASK-006 | ip.fr.1.3, srs.fr.1.13, DEC-048 |
 | TASK-019 | Define the physics adapter interface — ClickUp PB-025 | Review | Zeynep Ertürk + claude (PB-025 session) | TASK-016 | ip.fr.3.1, R-3 |
 | TASK-020 | Keep the assistant read-only and on the configured AI service — US-11.2 #72 | Done (PR #141) | codex/gpt-5/us112 | DEC-001, DEC-038, DEC-039, DEC-045 | srs.fr.11.8–11.12 |
-| TASK-021 | Filter, search and inspect Console log messages — US-24.1 #104 | Review | codex/gpt-5/104-console | TASK-006, #77 | srs.fr.24.1–24.11 |
+| TASK-021 | Filter, search and inspect Console log messages — US-24.1 #104 | Done (PR #142) | codex/gpt-5/104-console | TASK-006, #77 | srs.fr.24.1–24.11 |
 | TASK-022 | Open the AI Assistant with context from the current selection — US-33.1 #118 | Review (draft PR #145) | codex/gpt-5/118-assistant | #72, #77 | srs.fr.33.1–33.4 |
+| TASK-023 | Assistant answers that cite ticks, entities and source lines — US-11.1 #71 | Review | claude-code/opus-5.5/us111 | TASK-020 | srs.fr.11.1–11.7 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -239,3 +240,26 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
   built and completed a two-tick raylib/ImGui smoke run; clang-format 19, include policy, record IDs,
   documentation links and `git diff --check` passed.
 - **Links:** GitHub #118, draft PR #145.
+### TASK-023 — Assistant answers that cite ticks, entities and source lines (US-11.1 #71)
+- **Status:** Review
+- **Claimed by:** claude-code/opus-5.5/us111 on 2026-11-22
+- **Serves:** srs.fr.11.1–11.7
+- **Depends on:** TASK-020 (US-11.2 #72, merged in PR #141)
+- **Touches:** `assistant/` grounded pipeline, `tests/unit/assistant/grounded/`, AI/semantic architecture docs, decision/problem logs, agent state
+- **Goal:** Grounded answers from attached context only, with typed state, entity and source citations validated against retrieved evidence, a deterministic debug-flag diagnosis and explicit abstention, using #72's AgentBridge, cancellation and persistence unchanged.
+- **Acceptance criteria:**
+  - [x] srs.fr.11.1 chat-facing API `GroundedAssistant::ask()` accepts the question and attached context items.
+  - [x] srs.fr.11.2 state questions answered from Semantic Graph and run records.
+  - [x] srs.fr.11.3 diagnosis from telemetry, event payloads and write records; debug-flag rules for applied/exercised/recorded and the opposite cases; declarations never presented as the cause.
+  - [x] srs.fr.11.4 typed citations (state, entity, source with content hash); Start distinct from tick 0.
+  - [x] srs.fr.11.5 only the listed `Scripts/` files are read.
+  - [x] srs.fr.11.6 only question, consent-allowed earlier messages and attached items.
+  - [x] srs.fr.11.7 missing information named; hypotheses labelled.
+- **Plan:**
+  - Separate question/context models, read-only evidence query seams, context assembly, diagnosis, citations and formatting.
+  - Carry the grounded context and validate citations with an AgentBridge decorator; no shared API changes (human choice, DEC-069).
+  - Deterministic fakes for all tests; no network or model.
+  - Run headless and macOS warnings-as-errors builds and tests, clang-format 19, include/link/id checks, `git diff --check`.
+- **Verification:** see HND-032.
+- **Result:** see HND-032 and DEC-069. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips are implemented by their own stories against the new seams.
+- **Links:** GitHub #71, DEC-069, PRB-006

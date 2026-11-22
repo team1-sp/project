@@ -447,3 +447,15 @@
 - **Records:** no new decision, problem or open question.
 
 ---
+### HND-034 — Grounded assistant answers with tick, entity and source citations (US-11.1)
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/us111
+- **Task:** TASK-023, GitHub #71, srs.fr.11.1 to 11.7
+- **Result:** Added the `assistant/.../grounded/` pipeline: question and context-item models; const evidence query seams and `ScriptsFolderReader`; `assembleContext()` with category policy, `Scripts/` allowlist, 200 KB limit, 600-tick default and earlier-message consent; deterministic `diagnose()` with debug-flag, unlock and write-record rules; typed state/entity/source citations with strict codec, SHA-256 content hash and evidence validation; `GroundedAgentBridge` and `GroundedAssistant::ask()` over #72's unchanged `ReadOnlyAssistant`.
+- **Verified:** headless warnings-as-errors build and CTest 207/207 (57 new); macOS Debug warnings-as-errors build and CTest 220/220; clang-format 19.1.7, include, link and id checks and `git diff --check` clean. Tests use fakes only.
+- **Not verified:** Windows (CI), a live AI service, and real Semantic Graph/telemetry data, which do not exist on `main` yet.
+- **Next:** review DEC-069. The Semantic Graph, telemetry recording, asset catalogue and EP-33 context chips implement `SemanticGraphQuery`, `RunTelemetryQuery`, `AssetCatalogQuery` and produce `ContextItem`s; #119 calls `GroundedAssistant::ask()`; the Python service reads `semantic_graph_structure` and returns citations in the DEC-069 payload form.
+- **Traps:** never add a mutating method to the query seams; keep Start and tick 0 distinct; a debug flag is a cause only with an injection record and an observed effect. Fixture members that depend on a path must get it in their declaration (PRB-006).
+- **Records:** DEC-069 (part 1 decided in the conversation; parts 2–6 for review), PRB-006.
+
+---

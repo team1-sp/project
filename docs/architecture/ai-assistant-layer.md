@@ -100,3 +100,22 @@ The concrete project path, service address/model selection, transmission-policy 
 intentionally left to their own project/settings and panel stories (#121 and #119). Citation
 interpretation and grounded diagnosis remain #71; US-11.2 stores opaque citation kind/payload pairs
 without inventing them.
+
+## 9. Implemented US-11.1 grounded answers
+
+`aegis::assistant` adds the grounded pipeline under `assistant/include/aegis/assistant/grounded/`
+(DEC-069). Each stage is a separate unit:
+
+| Stage | Unit | What it does |
+| --- | --- | --- |
+| Question model | `GroundedQuestion`, `ContextItem` | Typed question text plus the attached items: Selection, Last run, Graph, Graph nodes, Source code, Asset, Log entry, Component type (srs.fr.11.1, 11.6). |
+| Evidence retrieval | `SemanticGraphQuery`, `RunTelemetryQuery`, `AssetCatalogQuery`, `ProjectSourceReader`; `assembleContext()` | Const query seams returning copies; called only for attached items. Enforces the policy per category, the `Scripts/` allowlist and the 200 KB limit, limits Last run to its tick range (default 600 ticks, Start always kept), and applies the earlier-message consent rules (srs.fr.11.5, 11.6, 33.46, 33.56, 33.59). `ScriptsFolderReader` is the production file reader; it never writes and refuses paths that resolve outside `Scripts/`. |
+| Diagnosis | `diagnose()` | Deterministic findings from records only: unlock failures from event payloads, value changes from handler write records, and debug-flag assessments (not applied, not recorded, not exercised, effect not observable, cause). Declarations alone become labelled hypotheses; missing records are named (srs.fr.11.2, 11.3, 11.7). |
+| Citations | `StateCitation`, `EntityCitation`, `SourceCitation`; `encodeCitation()`/`decodeCitation()`; `checkCitation()` | Typed values; Start is distinct from tick 0; source citations carry the `sha256:` content hash at question time. A citation is returned only if it matches retrieved evidence (srs.fr.11.4). |
+| Formatting | `formatDiagnosis()`, `renderContextDocument()` | The deterministic answer text and the versioned `AEGIS_GROUNDED_CONTEXT 1` document for the AI service. |
+| Transport | `GroundedAgentBridge`, `GroundedAssistant` | The chat-facing API. `ask()` assembles, diagnoses, then runs US-11.2's `ReadOnlyAssistant` through a decorator of the configured bridge that sends the document in `semanticGraphStructure`, streams the diagnosis first and drops AI-service citations that do not match the evidence. |
+
+The concrete Semantic Graph, telemetry recording, asset catalogue and the EP-33 context chips are
+not built yet; they implement these seams in their own stories. Tests use deterministic fakes and no
+network or model. Consent dialogs, field-by-field removal of denied data (srs.fr.33.54), request
+preview and the chat panel remain #121, EP-33 and #119.
