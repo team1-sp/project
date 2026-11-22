@@ -33,6 +33,9 @@ public:
     virtual void exit() = 0;
     // Opens the panel, or brings it to the front if it is open (srs.fr.14.22).
     virtual void showPanel(Panel panel) = 0;
+    // Opens Project Settings at AI and Privacy when a project settings controller is available.
+    [[nodiscard]] virtual bool canOpenAiPrivacySettings() const = 0;
+    virtual void openAiPrivacySettings() = 0;
 };
 
 // One line of a menu: a command, or a submenu of further entries.

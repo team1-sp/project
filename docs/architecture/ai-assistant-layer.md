@@ -2,7 +2,8 @@
 
 Uses the semantic graph and project data to explain, diagnose and help with design. Sub-layers: **Architecture reading → LLM model → User assistant**.
 
-Status: **US-11.2 core implemented**; grounded questions, the chat UI and settings remain planned.
+Status: **US-11.2 core and US-33.5 AI/privacy settings implemented**; grounded questions and the
+chat UI remain planned.
 The Semantic layer has no query implementation yet, so US-11.2 depends only on the minimal
 read-only `SemanticGraphView` structure seam (DEC-067).
 
@@ -96,7 +97,9 @@ grounded-diagnosis stories:
   kind, text, citations and data-category names. Replacement uses a temporary file and backup;
   corrupt or unsupported existing files are rejected rather than overwritten (srs.fr.11.12).
 
-The concrete project path, service address/model selection, transmission-policy values and UI are
-intentionally left to their own project/settings and panel stories (#121 and #119). Citation
-interpretation and grounded diagnosis remain #71; US-11.2 stores opaque citation kind/payload pairs
-without inventing them.
+US-33.5 supplies the validated address, model identifier and `DataTransmissionPolicy` implementation
+from a window-free controller. It extends the transport-neutral bridge with the standard gRPC health
+check and model discovery, keeps transport work off the UI thread, and persists no secrets under the
+injected user-local project settings area. See
+[`design/ai-privacy-settings.md`](../design/ai-privacy-settings.md). The per-question consent dialog
+remains #120; citation interpretation and grounded diagnosis remain #71.

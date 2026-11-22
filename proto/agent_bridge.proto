@@ -5,6 +5,7 @@ package aegis.bridge.v1;
 // The production engine/editor to Python AI-service contract (DEC-038).
 service AgentBridge {
   rpc Exchange(Observation) returns (Action);
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
   rpc Answer(AssistantRequest) returns (stream AssistantChunk);
 }
 
@@ -18,6 +19,17 @@ message Action {
   uint64 game_instance_id = 1;
   uint64 sequence = 2;
   int32 action_id = 3;
+}
+
+message ListModelsRequest {}
+
+message Model {
+  string identifier = 1;
+  string display_name = 2;
+}
+
+message ListModelsResponse {
+  repeated Model models = 1;
 }
 
 message AssistantRequest {
