@@ -45,6 +45,7 @@ jobs:
             bridge:
               - 'benchmarks/bridge/**'
               - 'engine/bridge/**'
+              - 'proto/agent_bridge.proto'
               - 'tests/unit/bridge/**'
               - 'CMakeLists.txt'
               - 'engine/CMakeLists.txt'
@@ -209,6 +210,7 @@ jobs:
             -DENGINE_WITH_RAYLIB=OFF \
             -DENGINE_BUILD_TESTS=ON \
             -DENGINE_WARNINGS_AS_ERRORS=ON \
+            -DAEGIS_WITH_GRPC_BRIDGE=ON \
             -DAEGIS_BUILD_BRIDGE_BENCHMARKS=ON \
             -DAEGIS_BRIDGE_PYTHON_EXECUTABLE="$(command -v python)"
           cmake --build build/bridge-ci --parallel

@@ -378,15 +378,27 @@
 
 ---
 
-### HND-030 — Console log filtering, search and inspection (US-24.1)
+### HND-030 — Read-only assistant and configured AI service (US-11.2)
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/us112
+- **Task:** US-11.2 (#72), srs.fr.11.8 to 11.12
+- **Result:** Added the window-free `aegis::assistant` core with only a const Semantic Graph view and text output. Configured requests stream through the existing AgentBridge abstraction; the optional production implementation contains gRPC/protobuf. Cancellation is idempotent before, during and after streaming. `AEGIS_CHAT 1` stores questions, complete/stopped/partial answers, citations and per-message transmitted-data categories beneath the injected user-local project path, using validated bounded parsing and safe replacement. Suggestions are marked manual text and cannot execute engine or project operations. #71, #119 and #121 remain out of scope.
+- **Verified:** warnings-as-errors builds and full CTest suites pass for headless (138/138), macOS Debug (152/152) and optional gRPC headless (138/138). clang-format 19.1.7, include policy, ID consistency, documentation links and `git diff --check` pass. Tests use fakes and require no AI service or network.
+- **Not verified:** a live configured AI service, intentionally excluded from unit tests; Windows compiler/CI until the PR runs.
+- **Next:** review DEC-067 and the PR; later stories supply Semantic Graph data (#71), chat UI (#119) and provider/settings UI (#121).
+- **Traps:** never give the assistant an engine world, project writer or shared-settings path. Preserve streaming cancellation in AgentBridge instead of adding a second transport. Do not overwrite a corrupt or unsupported chat file.
+- **Records:** DEC-067 (Accepted in the PR, for review); PRB-005 (AppleClang warning from generated protobuf headers).
+
+---
+
+### HND-031 — Console log filtering, search and inspection (US-24.1)
 - **Date:** 2026-11-22
 - **Agent:** codex/gpt-5/104-console
-- **Task:** TASK-020, GitHub #104, srs.fr.24.1 to 24.11
-- **Result:** Done, awaiting commit/push approval and PR review. Canonical `engine::LogEntry`/`ILogSink`; owning, window-free `ConsoleModel`; ImGui toolbar/tab counts, Clear/Clear on Play, full-field Collapse, filters, case-insensitive search, detail pane; tick-boundary Error Pause; external editor and entity navigation seams; status integration.
+- **Task:** TASK-021, GitHub #104, srs.fr.24.1 to 24.11
+- **Result:** Canonical `engine::LogEntry`/`ILogSink`; owning, window-free `ConsoleModel`; ImGui toolbar/tab counts, Clear/Clear on Play, full-field Collapse, filters, case-insensitive search, detail pane; tick-boundary Error Pause; external editor and entity navigation seams; status integration. Draft PR #142 is open.
 - **Files changed:** `engine/core` logging/Application, `editor` core/view/main, focused tests/CMake, Console architecture/testing docs and agent records.
-- **Verified:** `cmake --workflow --preset headless` 138/138; `cmake --build --preset macos-debug && ctest --preset macos-debug` 151/151; full macOS Editor target; clang-format 19.1.7 dry-run; `check_includes.py`, `check_md_links.py`, `check_ids.py`, `git diff --check`. Editor window launched and initialized raylib/OpenGL successfully.
-- **Not verified:** Windows CI; visual interaction could not be automated because the computer-use harness could not bind the standalone non-bundle raylib process.
-- **Repo state:** uncommitted review-ready changes on `feat/us-24.1-filter-search-inspect-console-log-messages`, based on `origin/main` f861579.
-- **Next:** get the member's commit/push approval; commit, fetch and merge newer `origin/main` if any, rerun checks, push, open the draft PR with the requested title/body and list DEC-067 under Decisions for review; inspect CI.
+- **Verified:** after merging PR #141, headless 150/150 and macOS 163/163 locally; clang-format, include, ID, documentation-link and diff checks pass. The pre-merge GitHub CI passed Windows, macOS and Ubuntu builds plus formatting, docs, static and benchmark checks. Editor window launched and initialized raylib/OpenGL successfully before the merge.
+- **Not verified:** visual interaction could not be automated because the computer-use harness could not bind the standalone non-bundle raylib process.
+- **Next:** merge current `origin/main`, renumber collided records, rerun verification, push the approved merge resolution, and review PR #142.
 - **Traps:** #85 must call `onPlayStarted()`/`onPlayStopped()` at its Play transitions. Collapse includes tick, stack, source and entity, so same text at different ticks stays separate. `AEGIS_CODE_EDITOR` overrides the default `code` executable.
-- **Records:** DEC-067 (Accepted in the PR, for review); PRB-003 occurrence.
+- **Records:** DEC-068 (Accepted in the PR, for review); PRB-003 occurrence.

@@ -1,7 +1,7 @@
 # Console and Structured Logging
 
 Status: implemented for US-24.1 (srs.fr.24.1 to 24.11); design choices are carried for review as
-DEC-067.
+DEC-068.
 
 ## Contract and ownership
 

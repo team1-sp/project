@@ -74,7 +74,8 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-064 | US-14.1: the Editor takes the look of the Figma design: Inter and JetBrains Mono embedded in the executable from `editor/assets/fonts`, the design's palette and sizes as the Dear ImGui style, Font Awesome icons on the toolbar | Accepted | 2026-11-16 |
 | DEC-065 | srs.fr.14.15 is reworded: a panel tab dragged out of its dock becomes a floating panel inside the main window, not a separate operating-system window | Accepted | 2026-11-17 |
 | DEC-066 | US-14.2: the status bar is built from a window-free `EditorStatus` model in `editor_core` (message, debug flags in orange, REC, mode, FPS, entities, AI service dot); clicking the message opens the Console; the AI and REC clicks wait for their panels | Accepted | 2026-11-17 |
-| DEC-067 | US-24.1: structured logs are owned by a window-free Console model; projection is non-mutating; search ignores case; collapse identity includes every structured field; Play lifecycle, pause, editor launch and entity navigation use injected seams | Accepted | 2026-11-22 |
+| DEC-067 | US-11.2: a window-free read-only assistant core uses AgentBridge streaming, cancellable answer operations and versioned user-local chat storage | Accepted | 2026-11-22 |
+| DEC-068 | US-24.1: structured logs are owned by a window-free Console model; projection is non-mutating; search ignores case; collapse identity includes every structured field; Play lifecycle, pause, editor launch and entity navigation use injected seams | Accepted | 2026-11-22 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -1008,7 +1009,59 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Revisit when:** the design adds a frame with debug flags on, or the Console story wants severity icons in the status bar.
 - **Supersedes / Related:** DEC-063, DEC-064, US-14.1 (#77), US-14.2 (#78).
 
-### DEC-067 — US-24.1: structured Console logging and navigation contracts
+### DEC-067 — US-11.2 uses a read-only assistant core, AgentBridge streaming and user-local chats
+- **Date:** 2026-11-22
+- **Status:** Accepted (carried by the US-11.2 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-11.2 pull request   **Recorded by:** codex/gpt-5/us112
+- **Context:** US-11.2 (#72) requires a read-only assistant, manual Semantic Graph design
+  suggestions, configured gRPC responses through AgentBridge, cancellation and user-local chat
+  persistence. `main` had only the transport-neutral synchronous playtest `AgentBridge`; the
+  Semantic Graph, project path service, assistant core and production gRPC contract did not exist.
+  The issue explicitly permits only the smallest stable interfaces for those gaps and excludes the
+  chat UI (#119), grounded diagnosis (#71) and settings UI (#121).
+- **Options considered:**
+  1. Assistant placement: (a) a window-free top-level C++ `assistant/` target above the bridge and
+     Semantic layer seams; (b) put orchestration in `editor_core`; (c) put it only in the Python AI
+     service. (a) keeps the product layer independent from the UI while the configured C++ client can
+     call the separate Python service. (b) couples the layer to the Editor and (c) cannot enforce the
+     local client-side read-only/storage boundary.
+  2. Responses: (a) server-streaming `Answer` returning text chunks, opaque citations and category
+     names, with cancellation on the stream; (b) a unary answer. (a) preserves partial answers and
+     maps Stop to gRPC `ClientContext::TryCancel()` without a second transport.
+  3. Project paths: (a) inject `UserProjectPaths::userLocalArea()` and append
+     `assistant/chats`; (b) invent a concrete hidden-directory name now. (a) makes shared settings
+     unreachable and leaves the concrete cross-platform project layout to its owning story.
+- **Decision:**
+  1. `aegis::assistant` is a window-free C++ target. `ReadOnlyAssistant` receives only a const
+     `SemanticGraphView`, read-only `DataTransmissionPolicy`, `AgentBridge` and `ChatStore`; it
+     receives no engine state, project-source writer or general project filesystem interface and
+     rejects disallowed data categories before starting the bridge. Design suggestions are
+     `MessageContent::DesignSuggestion` text with no apply operation.
+  2. The production `AgentBridge` protobuf service has the existing `Exchange` RPC and a
+     server-streaming `Answer` RPC. The transport-neutral C++ interface exposes a cancellable
+     `AssistantResponseStream`; optional `engine::bridge_grpc` owns all gRPC/protobuf types and maps
+     cancellation to `TryCancel()`. Default builds keep communication dependencies out (DEC-038).
+  3. Chat format `AEGIS_CHAT 1` stores every message's role, state, content kind, text, citations and
+     string data-category names under `<userLocalArea>/assistant/chats`. Saves replace valid files
+     through temporary/backup paths and refuse to overwrite corrupt or unsupported data.
+- **Rationale:** This is the smallest vertical slice that enforces every US-11.2 boundary while
+  leaving the UI, evidence gathering, citation semantics, service/model settings and concrete
+  project-local directory policy to their owning stories.
+- **Consequences:** The future project layer supplies `UserProjectPaths`; the Semantic layer
+  implements the read-only view; #121 supplies a validated address/model and constructs the gRPC
+  bridge; #119 runs/cancels operations and displays persisted history; #71 interprets structured
+  citations. New citation kinds and data categories require no format change because their values
+  are stored as strings.
+- **Docs updated:** `architecture/ai-assistant-layer.md`, `architecture/semantic-layer.md`,
+  `architecture/tech-stack.md`, `guidelines/repository-structure.md`,
+  `testing/test-checklists.md`, `agents/state/task-board.md`, `agents/state/current-status.md`,
+  `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this implements SRS A srs.fr.11.8–11.12.
+- **Revisit when:** #71 fixes concrete citation schemas, the project-local path owner defines the
+  directory layout, or AgentBridge streaming/deadline evidence requires a wire revision.
+- **Supersedes / Related:** DEC-001, DEC-038, DEC-039, DEC-045, TASK-020, US-11.2 (#72).
+
+### DEC-068 — US-24.1: structured Console logging and navigation contracts
 - **Date:** 2026-11-22
 - **Status:** Accepted (carried by the US-24.1 pull request; binds once a human merges it, DEC-052)
 - **Decided by:** the reviewer of the US-24.1 pull request   **Recorded by:** codex/gpt-5/104-console
@@ -1025,4 +1078,4 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Docs updated:** `design/console-logging.md`, `architecture/engine-layer.md`, `guidelines/repository-structure.md`, `testing/test-checklists.md`, agent state and handoff.
 - **Course documents affected (for humans):** none; this implements SRS A srs.fr.24.1 to 24.11.
 - **Revisit when:** US-17.2 introduces the Play controller, Project Preferences owns the editor command, or entity selection gains scene-qualified/stable references.
-- **Supersedes / Related:** DEC-057, DEC-060, DEC-063, DEC-066, TASK-020, GitHub #104, #85, #88, #123.
+- **Supersedes / Related:** DEC-057, DEC-060, DEC-063, DEC-066, TASK-021, GitHub #104, #85, #88, #123.

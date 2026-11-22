@@ -32,7 +32,8 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-017 | Create the Python `ai-services` project skeleton — ClickUp PB-006 | Review | codex/gpt-5/pb006 | TASK-012 | AI layer tooling |
 | TASK-018 | Editor hosts `Application` and opens the main window — ClickUp PB-122 | Review (issue #38) | Işık Dönger + claude (PB-122 thread) | TASK-006 | ip.fr.1.3, srs.fr.1.13, DEC-048 |
 | TASK-019 | Define the physics adapter interface — ClickUp PB-025 | Review | Zeynep Ertürk + claude (PB-025 session) | TASK-016 | ip.fr.3.1, R-3 |
-| TASK-020 | Filter, search and inspect Console log messages — US-24.1 #104 | Review | codex/gpt-5/104-console | TASK-006, #77 | srs.fr.24.1–24.11 |
+| TASK-020 | Keep the assistant read-only and on the configured AI service — US-11.2 #72 | Done (PR #141) | codex/gpt-5/us112 | DEC-001, DEC-038, DEC-039, DEC-045 | srs.fr.11.8–11.12 |
+| TASK-021 | Filter, search and inspect Console log messages — US-24.1 #104 | Review | codex/gpt-5/104-console | TASK-006, #77 | srs.fr.24.1–24.11 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -147,7 +148,35 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Acceptance:** the adapter interface with the required operations; no Box2D header outside the adapter implementation; reviewed and documented.
 - **Result:** `engine::physics` target (header-only) with `BodyDesc`, `BodyId`, `BodyState`, `CollisionEvent`, `RaycastHit` and `IPhysicsAdapter`; `Vec2` and `EntityId` in `engine/core`; `tools/check_includes.py` in CI; 4 contract tests with a fake adapter. Name kept as `IPhysicsAdapter` (ClickUp said `IPhysicsWorld`). Choices accepted by Işık as DEC-049. See HND-021.
 
-### TASK-020 — Filter, search and inspect Console log messages (US-24.1 #104)
+### TASK-020 — Keep the assistant read-only and on the configured AI service (US-11.2 #72)
+- **Status:** Done (PR #141, 2026-11-22)
+- **Claimed by:** codex/gpt-5/us112 on 2026-11-22
+- **Serves:** srs.fr.11.8–11.12, DEC-001, DEC-038, DEC-039, DEC-045
+- **Depends on:** DEC-001, DEC-038, DEC-039, DEC-045
+- **Touches:** AI Assistant and AgentBridge interfaces, user-local chat persistence, focused unit tests, architecture documentation
+- **Goal:** Add the smallest production assistant core that stays read-only, obtains configured responses through AgentBridge, cancels safely, and persists complete chats only in the user-local project area.
+- **Acceptance criteria:**
+  - [x] Assistant interfaces expose no operation that can mutate engine state or project source files; Semantic Graph suggestions remain manual text.
+  - [x] Configured response requests route through the existing AgentBridge contract behind a fakeable service interface.
+  - [x] Cancellation before response, during streaming and after completion is deterministic, safe and idempotent.
+  - [x] Completed, stopped and partially received chats persist and reload with citations and per-message transmitted-data categories.
+  - [x] Storage uses the established user-local project path rather than shared project settings, and corrupt or unsupported data fails safely without overwriting it.
+- **Plan:**
+  - Inspect current modules, AgentBridge/persistence/Semantic Graph architecture and tests before choosing interface placement.
+  - Add only read-only assistant request/suggestion, cancellation and versioned chat-storage seams required by #72.
+  - Add focused fake-backed headless tests for every acceptance criterion and failure mode.
+  - Update the architectural contract and mandatory project records without implementing #71, #119 or #121.
+  - Run relevant configure/build/test presets plus formatting, static, documentation-link and diff checks.
+- **Verification:** Relevant CMake presets and affected headless tests; Python checks if touched; clang-format 19; include/static checks; documentation-link checks; `git diff --check`.
+- **Result:** Added a window-free `aegis::assistant` core, the AgentBridge `Answer` streaming contract
+  and optional production gRPC implementation, deterministic cancellation, and forward-compatible
+  `AEGIS_CHAT 1` persistence under the injected user-local project area. Focused fake-backed tests
+  cover the read-only boundary, manual suggestions, routing, cancellation, storage round trips and
+  safe corrupt/unsupported-data failures. Headless, macOS and optional-gRPC builds/tests pass; format,
+  include, ID, documentation-link and diff checks are clean. See HND-030 and DEC-067.
+- **Links:** issue #72.
+
+### TASK-021 — Filter, search and inspect Console log messages (US-24.1 #104)
 - **Status:** Review
 - **Claimed by:** codex/gpt-5/104-console on 2026-11-22
 - **Serves:** srs.fr.24.1–24.11
@@ -167,5 +196,5 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
   - srs.fr.24.10–24.11: route activation through injectable external-editor and entity-navigation interfaces and connect them to the ImGui Console panel.
   - Route structured `Application` errors and warnings to an optional sink while preserving stderr fallback for headless operation; add focused tests and docs; run all available format/build/test/static/link/diff checks.
 - **Verification:** Repository configure/build/test presets, complete affected headless suite, clang-format 19, static/include checks, documentation-link checks, `git diff --check`, and a windowed Editor check if supported.
-- **Result:** Added canonical owning `LogEntry`/`ILogSink`, the window-free `ConsoleModel`, the complete ImGui panel, first-error tick-boundary pause through `Application::requestPause()`, Play lifecycle events, production external-editor launching, shared entity selection, status integration, focused tests and DEC-067/docs. Verified with `cmake --workflow --preset headless` (138/138), full `macos-debug` build plus `ctest --preset macos-debug` (151/151), clang-format 19.1.7, include/link/id checks and `git diff --check`. The standalone raylib window launched successfully; the computer-use harness could not bind to that non-bundle process for visual interaction.
-- **Links:** GitHub #104, DEC-067
+- **Result:** Added canonical owning `LogEntry`/`ILogSink`, the window-free `ConsoleModel`, the complete ImGui panel, first-error tick-boundary pause through `Application::requestPause()`, Play lifecycle events, production external-editor launching, shared entity selection, status integration, focused tests and DEC-068/docs. After merging PR #141, verified headless (150/150) and `macos-debug` (163/163), clang-format 19.1.7, include/link/id checks and `git diff --check`. The standalone raylib window launched successfully before the merge; the computer-use harness could not bind to that non-bundle process for visual interaction.
+- **Links:** GitHub #104, DEC-068

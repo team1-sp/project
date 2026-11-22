@@ -15,11 +15,14 @@ add_executable(engine_tests
     unit/editor/console_model_test.cpp
     unit/editor/status_bar_test.cpp
     unit/bridge/agent_bridge_test.cpp
+    unit/assistant/chat_store_test.cpp
+    unit/assistant/read_only_assistant_test.cpp
     unit/physics/physics_adapter_test.cpp
     unit/physics-box2d/box2d_info_test.cpp
 )
 target_link_libraries(engine_tests PRIVATE
     editor::core
+    aegis::assistant
     engine::core
     engine::bridge
     engine::physics

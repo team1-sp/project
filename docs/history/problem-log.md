@@ -19,6 +19,7 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 | PRB-002 | Ubuntu FlatBuffers package has no CMake config package | Build | Solved | 2026-11-04 |
 | PRB-003 | Clean Python environment could not download pinned build dependencies in the sandbox | Tooling | Solved | 2026-11-04 |
 | PRB-004 | Bridge benchmark did not build or run on Windows (vcpkg ZeroMQ name, gRPC C4996, pybind11 output folder, missing .exe lookup) | Build | Solved | 2026-11-04 |
+| PRB-005 | Generated protobuf code failed AppleClang warnings-as-errors | Build / AgentBridge | Solved | 2026-11-22 |
 
 ---
 
@@ -101,5 +102,31 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 - **Keywords:** Windows, MSVC, vcpkg, libzmq-mt-4_3_5, ZEROMQ_LIBRARY, C4996, C2220, IdentityKeyCertPair, aegis_bridge_pybind, ModuleNotFoundError, .pyd, Release folder, run_benchmarks.py
 - **Related:** PB-065, DEC-029, DEC-038, PRB-002
 - **Occurrences:** —
+
+---
+
+### PRB-005 — Generated protobuf code failed AppleClang warnings-as-errors
+- **Date:** 2026-11-22
+- **Reported by:** codex/gpt-5/us112
+- **Area:** Build / AgentBridge
+- **Status:** Solved
+- **Symptom:** the optional production gRPC bridge failed with
+  `error: type nullability specifier '_Nullable' is a Clang extension [-Werror,-Wnullability-extension]`
+  and the equivalent `_Nonnull` error while compiling generated `agent_bridge.pb.cc`.
+- **Context:** macOS, AppleClang 17, Homebrew gRPC 1.85.1 / protobuf 36.2,
+  `ENGINE_WARNINGS_AS_ERRORS=ON`, `AEGIS_WITH_GRPC_BRIDGE=ON`.
+- **Root cause:** protobuf-generated checks expand Abseil's `absl_nullable` and `absl_nonnull` to
+  Clang nullability extensions. The project warning policy promoted the generated-code diagnostic
+  to an error; no project source triggered it.
+- **Solution:** add `-Wno-nullability-extension` to `engine_bridge_grpc` for Clang compilers. The
+  suppression is specific to this extension and optional target; project warnings remain errors.
+- **How verified:** reconfigured and built `build/grpc-debug` with the options above; generated
+  protobuf/gRPC sources, `grpc_agent_bridge.cpp` and all other targets compiled successfully.
+- **Prevention:** keep generated protocol sources inside the optional transport target and scope
+  third-party warning suppressions to that target/compiler.
+- **Keywords:** AppleClang, protobuf 36.2, Abseil, _Nullable, _Nonnull,
+  -Wnullability-extension, warnings as errors, agent_bridge.pb.cc
+- **Related:** DEC-038, DEC-067, TASK-020
+- **Occurrences:** US-11.2 local gRPC build
 
 ---
