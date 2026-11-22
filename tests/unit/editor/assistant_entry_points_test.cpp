@@ -75,8 +75,8 @@ TEST_F(EntryPointTest, CtrlShiftACommand_OpensAndClosesAssistantPanel) {
 
     class Actions final : public editor::IEditorActions {
     public:
-        explicit Actions(editor::AssistantEntryPoints& entryPoints)
-            : entryPoints(entryPoints) {}
+        explicit Actions(editor::AssistantEntryPoints& target)
+            : entryPoints(target) {}
         void exit() override {}
         void showPanel(editor::Panel /*panel*/) override {}
         void openAssistant() override { entryPoints.openAssistant(); }
