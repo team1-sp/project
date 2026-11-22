@@ -12,7 +12,7 @@ US-11.1 defines the read-only queries this layer must answer for grounded assist
 `aegis::assistant::SemanticGraphQuery` (entity facts, a neighbourhood of at most 500 nodes within two
 relations, explicit nodes, component-type facts) and `RunTelemetryQuery` (the latest run's report,
 debug-injection, creation, event, write and sample records). Both return copies through `const`
-operations; the graph and recording stories implement them (DEC-069).
+operations; the graph and recording stories implement them (DEC-070).
 
 ## 1. Sub-layers
 

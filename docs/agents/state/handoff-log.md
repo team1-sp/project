@@ -405,13 +405,39 @@
 
 ---
 
-### HND-032 — Grounded assistant answers with tick, entity and source citations (US-11.1)
+### HND-032 — AI service and privacy project settings (US-33.5)
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/121-ai-privacy
+- **Task:** TASK-022, GitHub #121, srs.fr.33.28 to 33.33
+- **Goal:** Configure the per-project service/model and privacy settings without coupling state to
+  Dear ImGui or calling gRPC from UI code.
+- **Result:** Done — strict address/port validation, asynchronous health/model discovery through
+  AgentBridge, stale-address/request protection, model/send state, latency/failure presentation,
+  independent default-off sharing confirmations, Ask-before-send policy, user-local versioned
+  persistence and the AI and Privacy window/menu/status routes.
+- **Files changed:** AgentBridge/protobuf/gRPC bridge; `editor_core` settings/controller/store and
+  menu/status models; Dear ImGui view; focused tests/CMake; architecture/design/testing/agent records.
+- **Verified:** warnings-as-errors headless build + CTest 166/166; macOS Debug build including Editor
+  + CTest 179/179; optional gRPC warnings-as-errors build + CTest 166/166; clang-format 19.1.7,
+  include policy, record IDs, documentation links and `git diff --check` pass.
+- **Not verified:** live AI service interoperability and Windows compilation; CI covers Windows
+  after push. No provider credentials are stored or needed by tests.
+- **Repo state:** branch `feat/121-ai-service-privacy-settings`; implementation and verification are
+  complete, with review status tracked on GitHub #121 and its linked pull request.
+- **Next:** review DEC-069 and PR; Project Hub/project opening supplies the concrete user-local root
+  and bridge factory; #120 consumes `requiresConsent()` for the general sending dialog.
+- **Traps:** persisted model values are identifiers, never display names. Apply completions only when
+  both request id and address still match. Address changes must clear model/connection and both
+  address-bound permissions.
+- **Records:** DEC-069 (Accepted in the PR, for review); PRB-003 and PRB-005 occurrences.
+
+### HND-033 — Grounded assistant answers with tick, entity and source citations (US-11.1)
 - **Date:** 2026-11-22
 - **Agent:** claude-code/opus-5.5/us111
-- **Task:** TASK-022, GitHub #71, srs.fr.11.1 to 11.7
+- **Task:** TASK-023, GitHub #71, srs.fr.11.1 to 11.7
 - **Result:** Added the `assistant/.../grounded/` pipeline: question and context-item models; const evidence query seams and `ScriptsFolderReader`; `assembleContext()` with category policy, `Scripts/` allowlist, 200 KB limit, 600-tick default and earlier-message consent; deterministic `diagnose()` with debug-flag, unlock and write-record rules; typed state/entity/source citations with strict codec, SHA-256 content hash and evidence validation; `GroundedAgentBridge` and `GroundedAssistant::ask()` over #72's unchanged `ReadOnlyAssistant`.
-- **Verified:** headless warnings-as-errors build and CTest 207/207 (57 new); macOS Debug warnings-as-errors build and CTest 220/220; clang-format 19.1.7, include, link and id checks and `git diff --check` clean. Tests use fakes only.
+- **Verified:** headless warnings-as-errors build and CTest 224/224 after merging `main` with US-33.5 (58 new); macOS Debug warnings-as-errors build and CTest 237/237; clang-format 19.1.7, include, link and id checks and `git diff --check` clean. Tests use fakes only.
 - **Not verified:** Windows (CI), a live AI service, and real Semantic Graph/telemetry data, which do not exist on `main` yet.
-- **Next:** review DEC-069. The Semantic Graph, telemetry recording, asset catalogue and EP-33 context chips implement `SemanticGraphQuery`, `RunTelemetryQuery`, `AssetCatalogQuery` and produce `ContextItem`s; #119 calls `GroundedAssistant::ask()`; the Python service reads `semantic_graph_structure` and returns citations in the DEC-069 payload form.
+- **Next:** review DEC-070. The Semantic Graph, telemetry recording, asset catalogue and EP-33 context chips implement `SemanticGraphQuery`, `RunTelemetryQuery`, `AssetCatalogQuery` and produce `ContextItem`s; #119 calls `GroundedAssistant::ask()`; the Python service reads `semantic_graph_structure` and returns citations in the DEC-070 payload form.
 - **Traps:** never add a mutating method to the query seams; keep Start and tick 0 distinct; a debug flag is a cause only with an injection record and an observed effect. Fixture members that depend on a path must get it in their declaration (PRB-006).
-- **Records:** DEC-069 (part 1 decided in the conversation; parts 2–6 for review), PRB-006.
+- **Records:** DEC-070 (part 1 decided in the conversation; parts 2–6 for review), PRB-006.

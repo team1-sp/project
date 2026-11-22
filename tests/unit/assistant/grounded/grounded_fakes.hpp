@@ -200,6 +200,18 @@ public:
         return {{}, "not used"};
     }
 
+    [[nodiscard]] engine::bridge::HealthCheckResult
+    checkHealth(std::chrono::milliseconds timeout) override {
+        healthTimeouts.push_back(timeout);
+        return health;
+    }
+
+    [[nodiscard]] engine::bridge::ModelListResult
+    listModels(std::chrono::milliseconds timeout) override {
+        modelListTimeouts.push_back(timeout);
+        return models;
+    }
+
     [[nodiscard]] std::unique_ptr<engine::bridge::AssistantResponseStream>
     startAssistantResponse(const engine::bridge::AssistantRequest& request,
                            std::chrono::milliseconds) override {
@@ -209,6 +221,10 @@ public:
 
     std::shared_ptr<FakeStreamControl> control = std::make_shared<FakeStreamControl>();
     std::vector<engine::bridge::AssistantRequest> requests;
+    engine::bridge::HealthCheckResult health;
+    engine::bridge::ModelListResult models;
+    std::vector<std::chrono::milliseconds> healthTimeouts;
+    std::vector<std::chrono::milliseconds> modelListTimeouts;
 };
 
 } // namespace grounded_test

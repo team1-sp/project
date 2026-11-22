@@ -115,6 +115,15 @@ GroundedAgentBridge::exchange(const engine::bridge::Observation& observation,
     return configured_.exchange(observation, timeout);
 }
 
+engine::bridge::HealthCheckResult
+GroundedAgentBridge::checkHealth(std::chrono::milliseconds timeout) {
+    return configured_.checkHealth(timeout);
+}
+
+engine::bridge::ModelListResult GroundedAgentBridge::listModels(std::chrono::milliseconds timeout) {
+    return configured_.listModels(timeout);
+}
+
 std::unique_ptr<engine::bridge::AssistantResponseStream>
 GroundedAgentBridge::startAssistantResponse(const engine::bridge::AssistantRequest& request,
                                             std::chrono::milliseconds timeout) {

@@ -27,7 +27,8 @@ struct GroundedTurn {
 //   checkCitation() against the turn's evidence, re-encoded canonically, and reports how many
 //   were removed;
 // - keeps only data categories the request carried.
-// Requests for any other question get no stream.
+// Requests for any other question get no stream. exchange(), checkHealth() and listModels() are
+// forwarded unchanged to the configured bridge.
 class GroundedAgentBridge final : public engine::bridge::AgentBridge {
 public:
     GroundedAgentBridge(engine::bridge::AgentBridge& configured,
@@ -36,6 +37,12 @@ public:
     [[nodiscard]] engine::bridge::ExchangeResult
     exchange(const engine::bridge::Observation& observation,
              std::chrono::milliseconds timeout) override;
+
+    [[nodiscard]] engine::bridge::HealthCheckResult
+    checkHealth(std::chrono::milliseconds timeout) override;
+
+    [[nodiscard]] engine::bridge::ModelListResult
+    listModels(std::chrono::milliseconds timeout) override;
 
     [[nodiscard]] std::unique_ptr<engine::bridge::AssistantResponseStream>
     startAssistantResponse(const engine::bridge::AssistantRequest& request,

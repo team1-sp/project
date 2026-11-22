@@ -34,7 +34,8 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-019 | Define the physics adapter interface — ClickUp PB-025 | Review | Zeynep Ertürk + claude (PB-025 session) | TASK-016 | ip.fr.3.1, R-3 |
 | TASK-020 | Keep the assistant read-only and on the configured AI service — US-11.2 #72 | Done (PR #141) | codex/gpt-5/us112 | DEC-001, DEC-038, DEC-039, DEC-045 | srs.fr.11.8–11.12 |
 | TASK-021 | Filter, search and inspect Console log messages — US-24.1 #104 | Done (PR #142) | codex/gpt-5/104-console | TASK-006, #77 | srs.fr.24.1–24.11 |
-| TASK-022 | Assistant answers that cite ticks, entities and source lines — US-11.1 #71 | Review | claude-code/opus-5.5/us111 | TASK-020 | srs.fr.11.1–11.7 |
+| TASK-022 | Configure the AI service and data sharing per project — US-33.5 #121 | Done (PR #143) | codex/gpt-5/121-ai-privacy | TASK-020 | srs.fr.33.28–33.33 |
+| TASK-023 | Assistant answers that cite ticks, entities and source lines — US-11.1 #71 | Review | claude-code/opus-5.5/us111 | TASK-020 | srs.fr.11.1–11.7 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -200,7 +201,35 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Result:** Added canonical owning `LogEntry`/`ILogSink`, the window-free `ConsoleModel`, the complete ImGui panel, first-error tick-boundary pause through `Application::requestPause()`, Play lifecycle events, production external-editor launching, shared entity selection, status integration, focused tests and DEC-068/docs. After merging PR #141, verified headless (150/150) and `macos-debug` (163/163), clang-format 19.1.7, include/link/id checks and `git diff --check`. The standalone raylib window launched successfully before the merge; the computer-use harness could not bind to that non-bundle process for visual interaction.
 - **Links:** GitHub #104, DEC-068
 
-### TASK-022 — Assistant answers that cite ticks, entities and source lines (US-11.1 #71)
+### TASK-022 — Configure the AI service and data sharing per project (US-33.5 #121)
+- **Status:** Done (PR #143)
+- **Claimed by:** codex/gpt-5/121-ai-privacy
+- **Serves:** srs.fr.33.28–33.33
+- **Depends on:** TASK-020 / PR #141
+- **Touches:** AgentBridge health/model discovery operations, window-free Editor settings/controller and persistence, Dear ImGui AI & Privacy tab, focused tests and relevant documentation
+- **Goal:** Add per-project AI service, model and privacy settings with deterministic validation, asynchronous stale-response protection and no direct gRPC use from Editor code.
+- **Plan:**
+  - Extend the transport-neutral AgentBridge seam only with the missing health-check and model-list operations, then implement their optional gRPC transport mapping.
+  - Add a window-independent AI/privacy settings model and controller with injected service factory, clock and asynchronous completion queue.
+  - Persist only the validated service address, model identifier and three permission booleans in
+    the current user's project-local settings area, outside shared project settings; never persist
+    credentials.
+  - Render the AI & Privacy tab in the existing Dear ImGui Project Settings panel, including confirmations, model/connection states and send-disabled tooltip state.
+  - Cover address parsing, list/selection transitions, timeout/latency, privacy confirmations, persistence and stale responses in headless fake-backed tests.
+  - Run relevant headless and windowed builds/tests, clang-format/static/docs checks and `git diff --check`.
+- **Risks:** The merged #141 contract has no health or model-list operation; this task must add the smallest compatible operations without changing assistant-domain request/streaming contracts. Asynchronous work must not outlive UI/controller state.
+- **Verification:** CMake headless and macOS presets, focused CTest filters and full suites, optional gRPC build, clang-format 19, repository static/documentation checks and `git diff --check`.
+- **Result:** Added strict host/IPv4/bracketed-IPv6 validation; model discovery and selection
+  transitions; five-second standard gRPC health checks with latency/specific errors; stale-response
+  generations; default-off, independently confirmed source/telemetry permissions; persisted Ask
+  before every send; `DataTransmissionPolicy`/consent access for #120; `AEGIS_AI_PRIVACY 1`
+  persistence under the injected user-local project area; and the Dear ImGui AI and Privacy window
+  reached through Edit, AI and the status bar when a project controller is present. Headless 166/166,
+  macOS 179/179 and optional-gRPC 166/166 tests pass; format, include, ID, link and diff checks pass.
+  See HND-032 and DEC-069.
+- **Links:** GitHub #121.
+
+### TASK-023 — Assistant answers that cite ticks, entities and source lines (US-11.1 #71)
 - **Status:** Review
 - **Claimed by:** claude-code/opus-5.5/us111 on 2026-11-22
 - **Serves:** srs.fr.11.1–11.7
@@ -217,9 +246,9 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
   - [x] srs.fr.11.7 missing information named; hypotheses labelled.
 - **Plan:**
   - Separate question/context models, read-only evidence query seams, context assembly, diagnosis, citations and formatting.
-  - Carry the grounded context and validate citations with an AgentBridge decorator; no shared API changes (human choice, DEC-069).
+  - Carry the grounded context and validate citations with an AgentBridge decorator; no shared API changes (human choice, DEC-070 part 1).
   - Deterministic fakes for all tests; no network or model.
   - Run headless and macOS warnings-as-errors builds and tests, clang-format 19, include/link/id checks, `git diff --check`.
-- **Verification:** see HND-032.
-- **Result:** see HND-032 and DEC-069. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips are implemented by their own stories against the new seams.
-- **Links:** GitHub #71, DEC-069, PRB-006
+- **Verification:** see HND-033.
+- **Result:** see HND-033 and DEC-070. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips are implemented by their own stories against the new seams.
+- **Links:** GitHub #71, DEC-070, PRB-006

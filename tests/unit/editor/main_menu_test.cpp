@@ -24,8 +24,11 @@ public:
     void showPanel(Panel panel) override {
         calls.push_back(std::string("show ") + editor::panelName(panel));
     }
+    [[nodiscard]] bool canOpenAiPrivacySettings() const override { return settingsAvailable; }
+    void openAiPrivacySettings() override { calls.push_back("open AI settings"); }
 
     std::vector<std::string> calls;
+    bool settingsAvailable = false;
 };
 
 const Menu& menuTitled(const std::vector<Menu>& menus, const char* title) {
@@ -111,6 +114,22 @@ TEST(MainMenuTest, EnabledItems_CallTheirActions) {
     entryLabelled(general.submenu, "Scene").command.run();
 
     EXPECT_EQ(actions.calls, (std::vector<std::string>{"exit", "show Console", "show Scene"}));
+}
+
+TEST(MainMenuTest, ProjectAndAiSettingsUseTheSameAvailableAction) {
+    RecordingActions actions;
+    actions.settingsAvailable = true;
+    const std::vector<Menu> menus = editor::buildMainMenu(actions);
+
+    const editor::Command& projectSettings =
+        entryLabelled(menuTitled(menus, "Edit").entries, "Project Settings...").command;
+    const editor::Command& aiSettings =
+        entryLabelled(menuTitled(menus, "AI").entries, "AI Settings...").command;
+    ASSERT_TRUE(projectSettings.isEnabled());
+    ASSERT_TRUE(aiSettings.isEnabled());
+    projectSettings.run();
+    aiSettings.run();
+    EXPECT_EQ(actions.calls, (std::vector<std::string>{"open AI settings", "open AI settings"}));
 }
 
 // srs.fr.14.22, 14.23: Window > General lists the panels in order, on Ctrl+1 to Ctrl+6.

@@ -260,6 +260,29 @@ TEST_F(GroundedAssistantTest, GroundedBridge_RefusesRequestsForOtherQuestions) {
     EXPECT_TRUE(bridge.requests.empty());
 }
 
+// US-33.5 service discovery is not part of grounding: the decorator forwards it unchanged.
+TEST_F(GroundedAssistantTest, GroundedBridge_ForwardsHealthAndModelListToConfiguredBridge) {
+    GroundedAssistant assistant = makeAssistant(&bridge);
+    const PrepareResult prepared = assistant.prepare({"Why?", {}});
+    ASSERT_TRUE(prepared.succeeded());
+    bridge.health.status = engine::bridge::HealthServingStatus::Serving;
+    bridge.models.models = {{"model-a", "Model A"}};
+    bridge.models.failure = {engine::bridge::ServiceFailureKind::RemoteStatus, "UNAVAILABLE", "x"};
+    GroundedAgentBridge grounded(bridge, prepared.turn);
+
+    const engine::bridge::HealthCheckResult health = grounded.checkHealth(5s);
+    const engine::bridge::ModelListResult models = grounded.listModels(3s);
+
+    EXPECT_TRUE(health.isServing());
+    ASSERT_EQ(models.models.size(), 1u);
+    EXPECT_EQ(models.models.front().identifier, "model-a");
+    EXPECT_EQ(models.models.front().displayName, "Model A");
+    EXPECT_EQ(models.failure.status, "UNAVAILABLE");
+    EXPECT_EQ(bridge.healthTimeouts, (std::vector<std::chrono::milliseconds>{5s}));
+    EXPECT_EQ(bridge.modelListTimeouts, (std::vector<std::chrono::milliseconds>{3s}));
+    EXPECT_TRUE(bridge.requests.empty());
+}
+
 // Read-only (#72): answering uses real files under Scripts and leaves them byte-identical; the only
 // file written is the user-local chat.
 TEST_F(GroundedAssistantTest, Ask_WithScriptsFolderReader_IsReadOnlyOutsideUserLocalChat) {

@@ -99,6 +99,15 @@ public:
         return {};
     }
 
+    [[nodiscard]] engine::bridge::HealthCheckResult
+    checkHealth(std::chrono::milliseconds) override {
+        return {};
+    }
+
+    [[nodiscard]] engine::bridge::ModelListResult listModels(std::chrono::milliseconds) override {
+        return {};
+    }
+
     [[nodiscard]] std::unique_ptr<engine::bridge::AssistantResponseStream>
     startAssistantResponse(const engine::bridge::AssistantRequest& request,
                            std::chrono::milliseconds timeout) override {
