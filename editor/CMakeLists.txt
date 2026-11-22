@@ -1,7 +1,10 @@
 # Editor logic that needs no window: the menu model, the shortcuts and the session state
-# (US-14.1), and the status bar's items (US-14.2). It links neither raylib nor Dear ImGui, so
-# the tests use it in every preset.
+# (US-14.1), the status bar's items (US-14.2) and the AI Assistant chat state (US-33.2). It
+# links neither raylib nor Dear ImGui, so the tests use it in every preset.
 add_library(editor_core STATIC
+    src/assistant_chat.cpp
+    src/assistant_chat_context.cpp
+    src/assistant_chat_services.cpp
     src/assistant_entry_points.cpp
     src/command.cpp
     src/console_model.cpp
@@ -13,7 +16,9 @@ add_library(editor_core STATIC
 )
 add_library(editor::core ALIAS editor_core)
 target_include_directories(editor_core PUBLIC include)
-target_link_libraries(editor_core PUBLIC engine::core)
+# The AI Assistant chat (US-33.2) uses US-11.1/US-11.2's window-free assistant core.
+find_package(Threads REQUIRED)
+target_link_libraries(editor_core PUBLIC engine::core aegis::assistant PRIVATE Threads::Threads)
 engine_set_warnings(editor_core)
 
 # Editor app: hosts engine::Application and owns the main window (DEC-048). It opens a window,
@@ -21,6 +26,7 @@ engine_set_warnings(editor_core)
 # (DEC-063) and reaches raylib only through engine::rendering_raylib.
 if(ENGINE_WITH_RAYLIB)
     add_executable(editor
+        src/assistant_chat_panel.cpp
         src/main.cpp
         src/main_window_view.cpp
         src/theme.cpp

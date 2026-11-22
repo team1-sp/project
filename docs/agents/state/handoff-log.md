@@ -459,3 +459,18 @@
 - **Records:** DEC-069 (part 1 decided in the conversation; parts 2–6 for review), PRB-006.
 
 ---
+
+### HND-035 — AI Assistant chat, context chips and Stop (US-33.2)
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/119-chat
+- **Task:** TASK-024, GitHub #119, srs.fr.33.5 to 33.12
+- **Goal:** composer, Send/Stop, context chips, New Chat and History over the #71/#72/#118 public interfaces.
+- **Result:** Done locally on `feat/119-ai-chat-context`, stacked on `feat/118-open-ai-assistant` merged with `feat/71-grounded-assistant-answers` (commit `694ad0a`; agent-record conflicts kept both entries, #71's became TASK-023/HND-034). Added `AssistantChat`, `ContextChipSet`, `GroundedChatQuestionSender`, `ChatStoreLoader`, `GroundedContextSizeEstimator`, `EditorContextItemProvider` and the ImGui `AssistantChatPanel`; #71, #72 and #118 headers unchanged.
+- **Verified:** headless and macOS Debug builds with warnings as errors, CTest 258/258 and 271/271; GCC 15 headless with warnings as errors 258/258 after merging #145's CI fix 7a22193; new tests repeated 200 times; clang-format 19.1.7, `check_includes`, `check_ids`, `check_md_links`, `git diff --check`; `editor --max-ticks 2` exits 0.
+- **Not verified:** ThreadSanitizer (instrumented binary crashed in gtest discovery), clicking through the panel, Windows/CI, a live AI service.
+- **Repo state:** committed and pushed to `feat/119-ai-chat-context` with the member's approval (DEC-058); draft PR opened against `main`.
+- **Next:** approve, commit, push, open the draft PR with `Closes #119`; rebase onto `main` (merge, no rebase) after #144 and #145 merge, resolving the TASK-022/HND-032 id collision between them.
+- **Traps:** do not read the answer message while `isAnswering()`; `NoUserArea` returns an empty path, so plugging in a real bridge before a project path exists would write chats relative to the working directory (PRB-006).
+- **Records:** DEC-070, PRB-007.
+
+---

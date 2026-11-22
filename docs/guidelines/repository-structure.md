@@ -1,6 +1,6 @@
 # Repository Structure
 
-**Current reality `[VERIFIED 2026-11-22]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002. PB-006 adds the `ai-services/` Python 3.12 package skeleton. PB-025 adds `engine/physics/` and `tools/check_includes.py`. US-11.2 adds the `assistant/` core and production AgentBridge proto/optional gRPC target. US-11.1 adds the grounded-answer pipeline under `assistant/{include/aegis/assistant,src}/grounded/`. US-24.1 adds the canonical structured log contract in `engine/core` and the window-free Console model, platform launch and entity-navigation seams in `editor_core`. The other folders below are created as their PRs land.
+**Current reality `[VERIFIED 2026-11-22]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002. PB-006 adds the `ai-services/` Python 3.12 package skeleton. PB-025 adds `engine/physics/` and `tools/check_includes.py`. US-11.2 adds the `assistant/` core and production AgentBridge proto/optional gRPC target. US-11.1 adds the grounded-answer pipeline under `assistant/{include/aegis/assistant,src}/grounded/`. US-24.1 adds the canonical structured log contract in `engine/core` and the window-free Console model, platform launch and entity-navigation seams in `editor_core`. US-33.2 adds the window-free AI Assistant chat state to `editor_core`, which now links `aegis::assistant`. The other folders below are created as their PRs land.
 
 Related repos on the team's machines (separate git repos):
 
@@ -75,3 +75,4 @@ Dependency checks: only `physics-box2d` includes Box2D and only `rendering-rayli
 | 2026-11-22 | Added the US-11.2 `assistant/` core and production AgentBridge proto/optional gRPC target (DEC-067) | codex/gpt-5/us112 |
 | 2026-11-22 | Added the US-11.1 grounded-answer pipeline in `assistant/.../grounded/` (DEC-069) | claude-code/opus-5.5/us111 |
 | 2026-11-22 | Structured logging lives in `engine/core`; the Console model and navigation/launcher seams live in `editor_core` (US-24.1, DEC-068) | codex/gpt-5/104-console |
+| 2026-11-22 | The AI Assistant chat state lives in `editor_core`, which links `aegis::assistant` (US-33.2, DEC-070) | claude-code/opus-5.5/119-chat |

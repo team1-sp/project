@@ -77,7 +77,7 @@ void buildDefaultLayout(ImGuiID dockSpaceId, const ImGuiViewport& viewport) {
 
 MainWindowView::MainWindowView(EditorSession& session, const EditorStatus& status,
                                ConsoleModel& console, AssistantEntryPoints& assistant,
-                               ProjectSettingsState& projectSettings,
+                               AssistantChat& assistantChat, ProjectSettingsState& projectSettings,
                                IExternalCodeEditor& externalEditor,
                                IEntityNavigator& entityNavigator, CloseEditor closeEditor,
                                SetTitle setTitle)
@@ -85,6 +85,8 @@ MainWindowView::MainWindowView(EditorSession& session, const EditorStatus& statu
     , status_(status)
     , console_(console)
     , assistant_(assistant)
+    , assistantChat_(assistantChat)
+    , assistantChatPanel_(assistantChat)
     , projectSettings_(projectSettings)
     , externalEditor_(externalEditor)
     , entityNavigator_(entityNavigator)
@@ -149,6 +151,9 @@ bool MainWindowView::canAskAboutSelection() const {
 
 void MainWindowView::askAboutSelection() {
     assistant_.askAboutSelection();
+    if (assistant_.isAssistantOpen()) {
+        assistantChat_.importEntryPoint(assistant_.messageDraft(), assistant_.attachedContexts());
+    }
 }
 
 bool MainWindowView::canDiagnoseLastRun() const {
@@ -503,6 +508,8 @@ void MainWindowView::drawPanels() {
 }
 
 void MainWindowView::drawAssistantPanel() {
+    // Collect a finished answer even while the panel is closed.
+    assistantChat_.update();
     if (!assistant_.isAssistantOpen()) {
         return;
     }
@@ -513,30 +520,7 @@ void MainWindowView::drawAssistantPanel() {
     }
     bool open = true;
     if (ImGui::Begin("AI Assistant", &open)) {
-        for (const AssistantContext& context : assistant_.attachedContexts()) {
-            ImGui::TextUnformatted(std::holds_alternative<SelectionContext>(context) ? "Selection"
-                                                                                     : "Last run");
-            ImGui::SameLine();
-        }
-        if (!assistant_.attachedContexts().empty()) {
-            ImGui::NewLine();
-        }
-
-        const std::string& draft = assistant_.messageDraft();
-        if (draft != shownAssistantDraft_) {
-            shownAssistantDraft_ = draft;
-            std::fill(assistantDraft_.begin(), assistantDraft_.end(), '\0');
-            const std::size_t count = std::min(draft.size(), assistantDraft_.size() - 1);
-            std::copy_n(draft.data(), count, assistantDraft_.data());
-        }
-        if (focusMessageBox) {
-            ImGui::SetKeyboardFocusHere();
-        }
-        if (ImGui::InputTextMultiline("##AssistantMessage", assistantDraft_.data(),
-                                      assistantDraft_.size(), ImVec2(-FLT_MIN, 90.0F))) {
-            shownAssistantDraft_ = assistantDraft_.data();
-            assistant_.setMessageDraft(shownAssistantDraft_);
-        }
+        assistantChatPanel_.draw(focusMessageBox);
     }
     ImGui::End();
     if (!open) {

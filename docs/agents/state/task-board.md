@@ -36,6 +36,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-021 | Filter, search and inspect Console log messages — US-24.1 #104 | Done (PR #142) | codex/gpt-5/104-console | TASK-006, #77 | srs.fr.24.1–24.11 |
 | TASK-022 | Open the AI Assistant with context from the current selection — US-33.1 #118 | Review (draft PR #145) | codex/gpt-5/118-assistant | #72, #77 | srs.fr.33.1–33.4 |
 | TASK-023 | Assistant answers that cite ticks, entities and source lines — US-11.1 #71 | Review | claude-code/opus-5.5/us111 | TASK-020 | srs.fr.11.1–11.7 |
+| TASK-024 | Ask questions, control context and stop answers — US-33.2 #119 | Review (draft PR) | claude-code/opus-5.5/119-chat | TASK-022, TASK-023, TASK-020 | srs.fr.33.5–33.12 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -263,3 +264,18 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Verification:** see HND-032.
 - **Result:** see HND-032 and DEC-069. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips are implemented by their own stories against the new seams.
 - **Links:** GitHub #71, DEC-069, PRB-006
+
+### TASK-024 — Ask questions, control context and stop answers (US-33.2 #119)
+- **Status:** Review (draft PR)
+- **Claimed by:** claude-code/opus-5.5/119-chat on 2026-11-22
+- **Serves:** srs.fr.33.5–33.12
+- **Depends on:** TASK-020 (#72, merged), TASK-023 (#71, draft PR #144), TASK-022 (#118, draft PR #145); stacked on both open branches by the member's decision (DEC-070 part 1)
+- **Touches:** new `editor_core` chat/context/services units, a new thin ImGui panel file, small wiring in `main.cpp` and `main_window_view.*`, `editor/CMakeLists.txt`, tests and records
+- **Goal:** the chat composer, Send/Stop, context chips, New Chat and History over the #71/#72/#118 public interfaces.
+- **Plan:**
+  - Window-free `AssistantChat` and `ContextChipSet` in `editor_core`; production sender, loader, size estimator and item provider over `GroundedAssistant`, `AnswerOperation`, `ChatStore`.
+  - Thin `AssistantChatPanel` replacing #118's draft-only panel body; entry-point Ask about selection imports its draft and Selection chip.
+  - Unit tests with fakes plus an integration test with the real #71/#72 classes and a fake bridge.
+- **Risks:** stacked on unmerged PRs; `AnswerOperation` has no thread-safe snapshot, so the running answer is drawn after it ends.
+- **Result:** implemented as planned (DEC-070). Headless and macOS Debug with warnings as errors: 258/258 and 271/271; GCC 15 headless 258/258 after merging #145's CI fix 7a22193; 38 new tests, 200 repeats stable; clang-format 19, include/id/link checks and `git diff --check` clean; two-tick windowed smoke run exits 0. Not run: ThreadSanitizer (the instrumented test binary crashed during gtest discovery on this machine), interactive panel use, Windows. In the app every send is refused with "AI service is not configured" until #121 supplies a bridge.
+- **Links:** GitHub #119, DEC-070, PRB-007
