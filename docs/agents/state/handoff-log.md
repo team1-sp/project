@@ -578,3 +578,19 @@
   uses HND-037 (#145) and HND-039 (#147).
 - **Verified:** see the merge commit's CI run.
 - **Next:** CI and human review of PR #146.
+
+---
+
+### HND-148.1 — Collision-free record ids and union merges for the append-only logs
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/148-ids
+- **Task:** PR #148 (no issue)
+- **Goal:** stop parallel PRs from taking the same record id, and stop append-only logs from conflicting on local merges (DEC-148.1).
+- **Result:** Done, awaiting review of PR #148.
+- **Files changed:** `tools/check_ids.py`, `.github/workflows/ci.yml`, `.gitattributes`, `.githooks/pre-commit`, `.github/pull_request_template.md`, `CONTRIBUTING.md`, `docs/guidelines/{documentation-rules,git-workflow}.md`, `docs/agents/{AGENT-PROTOCOL,communication-protocol}.md`, `docs/agents/templates/*`, `docs/history/{decision-log,genai-usage-log}.md`.
+- **Verified:** `check_ids.py` on the repo; with fake pull_request events (matching and wrong numbers, old-form, malformed and duplicate ids); a local merge of two branches that both append to `handoff-log.md` completes without a conflict.
+- **Not verified:** the CI step on GitHub until this PR's run.
+- **Next:** human decides whether TASK ids stay (`TASK-<issue #>`) or new work drops them; `current-status.md`/`task-board.md` conflicts are a separate later decision.
+- **Traps:** this is the first entry in the new form, so the index now mixes old and new ids.
+- **Records:** DEC-148.1, HND-148.1.
+

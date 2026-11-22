@@ -1,9 +1,9 @@
 # Template — Problem entry
 
-Append to `history/problem-log.md` (and add a row to its index table). Search the log **first** — if the problem is a repeat, add an `Occurrence` line to the existing entry instead of creating a new one.
+Append to `history/problem-log.md` (and add a row to its index table). The id is `PRB-<n>.<k>`: `<n>` is the issue your PR closes (or the PR's number for no-issue work), `<k>` counts from 1 (DEC-148.1). Search the log **first** — if the problem is a repeat, add an `Occurrence` line to the existing entry instead of creating a new one.
 
 ```markdown
-### PRB-### — Short symptom-based title
+### PRB-<n>.<k> — Short symptom-based title
 - **Date:** YYYY-MM-DD
 - **Reported by:** <agent-id or human>
 - **Area:** ECS | Physics | Adapter | Rendering | Input | Gameplay | Telemetry | Headless | Semantic | AI | Build | Tooling | Docs | Process

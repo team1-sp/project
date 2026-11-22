@@ -1,5 +1,6 @@
 #!/bin/sh
-# Stops a commit when two record entries share an id (DEC-055); CI runs the same check.
+# Stops a commit when two record entries share an id or an id is malformed (DEC-055, DEC-148.1);
+# CI runs the same check and also matches new ids to the PR's number.
 # Enable once per clone: git config core.hooksPath .githooks
 root=$(git rev-parse --show-toplevel) || exit 1
 python=$(command -v python3 || command -v python)
@@ -8,6 +9,6 @@ if [ -z "$python" ]; then
     exit 0
 fi
 "$python" "$root/tools/check_ids.py" "$root" || {
-    echo "Record ids collide. Renumber your branch's entries (git-workflow.md §4), then commit again." >&2
+    echo "Record ids collide or are malformed. Fix your branch's entries (git-workflow.md §4), then commit again." >&2
     exit 1
 }

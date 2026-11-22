@@ -50,10 +50,11 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 3. Read the **index of `history/decision-log.md`** — this is the current truth. Anything `Accepted` binds you.
 4. Identify your **agent ID** (`<tool>/<model>/<short-session-id>`).
 5. Find your task:
-   - A human gave you a task → find or create the matching `TASK-###` on the task board.
+   - A human gave you a task → find or create the matching task on the task board (`TASK-<issue #>`).
    - No instructions → take the highest-priority task with status `Ready`. Never take a task someone else has `Claimed` (unless the claim is stale, see [communication-protocol.md](communication-protocol.md)).
 5a. **Pick where to work** (DEC-061, [git-workflow.md §1](../guidelines/git-workflow.md)): code and repository docs in your own cloud copy of the repository by default; a member's computer (folder access to edit files, Remote Control to run commands) only when the files, tools or signed-in accounts exist only there, or the member asks.
 6. **Claim** the task on the task board *before* starting work (status `Claimed`, your agent ID, today's date).
+6a. **Record ids** (DEC-148.1): every entry you add (DEC, HND, PRB, Q, GEN) is `<PREFIX>-<GitHub #>.<counter>`, where the number is the issue your PR closes, or the PR's own number for no-issue work: `HND-80.1`, `DEC-80.1`, `DEC-80.2`. Do not take "highest id + 1"; old 3-digit ids stay. CI rejects a new id with another number ([documentation-rules.md §4](../guidelines/documentation-rules.md#4-entry-ids)).
 
 ## Phase 1 — Understand (read-only)
 

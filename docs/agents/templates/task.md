@@ -1,9 +1,9 @@
 # Template — Task entry
 
-Copy into `state/task-board.md` (summary row **and** entry). Next ID = highest existing + 1.
+Copy into `state/task-board.md` (summary row **and** entry). One task per issue, with the issue's number as its id: `TASK-80` for #80 (DEC-148.1). Old tasks keep their 3-digit ids.
 
 ```markdown
-### TASK-### — Short imperative title
+### TASK-<issue #> — Short imperative title
 - **Status:** Backlog | Ready | Claimed | Review | Done | Blocked | Dropped
 - **Claimed by:** <agent-id> on YYYY-MM-DD        (omit until claimed)
 - **Serves:** ip.fr.x.y, ip.nfr.x.y, DEC-###     (requirement / decision IDs)
