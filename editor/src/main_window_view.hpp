@@ -1,11 +1,13 @@
 #pragma once
 
+#include <array>
 #include <functional>
 #include <optional>
 #include <string>
 #include <vector>
 
 #include "editor/command.hpp"
+#include "editor/console_model.hpp"
 #include "editor/editor_session.hpp"
 #include "editor/main_menu.hpp"
 #include "editor/status_bar.hpp"
@@ -24,8 +26,9 @@ public:
     using SetTitle = std::function<void(const std::string&)>;
 
     // `session` and `status` must outlive the view.
-    MainWindowView(EditorSession& session, const EditorStatus& status, CloseEditor closeEditor,
-                   SetTitle setTitle);
+    MainWindowView(EditorSession& session, const EditorStatus& status, ConsoleModel& console,
+                   IExternalCodeEditor& externalEditor, IEntityNavigator& entityNavigator,
+                   CloseEditor closeEditor, SetTitle setTitle);
 
     // Builds this render frame's interface. Call it between ImGui::NewFrame() and ImGui::Render().
     void draw();
@@ -41,9 +44,13 @@ private:
     void drawToolbar();
     void drawStatusBar();
     void drawPanels();
+    void drawConsolePanel();
 
     EditorSession& session_;
     const EditorStatus& status_;
+    ConsoleModel& console_;
+    IExternalCodeEditor& externalEditor_;
+    IEntityNavigator& entityNavigator_;
     CloseEditor closeEditor_;
     SetTitle setTitle_;
     Platform platform_;
@@ -52,6 +59,7 @@ private:
     std::string shownTitle_;
     // The panel that showPanel() asked to bring to the front in the next frame.
     std::optional<Panel> panelToFocus_;
+    std::array<char, 256> consoleSearch_{};
     // Render frames drawn so far, counted up to 2.
     int frameIndex_ = 0;
 };

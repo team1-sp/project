@@ -15,10 +15,13 @@
 
 #include <gtest/gtest.h>
 
+#include "editor/console_model.hpp"
+#include "editor/status_bar.hpp"
 #include "engine/core/application.hpp"
 #include "engine/core/frame_renderer.hpp"
 #include "engine/core/input_actions.hpp"
 #include "engine/core/input_source.hpp"
+#include "engine/core/logging.hpp"
 #include "engine/core/run_error.hpp"
 #include "engine/core/simulation.hpp"
 #include "engine/core/tick.hpp"
@@ -443,6 +446,28 @@ TEST_F(ApplicationTest, RunError_LogsMessageAndTickNumber) {
     EXPECT_EQ(logged, "error: tick 7: PlayerMovement: entity 12 has no Velocity component\n");
 }
 
+TEST_F(ApplicationTest, RunErrorWithStructuredSink_AddsCanonicalErrorWithoutOpeningWindow) {
+    editor::EditorStatus status;
+    editor::ConsoleModel console(status);
+    engine::Application app(simulation_);
+    simulation_.onTick = [&] {
+        if (app.ticksExecuted() == 2) {
+            throw engine::RunError("invalid entity handle");
+        }
+    };
+    engine::ApplicationConfig config = headlessConfig(5);
+    config.logSink = &console;
+    ASSERT_TRUE(app.init(config));
+
+    EXPECT_NE(app.run(), 0);
+
+    ASSERT_EQ(console.entries().size(), 1u);
+    EXPECT_EQ(console.entries().front().severity, engine::LogSeverity::Error);
+    EXPECT_EQ(console.entries().front().message, "invalid entity handle");
+    EXPECT_EQ(console.entries().front().tick, 2u);
+    EXPECT_EQ(log_, (CallLog{"tick 0", "tick 1", "tick 2"}));
+}
+
 // srs.fr.1.11: in normal mode the run also ends at the failed tick's boundary. The frame is not
 // rendered or presented; shutdown() still closes the window.
 TEST_F(ApplicationTest, NormalModeTickThrowsRunError_StopsWithoutRenderingThatFrame) {
@@ -831,6 +856,35 @@ TEST_F(ApplicationTest, PauseRequestedDuringATick_NoFurtherTickStarts) {
     EXPECT_EQ(log_, (CallLog{"open", "input", "begin", "render", "present", "input", "tick 0",
                              "tick 1", "begin", "render", "present", "input", "begin", "render",
                              "present", "input", "begin", "render", "present"}));
+}
+
+// srs.fr.24.6: the first Console error asks the existing Application pause API to pause at the
+// boundary after its tick, dropping the remaining ticks already scheduled for the render frame.
+TEST_F(ApplicationTest, ConsoleErrorPause_FirstErrorPausesAtItsTickBoundary) {
+    engine::Application app(simulation_, renderer_, windowFactory({80ms, 80ms, 80ms}),
+                            timeSource());
+    editor::EditorStatus status;
+    editor::ConsoleModel console(status, [&] { EXPECT_TRUE(app.requestPause()); });
+    console.setClearOnPlay(false);
+    console.setErrorPause(true);
+    console.onPlayStarted();
+    simulation_.onTick = [&] {
+        if (app.ticksExecuted() >= 1) {
+            console.write(engine::LogEntry{engine::LogSeverity::Error, "tick failed",
+                                           app.ticksExecuted(), std::nullopt, std::nullopt,
+                                           std::nullopt});
+        }
+    };
+    engine::ApplicationConfig config;
+    config.logSink = &console;
+    ASSERT_TRUE(app.init(config));
+
+    ASSERT_EQ(app.run(), 0);
+
+    EXPECT_TRUE(app.isPaused());
+    EXPECT_EQ(app.ticksExecuted(), 2u);
+    ASSERT_EQ(console.entries().size(), 1u);
+    EXPECT_EQ(console.entries().front().tick, 1u);
 }
 
 // srs.fr.1.16 to 1.18 together. The first frame leaves half a tick (25 ms is 1.5 ticks). The

@@ -388,3 +388,17 @@
 - **Next:** review DEC-067 and the PR; later stories supply Semantic Graph data (#71), chat UI (#119) and provider/settings UI (#121).
 - **Traps:** never give the assistant an engine world, project writer or shared-settings path. Preserve streaming cancellation in AgentBridge instead of adding a second transport. Do not overwrite a corrupt or unsupported chat file.
 - **Records:** DEC-067 (Accepted in the PR, for review); PRB-005 (AppleClang warning from generated protobuf headers).
+
+---
+
+### HND-031 — Console log filtering, search and inspection (US-24.1)
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/104-console
+- **Task:** TASK-021, GitHub #104, srs.fr.24.1 to 24.11
+- **Result:** Canonical `engine::LogEntry`/`ILogSink`; owning, window-free `ConsoleModel`; ImGui toolbar/tab counts, Clear/Clear on Play, full-field Collapse, filters, case-insensitive search, detail pane; tick-boundary Error Pause; external editor and entity navigation seams; status integration. Draft PR #142 is open.
+- **Files changed:** `engine/core` logging/Application, `editor` core/view/main, focused tests/CMake, Console architecture/testing docs and agent records.
+- **Verified:** after merging PR #141, headless 150/150 and macOS 163/163 locally; clang-format, include, ID, documentation-link and diff checks pass. The pre-merge GitHub CI passed Windows, macOS and Ubuntu builds plus formatting, docs, static and benchmark checks. Editor window launched and initialized raylib/OpenGL successfully before the merge.
+- **Not verified:** visual interaction could not be automated because the computer-use harness could not bind the standalone non-bundle raylib process.
+- **Next:** merge current `origin/main`, renumber collided records, rerun verification, push the approved merge resolution, and review PR #142.
+- **Traps:** #85 must call `onPlayStarted()`/`onPlayStopped()` at its Play transitions. Collapse includes tick, stack, source and entity, so same text at different ticks stays separate. `AEGIS_CODE_EDITOR` overrides the default `code` executable.
+- **Records:** DEC-068 (Accepted in the PR, for review); PRB-003 occurrence.

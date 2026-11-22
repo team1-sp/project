@@ -41,6 +41,32 @@ Tests are in `tests/unit/core/`.
 - [ ] Query iteration order deterministic
 - [ ] Structural change during iteration is safe/deferred
 
+## Console (srs.fr.24.1 to 24.11)
+
+Tests are in `tests/unit/editor/console_model_test.cpp` and
+`tests/unit/core/application_test.cpp` and run in the headless preset.
+
+- [x] Canonical entries preserve Info/Warning/Error, complete message, optional tick, stack,
+  source and entity in insertion order; counts appear in the toolbar model and tab label
+  (24.1, 24.2) — `ConsoleModel.AddingSeveritiesAndOptionalTicks_PreservesEntriesAndCounts`
+- [x] Clear resets entries, counters, selection and status; Clear on Play follows its toggle
+  (24.3, 24.4) — `ConsoleModel.Clear_RemovesEntriesResetsCountsSelectionAndStatus`,
+  `ConsoleModel.PlayStarted_ClearOnPlayOnClearsAndOffPreservesEntries`
+- [x] Collapse groups full structured equality only and does not mutate entries (24.5) —
+  `ConsoleModel.CollapseOn_GroupsOnlyEntriesWhoseEveryStructuredFieldIsIdentical`
+- [x] Error Pause uses `Application::requestPause()`, triggers once per Play run, completes the
+  error tick and drops the frame's remaining ticks (24.6) —
+  `ConsoleModel.ErrorPause_OnlyFirstTickedErrorOfEachPlayRunRequestsPause`,
+  `ApplicationTest.ConsoleErrorPause_FirstErrorPausesAtItsTickBoundary`
+- [x] Independent severity filters and case-insensitive substring search are non-destructive
+  (24.7, 24.8) — `ConsoleModel.SeverityFilters_AreIndependentAndDoNotDeleteEntries`,
+  `ConsoleModel.Search_IsCaseInsensitiveSubstringAndEmptySearchShowsAll`
+- [x] Selection exposes the complete message, tick and stack trace (24.9) —
+  `ConsoleModel.Selection_ExposesCompleteMessageTickAndStackTrace`
+- [x] Double-click actions send the exact source/line and entity to injected interfaces (24.10,
+  24.11) — `ConsoleModel.Activation_RequestsExactSourceAndEntityThroughInjectedInterfaces`,
+  `EntityNavigation.NavigateTo_SelectsTheEntityForOtherEditorPanels`
+
 ## Physics via adapter (ip.fr.3.*)
 
 - [ ] Dynamic body is affected by gravity (3.3)

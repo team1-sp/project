@@ -16,6 +16,7 @@ namespace engine {
 
 class FixedTimestep;
 class IFrameRenderer;
+class ILogSink;
 class ISimulation;
 
 // Why a run ended (srs.fr.1.10, 1.11, 7.7). The names of the headless outcomes are those of
@@ -53,6 +54,9 @@ struct ApplicationConfig {
     // true to close the window and end the run, or false to keep running; the Editor applies its
     // unsaved-changes check here (srs.fr.14.3). Empty: the window always closes.
     std::function<bool()> confirmClose;
+    // Optional structured logging destination. Not owned; it must outlive init() and run().
+    // Without one, Application preserves the command-line stderr output used by headless runs.
+    ILogSink* logSink = nullptr;
 };
 
 // Owns the application window and runs the game loop (srs.fr.1.1 to 1.18).
