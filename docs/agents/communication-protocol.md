@@ -76,7 +76,7 @@ Several agents may work at the same time in different tools. There is no lock se
 
 1. **Re-read just before writing** any shared state file. If it changed since you first read it, merge — do not overwrite.
 2. **Append-only files:** append at the end; never reorder.
-3. **IDs:** take the next number by reading the highest existing ID in the file right before writing. If two agents collide on an ID, the later writer renumbers *its own* entry and fixes its references.
+3. **IDs** (DEC-148.1): a new entry's id is `<PREFIX>-<GitHub #>.<counter>`, where the number is the issue your pull request closes, or your pull request's own number for no-issue work: `DEC-80.1`, `HND-80.2`, `PRB-147.1`. Count up from `.1` within your work; look only at your own number's entries, not the highest id in the file. Tasks are `TASK-<issue #>`. Old 3-digit ids stay as they are. Rules: [documentation-rules.md §4](../guidelines/documentation-rules.md#4-entry-ids).
 4. **One task = one owner.** Different tasks should touch different files. If two tasks must touch the same file, note it in both tasks (`Touches:`) and sequence them.
 5. **Git:** work on a branch named after the backlog item (`feat/pb-026-short-name`, see `guidelines/git-workflow.md`). Resolve merge conflicts in state files by keeping *both* sides' entries.
 6. **If state files disagree with the repo**, trust the repo, then fix the state file and note it in your handoff.
@@ -86,7 +86,7 @@ Several agents may work at the same time in different tools. There is no lock se
 All logs use a header per entry so they can be searched with plain text tools:
 
 ```
-### PRB-004 — Short title
+### PRB-142.1 — Short title
 ```
 
 Fields are `**Field:** value` lines. Tags go on a `**Keywords:**` line (comma-separated, include exact error strings and component names). See [templates/](templates/).

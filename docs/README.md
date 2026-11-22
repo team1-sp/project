@@ -108,7 +108,7 @@ docs/
 
 - **Language:** English. (Team-facing educational guides outside this folder may be Turkish; code, comments, commits and these docs are English.)
 - **Terminology:** use the words in [architecture/glossary.md](architecture/glossary.md). Do not invent synonyms ("physics library" ≠ "physics engine" ≠ "physics adapter").
-- **IDs:** `TASK-###`, `DEC-###`, `PRB-###`, `HND-###`, `Q-###`, `GEN-###`. Zero-padded, never reused.
+- **IDs:** new entries are `<PREFIX>-<GitHub #>.<counter>` (`DEC-80.1`, `HND-148.1`) and tasks `TASK-<issue #>`; older entries keep `DEC-###` etc. Never reused or renumbered ([guidelines/documentation-rules.md §4](guidelines/documentation-rules.md#4-entry-ids), DEC-148.1).
 - **Dates:** ISO `YYYY-MM-DD`.
 - **Certainty tags:** `[VERIFIED]` (checked against code/docs/run), `[ASSUMPTION]`, `[TBD]` (decision not made yet), `[PROPOSED]` (suggested, not accepted).
 - **Source of truth:** the `Accepted` entries in [history/decision-log.md](history/decision-log.md). Humans decide, agents consult (DEC-017). Course documents under `senior-project/docs/` (Initial Plan etc.) are **not** authoritative.

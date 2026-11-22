@@ -7,7 +7,7 @@ Rules: see [../guidelines/genai-usage-rules.md](../guidelines/genai-usage-rules.
 ## Entry format
 
 ```markdown
-### GEN-### — Short title
+### GEN-<n>.<k> — Short title
 - **Date:** YYYY-MM-DD
 - **Deliverable / section:** e.g. Initial Plan §4.1, or "code: PhysicsAdapter"
 - **Tool and model:** e.g. Claude Sonnet 5.5, ChatGPT, Gemini Pro

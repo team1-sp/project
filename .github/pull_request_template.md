@@ -11,7 +11,7 @@ Closes #<!-- issue number; a docs/ci/chore PR without an issue deletes this line
 <!-- Which docs changed, or "none needed". -->
 
 ## Decisions for review
-<!-- Every decision-log entry this PR adds or changes, one line each: "DEC-### - what was decided (approval: review of this PR | conversation, who, date)". Entries approved through review are written Accepted and bind only when this PR is merged; ask for a change or a rejection in the review (DEC-052). Write "none" if there are none. -->
+<!-- Every decision-log entry this PR adds or changes, one line each: "DEC-<n>.<k> - what was decided (approval: review of this PR | conversation, who, date)". Entries approved through review are written Accepted and bind only when this PR is merged; ask for a change or a rejection in the review (DEC-052). Write "none" if there are none. -->
 
 ## Definition of Done
 <!-- Full list: docs/process/definition-of-done.md -->

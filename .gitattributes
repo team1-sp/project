@@ -19,3 +19,11 @@
 *.ogg binary
 *.mp3 binary
 *.zip binary
+
+# Append-only logs: a local merge keeps both sides' new entries instead of stopping on a
+# conflict (DEC-148.1). Files edited in place (task-board, current-status, open-questions) are
+# left out on purpose. GitHub's web conflict view ignores this; tools/check_ids.py catches a
+# line kept twice.
+docs/agents/state/handoff-log.md merge=union
+docs/history/decision-log.md merge=union
+docs/history/problem-log.md merge=union
