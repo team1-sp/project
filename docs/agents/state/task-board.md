@@ -34,7 +34,7 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-019 | Define the physics adapter interface — ClickUp PB-025 | Review | Zeynep Ertürk + claude (PB-025 session) | TASK-016 | ip.fr.3.1, R-3 |
 | TASK-020 | Keep the assistant read-only and on the configured AI service — US-11.2 #72 | Done (PR #141) | codex/gpt-5/us112 | DEC-001, DEC-038, DEC-039, DEC-045 | srs.fr.11.8–11.12 |
 | TASK-021 | Filter, search and inspect Console log messages — US-24.1 #104 | Review | codex/gpt-5/104-console | TASK-006, #77 | srs.fr.24.1–24.11 |
-| TASK-022 | Open the AI Assistant with context from the current selection — US-33.1 #118 | Review (self; approved for push) | codex/gpt-5/118-assistant | #72, #77 | srs.fr.33.1–33.4 |
+| TASK-022 | Open the AI Assistant with context from the current selection — US-33.1 #118 | Review (draft PR #145) | codex/gpt-5/118-assistant | #72, #77 | srs.fr.33.1–33.4 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -201,7 +201,7 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Links:** GitHub #104, DEC-068
 
 ### TASK-022 — Open the AI Assistant with context from the current selection (US-33.1 #118)
-- **Status:** Review (self; human approved commit, push and draft PR on 2026-11-22)
+- **Status:** Review (draft PR #145)
 - **Claimed by:** codex/gpt-5/118-assistant on 2026-11-22
 - **Serves:** srs.fr.33.1–33.4, srs.fr.17.22, srs.fr.33.35, srs.fr.33.41
 - **Depends on:** GitHub issues #72 and #77 (both merged)
@@ -238,4 +238,4 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Verified:** targeted 31/31 editor tests and complete headless 163/163 passed; the macOS editor
   built and completed a two-tick raylib/ImGui smoke run; clang-format 19, include policy, record IDs,
   documentation links and `git diff --check` passed.
-- **Links:** GitHub #118.
+- **Links:** GitHub #118, draft PR #145.

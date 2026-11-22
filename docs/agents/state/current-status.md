@@ -8,7 +8,7 @@ updated_by: codex/gpt-5/118-assistant
 Snapshot of the project. Overwrite this file each session (keep it short). History belongs in `handoff-log.md`. **The truth is the `Accepted` entries in `history/decision-log.md`.**
 
 ## One-line summary
-Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The fixed game loop, pause API, Editor main window, status bar, read-only assistant core and structured Console are merged. US-33.1's Editor entry points are implemented and verified; the human approved committing, pushing and opening the draft PR. The custom ECS is designed but not built. **The demo game is undecided** (Q-016).
+Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The fixed game loop, pause API, Editor main window, status bar, read-only assistant core and structured Console are merged. US-33.1's Editor entry points are implemented and verified in draft PR #145. The custom ECS is designed but not built. **The demo game is undecided** (Q-016).
 
 ## Phase
 Roadmap phase **1 — Project and technology decisions**: all exit criteria are met (see `plan.md`); the human confirms closing it. Phase 2 starts with the skeleton (TASK-005).
@@ -29,8 +29,8 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
 
 ## In progress / next
-- **US-33.1 (#118): open the assistant with useful context** — Review (self), approved for push and
-  draft PR. AI menu/toolbar entry points, Ctrl+Shift+A toggle, typed Selection and Last run
+- **US-33.1 (#118): open the assistant with useful context** — Review, draft PR #145. AI
+  menu/toolbar entry points, Ctrl+Shift+A toggle, typed Selection and Last run
   contexts, consent-aware diagnosis routing and AI-and-Privacy settings navigation are covered by
   focused headless tests. #72's public interfaces are unchanged; #71/#119/#120/#121 remain separate.
 - **US-24.1 (#104): structured Console logging** — Review. Canonical `LogEntry` and optional `ILogSink` in `engine/core`; window-free owning `ConsoleModel`, non-mutating filters/search/collapse, selection/details, Error Pause and Play lifecycle seams, external-editor and entity navigation abstractions in `editor_core`; ImGui Console panel filled. DEC-068 is carried for PR review. US-17.2 (#85) calls the implemented Play start/stop seam when its controller lands.

@@ -428,3 +428,22 @@
 - **Records:** PRB-003 repeat occurrence; no decision or open question created.
 
 ---
+
+### HND-033 — AI Assistant entry points pushed for review
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/118-assistant
+- **Task:** TASK-022, GitHub #118
+- **Goal:** Commit and publish the human-approved US-33.1 implementation.
+- **Result:** Commit `0c96323` pushed to `feat/118-open-ai-assistant`; draft PR #145 opened with
+  `Closes #118`, the acceptance checklist and verification results.
+- **Files changed:** no implementation changes after HND-032; live task/status records now point to
+  PR #145.
+- **Verified:** latest `origin/main` remained the branch base; pre-commit ID/link/diff checks passed;
+  GitHub accepted the branch and created the draft PR.
+- **Not verified:** GitHub CI and human review are pending.
+- **Repo state:** branch pushed and tracking `origin/feat/118-open-ai-assistant`; draft PR #145 open.
+- **Next:** watch CI, address review findings, and let a human mark ready/merge when approved.
+- **Traps:** none beyond HND-032.
+- **Records:** no new decision, problem or open question.
+
+---
