@@ -52,6 +52,7 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 5. Find your task:
    - A human gave you a task → find or create the matching `TASK-###` on the task board.
    - No instructions → take the highest-priority task with status `Ready`. Never take a task someone else has `Claimed` (unless the claim is stale, see [communication-protocol.md](communication-protocol.md)).
+5a. **Pick where to work** (DEC-061, [git-workflow.md §1](../guidelines/git-workflow.md)): code and repository docs in your own cloud copy of the repository by default; a member's computer (folder access to edit files, Remote Control to run commands) only when the files, tools or signed-in accounts exist only there, or the member asks.
 6. **Claim** the task on the task board *before* starting work (status `Claimed`, your agent ID, today's date).
 
 ## Phase 1 — Understand (read-only)
@@ -70,6 +71,7 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 12. Write a short plan inside the task entry: goal, files you expect to touch, how you will verify, risks. 3–8 bullets. A plan that is not written down does not exist for the next agent.
 13. Check the plan against [rules.md](rules.md) invariants (layer boundaries, ECS as data hub, adapter, fixed timestep, headless). If the plan violates one → stop, go to "Disagreeing with a decision".
 14. Prefer the **smallest vertical slice** that can be verified. One task = one reviewable change.
+14a. **Check for overlapping work:** list the open PRs and the files they touch (`gh pr list --state open --json number,title,files`). If one changes the same code or design docs as your plan, tell the human before you start ([git-workflow.md §4](../guidelines/git-workflow.md#4-merge-conflicts), DEC-055).
 
 ## Phase 3 — Do
 
@@ -82,9 +84,11 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 
 19. **Problem hit and solved?** → append an entry to `history/problem-log.md` using [templates/problem-entry.md](templates/problem-entry.md). Include the exact error text so future searches find it.
 20. **Human made a decision this session?** → [playbooks/record-decision.md](playbooks/record-decision.md): log it `Accepted` (with who decided, when, and their words), propagate to all documents.
-21. **You think a decision is needed but the human has not decided?** → log it `Proposed` (so it is visible), put the `DECISION NEEDED` block in your reply and a `Q-###` in `open-questions.md`. A `Proposed` entry binds nobody.
+21. **You think a decision is needed but the human has not decided?** → put the `DECISION NEEDED` block in your reply, log it `Proposed` (so it is visible) and add a `Q-###` in `open-questions.md`. A `Proposed` entry binds nobody. When the human answers, it becomes `Accepted`.
+21a. **Your change carries a decision nobody had to answer first** (a name, a layout, how a module reads an SRS rule)? → log it `Accepted` and list it under "Decisions for review" in the PR body. The reviewer approves or rejects it with the rest of the diff, and it binds only once a human merges the PR (DEC-052). This saves a follow-up commit; it is not permission to decide open choices yourself (P-3, P-4).
 22. **AI-generated text for a course deliverable?** → append to `history/genai-usage-log.md` (see [guidelines/genai-usage-rules.md](../guidelines/genai-usage-rules.md)).
 23. **Docs affected?** Update the architecture/design/testing doc that your change made wrong. A change that makes a doc lie is not done.
+23a. **Commit, push, PR** ([git-workflow.md](../guidelines/git-workflow.md), DEC-053 to DEC-055, DEC-058, DEC-061): working on a member's own computer, show them the change and commit and push only after they approve it; working in your own cloud copy of the repository, commit and push without asking. Merge `origin/main` into the branch, build and test again, then push. After the first push, open the draft PR with `python tools/open_pr.py`; in a cloud session it fails (GraphQL is blocked), so open it with the GitHub `create_pull_request` tool and set labels, milestone and assignee with `gh api -X PATCH` (DEC-061). Merge `main` again before marking it ready for review, and whenever the PR gets the `needs-sync` label.
 24. Update the task on the board (`Review` or `Done` or `Blocked`) with a one-paragraph result.
 25. Update `state/current-status.md` (what changed, what is next, `last_updated`, `updated_by`).
 

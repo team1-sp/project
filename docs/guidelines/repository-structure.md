@@ -1,6 +1,6 @@
 # Repository Structure
 
-**Current reality `[VERIFIED 2026-11-04]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002: `CMakeLists.txt`, `CMakePresets.json`, `cmake/`, `engine/core/`, `engine/physics-box2d/`, `engine/rendering-raylib/`, `editor/`, `sandbox/` and `tests/unit/`. PB-006 adds the `ai-services/` Python 3.12 package skeleton. The other folders below are created as their PRs land.
+**Current reality `[VERIFIED 2026-11-04]`:** `project/` contains `README.md`, `CONTRIBUTING.md`, `.github/`, `tools/`, `docs/`, repo config files and the build skeleton from PB-002: `CMakeLists.txt`, `CMakePresets.json`, `cmake/`, `engine/core/`, `engine/physics-box2d/`, `engine/rendering-raylib/`, `editor/`, `sandbox/` and `tests/unit/`. PB-006 adds the `ai-services/` Python 3.12 package skeleton. PB-025 adds `engine/physics/` (the `IPhysicsAdapter` interface) and `tools/check_includes.py`. The other folders below are created as their PRs land.
 
 Related repos on the team's machines (separate git repos):
 
@@ -29,23 +29,29 @@ project/
 │   ├── input/                action layer, scripted replay, agent action source
 │   ├── telemetry/            recording + export (what the semantic layer reads)
 │   ├── headless/             headless runner, limits, exit codes
-│   └── bridge/               engine server for the Python client
-├── editor/                   C++ editor app
-├── sandbox/                  scratch app that opens a raylib window (build smoke check); not the demo game
+│   └── bridge/               transport-neutral AgentBridge; optional production gRPC client
+├── assistant/                LAYER 3 window-free C++ client core: read-only orchestration + chat storage
+├── editor/                   C++ editor app; hosts engine::Application and owns the main window (DEC-048)
+├── sandbox/                  developer and CI test host on engine::Application; not the product, not the demo game
 ├── games/<name>/             demo game, levels, bug-injected variants — `[UNDECIDED]`: the team has not chosen the game (Q-016)
 ├── tests/                    GoogleTest, mirrors engine/ (unit/, integration/, scenarios/, benchmarks/)
-├── proto/                    engine <-> Python contract
+├── proto/                    production AgentBridge gRPC/protobuf contract
 ├── semantic/                 LAYER 2, own package and pipeline (DEC-026); language open, Python assumed
 ├── ai-services/              LAYER 3, Python 3.12 src-layout package (DEC-039); uses semantic/ when available
 ├── assets/                   small, license-recorded assets
-├── tools/                    repo scripts (PR checks, link check, label sync, architecture check)
+├── tools/                    repo scripts (PR checks, link check, label sync, include check `check_includes.py`)
 ├── docs/                     this documentation
 └── .github/                  workflows, CODEOWNERS, issue forms, PR template, labels
 ```
 
-CMake targets: each engine folder builds `engine_<folder>` (alias `engine::<folder>`, `-` becomes `_`) with public headers under `include/engine/<folder>/`; executables are `editor`, `sandbox` and `engine_tests`. Options: `ENGINE_WITH_RAYLIB` (off in `headless`: no raylib fetch, no `rendering-raylib`, no `sandbox`), `ENGINE_BUILD_TESTS`, `ENGINE_WARNINGS_AS_ERRORS` (on in CI). Build output goes to `build/<preset>/` (git-ignored).
+CMake targets: each engine folder builds `engine_<folder>` (alias `engine::<folder>`, `-` becomes `_`) with public headers under `include/engine/<folder>/`; executables are `editor`, `sandbox` and `engine_tests`. Options: `ENGINE_WITH_RAYLIB` (off in `headless`: no raylib fetch, no `rendering-raylib`, no `editor`, no `sandbox`), `ENGINE_BUILD_TESTS`, `ENGINE_WARNINGS_AS_ERRORS` (on in CI). Build output goes to `build/<preset>/` (git-ignored).
 
-Dependency checks: only `physics-box2d` includes Box2D and only `rendering-raylib` includes raylib (compile errors elsewhere); `engine/` never depends on `semantic/`, `ai-services/` or `editor/` (CMake targets + a CI script); the `headless` preset builds without raylib (R-6).
+`assistant/` builds `aegis_assistant` (`aegis::assistant`) and depends only on the transport-neutral
+`engine::bridge` seam. `AEGIS_WITH_GRPC_BRIDGE` adds `engine::bridge_grpc`, generated from
+`proto/agent_bridge.proto`; it is off in the default build so gRPC/protobuf remain optional
+(DEC-038, DEC-067).
+
+Dependency checks: only `physics-box2d` includes Box2D and only `rendering-raylib` includes raylib (compile errors elsewhere, and `tools/check_includes.py` in CI since PB-025); `engine/` never depends on `semantic/`, `ai-services/` or `editor/` (CMake targets + a CI script); the `headless` preset builds without raylib (R-6).
 
 ## Rules
 
@@ -64,3 +70,5 @@ Dependency checks: only `physics-box2d` includes Box2D and only `rendering-rayli
 | 2026-10-24 | Build skeleton landed (PB-002): presets incl. macOS, target names, options; raylib 6.2 (DEC-033) | claude-code (PB-002 session) |
 | 2026-10-27 | `games/demo-maze/` removed (the team never chose it as the demo); its smoke window moved to `sandbox/`; demo game undecided (Q-016) | claude-code |
 | 2026-11-04 | Added the Python 3.12 `ai-services/` package skeleton (PB-006, DEC-039) | codex/gpt-5/pb006 |
+| 2026-11-10 | `engine/physics/` and `tools/check_includes.py` exist (PB-025) | claude (PB-025 session) |
+| 2026-11-22 | Added the US-11.2 `assistant/` core and production AgentBridge proto/optional gRPC target (DEC-067) | codex/gpt-5/us112 |

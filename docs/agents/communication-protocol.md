@@ -10,7 +10,7 @@ Agents never talk to each other directly. They communicate **only through files 
 | "What should be done, and by whom?" | `state/task-board.md` | Edit your own task rows/entries. |
 | "What did the last agent do, what must I know?" | `state/handoff-log.md` | **Append-only**, newest at the bottom. |
 | "I need a human / another agent to answer" | `state/open-questions.md` | Add `Q-###` (and also say it to the human in your reply — never only in the file); answer by filling `Answer` + status `Answered`. |
-| "A human decided something" | `history/decision-log.md` | Log `Accepted`, then propagate to every document: [playbooks/record-decision.md](playbooks/record-decision.md). |
+| "A human decided something" | `history/decision-log.md` | Log `Accepted` (approval in the conversation, or in the review of the PR that adds it; DEC-052), then propagate to every document: [playbooks/record-decision.md](playbooks/record-decision.md). |
 | "What is the plan?" | `state/plan.md` | Edit; log big changes in the change table. |
 | "What did we decide and why?" | `history/decision-log.md` | **Append-only. The single source of truth** (DEC-017). |
 | "Has this problem happened before?" | `history/problem-log.md` | **Append-only.** |

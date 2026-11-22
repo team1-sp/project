@@ -22,7 +22,7 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | --- | --- |
 | P-1 | MUST follow [AGENT-PROTOCOL.md](AGENT-PROTOCOL.md) each session. |
 | P-2 | MUST claim a task on the board before working; MUST release or complete it before ending. |
-| P-3 | MUST NOT make or silently change a decision. **Humans decide; agents consult** (DEC-017). Surface uncertainty with a `DECISION NEEDED` block; log your suggestion `Proposed`; write `Accepted` only to record an explicit human decision (who, when, words), then propagate it everywhere (`playbooks/record-decision.md`). |
+| P-3 | MUST NOT make or silently change a decision. **Humans decide; agents consult** (DEC-017). Surface uncertainty with a `DECISION NEEDED` block and log it `Proposed` while you wait for the answer. Write `Accepted` only for a decision a human approves: one they made in the conversation (who, when, words), or one your PR lists under "Decisions for review" (binding only once a human merges it; DEC-052). Then propagate it everywhere (`playbooks/record-decision.md`). |
 | P-4 | MUST NOT resolve any open choice yourself — anything marked `[TBD]` or not covered by an `Accepted` decision (currently e.g. ECS implementation, build system, Box2D version, test framework). Raise it with the human; write against the abstraction only if that is genuinely neutral. Decided stack: C++ (DEC-013), Box2D (DEC-014), Raylib (DEC-015), 2D only (DEC-016). |
 | P-5 | MUST NOT claim something works unless you ran it. State clearly what was and was not executed. |
 | P-6 | MUST NOT edit or delete past entries in `history/` or `handoff-log.md`. Append a correcting entry (decision entries also allow a dated `Amendments` line). |
@@ -30,6 +30,7 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | P-8 | SHOULD keep changes small: one task, one reviewable diff. No drive-by refactors. |
 | P-9 | MUST update documentation that your change invalidates, in the same task. After any human decision, update **every** affected document (`playbooks/record-decision.md`). |
 | P-11 | MUST tell the human about every material uncertainty or document conflict, in your reply — not only in a file. Course documents (Initial Plan etc.) are not authoritative; the decision log is. |
+| P-12 | SHOULD do code and repository docs work in your own cloud copy of the repository; MUST work on a member's computer only when the files, tools or signed-in accounts exist only there, or the member asks, and there MUST ask before every commit and push (DEC-058, DEC-061; `guidelines/git-workflow.md` §1). |
 | P-10 | MUST NOT leave the repo with failing build/tests without a `Blocked` task describing it. |
 
 ## C. Safety and scope rules
@@ -41,7 +42,7 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | S-3 | MUST NOT modify files outside `project/` — in particular the sibling `senior-project/docs/` course-deliverable repo — unless the task explicitly says so. Those documents are for the course and are **not** the source of truth; when they disagree with the decision log, list them for the humans instead of editing. |
 | S-4 | MUST NOT write text *for course deliverables* without logging it in `history/genai-usage-log.md` and marking it per `guidelines/genai-usage-rules.md`. Unmarked AI text in a graded document is treated as plagiarism by the course. |
 | S-5 | MUST NOT add heavy dependencies, download assets, or call external AI services without a decision entry. ip.nfr.2.1: no source/telemetry is sent to an external AI service unless the user enabled it. |
-| S-6 | MUST NOT expand scope: **2D only** (DEC-016) — no 3D work, not even experiments; also no networking, editor tooling, etc. — unless a human decides otherwise. Keep seams so 3D stays possible later; do not build it. |
+| S-6 | MUST NOT expand scope: **2D only** (DEC-016) — no 3D work, not even experiments; also no networking etc. — unless a human decides otherwise. Keep seams so 3D stays possible later; do not build it. |
 | S-7 | When unsure whether an action is destructive or irreversible: don't; ask. |
 
 ## D. What agents MAY do without asking
@@ -50,5 +51,5 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 - Append to `history/*`, `handoff-log.md`, `open-questions.md`.
 - Edit `testing/`, `troubleshooting/` and `agents/state/` docs.
 - Add tests, fix bugs inside a claimed task, update docs made stale by their change.
-- Propose decisions (`Proposed`, binds nobody) and record human decisions as `Accepted` with propagation.
+- Propose decisions (`Proposed` while the question is open in the conversation, binds nobody), record human decisions as `Accepted` with propagation, and write a decision their PR carries as `Accepted`, listed under "Decisions for review" (the human approves or rejects it in the review; DEC-052).
 - Ask the human questions at any time; that is part of the job.

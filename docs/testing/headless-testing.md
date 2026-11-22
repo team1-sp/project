@@ -24,9 +24,9 @@ Headless: Agent/Script input → ECS → Physics → Gameplay → Telemetry → 
 1. **Simulated time.** One loop iteration = one fixed step (1/60 s). No sleeping, no real-time pacing, no `DateTime.Now`/`chrono::now` in simulation.
 2. **No render references** in simulation code. RenderSystem is not registered in headless mode; **Raylib is never initialised** (no `InitWindow`, no GL context). Because Raylib's `LoadTexture`/`LoadShader`/`LoadFont` need a context, simulation refers to assets by ID only; the rendering layer resolves IDs to loaded resources.
 3. **Input via actions.** The loop pulls `(frame → actions)` from an `IActionSource`; implementations: keyboard, script, agent.
-4. **Single entry point:** `Engine.Run(config)` with `config.mode ∈ {normal, headless}`, `maxFrames`, `seed`, `telemetry`, `actionSource`.
+4. **Single entry point:** `engine::Application` with `ApplicationConfig::headless` and `maxTicks`. A game process fills them from its command line with `engine::parseRunOptions()`: `--headless`, `--max-ticks N` (1 to 1 000 000, default 10 000), `--seed S` (0 to 4 294 967 295, default 0) and `--input-recording F` (srs.fr.7.33). Telemetry and the action source come later (US-5.x, US-7.x).
 5. **Deterministic RNG** seeded from config.
-6. **Termination conditions** (ip.fr.7.4): `maxFrames`, `GoalReachedEvent`, fatal bug event, explicit stop.
+6. **Termination conditions** (ip.fr.7.4, srs.fr.7.7 to 7.10, 1.11): built so far are the maximum number of ticks (outcome `Max ticks`) and an `engine::RunError` thrown by a tick (outcome `Error`, message and tick on the standard error output, non-zero exit code). Stop on objective, Stop on failure and the stop request come with US-7.2.
 
 ## 3. Test harness sketch `[PROPOSED]` (names are provisional)
 

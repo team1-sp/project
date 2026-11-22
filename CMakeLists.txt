@@ -14,6 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(ENGINE_WITH_RAYLIB "Build the raylib renderer and the targets that open a window" ON)
 option(ENGINE_BUILD_TESTS "Build the GoogleTest suite" ON)
 option(ENGINE_WARNINGS_AS_ERRORS "Treat compiler warnings in our own targets as errors" OFF)
+option(AEGIS_WITH_GRPC_BRIDGE "Build the production gRPC AgentBridge implementation" OFF)
 option(AEGIS_BUILD_BRIDGE_BENCHMARKS "Build the optional gRPC/ZeroMQ bridge benchmarks" OFF)
 set(AEGIS_BRIDGE_PYTHON_EXECUTABLE "" CACHE FILEPATH
     "Python 3.12 interpreter containing the optional bridge benchmark dependencies")
@@ -21,10 +22,14 @@ set(AEGIS_BRIDGE_PYTHON_EXECUTABLE "" CACHE FILEPATH
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(CompilerWarnings)
 include(Dependencies)
+include(EmbedFile)
 
 add_subdirectory(engine)
-add_subdirectory(editor)
+add_subdirectory(assistant)
 
+# The editor and the sandbox open a window, so the headless preset builds neither (R-4, R-6).
+# editor/ is always added for its window-free logic, editor_core, which the tests use.
+add_subdirectory(editor)
 if(ENGINE_WITH_RAYLIB)
     add_subdirectory(sandbox)
 endif()

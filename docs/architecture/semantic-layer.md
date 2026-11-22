@@ -4,6 +4,10 @@ Converts the engine's runtime data into a structured **graph** that represents r
 
 Status: **planned**; not started (roadmap phase 10). Everything below is design intent derived from the requirements (ip.fr.10.*), not implemented behaviour.
 
+US-11.2 adds only `SemanticGraphView::structureForAssistant() const`, a read-only seam used to send
+graph structure for manual design suggestions. It does not implement graph storage, queries or
+grounded diagnosis (DEC-067).
+
 ## 1. Sub-layers
 
 | Sub-layer | Responsibility | Input | Output |
@@ -49,7 +53,8 @@ DoorOpenFailedEvent(frame 530) ──triggered──► (DoorState unchanged)
 
 - Graph storage: in-memory object graph vs. embedded graph/SQL store.
 - Live (streaming) vs. post-run (batch) graph building. Start with batch from the telemetry file.
-- Interchange format between engine and this layer (JSON lines? protobuf? — see DEC-011 proposed).
+- Interchange format between engine and this layer (JSON lines? protobuf?). AgentBridge transport is
+  separately fixed as gRPC/protobuf by DEC-038.
 - Visual graph viewer (Initial Plan describes a "live, node-based visual knowledge graph workspace"): scope for the MVP.
 
 ## 5. Acceptance sketch

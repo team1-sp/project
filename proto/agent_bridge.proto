@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package aegis.bridge.v1;
+
+// The production engine/editor to Python AI-service contract (DEC-038).
+service AgentBridge {
+  rpc Exchange(Observation) returns (Action);
+  rpc Answer(AssistantRequest) returns (stream AssistantChunk);
+}
+
+message Observation {
+  uint64 game_instance_id = 1;
+  uint64 sequence = 2;
+  bytes payload = 3;
+}
+
+message Action {
+  uint64 game_instance_id = 1;
+  uint64 sequence = 2;
+  int32 action_id = 3;
+}
+
+message AssistantRequest {
+  string request_id = 1;
+  string model_id = 2;
+  string question = 3;
+  string semantic_graph_structure = 4;
+  repeated string data_categories = 5;
+}
+
+message Citation {
+  string kind = 1;
+  string payload = 2;
+}
+
+message AssistantChunk {
+  string text = 1;
+  repeated Citation citations = 2;
+  repeated string data_categories = 3;
+}

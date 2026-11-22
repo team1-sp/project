@@ -1,5 +1,6 @@
 # Third-party libraries, fetched at pinned versions (DEC-023). Changing a version is a
-# decision (coding-standards.md section 6): raylib DEC-033, Box2D DEC-020, GoogleTest DEC-023.
+# decision (coding-standards.md section 6): raylib DEC-033, Box2D DEC-020, GoogleTest DEC-023,
+# Dear ImGui and rlImGui DEC-063.
 include(FetchContent)
 
 # Box2D v3.1.1 (DEC-020). Its samples and unit tests are only built when Box2D is the
@@ -24,6 +25,40 @@ if(ENGINE_WITH_RAYLIB)
         SYSTEM
     )
     FetchContent_MakeAvailable(raylib)
+    # The game loop collects input as the first step of a render frame (srs.fr.1.1, DEC-051).
+    # With this flag EndDrawing() no longer presents, waits or polls input; RaylibWindow does
+    # each of them itself, in the order of srs.fr.1.1. raylib's config.h honours the definition.
+    target_compile_definitions(raylib PRIVATE SUPPORT_CUSTOM_FRAME_CONTROL=1)
+
+    # Dear ImGui v1.93.0, docking branch, draws the Editor's menus, toolbar and panels (DEC-063).
+    # The library has no CMake file, so its core files become the `imgui` target here. Only
+    # the editor and engine/rendering-raylib link it; the headless preset fetches neither.
+    FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG v1.93.0-docking # b916186e66aa3c02b72c6ca17455516512ed8049
+        GIT_SHALLOW TRUE
+        SYSTEM
+    )
+    FetchContent_MakeAvailable(imgui)
+    add_library(imgui STATIC
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    )
+    target_include_directories(imgui SYSTEM PUBLIC ${imgui_SOURCE_DIR})
+
+    # rlImGui, the raylib backend of Dear ImGui (DEC-063). It has no release tags, so it is
+    # pinned to a commit. engine/rendering-raylib compiles its one source file, because it
+    # includes raylib.h (R-4).
+    FetchContent_Declare(
+        rlimgui
+        GIT_REPOSITORY https://github.com/raylib-extras/rlImGui.git
+        GIT_TAG 5c17e70e98ae9f50ca94bdcad0e3b3536b46a203 # main, 2026-11-09
+        SYSTEM
+    )
+    FetchContent_MakeAvailable(rlimgui)
 endif()
 
 if(ENGINE_BUILD_TESTS)

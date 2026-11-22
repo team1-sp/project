@@ -2,7 +2,9 @@
 
 Uses the semantic graph and project data to explain, diagnose and help with design. Sub-layers: **Architecture reading → LLM model → User assistant**.
 
-Status: **planned** (roadmap phase 12). Do not build before the Semantic layer provides a query API.
+Status: **US-11.2 core implemented**; grounded questions, the chat UI and settings remain planned.
+The Semantic layer has no query implementation yet, so US-11.2 depends only on the minimal
+read-only `SemanticGraphView` structure seam (DEC-067).
 
 ## 1. Capabilities (ip.fr.11.*)
 
@@ -41,6 +43,7 @@ Semantic graph / telemetry / source code
 4. **Privacy default-off** for external services: no source code or telemetry leaves the machine unless the user enabled it in configuration (ip.nfr.2.1).
 5. **Latency target:** answer within 30 s for ≥ 90% of questions, excluding service outages (ip.nfr.1.5).
 6. **Model-agnostic.** Provider behind an interface so a local model or a different vendor can be used.
+7. **No own model; user-supplied provider** (DEC-045). We do not build or train a model. Users bring their own provider account and API key (stored in the OS credential store); the project guarantees only free-tier or local use.
 
 ## 4. Techniques (what each is for)
 
@@ -69,3 +72,31 @@ LLM + RAG over game-design documents, cross-referenced with the semantic graph t
 ## 7. How to evaluate
 
 Use the demo game's injected bugs as ground truth: for each bug, ask the assistant the natural question ("Why can the player open the door with no key?") and check (a) correct diagnosis, (b) correct cited frames/entities, (c) correct abstention when evidence is missing. Record results in `testing/`.
+
+## 8. Implemented US-11.2 boundary
+
+The window-free C++ target `aegis::assistant` implements the contract needed before the UI and
+grounded-diagnosis stories:
+
+- `ReadOnlyAssistant` receives only a `const SemanticGraphView`, read-only
+  `DataTransmissionPolicy`, `AgentBridge` and `ChatStore`. It has no `World`, project-source writer
+  or general project filesystem capability. It rejects a request before AgentBridge sees any data
+  category the policy disallows. A design suggestion is
+  stored as `MessageContent::DesignSuggestion` text for manual application; there is no execute or
+  apply operation (srs.fr.11.8–11.9).
+- A configured question calls the `AgentBridge::startAssistantResponse()` server-streaming operation.
+  Protocol-library types stay inside optional `engine::bridge_grpc`; the production protobuf contract
+  is `proto/agent_bridge.proto`. No service means no request or chat mutation (srs.fr.11.10, DEC-038).
+- `AnswerOperation::cancel()` changes a streaming answer to `Stopped`, persists the part received and
+  calls the stream's idempotent cancellation. The gRPC implementation maps this to
+  `ClientContext::TryCancel()`; cancellation before consume, during streaming and after completion is
+  safe (srs.fr.11.11).
+- `ChatStore` writes format `AEGIS_CHAT 1` beneath
+  `<UserProjectPaths::userLocalArea()>/assistant/chats`. Every message records role, state, content
+  kind, text, citations and data-category names. Replacement uses a temporary file and backup;
+  corrupt or unsupported existing files are rejected rather than overwritten (srs.fr.11.12).
+
+The concrete project path, service address/model selection, transmission-policy values and UI are
+intentionally left to their own project/settings and panel stories (#121 and #119). Citation
+interpretation and grounded diagnosis remain #71; US-11.2 stores opaque citation kind/payload pairs
+without inventing them.

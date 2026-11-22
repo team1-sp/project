@@ -45,6 +45,7 @@ jobs:
             bridge:
               - 'benchmarks/bridge/**'
               - 'engine/bridge/**'
+              - 'proto/agent_bridge.proto'
               - 'tests/unit/bridge/**'
               - 'CMakeLists.txt'
               - 'engine/CMakeLists.txt'
@@ -64,7 +65,7 @@ jobs:
       - name: Branch name and linked issue
         run: python3 tools/check_pr.py
       - name: Conventional Commit PR title
-        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        uses: amannn/action-semantic-pull-request@2252a14e810aa9b85c2d560bd7070c802206ecf6 # v6.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -82,6 +83,20 @@ jobs:
             revert
           requireScope: false
 
+  dependencies:
+    # The PR's issue must have no open "blocked by" issues (tools/check_blockers.py).
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Blocking issues are closed
+        run: python3 tools/check_blockers.py
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   docs:
     needs: changes
     if: needs.changes.outputs.docs == 'true'
@@ -90,6 +105,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Relative links point to existing files
         run: python3 tools/check_md_links.py .
+      - name: Record ids are unique (DEC-055)
+        run: python3 tools/check_ids.py .
 
   format:
     needs: changes
@@ -104,6 +121,8 @@ jobs:
           git ls-files -z -- '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' '*.inl' \
             ':!:third_party/**' ':!:external/**' \
             | xargs -0 -r "$HOME/.local/bin/clang-format" --dry-run -Werror
+      - name: Box2D and raylib stay in their adapter targets (R-3, R-4)
+        run: python3 tools/check_includes.py .
 
   build:
     # Configure, build and test with the same presets developers use (PB-002). Windows and
@@ -191,6 +210,7 @@ jobs:
             -DENGINE_WITH_RAYLIB=OFF \
             -DENGINE_BUILD_TESTS=ON \
             -DENGINE_WARNINGS_AS_ERRORS=ON \
+            -DAEGIS_WITH_GRPC_BRIDGE=ON \
             -DAEGIS_BUILD_BRIDGE_BENCHMARKS=ON \
             -DAEGIS_BRIDGE_PYTHON_EXECUTABLE="$(command -v python)"
           cmake --build build/bridge-ci --parallel
@@ -204,14 +224,14 @@ jobs:
         with:
           fetch-depth: 0
       - name: Scan the change for secrets
-        uses: trufflesecurity/trufflehog@e63326d6545de8f425d93ce24078c6e68d83f70e # v3.99.3
+        uses: trufflesecurity/trufflehog@ea68ca03c865c5f324e86e849ced20ed3cf9dbbb # v3.99.8
         with:
           extra_args: --results=verified,unknown
 
   ci-ok:
     # Skipped when a newer push cancels this run, so superseded runs don't report a failure.
     if: ${{ always() && !cancelled() }}
-    needs: [changes, pr-hygiene, docs, format, build, python, bridge-benchmark, secrets]
+    needs: [changes, pr-hygiene, dependencies, docs, format, build, python, bridge-benchmark, secrets]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped

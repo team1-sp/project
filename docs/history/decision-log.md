@@ -2,8 +2,8 @@
 
 **Append-only. This log is the single source of truth.** Every architectural, technological, scope or process decision, with rationale, so nobody has to re-argue it. Where any other document (including the course documents under `senior-project/docs/`) disagrees with an `Accepted` entry here, this log wins and the other document must be updated (project docs) or flagged for humans (course docs). Template: [../agents/templates/decision-entry.md](../agents/templates/decision-entry.md). Procedure: [../agents/playbooks/record-decision.md](../agents/playbooks/record-decision.md).
 
-Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejected` · `Superseded by DEC-###`.
-**Humans decide; agents consult.** An entry is `Accepted` only because a human decided it (see `Decided by`). Agents may write `Accepted` solely to record an explicit human decision. To reverse a decision, add a new entry that supersedes it.
+Statuses: `Proposed` (a question is open in the conversation and nobody has answered it yet; binds nobody) · `Accepted` (binding) · `Rejected` · `Superseded by DEC-###`.
+**Humans decide; agents consult.** An entry is `Accepted` only because a human decided it (see `Decided by`). A human approves a decision in one of two places (DEC-052): in the conversation, or in the review of the pull request that adds the entry. An entry added in a pull request is written `Accepted` from the start: the reviewer treats it as proposed, and it binds only once a human merges the PR. On `main`, `Accepted` therefore always means a human approved it, in the conversation or in the review. Writing it `Accepted` saves the extra commit that would otherwise flip `Proposed` to `Accepted` after approval; it does not let an agent decide anything. To reverse a decision, add a new entry that supersedes it.
 
 ## Index
 
@@ -33,21 +33,48 @@ Statuses: `Proposed` (suggested; binds nobody) · `Accepted` (binding) · `Rejec
 | DEC-022 | One repository for code and engineering docs; `team1-sp/docs` holds course deliverables only | Accepted | 2026-10-15 |
 | DEC-023 | Build system CMake, test framework GoogleTest | Accepted | 2026-10-15 |
 | DEC-024 | Işık Dönger reviews every PR; area owners are second code owners | Accepted | 2026-10-15 |
-| DEC-025 | AI agents push only after a human approves; humans approve and merge every PR | Accepted | 2026-10-15 |
+| DEC-025 | AI agents push only after a human approves; humans approve and merge every PR | Superseded by DEC-053 | 2026-10-15 |
 | DEC-026 | The semantic layer lives in its own top-level folder, separate from engine and ai-services | Accepted | 2026-10-15 |
 | DEC-027 | Trunk-based git workflow; branch protection deferred, rules kept as a team agreement | Accepted | 2026-10-15 |
-| DEC-028 | GitHub issues are created from ClickUp tasks with ClickUp's GitHub integration | Accepted | 2026-10-15 |
+| DEC-028 | GitHub issues are created from ClickUp tasks with ClickUp's GitHub integration | Superseded by DEC-050 | 2026-10-15 |
 | DEC-029 | Platforms: develop on Windows and macOS (Windows priority); the engine application and the development tool must run on both; games are built for Windows only for now | Accepted | 2026-10-15 |
 | DEC-030 | Compilers: whatever each platform needs; none pinned now | Accepted | 2026-10-15 |
 | DEC-031 | Coding standards, Definition of Done and clang-format 19 accepted | Accepted | 2026-10-23 |
 | DEC-032 | Only Işık Dönger and the advisor approve PRs; Işık's own PRs need no approval; `main` ruleset on | Accepted | 2026-10-23 |
 | DEC-033 | Raylib version is 6.2 | Accepted | 2026-10-24 |
 | DEC-034 | The product name is Aegis | Accepted | 2026-10-24 |
-| DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Accepted | 2026-10-24 |
+| DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Superseded by DEC-050 | 2026-10-24 |
 | DEC-036 | World units are meters with y up; 32 pixels per meter; conversion only in the renderer | Accepted | 2026-11-01 |
 | DEC-037 | The PB-008 spike in `sandbox/` may link Box2D and raylib directly (exception to R-3/R-4 for that spike only) | Proposed | 2026-11-01 |
 | DEC-038 | ADR-002: the C++ to Python bridge is gRPC/protobuf behind AgentBridge | Accepted | 2026-11-04 |
 | DEC-039 | `ai-services` uses Python 3.12 with pinned Python project tooling | Accepted | 2026-11-04 |
+| DEC-040 | The physics body owns velocity; the ECS Velocity component mirrors it and carries pending writes | Accepted | 2026-11-05 |
+| DEC-041 | The ECS and the Physics Adapter meet only in two declared systems, PhysicsSyncIn and PhysicsSyncOut | Accepted | 2026-11-05 |
+| DEC-042 | Pre-implementation ECS gaps settled: push events, tick vocabulary, Phase 1 components, input, time, RNG, scene, ids, errors, telemetry records | Accepted | 2026-11-05 |
+| DEC-043 | About 20 % of the whole project is built this semester; the ECS builds its Phase 1 slice | Accepted | 2026-11-05 |
+| DEC-044 | Coding standards amended for the ECS design: naming, tags, declarations, errors, RNG | Accepted | 2026-11-05 |
+| DEC-045 | No own LLM is built; users supply their own model provider and key; only free-tier or local use is guaranteed | Accepted | 2026-11-06 |
+| DEC-046 | PB-011: the window lives in `rendering-raylib` behind `IWindow`; the loop reaches the game through `ISimulation` and `IFrameRenderer`; the leak check is one guarded MSVC call | Accepted | 2026-11-10 |
+| DEC-047 | PB-012: the game loop follows srs.fr.1.2 to 1.6 (at most 5 ticks per render frame) with an exact integer accumulator and the tick counter in `engine/core` | Accepted | 2026-11-10 |
+| DEC-048 | The editor is the application that hosts `engine::Application` and owns the main window; `sandbox` is a developer and CI test host; games never host the engine | Accepted | 2026-11-11 |
+| DEC-049 | PB-025: the physics interface is named `IPhysicsAdapter`; bodies are addressed by `BodyId` with `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core` | Accepted | 2026-11-11 |
+| DEC-050 | The backlog moves from ClickUp to one GitHub project built from the SRS; branches use the issue number, PR scopes the story id; creating a branch moves its card to In progress, new PRs are filled from the issue, and no workflow creates branches or PRs | Accepted | 2026-11-11 |
+| DEC-051 | US-1.1: a render frame collects input first, through `IWindow::collectInput()`; raylib is built with `SUPPORT_CUSTOM_FRAME_CONTROL` so that `RaylibWindow` polls, presents and caps the frame rate itself | Accepted | 2026-11-12 |
+| DEC-052 | A decision is `Proposed` only while its question waits for an answer in the conversation; a decision a PR carries is written `Accepted`, listed for review, and binds only when a human merges the PR | Accepted | 2026-11-12 |
+| DEC-053 | AI agents commit only after a human approves the change; after that they push and open or update the draft PR without asking again; humans approve and merge every PR | Accepted | 2026-11-12 |
+| DEC-054 | Agents (and developers) open the draft PR with `tools/open_pr.py` after the first push; the PR fill workflow is removed; no workflow creates commits or PRs | Accepted | 2026-11-12 |
+| DEC-055 | Branches keep in step with `main` by merging it (never rebasing) before each push and before review; collided record ids are renumbered by the later branch and caught by `check_ids.py`; the `Conflict flag` workflow labels open PRs that conflict with `main` | Accepted | 2026-11-12 |
+| DEC-057 | US-1.2: the run mode and run settings come from `parseRunOptions()` in `engine/core`; the game loop catches `engine::RunError`, logs the tick, ends the run with the outcome `Error` and a non-zero exit code; the Editor parts wait for their stories | Accepted | 2026-11-15 |
+| DEC-058 | Agents ask before committing only when they work on a member's computer; in their own cloud copy of the repository they commit and push without asking | Accepted | 2026-11-15 |
+| DEC-059 | US-1.3: the game loop runs every tick as the seven tick phases through `ISimulation::runPhase()`; `TickPhase` lives in `engine/core`; the loop builds each tick's input action state from the run's `IInputSource` (keyboard queue, None, later recording and agent) | Accepted | 2026-11-16 |
+| DEC-060 | US-1.4: `Application::requestPause()`, `resume()`, `requestStep()` and `isPaused()` pause a normal-mode run at the next tick boundary, drop the frame's unstarted ticks, keep the part of a tick, add no paused time and run one tick per step without the accumulator | Accepted | 2026-11-16 |
+| DEC-061 | Agents do code work in their own cloud copy of the repository by default; they work on a member's computer (folder access or Remote Control) only when the work needs that computer or the member asks | Accepted | 2026-11-16 |
+| DEC-062 | The `Epic close` workflow closes an epic once all of its sub-issues are closed and its "Later stories" list is empty; with later stories left it stays open with the `increment-done` label | Accepted | 2026-11-16 |
+| DEC-063 | US-14.1: the Editor's interface is drawn with Dear ImGui v1.93.0 (docking branch) through rlImGui inside `engine/rendering-raylib`; the window-free menu model and session live in `editor_core`; unbuilt menu items are disabled; `Application` gets `confirmClose`, `requestClose()` and `setWindowTitle()` | Accepted | 2026-11-16 |
+| DEC-064 | US-14.1: the Editor takes the look of the Figma design: Inter and JetBrains Mono embedded in the executable from `editor/assets/fonts`, the design's palette and sizes as the Dear ImGui style, Font Awesome icons on the toolbar | Accepted | 2026-11-16 |
+| DEC-065 | srs.fr.14.15 is reworded: a panel tab dragged out of its dock becomes a floating panel inside the main window, not a separate operating-system window | Accepted | 2026-11-17 |
+| DEC-066 | US-14.2: the status bar is built from a window-free `EditorStatus` model in `editor_core` (message, debug flags in orange, REC, mode, FPS, entities, AI service dot); clicking the message opens the Console; the AI and REC clicks wait for their panels | Accepted | 2026-11-17 |
+| DEC-067 | US-11.2: a window-free read-only assistant core uses AgentBridge streaming, cancellable answer operations and versioned user-local chat storage | Accepted | 2026-11-22 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -299,7 +326,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-025 — AI agents push only after a human approves
 - **Date:** 2026-10-15
-- **Status:** Accepted
+- **Status:** Superseded by DEC-053
 - **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
 - **Human's words:** "AI agents should only push from a human aprrovement."
 - **Context:** Q-006.
@@ -330,7 +357,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-028 — GitHub issues are created from ClickUp tasks
 - **Date:** 2026-10-15
-- **Status:** Accepted
+- **Status:** Superseded by DEC-050
 - **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (session 0171)
 - **Human's words:** "Clickup lets issue creation directly from a task. I think we will use that."; "pr should be created from clickup when a task is about to be started."
 - **Decision:** When a task is started, the developer creates its GitHub issue from the ClickUp task with ClickUp's GitHub integration. One issue per top-level backlog item, titled like the task. A GitHub Action is planned to add the branch and a draft PR for each new `PB-` issue.
@@ -424,7 +451,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 
 ### DEC-035 — PR titles put the PB id in the Conventional Commit scope
 - **Date:** 2026-10-24
-- **Status:** Accepted
+- **Status:** Superseded by DEC-050
 - **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude-code (PB-002 session)
 - **Human's words:** "pr title should be how it is now. with requirement right after the tag." Then chose `ci(PB-002): Create the CMake…` when asked which format that meant.
 - **Context:** `guidelines/git-workflow.md` used the area label as the scope and put the PB id at the end (`feat(phys): … (PB-025)`); the Issue start workflow wrote `feat: … (PB-025)`.
@@ -490,3 +517,545 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** any software-environment section that names the AI-service Python version.
 - **Supersedes / Related:** accepts the language/runtime part of DEC-011; PB-006, GitHub issue #20, Q-018.
 - **Amendments:** 2026-11-04 — renumbered from DEC-038 by Işık Dönger while merging `main` into the PB-065 branch, because both branches had created a DEC-038. Citations in project docs were updated to DEC-039. 2026-11-04 — the engine-facing protocol mentioned in Consequences is now decided by DEC-038.
+
+### DEC-040 — The physics body owns velocity
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager, reviewer of PR #28)  **Proposed by:** `physics-adapter-design.md` §4 (TASK-008)  **Recorded by:** claude (PR #28 review)
+- **Human's words:** "for physics adapter body (phyics adapter) should own velocity"
+- **Context:** `physics-adapter-design.md` §4 left open whether the ECS or the Box2D body is authoritative for velocity. It decides which system declares `writes<Velocity>` and how gameplay changes motion. The SRS already describes the behaviour (srs.fr.3.13, 3.18–3.22, 3.28, 3.51).
+- **Options considered:** (a) ECS owns velocity and pushes it into the body every step; (b) the body owns it and the adapter writes it back to the ECS.
+- **Decision:** (b). After each physics step the body's position, rotation and linear velocity are authoritative for dynamic bodies and are written back to `PositionComponent` and `VelocityComponent` in PhysicsSyncOut. Gameplay changes motion only by writing Position or Velocity, which marks the component as a **pending write**, or by force and impulse commands; the next PhysicsSyncIn applies pending writes to the body, and write-back skips a component with a pending write. As the SRS states: static bodies follow the ECS Position and ignore Velocity; a kinematic body keeps a written Velocity until it is written again, and physics never changes a kinematic body's Velocity.
+- **Rationale:** Box2D's collision response must not be overwritten by stale ECS values every step; pending writes keep gameplay control explicit and match the SRS.
+- **Consequences:** The ECS needs write tracking for Position and Velocity (`ecs-api-design.md` §6) and an untracked write-back path used only by PhysicsSyncOut. `VelocityComponent` is a mirror for telemetry and gameplay reads.
+- **Docs updated:** `design/physics-adapter-design.md` §4, `design/ecs-design.md`, `design/ecs-api-design.md`.
+- **Course documents affected (for humans):** none known.
+- **Supersedes / Related:** closes the velocity point of TASK-008; DEC-014, DEC-036, DEC-041.
+
+### DEC-041 — ECS and Physics Adapter meet only in PhysicsSyncIn and PhysicsSyncOut
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Decided by:** Işık Dönger  **Proposed by:** claude (PR #28 review)  **Recorded by:** claude (PR #28 review)
+- **Human's words:** "PhysicsSync system works."
+- **Context:** Nothing defined how bodies are created and destroyed and who reads and writes ECS data for physics. Options were an `IWorldObserver` reacting to component adds, or declared systems.
+- **Decision:** Two engine systems, `PhysicsSyncIn` (phase PhysicsSyncIn) and `PhysicsSyncOut` (phase PhysicsSyncOut), are the only code that calls the Physics Adapter from the simulation. PhysicsSyncIn creates and changes bodies and shapes and applies pending writes, in the order of srs.fr.3.61. PhysicsSyncOut writes positions and velocities back and publishes `CollisionEvent`. The game loop calls `adapter.step(1/60)` in PhysicsStep, which holds no systems. The adapter keeps an `IWorldObserver` only to learn about destroyed and disabled entities, and acts on them in the next PhysicsSyncIn (srs.fr.2.119). Both systems declare their reads, writes and publishes like any system and are created by factories that receive that World's adapter.
+- **Rationale:** Declared systems make every physics read and write visible in the Semantic Graph and keep the access check complete.
+- **Consequences:** The Physics Adapter uses the ECS `EntityId` type. `CollisionEvent` is published by the PhysicsSyncOut system, not by an engine module.
+- **Docs updated:** `design/physics-adapter-design.md`, `design/ecs-design.md`, `design/ecs-api-design.md`, `design/ecs-event-bus-design.md`.
+- **Course documents affected (for humans):** none known.
+- **Supersedes / Related:** DEC-002, DEC-003, DEC-040, R-2, R-3.
+
+### DEC-042 — Pre-implementation ECS gaps settled
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Decided by:** Işık Dönger  **Proposed by:** claude (PR #28 review, "Gaps before implementation")  **Recorded by:** claude (PR #28 review)
+- **Human's words:** "for everything else your suggestions work."
+- **Context:** After the PB-010 API design, `ecs-design.md` and `telemetry-and-events.md` contradicted it, and several things Phase 1 needs were `[TBD]`.
+- **Decision:**
+  1. Events are **pushed**: handlers run at the end of the publishing tick phase (event bus design). `ecs-design.md` §4's per-frame pull model is replaced.
+  2. Simulation steps are **ticks** (srs.fr.1.12) everywhere in engine docs; "frame" means render frame only. PhysicsStep holds no systems; rendering is not a system; telemetry recording is done by a recorder that observes the World and the bus, not by a TelemetrySystem.
+  3. Phase 1 components use the SRS names and fields (srs.fr.22.34–22.45), listed in `ecs-design.md` §2.
+  4. `InputStateComponent` holds pressed, released and held states for the Phase 1 actions (MoveUp, MoveDown, MoveLeft, MoveRight, Interact) and the movement vector; it is also the agent's action shape.
+  5. Systems read the fixed step through `ctx.fixedDeltaSeconds()`; there is one seeded gameplay random number generator (PCG32, srs.fr.7.5), reached through `ctx.random()` by systems that declare `usesRandom()`.
+  6. Phase 1 scenes are built by C++ spawn code with explicit Editor-range entity IDs; the `.scene` format waits for the Editor.
+  7. `AssetId` is a 64-bit FNV-1a hash of the asset name, with the name kept for export; `TagId` indexes the project's tag list (Phase 1: Untagged, Obstacle).
+  8. Unrecoverable run errors (precondition and access violations) throw `engine::RunError`, caught only by the game loop, which logs the message and tick, Error-Pauses in the Editor and exits non-zero headless (srs.fr.1.11). The checks are on in every build. Exceptions never cross the adapter boundary.
+  9. Telemetry Phase 1 records: run header, schema, per-tick sample, entity lifecycle, event publication. `telemetry-and-events.md` is rewritten to ticks.
+  10. Q-013 is answered for Phase 1: description, unit, and the derived readBy/writtenBy; ranges, examples and notes can be added later.
+- **Rationale:** Each item was a blocker or a contradiction for Phase 1 implementation; see the PR #28 review.
+- **Consequences:** `ecs-design.md`, `telemetry-and-events.md`, `ecs-api-design.md` and `ecs-event-bus-design.md` are updated; the PB-010 D-decisions still go through the PB-010.3 review and ADR-001.
+- **Docs updated:** `design/ecs-design.md`, `design/telemetry-and-events.md`, `design/ecs-api-design.md`, `design/ecs-event-bus-design.md`, `design/physics-adapter-design.md`, `architecture/engine-layer.md`, `architecture/glossary.md`, `agents/state/open-questions.md` (Q-013).
+- **Course documents affected (for humans):** any course text that describes events as living for a frame or uses DoorState/RequiredItem component names.
+- **Supersedes / Related:** DEC-002, DEC-008, DEC-018, Q-013, PB-010.
+
+### DEC-043 — About 20 % of the whole project is built this semester
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Decided by:** Işık Dönger  **Recorded by:** claude (PR #28 review)
+- **Human's words:** "for scope we will build only %20 of the whole project this semester."
+- **Context:** The PB-010 ECS design covers the full SRS; it is more than the ECS owners can build and test this semester.
+- **Decision:** This semester builds about 20 % of the whole project. For the ECS this is Phase 1 of `ecs-api-design.md` §17 (D-26): enough for the test scene (player, wall, door, key, goal), the semantic layer's schema and telemetry, and the AI bridge seams. Later items keep their place in the API.
+- **Rationale:** `[not given]`
+- **Consequences:** Implementation tasks for the ECS are cut to Phase 1; later items need their own PB tasks.
+- **Docs updated:** `design/ecs-api-design.md` §17, `design/ecs-event-bus-design.md` §11, `design/ecs-design.md`.
+- **Course documents affected (for humans):** the semester plan or roadmap sections of course documents, if they promise more.
+- **Supersedes / Related:** D-26, PB-010.
+
+### DEC-044 — Coding standards amended for the ECS design
+- **Date:** 2026-11-05
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Proposed by:** `ecs-api-design.md` §14 (D-17, D-19) and DEC-042  **Recorded by:** claude (PR #28 review)
+- **Human's words:** "you can edit coding-standart and pr description"
+- **Context:** `coding-standards.md` (DEC-031) says changes go through a PR and a decision entry. The ECS design's naming (D-17, D-19), error policy and randomness rules (DEC-042) did not match it.
+- **Decision:** `guidelines/coding-standards.md` is amended: systems declare everything in `describe()`; no static mutable state in systems; fixed step and gameplay RNG through `SystemContext`; invariant checks stay on in every build and throw `engine::RunError`; per-tick instead of per-frame wording; naming rows for types (PascalCase), functions and locals (camelCase), private members (trailing underscore), component and event fields (camelCase with units), namespace `engine`, tags (`<Name>Tag`, empty, filter only; empty SRS roles stay components); components and events are aggregates with `typeName` and no raw C arrays; only `RunError` may be thrown, never across the adapter boundary.
+- **Rationale:** One set of rules for the code that implements PB-010.
+- **Consequences:** Code review checks the new rules from the first ECS implementation PR.
+- **Docs updated:** `guidelines/coding-standards.md`, `design/ecs-api-design.md` §14.
+- **Course documents affected (for humans):** any course text that quotes the coding standard's naming table.
+- **Supersedes / Related:** amends DEC-031; D-17, D-19, DEC-042.
+
+### DEC-045 — No own LLM is built; users supply their own model provider and key
+- **Date:** 2026-11-06
+- **Status:** Accepted
+- **Decided by:** Işık Dönger   **Recorded by:** claude (use cases thread)
+- **Human's words:** "we must have decided that we will not build our own model at this time. [...] I am thinking that we can only gurantee free tier usage from other models and the user must use their own subscripti[on]" and, asked whether to record it, "you should only change related document in the project repo".
+- **Context:** The AI service is a separate Python process reached over gRPC (DEC-038, DEC-039), and the provider sits behind an interface (`architecture/ai-assistant-layer.md` principle 6). No decision said which models are used or who pays for them. PB-068 (LLM provider selection and cost estimate) is still open.
+- **Options considered:**
+  1. Train or host our own model. Rejected: out of scope for a senior project.
+  2. The team pays for one cloud provider for all users. Not possible to guarantee after the course.
+  3. Users bring their own provider account or subscription and API key; the project guarantees only free-tier or local use. Chosen.
+- **Decision:** Aegis does not build or train its own language model. The AI service talks to third-party or local models through the provider interface. Users supply their own provider account, subscription and API key. The project guarantees only that the assistant works with a free tier or a local model; paid tiers are the user's choice.
+- **Rationale:** `[rationale not given — ask]`
+- **Consequences:** The provider interface must support at least one free-tier cloud provider and one local option. Provider choice, quotas and terms are outside the project's control, so answer quality and limits depend on the user's provider. API keys stay in the OS credential store (SRS srs.nfr.3.7). PB-068 narrows to choosing which free-tier and local providers to support and test.
+- **Docs updated:** `architecture/ai-assistant-layer.md`, `architecture/tech-stack.md`.
+- **Course documents affected (for humans):** SRS Section 4 (assumptions and dependencies) and Section 5 (the "model provider" row says no provider is imposed). Handed to the SRS-A review thread as point 6.
+- **Revisit when:** PB-068 picks the supported providers, or the free tiers they offer change.
+- **Supersedes / Related:** DEC-010, DEC-038, DEC-039, PB-068.
+- **Amendments:**
+
+### DEC-046 — PB-011: window in `rendering-raylib` behind `IWindow`, loop seams `ISimulation` and `IFrameRenderer`, guarded MSVC leak check
+- **Date:** 2026-11-10
+- **Status:** Accepted
+- **Proposed by:** Arda Karabulut (owner of PB-011; engine core area, DEC-024), who chose these options  **Recorded by:** claude-code (PB-011 session)
+- **Context:** The ClickUp text of PB-011 puts the Window wrapper in a new `engine/platform` module, has `Application::Run` "call the scheduler each frame", names `demo/main.cpp` and asks for `_CrtSetDbgFlag`. Against that: only `engine/rendering-raylib` may link raylib (R-4, DEC-007, DEC-022) and `engine/core` must build without it (headless preset); `engine/ecs` does not exist yet and systems run per tick, not per render frame (srs.fr.1.13); no demo game is chosen (Q-016); `_CrtSetDbgFlag` exists only in the Microsoft C runtime, and the coding standard says to ask before adding platform-specific APIs.
+- **Options considered:**
+  1. Window: (a) `RaylibWindow` in `engine/rendering-raylib` with a raylib-free `IWindow` in `engine/core`; (b) a new `engine/platform` target that also links raylib, which needs an exception to R-4. Arda chose (a).
+  2. Leak check: (a) one guarded C runtime call; (b) the same plus sanitizers in CI; (c) sanitizers only. Arda chose (a).
+  3. How the loop calls the game: (a) two interfaces; (b) `std::function` callbacks in the config. Arda chose (a).
+- **Decision (proposed):**
+  1. `engine/core` defines `IWindow`, `WindowConfig` and `WindowFactory`. `engine/rendering-raylib` implements them as `RaylibWindow`, the only code that calls `InitWindow`, `WindowShouldClose` and `CloseWindow`. `Application` is given the factory and never calls it in headless mode. No `engine/platform` module is created; "window code only in the platform module" is met by `engine/rendering-raylib`.
+  2. Until the ECS exists, `Application` calls `ISimulation::runTick()` for each tick and `IFrameRenderer::renderFrame()` once per render frame. An `Application` built from a simulation alone can only run headless.
+  3. `engine::enableLeakReportAtExit()` (`engine/core/src/leak_check.cpp`) is the one place with compiler-specific code: under `_MSC_VER` and `_DEBUG` it turns on the C runtime leak report and also sends it to the standard error output; in every other build it does nothing.
+  4. The example application is `sandbox`, not a `demo/` folder.
+- **Rationale:** The chosen options change no architecture rule and keep the headless build free of raylib. `[further rationale not given]`
+- **Consequences:** needs confirmation from Işık Dönger in the PB-011 pull request (Q-019). The ECS scheduler will implement `ISimulation`. `runSmokeWindow` is removed and `sandbox` runs on `Application`. Leaks are checked automatically only in MSVC Debug builds.
+- **Docs updated:** `architecture/engine-layer.md`, `troubleshooting/environment-setup.md`, `troubleshooting/common-errors.md`, `agents/state/*`.
+- **Course documents affected (for humans):** none known. The ClickUp text of PB-011 still names `engine/platform` and `demo/main.cpp`.
+- **Revisit when:** `engine/rendering` (renderer interface and null renderer) or `engine/ecs` is created, or the team wants sanitizers in CI.
+- **Supersedes / Related:** R-4, DEC-007, DEC-022, DEC-024, DEC-037, Q-016, Q-019, PB-011, TASK-006.
+- **Amendments:** 2026-11-11 — accepted by Işık Dönger after merging PR #35 (Q-019): "I want you to update decision from pr 35 and 37 as accepted since they are only proposed now." Item 4 is clarified by DEC-048: `sandbox` is a developer and CI test host, the editor hosts the application, and the demo game is built inside the editor. Recorded by claude (PB-122 thread).
+
+### DEC-047 — PB-012: the game loop follows srs.fr.1.2 to 1.6 with an exact integer accumulator and the tick counter in `engine/core`
+- **Date:** 2026-11-10
+- **Status:** Accepted
+- **Proposed by:** claude-code (PB-012 session), from srs.fr.1.2 to 1.6  **Recorded by:** claude-code (PB-012 session)
+- **Context:** `architecture/engine-layer.md` had the cap on ticks per render frame only as `[PROPOSED: cap 5]`. The SRS fixes the loop (srs.fr.1.2 to 1.6), but it is a course document and the decision log had no entry. The ClickUp text of PB-012 says "simulation frame counter" and `EngineContext`, gives `maxStepsPerFrame` no value and does not say how time is represented.
+- **Options considered:**
+  1. Limit on catching up: (a) at most 5 ticks per render frame, drop the time of the further whole ticks, keep the part of a tick (srs.fr.1.3, 1.4); (b) clamp the frame time, as the PB-008 spike does (0.25 s). For comparison, Unity 6.5 also stops catching up beyond a maximum time, and the fixed-step group of its Entities 6.5 package also defaults to 1/60 s. (a) is proposed because the SRS states it.
+  2. Accumulator: (a) exact integers, nanoseconds times 60; (b) `double` seconds; (c) a tick rounded to 16 666 667 ns. In one second, (b) runs 59 ticks at 144 frames per second and (c) runs 59 at every frame rate. (a) is proposed.
+  3. Counter: a tick counter in the loop, passed to `ISimulation::runTick(tick)`, instead of a "frame number" in an `EngineContext`. DEC-042 item 2 already fixes the word tick.
+- **Decision (proposed):**
+  1. `FixedTimestep` in `engine/core` implements 1(a) with `maxTicksPerRenderFrame = 5` and reports when the warning "Simulation is running slower than real time" is due, at most once per second of real time. Until a logger exists, `Application` writes it to the standard error output.
+  2. The accumulator is exact (2(a)).
+  3. `Tick` is `std::uint64_t` in `engine/core/tick.hpp`. `Application` keeps the counter: 0 when a run starts and one more after every completed tick; simulated time is the counter times 1/60 s (srs.fr.1.5, 1.6).
+  4. `FrameClock` (the task's `Time`) reads `std::chrono::steady_clock` once per render frame; nothing in a tick reads real time. A headless run uses no clock and needs a maximum number of ticks (srs.fr.7.4, 7.7).
+- **Rationale:** It follows the SRS as written and keeps "60 ticks are 1.0 s" true at every frame rate.
+- **Consequences:** needs confirmation from Işık Dönger in the PB-012 pull request (Q-020). Not built yet: pause, resume and step (srs.fr.1.16 to 1.18), `RunError` handling (srs.fr.1.11), the headless run settings (srs.fr.7.x).
+- **Docs updated:** `architecture/engine-layer.md`, `troubleshooting/common-errors.md` (E-007, E-031), `troubleshooting/environment-setup.md`, `testing/test-checklists.md`, `agents/state/*`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** pause and step are built (they change what the accumulator keeps), or a logger exists.
+- **Supersedes / Related:** DEC-004, DEC-042, DEC-046, R-5, R-6, E-006, E-007, E-031, Q-020, PB-012, TASK-006.
+- **Amendments:** 2026-11-11 — accepted by Işık Dönger after merging PR #37 (Q-020): "I want you to update decision from pr 35 and 37 as accepted since they are only proposed now." Recorded by claude (PB-122 thread).
+
+### DEC-048 — The editor hosts `engine::Application` and owns the main window
+- **Date:** 2026-11-11
+- **Status:** Accepted
+- **Decided by:** Işık Dönger   **Recorded by:** claude (PB-122 thread)
+- **Human's words:** reviewing PR #35: "shouldnt this task be to initialize the main window that the engine will run in, aka the editor. Demo is a game that will be developed within the editor." Asked for the layout, then: "okey you can go ahead and open pr."
+- **Context:** DEC-046 item 4 named `sandbox` "the example application", and the PB-011 text named `demo/main.cpp`, which read as if a game hosts the engine. `editor/` was a placeholder that only printed its version and did not link the renderer.
+- **Options considered:**
+  1. The editor hosts `Application` and opens the main window; `sandbox` stays as a test host. Chosen.
+  2. Keep `sandbox` as the only window application until the editor shell (PB-110).
+- **Decision:**
+  1. `engine::Application` stays in `engine/core` and knows no editor and no game (DEC-046).
+  2. The `editor` executable is the application that hosts the engine: it builds `Application` with `RaylibWindow` and owns the main window. Editor panels draw in the render frame (srs.fr.1.13).
+  3. `sandbox` is a developer and CI test host, not the product and not a stand-in for the demo.
+  4. Games, including the demo game (Q-016), are content built and run inside the editor; they never host the engine.
+  5. The editor opens a window, so like `sandbox` it is built only when `ENGINE_WITH_RAYLIB` is on; the `headless` preset builds neither (R-4, R-6).
+- **Rationale:** The SRS puts Editor panels in the render frame (srs.fr.1.13) and the run-mode switch in the Editor (srs.fr.1.8), so the editor is the host.
+- **Consequences:** PB-122 moves `editor/` onto `Application`. PB-110 (editor shell) builds its panels on that window. Rule S-6 no longer lists editor tooling as out of scope.
+- **Docs updated:** `agents/rules.md` (S-6), `architecture/engine-layer.md`, `guidelines/repository-structure.md`, `troubleshooting/environment-setup.md`, `agents/state/*`.
+- **Course documents affected (for humans):** none known.
+- **Revisit when:** the editor shell (PB-110) or the run-mode switch (srs.fr.1.8) is built.
+- **Supersedes / Related:** clarifies DEC-046 item 4; DEC-029, R-4, R-6, Q-016, PB-110, PB-122.
+- **Amendments:**
+
+### DEC-049 — PB-025: the physics interface is `IPhysicsAdapter`, bodies are addressed by `BodyId`, and `Vec2` and `EntityId` live in `engine/core`
+- **Date:** 2026-11-11
+- **Status:** Accepted
+- **Decided by:** Zeynep Ertürk (owner of PB-025; physics adapter area, DEC-024) chose the three options on 2026-11-10; Işık Dönger (project manager, reviewer of PR #33) accepted them on 2026-11-11  **Recorded by:** claude (PB-025 review session)
+- **Human's words:** Işık Dönger: "I approve the first one, second and third also seems correct to me" (the three choices listed in PR #33).
+- **Context:** The ClickUp text of PB-025 (PB-025.2) names the interface `IPhysicsWorld`, while `design/physics-adapter-design.md`, R-3 and DEC-003 always say Physics Adapter. The design doc addressed bodies by `BodyId` but let `DestroyBody` take either an entity or a `BodyId`, and had no entity-to-body lookup, which `PhysicsSyncIn` needs (DEC-041). `Vec2` and `EntityId` were only designed (`ecs-api-design.md` §4), not written, and the physics target must not depend on an ECS target that does not exist yet.
+- **Options considered:**
+  1. Name: (a) `IPhysicsAdapter`, as in the design doc and the rules; (b) `IPhysicsWorld`, as in ClickUp. Zeynep chose (a).
+  2. Addressing: (a) every call takes a `BodyId`, plus `findBody(EntityId)`; (b) every call takes an `EntityId` and the adapter keeps the mapping inside. Zeynep chose (a).
+  3. Shared types: (a) `Vec2` and `EntityId` in `engine/core`, copied from `ecs-api-design.md` §4; (b) in `engine/physics`; (c) wait for `engine/ecs`. Zeynep chose (a).
+- **Decision:**
+  1. The interface is `engine::physics::IPhysicsAdapter` in the header-only `engine::physics` target, which links only `engine::core`.
+  2. Bodies are addressed by `BodyId` (64-bit, so the Box2D implementation can pack a `b2BodyId` into it). `createBody(EntityId, BodyDesc)` returns it, `findBody(EntityId)` looks it up and `destroyBody(BodyId)` removes it. Collision events and raycasts report `EntityId`, not `BodyId`.
+  3. `engine::Vec2` and `engine::EntityId` are defined in `engine/core` (`vec2.hpp`, `entity_id.hpp`); the ECS reuses them.
+- **Rationale:** One name across the rules, the design doc and the code. A `BodyId` avoids a map lookup in every call, and the lookup the sync systems need is one explicit call. `engine/core` is the one target both physics and the ECS already depend on, so neither depends on the other (R-2). `[further rationale not given]`
+- **Consequences:** PB-026 implements `Box2DPhysicsAdapter` against this interface in `engine/physics-box2d/`. The ECS (Phase 1) must include `engine/core/entity_id.hpp` instead of defining its own `EntityId`. The ClickUp subtask PB-025.2 still says `IPhysicsWorld`.
+- **Docs updated:** `design/physics-adapter-design.md` (§2 and the decisions line), `agents/state/current-status.md`, `agents/state/task-board.md`, `agents/state/handoff-log.md` (HND-021).
+- **Course documents affected (for humans):** none known. The ClickUp text of PB-025.2 names `IPhysicsWorld`.
+- **Revisit when:** PB-026 shows that `BodyId` addressing does not fit Box2D v3, or `engine/ecs` is created and wants `EntityId` elsewhere.
+- **Supersedes / Related:** DEC-003, DEC-014, DEC-024, DEC-041, R-2, R-3, PB-025, PB-026, TASK-019.
+- **Amendments:**
+
+### DEC-050 — The backlog moves from ClickUp to one GitHub project; branches use the issue number; the branch starts the task
+- **Date:** 2026-11-11
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)  **Recorded by:** claude (issue #126)
+- **Human's words:** "Okey, lets go with Github Projects with one project. But I am going to ask you to create all the issues and everything from stracth instead of copying clickup. Because main reason I wanted to do this was because we needed an overhaul and clickup wasnt easily altered."; "my problem is actions should not be creating pr's, only the branch."; "feat/us-15.2 would be clear"; "I do not like this poll idea ... branch creation should be instant since project status will be changed right before starting implementation."
+- **Context:** ClickUp was hard to change and its backlog had drifted from the SRS. The Issue start workflow opened a draft PR for every new `PB-` issue, which failed with "GitHub Actions is not permitted to create or approve pull requests".
+- **Decision:**
+  1. Planning moves to one GitHub project, team1-sp #3 (Iterative development template). Epics (`EP-xx`) and user stories (`US-x.y`) come from SRS A Section 6.3; each story is a sub-issue of its epic and its functional requirements are its acceptance criteria. Increment 1 stories (SRS B) are issues in the Increment 1 milestone; later stories stay as checklists in their epics until planned. Iteration, Estimate, Size and Priority are project fields.
+  2. One branch per user story, named `<type>/us-<x.y>-<short-description>` (`feat/us-15.2-build-settings-file-menu`); other issues use `<type>/<issue>-<short-description>`; `<type>/pb-<nnn>-…` stays valid for branches started before this decision. A colon cannot appear in a git branch name, so the PR-title form `feat(US-15.2): …` cannot be used for branches. The `branch-names` ruleset enforces the same pattern.
+  3. PR titles use the story id as the Conventional Commit scope (`feat(US-1.1): …`), or the issue number for other issues (`fix(#142): …`).
+  4. The developer creates the branch (instant), and that starts the task: the Issue start workflow runs on the branch creation, moves the issue's card to In progress with the `PROJECT_TOKEN` secret, assigns the creator if nobody is assigned and comments the checkout command. The PR fill workflow copies `Closes #<issue>`, labels, milestone, assignees and a Conventional Commit title from the issue into a new PR. No workflow creates branches or PRs. (Creating the branch from the status was rejected: project status changes do not trigger workflows, so it would need polling.)
+- **Rationale:** GitHub issues are the backlog itself, so nothing has to be synchronised, and AI agents can edit them directly. Opening PRs from Actions needs a repository setting the team does not want and a PR with an empty start commit.
+- **Consequences:** Someone with org access must add the `PROJECT_TOKEN` repository secret; until then cards are not moved, but the comment, assignment and PR filling still work. If a GitHub branch-name ruleset exists, its pattern must be updated to match `tools/check_pr.py`. ClickUp is no longer updated; old `PB-` ids remain in history and in older docs.
+- **Docs updated:** `CONTRIBUTING.md`, `guidelines/git-workflow.md`, `process/development-process.md`, `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/1-backlog-item.yml`, `.github/labels.yml`, `.github/workflows/issue-start.yml`, `.github/workflows/pr-fill.yml`, `tools/start_task.py`, `tools/fill_pr.py`, `tools/check_pr.py`.
+- **Course documents affected (for humans):** the Initial Plan names ClickUp as the planning tool (§4.2).
+- **Revisit when:** the team needs more than one project.
+- **Supersedes / Related:** supersedes DEC-028 and the scope rule of DEC-035; related DEC-024, DEC-027, DEC-032.
+- **Amendments:** 2026-11-12 — the PR fill workflow of point 4 is replaced by `tools/open_pr.py`, which the agent or developer runs after the first push (DEC-054). The rest of point 4 stands.
+
+### DEC-051 — US-1.1: a render frame collects input first; raylib is built with custom frame control
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger   **Recorded by:** claude (US-1.1 thread)
+- **Human's words:** "You can log the decision as accepted, push and then create the pr." (2026-11-12, after reviewing the US-1.1 change)
+- **Proposed by:** claude (US-1.1 thread), from srs.fr.1.1
+- **Context:** srs.fr.1.1 orders a normal-mode render frame as (1) collect keyboard input, (2) run the due ticks, (3) render, (4) present. Since PB-011 (DEC-046) the loop ran ticks, `beginFrame`, `renderFrame`, `endFrame`, and `RaylibWindow::endFrame()` called raylib's `EndDrawing()`, which presents, waits for the frame-rate cap and only then polls input. Input was therefore collected at the end of the previous frame, before the wait: the first frame's ticks saw no collected input, and input arriving during the wait reached the ticks one frame late. raylib cannot poll a second time at the start of the frame, because `PollInputEvents()` copies the current key state into the previous one and would erase the key-press edges of the first poll.
+- **Options considered:**
+  1. Keep `EndDrawing()` as it is and document that the poll at the end of frame N is step 1 of frame N + 1. No raylib change, but the order is only true by argument, cannot be seen in the interface or tested, and keeps up to one frame of extra input latency.
+  2. Build raylib with `SUPPORT_CUSTOM_FRAME_CONTROL=1` (a documented raylib build flag; `config.h` honours a compile definition) and give `IWindow` an explicit `collectInput()`. `EndDrawing()` then only flushes the draw batch; `RaylibWindow` calls `PollInputEvents()` in `collectInput()`, and `SwapScreenBuffer()` plus the frame-rate wait in `presentFrame()`. raylib's own frame timing (`GetFrameTime()`, `GetFPS()`) is no longer updated; the engine does not use it (its loop measures time with `FrameClock`).
+- **Decision:** option 2. `IWindow` has `collectInput()`, `beginFrame()` and `presentFrame()` (renamed from `endFrame()`); `Application` calls them in the srs.fr.1.1 order, and the game loop tests check that order.
+- **Rationale:** the order of srs.fr.1.1 holds by construction and is tested; input is collected after the frame-rate wait, right before the ticks that use it.
+- **Consequences:** raylib code outside `RaylibWindow` must present and poll itself: the PB-008 spike (`sandbox/src/box2d_raylib.cpp`) now calls `PollInputEvents()`, `SwapScreenBuffer()` and `WaitTime()` and measures its frame time with `GetTime()`. Zeynep Ertürk (`engine/rendering-raylib`) should still look at the window wrapper in the US-1.1 pull request. The warning of srs.fr.1.4 still goes to the standard error output until a logger and the Console exist; pause (srs.fr.1.3 "while not paused") is US-1.4.
+- **Docs updated:** `architecture/engine-layer.md`, `testing/test-checklists.md`, `agents/state/handoff-log.md`, `agents/state/current-status.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** a raylib upgrade changes custom frame control, or the renderer moves off raylib.
+- **Supersedes / Related:** DEC-033, DEC-046, DEC-047, R-4, srs.fr.1.1, srs.fr.5.1, US-1.1 (#41).
+
+### DEC-052 — A decision is `Proposed` only while it waits for an answer in the conversation; a decision a PR carries is written `Accepted` and approved in the review
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (ci/131 thread)
+- **Human's words:** "Change the workflow so that decisions are only logged as proposed when waiting for approval through the conversation. Otherwise it should be logged as approved and wait for approval in the review part. This change is not to allow for ai agents to make the decisions themself with bypassing the human!! This is to solve the requiring an additional commit to change the proposed log to accepted." (2026-11-12)
+- **Context:** Agents wrote every decision their change carried as `Proposed`, even though the reviewer of the pull request approves or rejects it anyway. When the reviewer agreed, another commit was needed only to flip the entry to `Accepted` (for example DEC-046 and DEC-047 after PRs #35 and #37, and DEC-051 before PR #130 was opened).
+- **Options considered:**
+  1. Keep `Proposed` until a human approves, then commit the flip. Simple, but costs a commit and a review round for every accepted decision.
+  2. Write the entry `Accepted` in the PR and make the review the approval step: the reviewer treats it as proposed, and the merge accepts it.
+- **Decision:** option 2. `Proposed` means a question is open in the conversation and nobody has answered it. A decision the human made in the conversation is `Accepted`, with their words. A decision a pull request carries is also written `Accepted` (no extra marker, so nothing has to be removed at merge), is listed under "Decisions for review" in the PR body, and binds only once a human merges the PR. A rejected or changed entry is fixed on the branch before the merge. Humans still decide (DEC-017): an agent puts open choices to the human first, and an unlisted entry is not approved by the merge.
+- **Rationale:** the review already is a human approval step, and every PR is merged by a human (DEC-025), so nothing reaches `main` as `Accepted` without a human. The flip commit added no information.
+- **Consequences:** the PR template has a "Decisions for review" section that reviewers check (`process/code-review.md`). Entries may still change on their branch until the merge; once on `main` they are append-only as before.
+- **Docs updated:** `history/decision-log.md` (header), `agents/templates/decision-entry.md`, `agents/playbooks/record-decision.md`, `agents/rules.md` (P-3, section D), `agents/AGENT-PROTOCOL.md` (steps 20 to 21a), `agents/model-compatibility.md`, `agents/communication-protocol.md`, `process/code-review.md`, `.github/pull_request_template.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** a decision that skipped the conversation turns out to need wider discussion than a review gives.
+- **Supersedes / Related:** refines DEC-017 and DEC-025; related DEC-050.
+
+### DEC-053 — AI agents ask before committing, not before pushing
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (ci/131 thread)
+- **Human's words:** "Requiring approval before pushing should be removed. Because after commiting commits cannot be altered and changes will require new commit anyway so pushing isnt effective. Commits should require approval." (2026-11-12)
+- **Context:** DEC-025 made agents ask before every push. By then the commit already exists, and since history is never rewritten (S-2), any requested change is a new commit whether or not the first one was pushed. The approval protected nothing and delayed CI and the draft PR.
+- **Decision:** An AI agent shows the human its change and commits only after the human approves it. Once a commit is approved, the agent pushes it and opens or updates the draft PR without asking again. Merging `main` into the branch with no conflicts, or with only state and history files resolved by the rules of DEC-055, is committed without asking again; a merge that needed any other resolution is shown first. A human approves and merges every PR. Agents never push to `main`, force-push or rewrite history.
+- **Rationale:** the approval belongs where the change becomes permanent, which is the commit.
+- **Consequences:** CI runs and the draft PR exists as soon as the human approves the change.
+- **Docs updated:** `guidelines/git-workflow.md`, `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (step 23a), `agents/state/current-status.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** a pushed commit causes harm that an earlier approval would have stopped.
+- **Supersedes / Related:** supersedes DEC-025; related S-2, DEC-054, DEC-055.
+
+### DEC-054 — Agents open the draft PR with `tools/open_pr.py`; the PR fill workflow is removed
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (ci/131 thread)
+- **Human's words:** "Pr should not be required to be opened manually. ... either after branch creation github actions push an initial commit ... or creation of both branch and pr should be moved to agents instead of github."; on Claude's recommendation of the second: "In point 2, I approve your proposal." (2026-11-12)
+- **Context:** Since DEC-050 a developer opened each PR by hand and the PR fill workflow filled it, but agents already opened and filled their own PRs, so the workflow did nothing. GitHub cannot open a PR for a branch with no commits beyond `main`.
+- **Options considered:**
+  1. After the branch is created, a workflow pushes a "task started" commit and opens a draft PR. Needs the "Allow GitHub Actions to create pull requests" setting rejected in DEC-050 (or a personal token, which makes the token owner the PR author); a PR opened with the workflow token does not trigger CI or other workflows; every local branch falls behind its remote at once; and the start commit edits shared docs, which adds merge conflicts.
+  2. The agent (or developer) opens the PR after the first push, with a local tool that fills it from the issue.
+- **Decision:** option 2. `tools/open_pr.py` opens a draft PR for the current branch with `Closes #<issue>`, the issue's labels, milestone and assignees, and a Conventional Commit title; agents run it right after their first push. `.github/workflows/pr-fill.yml` and `tools/fill_pr.py` are removed. The Issue start workflow still runs on branch creation. No workflow creates branches, commits or PRs.
+- **Rationale:** the PR is opened by the person (or the agent working for them), so authorship is right and CI runs; nothing needs a repository setting or a bot commit.
+- **Consequences:** `docs`, `ci` and `chore` changes without an issue are named after their own PR number (`ci/131-update-agent-workflow`, PR title `ci(#131): Update agent workflow`, `no-issue` label, no `Closes` line); `open_pr.py` does this when the branch number has no issue (Işık Dönger, 2026-11-12: "make sure everything works with ci/pr_number-description branch name and ci(pr-number): description pr name"). A PR opened by hand is no longer filled; `pr-hygiene` (`tools/check_pr.py`) still fails it without a valid title and `Closes #<issue>`.
+- **Docs updated:** `guidelines/git-workflow.md`, `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (step 23a), `agents/state/current-status.md`, `tools/issue_ref.py`; DEC-050 amended.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** humans keep opening PRs by hand and forgetting the fields.
+- **Supersedes / Related:** replaces the PR fill part of DEC-050; related DEC-053.
+
+### DEC-055 — Branches keep in step with `main` by merging it; collided ids are caught in CI; conflicting PRs are flagged
+- **Date:** 2026-11-12
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (ci/131 thread)
+- **Human's words:** "There should be addition to workflow to account for merge conflicts happening because of pr merges while working on the pr."; on Claude's proposal: "In point 3, I approve your proposal but I have a question. This does not solve merge conflicts after ready-for-review ... do you have any proposal to mitigate this." (2026-11-12). The conflict flag answers that question and is approved in the review of this PR.
+- **Context:** PRs merged while another branch is open cause conflicts that the reviewer resolved during review, mostly in docs. Two branches that append to the same log can also merge without any git conflict and still give two entries the same id.
+- **Decision:**
+  1. Before starting, the agent lists open PRs and the files they touch and tells the human about overlap in code or design docs.
+  2. The branch merges `origin/main` (never rebases) before every push, before ready for review and when flagged, then builds and tests again.
+  3. In state and history files both sides are kept and the branch being synced renumbers its own colliding ids. Code and design-doc conflicts are resolved only when both sides fit together; otherwise the agent asks the human.
+  4. `tools/check_ids.py` in the `docs` CI job fails on a duplicate DEC, HND, PRB, Q or TASK id, or a decision or problem entry missing from its index.
+  5. The `Conflict flag` workflow (`tools/flag_conflicts.py`) runs after each merge to `main` and on pushes to PRs: a PR that conflicts with `main` gets the `needs-sync` label and one comment, and the label is removed once it no longer conflicts. The author syncs; the reviewer only re-checks the merge commit; a PR with `needs-sync` is not merged.
+- **Rationale:** conflicts are found by the author, early and in small pieces, instead of by the reviewer at the end.
+- **Consequences:** the `needs-sync` label is added to `.github/labels.yml`. The ruleset option "require branches to be up to date before merging" stays off unless the team turns it on.
+- **Docs updated:** `guidelines/git-workflow.md` §4, `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (steps 14a, 23a), `.github/labels.yml`, `.github/workflows/ci.yml`, `.github/workflows/conflict-flag.yml`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** conflicts still reach review regularly.
+- **Supersedes / Related:** related DEC-053, DEC-054, P-6.
+
+### DEC-057 — US-1.2: run options in `engine/core`, run errors end the run in the game loop, Editor parts wait for their stories
+- **Date:** 2026-11-15
+- **Status:** Accepted (carried by the US-1.2 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-1.2 pull request   **Recorded by:** claude (US-1.2 thread)
+- **Human's words:** none yet; listed under "Decisions for review" in the PR.
+- **Proposed by:** claude (US-1.2 thread), from srs.fr.1.7 to 1.11 and DEC-042
+- **Context:** US-1.2 (#42) asks for srs.fr.1.7 to 1.11. Normal and headless mode (srs.fr.1.7) and closing the window (srs.fr.1.10) were built in PB-011 and PB-012. Missing were the command-line run mode and settings of a built game (srs.fr.1.8, 7.33), the fullscreen state of the standalone window (srs.fr.1.9) and the handling of unrecoverable run errors (srs.fr.1.11), which DEC-042 had already given the shape "throw `engine::RunError`, only the game loop catches it". The rest of those requirements needs Editor features that are other stories: the mode switch (srs.fr.17.19, US-17.3, not in Increment 1), Play mode and Error Pause (US-17.2, US-24.1), the Game view (US-20.1) and the project's Rendering settings (srs.fr.27.23, US-27.4).
+- **Decision:**
+  1. `engine/core/run_options.hpp` has `RunOptions` and `parseRunOptions()` for the options of srs.fr.7.33: `--headless`, `--max-ticks N` (1 to 1 000 000, default 10 000 in a headless run), `--seed S` (0 to 4 294 967 295, srs.fr.7.32) and `--input-recording F`. An unknown option or an invalid value gives an error naming the option; the caller writes it to the standard error output, runs no tick and exits non-zero. `parseRunOption()` reads one option, so an application with options of its own (the sandbox's `--fps`) can combine both. The built game (US-28.x) will use it; the sandbox uses it now. The editor does not take `--headless`: its mode comes from the mode switch.
+  2. `--input-recording` is parsed, but the sandbox refuses it with "input recording playback is not built yet" and runs no tick, until playback (srs.fr.5.12 onwards) exists. The seed is parsed and printed; nothing draws random numbers until the gameplay generator (srs.fr.7.5) exists.
+  3. `engine/core/run_error.hpp` has `engine::RunError` (a `std::runtime_error`). `Application::runOneTick()` is the only place it is caught. It writes `error: tick N: <message>` to the standard error output (there is no logger yet), runs no further tick, does not render or present the frame in progress, and `run()` returns exit code 1. The failed tick does not count as executed. Other exceptions are bugs and are not caught. This applies in headless mode and in normal mode outside the Editor; Error Pause in Play mode comes with US-17.2.
+  4. `Application::outcome()` returns a `RunOutcome`: `NotRun`, `WindowClosed`, `MaxTicks` or `Error`, with the report names "Not run", "Window closed", "Max ticks" and "Error" (`runOutcomeName()`). The headless names follow srs.fr.7.16; `Stopped`, `Failure` and `Objective reached` come with US-7.2.
+  5. `WindowConfig` has `fullscreen`, which `RaylibWindow::open` turns into raylib's `FLAG_FULLSCREEN_MODE`. Who fills it from the project's Rendering settings is US-27.4 and US-28.x.
+  6. The sandbox gets `--seed`, `--input-recording`, `--fullscreen` and `--fail-at-tick N` (tick N throws `RunError`, so CI can check srs.fr.1.11 on a real process), and prints the run's mode, seed and outcome.
+- **Rationale:** everything the engine needs for the two run modes is built and tested now, behind the interfaces the Editor and the built game will call, without building Editor features that belong to other stories.
+- **Consequences:** srs.fr.1.8 (Editor mode switch), 1.9 (Rendering settings, Game view) and 1.11 (Error Pause in Play mode) stay partly open after US-1.2; the PR says which parts. A logger (Console, US-24.1) replaces the standard error output later.
+- **Docs updated:** `architecture/engine-layer.md`, `testing/test-checklists.md`, `testing/headless-testing.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** the logger, Play mode or the build pipeline exists.
+- **Supersedes / Related:** DEC-042 (item 8), DEC-046, DEC-047, DEC-048, US-1.2 (#42).
+
+### DEC-058 — Agents ask before committing only on a member's computer; in a cloud copy they commit and push without asking
+- **Date:** 2026-11-15
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager)   **Recorded by:** claude (US-1.2 thread)
+- **Human's words:** "if worked on the local commit/pushes should ask for permissions. otherwise it should be auto commit/pushed" (2026-11-15)
+- **Context:** DEC-053 made every agent ask before committing. Agents running in a cloud session work in their own clone of the repository: their commits change nothing on a member's computer and reach `main` only through a PR that a human reviews and merges, so the approval added a wait without protecting anything. An agent working on a member's own computer changes that member's working copy and local branches.
+- **Decision:** An agent working on a member's own computer (folder access or a session on the device) shows the change and commits and pushes only after that member approves. An agent working in its own cloud copy of the repository commits and pushes to the story branch without asking, then opens or updates the draft PR with `tools/open_pr.py`. Everything else in DEC-053 stays: a merge of `main` that needed a resolution beyond the state and history file rules of DEC-055 is shown first; a human approves and merges every PR; agents never push to `main`, force-push or rewrite history.
+- **Rationale:** the approval belongs where an agent's commit touches a member's own files; in a cloud copy the PR review is the approval step.
+- **Consequences:** cloud agents' changes appear on the branch and in the draft PR as soon as they are built and tested.
+- **Docs updated:** `guidelines/git-workflow.md` §1, `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (step 23a), `agents/state/current-status.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** a cloud agent's push causes harm that an approval would have stopped.
+- **Supersedes / Related:** refines DEC-053; related DEC-052, DEC-054, DEC-055, S-2.
+
+### DEC-059 — US-1.3: the game loop runs the seven tick phases itself and gives every tick its input action state
+- **Date:** 2026-11-16
+- **Status:** Accepted (carried by the US-1.3 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-1.3 pull request   **Recorded by:** claude (US-1.3 thread)
+- **Human's words:** none yet; listed under "Decisions for review" in the PR.
+- **Proposed by:** claude (US-1.3 thread), from srs.fr.1.12 to 1.15, srs.fr.5.5 to 5.7, 5.11 and DEC-041, DEC-042
+- **Context:** US-1.3 (#43) asks that every tick runs the same seven phases in the same order in normal and headless mode (srs.fr.1.12, 1.13), that the input application phase gives the tick the input action state of its input source (srs.fr.1.14) and that a frame without a tick still renders the last completed tick (srs.fr.1.15, already met in US-1.1). `ISimulation::runTick(tick)` left the phase order to whoever implements it, so nothing in the loop guaranteed it. `TickPhase` was only designed, inside `engine/ecs` (`ecs-api-design.md` §8), which does not exist yet. Nothing in the engine held input actions or input sources. Key bindings and the Input Map are US-5.1; focus loss is US-5.3; recordings are US-5.4.
+- **Options considered:**
+  1. Who runs the phases: (a) the game loop calls `ISimulation::runPhase(phase, context)` once per phase; (b) keep `runTick()` and let the ECS run its phases inside it. (a) is chosen: the loop owns the order, both modes reach the simulation through one function, and the ECS `SystemScheduler::runPhase()` maps onto it one to one.
+  2. Where input transitions come from: (a) an `IInputSource` interface that the loop asks once per tick, with a `KeyboardQueue` for normal mode and `NoInputSource` for None; (b) pass input through `IWindow`. (a) is chosen: recordings and the agent (srs.fr.5.3, 5.11, 9.51) become sources too, and headless mode, which has no window, uses the same path.
+- **Decision:**
+  1. `engine/core/tick_phase.hpp` has `enum class TickPhase` (InputApplication, GameplayInput, PhysicsSyncIn, PhysicsStep, PhysicsSyncOut, GameplayRules, TelemetryRecording), `tickPhases` in execution order and `tickPhaseName()` with the names the schema uses. The ECS uses this type instead of defining its own.
+  2. `ISimulation::runTick(tick)` is replaced by `runPhase(TickPhase, const TickContext&)`. `Application::runOneTick()`, the only function both modes use to run a tick, calls it for each phase of `tickPhases` in order. `TickContext` holds the tick number and the tick's `InputActionState`. The PhysicsStep phase is still called: the ECS-backed simulation steps the Physics Adapter there and runs no systems (DEC-041 said "the game loop calls `adapter.step(1/60)`"; the loop now does so through this call).
+  3. A phase that throws `engine::RunError` ends the tick there: the later phases of that tick do not run and the tick is not counted (srs.fr.1.11 as in DEC-057).
+  4. `engine/core/input_actions.hpp` has the Phase 1 actions of DEC-042 item 4 (`InputAction`: MoveUp, MoveDown, MoveLeft, MoveRight, Interact), `InputTransition` and `InputActionState`, whose `applyTick()` follows srs.fr.5.6 and 5.7. The Input Map (US-5.1, srs.fr.5.22 onwards) replaces the fixed list.
+  5. `engine/core/input_source.hpp` has `IInputSource::takeTransitions(tick, out)`, `NoInputSource` and `KeyboardQueue` (srs.fr.5.5: transitions of frames that run no tick stay queued; the first tick afterwards takes them all). Before phase 1 of each tick, `Application` takes the transitions from the run's source and applies them to the run's `InputActionState`. `ApplicationConfig::inputSource` selects a source; without one, normal mode uses the keyboard queue (`Application::keyboardQueue()`) and headless mode uses None (srs.fr.7.3). While another source is active, the keyboard queue is emptied every render frame (srs.fr.5.11). A new run starts with nothing held and nothing queued.
+  6. Nothing pushes keyboard transitions yet: turning raylib keys into actions needs the default bindings and the Input Map (srs.fr.5.1, 5.28; US-5.1). Focus-lost markers (US-5.3), recording playback (US-5.4) and the agent source come with their stories as `IInputSource` implementations or additions.
+  7. The sandbox prints `tick phases run: N`, so CI checks seven phases per tick on a real process.
+- **Rationale:** the phase order is fixed in one place that both run modes share, so they cannot drift apart, and every later input source plugs into the same tick input path.
+- **Consequences:** `editor`, `sandbox` and the tests implement `runPhase()`. `ecs-api-design.md` §8 now points to `engine/core` for `TickPhase`. US-5.1 fills the keyboard queue from the window.
+- **Docs updated:** `architecture/engine-layer.md`, `design/ecs-api-design.md`, `design/ecs-design.md`, `design/physics-adapter-design.md`, `testing/test-checklists.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** the ECS scheduler, the Input Map or recording playback is built.
+- **Supersedes / Related:** DEC-041, DEC-042 (items 2, 4), DEC-046 (item 2), DEC-047, DEC-057, US-1.3 (#43).
+
+### DEC-060 — US-1.4: pause, resume and step in the game loop
+- **Date:** 2026-11-16
+- **Status:** Accepted (carried by the US-1.4 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-1.4 pull request   **Recorded by:** claude (US-1.4 thread)
+- **Human's words:** none yet; listed under "Decisions for review" in the PR.
+- **Proposed by:** claude (US-1.4 thread), from srs.fr.1.16 to 1.18, 17.12 to 17.14, 24.6 and DEC-047
+- **Context:** US-1.4 (#44) asks that a pause takes effect at the next tick boundary, drops the whole ticks still due and keeps the part of a tick (srs.fr.1.16), adds no real time while paused (srs.fr.1.17) and measures real time again from the resume, so the pause neither simulates paused time nor causes the slow-simulation warning (srs.fr.1.18). Step (srs.fr.17.14) runs one tick without the accumulator. The Pause and Step buttons, Ctrl+Shift+P and Ctrl+Alt+P belong to Play mode (US-17.2), and Error Pause to US-24.1; this story gives them the engine calls. `FixedTimestep` already holds only the part of a tick between frames: the whole ticks of a frame live in the loop's `FrameTicks`.
+- **Options considered:**
+  1. How the paused time is kept out: (a) keep reading the frame clock every frame, give the timestep nothing while paused, and on resume take off the part of the next frame time that passed before the resume; (b) restart the frame clock on resume. (a) is chosen: frame times stay true for FPS and render frame time, and `FrameClock::sinceFrameStart()` is the only addition.
+  2. Where the pause is checked: (a) before every tick of a frame and once after the frame's ticks; (b) only between frames. (a) is chosen: srs.fr.24.6 needs a pause asked for inside a tick to stop the frame's remaining ticks.
+- **Decision:**
+  1. `Application::requestPause()` asks for a pause. The loop checks the request before each tick of a render frame and after the frame's ticks; at that boundary the pause takes effect: the frame's ticks that have not started are dropped (they are the accumulator's whole ticks) and `FixedTimestep` keeps the part of a tick. Render frames go on, collecting input and rendering the last completed tick.
+  2. While paused, the frame clock is still read every frame, but `FixedTimestep::advance()` is not called, so no real time and no warning interval reach it.
+  3. `resume()` ends the pause and stores `FrameClock::sinceFrameStart()`, the paused part of the next frame time, which the next frame takes off before it calls `advance()`. A `resume()` before the pause has taken effect cancels the request.
+  4. `requestStep()` while paused counts one step; the next render frame runs one tick per step through `runOneTick()` and renders it, without calling the timestep. A step can reach `maxTicks` or throw `RunError` like any tick.
+  5. The calls act only during a normal-mode `run()` and return false otherwise: headless runs have no Pause (srs.fr.17.28 enables it only in Play mode). A new run starts unpaused. They are called on the loop's thread, from input collection, from a tick or from rendering; the Editor's controls come with US-17.2 and Error Pause with US-24.1.
+- **Rationale:** the timestep stays exact and unchanged: pause and step only decide whether it is called and with how much time, so no paused time and no rounding enter the accumulator.
+- **Consequences:** Play mode's Pause, Step and the toolbar counter (US-17.2) and Error Pause (US-24.1) call these functions. The sandbox has no pause control.
+- **Docs updated:** `architecture/engine-layer.md`, `testing/test-checklists.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** the Editor's Play mode controls or Error Pause are built, or the game loop moves to another thread than the Editor's UI.
+- **Supersedes / Related:** DEC-047, DEC-057, DEC-059, US-1.4 (#44).
+
+### DEC-061 — Agents do code work in a cloud copy by default, on a member's computer only when the work needs it
+- **Date:** 2026-11-16
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager) asked for the rule; the wording below is for review in the ci/136 pull request   **Recorded by:** claude (ci/136 thread)
+- **Human's words:** "Adding a rule when the agents work on the local and when work on the cloud." (2026-11-16)
+- **Context:** Agents can work in two places: in their own cloud copy of `team1-sp/project` (a Claude Code cloud session), or on a member's own computer, through folder access or a Remote Control session. DEC-058 already says how commits differ between the two, but nothing said which place to pick.
+- **Options considered:**
+  1. Cloud copy by default — cheaper and faster to start, can build, run the tests, commit, push and open the PR itself; the member only runs `git pull`. Cannot reach files that live only on the member's computer, local tools or signed-in accounts.
+  2. Member's computer by default — uses the member's own setup, but every commit and push waits for their approval (DEC-058), the computer must stay on, and the agent changes their working copy.
+- **Decision:** Code and repository docs work happens in the agent's own cloud copy by default: build, test, commit, merge `origin/main`, push and open the draft PR there, without asking (DEC-058); the member then runs `git pull`. An agent works on a member's computer only when (a) the files live only there, such as the Word deliverables in `docs/deliverables` on the member's computer, (b) the work needs a tool, program or signed-in account that exists only there (Visual Studio, a Windows-only check, the member's GitHub or ClickUp login), or (c) the member asks for it. On the member's computer it prefers folder access for reading and editing files, uses Remote Control only to run commands there, and commits or pushes only after the member approves (DEC-058). In a cloud session `tools/open_pr.py` fails, because it uses `gh repo view` and GraphQL is blocked there (HTTP 403): the agent opens the draft PR with the GitHub `create_pull_request` tool, with the same title and body `open_pr.py` would build, then sets labels, milestone and assignee with `gh api -X PATCH repos/team1-sp/project/issues/<pr>`.
+- **Rationale:** most work is code and docs in the repository, which the cloud copy handles end to end without waiting on anyone; the member's computer is used only for what nothing else can reach.
+- **Consequences:** members `git pull` the branch to look at cloud work locally. Work that needs Windows-only checks still relies on CI's Windows job or a member's computer.
+- **Docs updated:** `guidelines/git-workflow.md` §1, `agents/AGENT-PROTOCOL.md` (steps 5a, 23a), `agents/rules.md` (P-12), `CONTRIBUTING.md`, `agents/state/current-status.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** cloud sessions can run GraphQL (then `open_pr.py` works there too), or a cloud copy cannot build something the team needs.
+- **Supersedes / Related:** related DEC-054, DEC-058.
+
+### DEC-062 — The `Epic close` workflow closes an epic once all of its stories are done, and marks it `increment-done` while only later stories are left
+- **Date:** 2026-11-16
+- **Status:** Accepted
+- **Decided by:** Işık Dönger (Project Manager), 2026-11-16, in the conversation (option 2 chosen); the rest of the details are for review in the ci/136 pull request   **Recorded by:** claude (ci/136 thread)
+- **Human's words:** "Adding an action that auto closes user epic issues that are sub-issues are closed." (2026-11-16); on epics with later stories: chose "Keep open, add increment-done" (2026-11-16)
+- **Context:** Epics (`EP-xx`, label `type:epic`) are parent issues whose stories are GitHub sub-issues (DEC-050). Stories close when their PRs merge; epics stayed open until someone closed them by hand (EP-01 was closed by hand on 2026-11-16). Stories not planned yet are a "Later stories" checklist in the epic's body, not sub-issues.
+- **Options considered:**
+  1. Close as soon as all sub-issues are closed, reopen by hand when a later story is planned — simple, but the board says the epic is done while SRS stories are still left, and Actions cannot trigger on a sub-issue being linked, so reopening cannot be automated reliably.
+  2. Keep the epic open while unchecked later stories remain, and mark the in-between state with an `increment-done` label — the board stays honest, nothing has to be reopened, and a label needs no `PROJECT_TOKEN`.
+  3. Same as 2 without a label — nothing shows that the epic has no planned work left.
+- **Decision:** option 2. `.github/workflows/epic-close.yml` runs `tools/close_epics.py` when an issue is closed, reopened or edited: it checks the issue itself if it is an epic, then its parent (found with the sub-issues API). For an open `type:epic` issue with at least one sub-issue: while any sub-issue is open, it stays open without `increment-done`; when all are closed but the "Later stories" section still has unchecked items (items that only link an issue are not counted), it stays open and gets `increment-done`; when all are closed and no later stories are left, it is commented on and closed as completed (and the check goes one level up). Run by hand (`workflow_dispatch`, optional dry run), it checks every open epic. Closed epics are never reopened. It uses the workflow's own token; the project's built-in "Item closed" workflow moves the card to Done, so it needs no `PROJECT_TOKEN`.
+- **Rationale:** an epic covers all of its SRS stories, so it is closed only when all of them are done; the label still shows that an Increment's part of it is finished.
+- **Consequences:** converting a later story to a sub-issue edits the epic's body, which runs the check and takes the label off. An epic with no sub-issues never changes by itself. EP-01 (#40) was closed by hand on 2026-11-16 with US-1.5 still in its later stories; under this rule it would be open with `increment-done`, and the workflow leaves it closed unless someone reopens it.
+- **Docs updated:** `guidelines/git-workflow.md` §1, `CONTRIBUTING.md`, `.github/labels.yml`, `agents/state/current-status.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** later stories are planned as sub-issues up front, or GitHub Actions can trigger on sub-issue links.
+- **Supersedes / Related:** related DEC-050.
+
+### DEC-063 — US-14.1: the Editor's main window with Dear ImGui
+- **Date:** 2026-11-16
+- **Status:** Accepted (carried by the US-14.1 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (library choice, 2026-11-17); the rest by the reviewer of the US-14.1 pull request   **Recorded by:** claude (US-14.1 thread)
+- **Human's words:** Işık Dönger, US-14.1 thread, 2026-11-17, after seeing the themed editor: "okey it looks good. then I approve ImGui+rIlmGui."
+
+- **Proposed by:** claude (US-14.1 thread), from srs.fr.14.1 to 14.6, 14.12 to 14.27, 15.15, 15.22 and the B-01, C-01 and D-01 to D-09 frames
+- **Context:** US-14.1 (#77) asks for the main window with the menu bar, toolbar, the Default panel layout and the status bar (srs.fr.14.1), the project and scene in the title with "*" for unsaved changes (14.2), the unsaved-changes check before closing (14.3), the nine menus (14.4), disabled items in muted text with no hover effect (14.5) and Ctrl/Cmd shortcuts (14.6). raylib draws shapes and text but has no menus, tabs or docking, and no UI library had been chosen (tech-stack.md). Later stories need tab docking, splitting and floating panels (srs.fr.14.12 to 14.15). No project, scene or Unsaved Changes dialog (F-01) exists yet.
+- **Options considered:**
+  1. UI library: (a) Dear ImGui, docking branch, with the rlImGui backend for raylib; (b) raygui, raylib's own immediate-mode GUI; (c) our own widgets drawn with raylib. (a) is chosen: menus, disabled items, tabs and the dock builder are built in, and the docking stories reuse them; (b) and (c) have no menus or docking. The choice was offered to the human with (a) recommended.
+  2. Where the backend lives: rlImGui includes raylib.h, so it is built in `engine/rendering-raylib` (R-4); the editor uses only `imgui.h`.
+  3. What a not-yet-built menu item does: (a) show it disabled; (b) leave it out. (a) is chosen: the menus match D-01 to D-09 now, and srs.fr.14.5 already says an item is disabled while its condition is not met.
+- **Decision:**
+  1. Dear ImGui v1.93.0-docking and rlImGui (commit 5c17e70, no release tags) are fetched by `cmake/Dependencies.cmake` only when raylib is on. `imgui` is a static library target of the core files; `rlimgui` is built in `engine/rendering-raylib` without our warning flags, with the icon font left out. `engine::rendering_raylib::ImGuiRenderer` is the `IFrameRenderer` that owns the Dear ImGui context: it creates it in the first render frame, measures the frame time itself (custom frame control, DEC-051, leaves raylib's frame time unset) and releases it in `releaseGraphics()`.
+  2. `editor_core` (always built, linked by the tests) holds the window-free parts: `Command` (label, shortcut, enabled condition, action), `shortcutText()` with Ctrl on Windows and Cmd on macOS (srs.fr.14.6; Exit is Alt+F4 / Cmd+Q, srs.fr.15.15), the nine menus and the C-01 toolbar from `buildMainMenu()` and `buildToolbar()`, and `EditorSession` with the project, active scene, unsaved items (srs.fr.15.24), the window title (srs.fr.14.2: "Aegis Editor 0.1 — <project> — <scene>*", following B-01) and `confirmClose()`.
+  3. A command without an enabled condition is a feature not built yet and is drawn disabled (srs.fr.14.5); an empty submenu (Open Recent) is disabled too. Enabled now: File > Exit and Window > General's six panels (Ctrl+1 to Ctrl+6). The toolbar is all disabled until the Scene view and Play mode stories.
+  4. `MainWindowView` (editor, Dear ImGui) draws the menu bar, the toolbar and the status bar as viewport side bars and the panels in a dock space with the Default layout of srs.fr.14.1, built with the dock builder at start: Hierarchy left, Scene and Game centre, Inspector right, Project and Console bottom. No imgui.ini is written until the layout stories save layouts. Enabled commands also run from their shortcuts.
+  5. `engine/core`: `ApplicationConfig::confirmClose` is asked when the user asks to close the window and can keep it open; `Application::requestClose()` ends a normal-mode run after the render frame (File > Exit, after its own check); `Application::setWindowTitle()` and `IWindow::setTitle()` change the title; `WindowConfig::escapeClosesWindow` lets the Editor keep Escape (Stop Headless Run, D-06); `IFrameRenderer::releaseGraphics()` runs right before the window closes.
+  6. `EditorSession::confirmClose()` returns true with nothing unsaved. With unsaved items it keeps the Editor open and flags a request for the Unsaved Changes dialog (F-01), which closes the Editor itself when it comes with US-15.x. Stopping a simulation operation first (srs.fr.15.25) comes with Play mode.
+- **Rationale:** Dear ImGui is the common choice for engine editors, covers srs.fr.14.5 and the later docking requirements out of the box, and keeps raylib inside its adapter target. Keeping the menu model and session out of Dear ImGui lets the tests check srs.fr.14.2 to 14.6 without a window.
+- **Consequences:** two new pinned dependencies (changing their versions is a decision, coding-standards §6). The Editor has no project until the Project Hub (US-13.x), so it shows "No project open". Fonts and colours follow in DEC-064. Docking by drag, floating panels and saved layouts (srs.fr.14.12 to 14.27) build on this dock space.
+- **Docs updated:** `architecture/tech-stack.md`, `architecture/engine-layer.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** panels in separate operating-system windows are wanted again (rlImGui has no multi-viewport support, DEC-065).
+- **Supersedes / Related:** DEC-033, DEC-048, DEC-051, US-14.1 (#77).
+
+### DEC-064 — US-14.1: the Editor's theme follows the Figma design
+- **Date:** 2026-11-16
+- **Status:** Accepted (carried by the US-14.1 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-14.1 pull request   **Recorded by:** claude (US-14.1 thread)
+- **Human's words:** Işık Dönger, US-14.1 thread, 2026-11-17: "first build on top of the already built ImGui and adds the theme to make it look like the figma design so I can see how far off it will be."
+- **Proposed by:** claude (US-14.1 thread), from the B-01, B-02 and C-01 frames and the palette of `aegis-figma-update-6`
+- **Context:** the first version used Dear ImGui's stock dark style and its ASCII-only pixel font, so it looked unlike the design. The design uses Inter (Regular, Semi Bold) and JetBrains Mono, a grey palette with a #3a79bb accent, 3 px corners and icons on the toolbar.
+- **Options considered:**
+  1. Fonts: (a) commit the three TTF files (about 1.1 MB, SIL Open Font License) and embed them in the executable; (b) download the release archives at configure time (Inter's is 34 MB); (c) load them from files beside the executable. (a) is chosen: it builds offline, keeps `editor.exe` a single file, and `.gitattributes` already treats `*.ttf` as binary assets.
+- **Decision:**
+  1. `editor/assets/fonts/` holds Inter 4.1 Regular and Semi Bold and JetBrains Mono 2.304 Regular with their licenses and a README naming the sources. `cmake/EmbedFile.cmake` (`embed_file()`) turns each into a generated C++ array linked into `editor`.
+  2. `editor/src/theme.cpp` (`applyTheme()`) loads the fonts at 13 px and sets Dear ImGui's colours and sizes from the design's palette: panels #282828, bars #232323, tabs #2d2d2d / #3c3c3c with a #3a79bb top line, selection #2c5d87, text #e6e6e6, 3 px corners. `ImGuiRenderer` takes a setup callback for this and scales fonts and sizes by the display's DPI scale.
+  3. rlImGui's Font Awesome 6 icons are turned back on and merged into Inter Regular; the toolbar uses them, laid out as in C-01 (tools left, mode switch, run buttons and tick counter centre, AI Assistant and Layout right). The status bar shows the mode, the FPS and the AI service state (offline) at the right.
+  4. Dear ImGui's dock window-menu button is hidden; the design's ⋮ menu (E-07) comes with the docking stories.
+- **Rationale:** shows how close Dear ImGui gets to the design (asked by the human) with styling only, no custom widgets.
+- **Consequences:** the window's title bar stays the operating system's, not the design's custom one. Disabled controls are drawn at 45 % opacity (srs.fr.14.5), so the toolbar looks fainter than the design, which shows them enabled.
+- **Docs updated:** `editor/assets/fonts/README.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** the design changes its fonts or palette, or a light theme is wanted.
+- **Supersedes / Related:** DEC-063, US-14.1 (#77).
+
+### DEC-065 — srs.fr.14.15: floating panels stay inside the main window
+- **Date:** 2026-11-17
+- **Status:** Accepted
+- **Decided by:** Işık Dönger   **Recorded by:** claude (US-14.1 thread)
+- **Human's words:** US-14.1 thread, 2026-11-17: "I also decide changing srs.fr.14.15 wording to floating panel inside the main window."
+- **Proposed by:** claude (US-14.1 thread)
+- **Context:** srs.fr.14.15 said that a panel tab dragged outside the main window becomes a floating window. With Dear ImGui and rlImGui (DEC-063) that needs multi-viewport support, which rlImGui lacks because raylib manages one window. The options put to the human were (a) reword the requirement to a floating panel inside the main window, (b) replace rlImGui with Dear ImGui's GLFW and OpenGL backends (about 3 to 5 days, more risk on macOS), (c) leave the requirement out of scope.
+- **Decision:** (a). srs.fr.14.15 now reads: "When the user drags a panel tab out of its dock and drops it where no dock accepts it, the Editor shall show the panel as a floating panel inside the main window." Dear ImGui's docking already behaves this way.
+- **Rationale:** costs nothing, keeps the requirement testable and keeps option (b) open for a later increment.
+- **Consequences:** the docking story that holds srs.fr.14.15 is met by Dear ImGui's floating docked windows. A panel cannot be moved to another monitor without the main window spanning it.
+- **Docs updated:** `history/decision-log.md`. Agents in this repository do not change the SRS or other deliverables in team1-sp/docs; the team updates the SRS wording there.
+- **Course documents affected (for humans):** SRS A, srs.fr.14.15 (Section 6.1).
+- **Revisit when:** separate operating-system windows are wanted, which needs option (b).
+- **Supersedes / Related:** DEC-063.
+
+### DEC-066 — US-14.2: the status bar shows the Editor's state from a window-free model
+- **Date:** 2026-11-17
+- **Status:** Accepted (carried by the US-14.2 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-14.2 pull request   **Recorded by:** claude (US-14.2 thread)
+- **Human's words:** Işık Dönger, US-14.2 thread, 2026-11-17: "Can you start on the US-14.2."
+- **Proposed by:** claude (US-14.2 thread), from srs.fr.14.7 to 14.11 and the status bars of the B-01, B-02, B-04, B-08 and C-08c frames and the B-01 and D-06 spec cards
+- **Context:** US-14.2 (#78) asks the status bar for the last Console message (14.7), the mode, FPS and entity count (14.8), the AI service dot (14.9), a red REC while telemetry records (14.10) and the active debug flags in orange (14.11). None of the sources exist yet: the Console log is US-24.1, Play mode EP-17, scenes and entities EP-02/EP-18, the AI service settings US-33.5, the Telemetry panel EP-30 and debug flags EP-12. The design shows no frame with debug flags on, and none with an empty message.
+- **Options considered:**
+  1. Click targets that are not built yet (Project Settings F-04, the Telemetry panel): (a) keep the item visible but not clickable until its story, like a disabled menu item (srs.fr.14.5); (b) add empty action methods now. (a) is chosen: no dead calls.
+  2. Where the debug flags go: (a) first in the right-hand group, before REC; (b) in the message area. (a) is chosen: the message area changes with every log line, so the flags would be hidden.
+- **Decision:**
+  1. `editor_core` gets `EditorStatus` (last Console message, `EditorMode` Edit/Play/Paused/Headless, headless ticks per second, optional entity count, `AiServiceState` and service name, telemetry recording, active debug flag names) and `buildStatusBar()`, which turns it into a `StatusBar`: the message at the left and, at the right, debug flags, REC, mode, FPS, entities and AI service, in this order. Each `StatusItem` has its text, a muted or warning colour, an optional dot and a `Command` for its click. The stories that own each source fill `EditorStatus`; the Editor owns one in `main.cpp`.
+  2. Texts follow the design: "Edit mode", "Play mode", "Paused", "Headless run"; "FPS —" in Edit mode, the render frame rate in Play mode and while paused, "FPS 2 840 ticks/s" in a headless run; "Entities 24", "Entities —" with no scene; "AI service: offline" (grey #6a6a6a dot), "AI service: connected" or "AI service: local · connected" (green #6bcb3c dot); "REC telemetry" with a red #e04a4a dot; flag names joined by commas in #e0b03c. Numbers are grouped in threes with a space. No message is shown while the Console has none.
+  3. Clicking the message opens the Console panel (srs.fr.14.7). The AI service and REC items name their targets but stay unclickable until US-33.5 and EP-30 add them. A clickable item highlights under the mouse, shows a hand cursor and its target as a tooltip. A message too long for the room left is cut with "...".
+  4. `MainWindowView` draws the bar 22 px high in #2a2a2a with a #1a1a1a line above and #a8a8a8 text, from the B-01 palette.
+- **Rationale:** the tests check srs.fr.14.7 to 14.11 without a window, and each later story only sets one field.
+- **Consequences:** a fresh Editor shows "Edit mode · FPS — · Entities — · AI service: offline" and no message. srs.fr.14.9 and 14.10's clicks are met once US-33.5 and EP-30 enable them.
+- **Docs updated:** `agents/state/current-status.md`, `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this follows SRS 6.1.
+- **Revisit when:** the design adds a frame with debug flags on, or the Console story wants severity icons in the status bar.
+- **Supersedes / Related:** DEC-063, DEC-064, US-14.1 (#77), US-14.2 (#78).
+
+### DEC-067 — US-11.2 uses a read-only assistant core, AgentBridge streaming and user-local chats
+- **Date:** 2026-11-22
+- **Status:** Accepted (carried by the US-11.2 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-11.2 pull request   **Recorded by:** codex/gpt-5/us112
+- **Context:** US-11.2 (#72) requires a read-only assistant, manual Semantic Graph design
+  suggestions, configured gRPC responses through AgentBridge, cancellation and user-local chat
+  persistence. `main` had only the transport-neutral synchronous playtest `AgentBridge`; the
+  Semantic Graph, project path service, assistant core and production gRPC contract did not exist.
+  The issue explicitly permits only the smallest stable interfaces for those gaps and excludes the
+  chat UI (#119), grounded diagnosis (#71) and settings UI (#121).
+- **Options considered:**
+  1. Assistant placement: (a) a window-free top-level C++ `assistant/` target above the bridge and
+     Semantic layer seams; (b) put orchestration in `editor_core`; (c) put it only in the Python AI
+     service. (a) keeps the product layer independent from the UI while the configured C++ client can
+     call the separate Python service. (b) couples the layer to the Editor and (c) cannot enforce the
+     local client-side read-only/storage boundary.
+  2. Responses: (a) server-streaming `Answer` returning text chunks, opaque citations and category
+     names, with cancellation on the stream; (b) a unary answer. (a) preserves partial answers and
+     maps Stop to gRPC `ClientContext::TryCancel()` without a second transport.
+  3. Project paths: (a) inject `UserProjectPaths::userLocalArea()` and append
+     `assistant/chats`; (b) invent a concrete hidden-directory name now. (a) makes shared settings
+     unreachable and leaves the concrete cross-platform project layout to its owning story.
+- **Decision:**
+  1. `aegis::assistant` is a window-free C++ target. `ReadOnlyAssistant` receives only a const
+     `SemanticGraphView`, read-only `DataTransmissionPolicy`, `AgentBridge` and `ChatStore`; it
+     receives no engine state, project-source writer or general project filesystem interface and
+     rejects disallowed data categories before starting the bridge. Design suggestions are
+     `MessageContent::DesignSuggestion` text with no apply operation.
+  2. The production `AgentBridge` protobuf service has the existing `Exchange` RPC and a
+     server-streaming `Answer` RPC. The transport-neutral C++ interface exposes a cancellable
+     `AssistantResponseStream`; optional `engine::bridge_grpc` owns all gRPC/protobuf types and maps
+     cancellation to `TryCancel()`. Default builds keep communication dependencies out (DEC-038).
+  3. Chat format `AEGIS_CHAT 1` stores every message's role, state, content kind, text, citations and
+     string data-category names under `<userLocalArea>/assistant/chats`. Saves replace valid files
+     through temporary/backup paths and refuse to overwrite corrupt or unsupported data.
+- **Rationale:** This is the smallest vertical slice that enforces every US-11.2 boundary while
+  leaving the UI, evidence gathering, citation semantics, service/model settings and concrete
+  project-local directory policy to their owning stories.
+- **Consequences:** The future project layer supplies `UserProjectPaths`; the Semantic layer
+  implements the read-only view; #121 supplies a validated address/model and constructs the gRPC
+  bridge; #119 runs/cancels operations and displays persisted history; #71 interprets structured
+  citations. New citation kinds and data categories require no format change because their values
+  are stored as strings.
+- **Docs updated:** `architecture/ai-assistant-layer.md`, `architecture/semantic-layer.md`,
+  `architecture/tech-stack.md`, `guidelines/repository-structure.md`,
+  `testing/test-checklists.md`, `agents/state/task-board.md`, `agents/state/current-status.md`,
+  `agents/state/handoff-log.md`.
+- **Course documents affected (for humans):** none; this implements SRS A srs.fr.11.8–11.12.
+- **Revisit when:** #71 fixes concrete citation schemas, the project-local path owner defines the
+  directory layout, or AgentBridge streaming/deadline evidence requires a wire revision.
+- **Supersedes / Related:** DEC-001, DEC-038, DEC-039, DEC-045, TASK-020, US-11.2 (#72).

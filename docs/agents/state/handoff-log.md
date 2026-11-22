@@ -175,21 +175,7 @@
 
 ---
 
-### HND-015 — RL-based automated game-testing literature review (PB-062)
-- **Date:** 2026-11-04
-- **Agent:** codex/gpt-5/pb062
-- **Task:** TASK-017 (ClickUp PB-062), GitHub issue #24
-- **Goal:** Summarize the three required RL game-testing papers, review modl.ai and comparable tools, and derive implications for Aegis.
-- **Result:** Ready for review. `research/rl-testing-lit.md` covers Bergdahl et al. (2020), Gordillo et al. (2021), and Zheng et al. (2019/Wuji); compares modl.ai, Unity ML-Agents, Unreal Learning Agents, GameDriver and AltTester; synthesizes evidence; maps agent/oracle approaches to all four current bug classes; and proposes a goal-seeking PPO plus curiosity/coverage PPO kernel with scripted/random baselines and deterministic oracles.
-- **Files changed:** `docs/research/rl-testing-lit.md` (new), `docs/README.md`, `docs/agents/state/{task-board,current-status,handoff-log}.md`.
-- **Verified:** Claims were cross-checked against the original three papers and official vendor/tool documentation. `python3 tools/check_md_links.py docs` reports 0 broken links; `git diff --check` is clean. The research document is 324 lines, below the documentation limit.
-- **Not verified:** Vendor claims were not tested hands-on. The proposed agent strategy was not implemented or benchmarked. No unit tests were run because the change is documentation-only.
-- **Next:** Team reviews the research and decides later whether any `[PROPOSED]` implication should become an accepted design decision. The demo game must be chosen (Q-016) before scenario-specific state coverage, bounds, goals or rewards can be fixed.
-- **Traps:** RL exploration does not itself prove that a behavior is a bug; logical rules need explicit oracles. Failure to reach a goal is evidence, not proof of unreachability. Do not treat the proposed Python/process boundary as decided (DEC-011 remains deferred).
-
----
-
-### HND-016 — Python `ai-services` project skeleton (PB-006)
+### HND-015 — Python `ai-services` project skeleton (PB-006)
 - **Date:** 2026-11-04
 - **Agent:** codex/gpt-5/pb006
 - **Task:** TASK-017 (ClickUp PB-006), GitHub issue #20
@@ -212,3 +198,208 @@
 - **Next:** a production bridge task (pinned gRPC/protobuf, `.proto` contract, Windows build check). End-to-end RL benchmark before revisiting the transport.
 - **Traps:** gRPC on Windows has not been built yet. The benchmark harness under `benchmarks/bridge/` is research code, not the production bridge.
 - **Records:** DEC-038 accepted, DEC-011 superseded, DEC-039 and PRB-003 renumbered during the merge, PRB-002.
+
+---
+
+### HND-017 — Record the user-supplied LLM provider decision
+- **Date:** 2026-11-06
+- **Agent:** claude (use cases thread)
+- **Task:** related to ClickUp PB-068 (does not complete it)
+- **Result:** Işık Dönger decided that Aegis builds no model of its own, users supply their own provider account and API key, and only free-tier or local use is guaranteed. Recorded as DEC-045, with matching updates to `architecture/tech-stack.md` and `architecture/ai-assistant-layer.md`.
+- **Next:** PB-068 picks which free-tier and local providers to support and test. The SRS changes (Sections 4 and 5) are handled in the course docs repo by the SRS-A review.
+- **Traps:** The rationale was not given; ask before citing one.
+- **Records:** DEC-045.
+
+---
+
+### HND-018 — Application window and game loop (PB-011)
+- **Date:** 2026-11-10
+- **Agent:** claude-code (PB-011 session), working with Arda Karabulut
+- **Task:** TASK-006 (ClickUp PB-011)
+- **Goal:** The engine opens a window and runs an update/draw loop; closing it exits with code 0 and no leaks.
+- **Result:** Done, ready for review. `engine/core`: `Application` (`init`, `run`, `shutdown`), `IWindow` + `WindowConfig` + `WindowFactory`, `ISimulation`, `IFrameRenderer`, `enableLeakReportAtExit()`. `engine/rendering-raylib`: `RaylibWindow` (the only caller of `InitWindow`, `WindowShouldClose`, `CloseWindow`) and `StatusTextRenderer`; `smoke_window.*` became `raylib_info.*` and `runSmokeWindow` is gone. `sandbox` runs on `Application` with `--headless` and `--max-ticks N`. Arda chose the structure (DEC-046, `Proposed` until Işık confirms; Q-019).
+- **Files changed:** `engine/core/{CMakeLists.txt,include/engine/core/{application,window,simulation,frame_renderer,leak_check}.hpp,src/{application,leak_check}.cpp}`, `engine/rendering-raylib/{CMakeLists.txt,include/engine/rendering_raylib/{raylib_info,raylib_window,status_text_renderer}.hpp,src/{raylib_info,raylib_window,status_text_renderer}.cpp}`, `sandbox/{CMakeLists.txt,src/main.cpp}`, `tests/{CMakeLists.txt,unit/core/application_test.cpp}`, `docs/architecture/engine-layer.md`, `docs/troubleshooting/{environment-setup,common-errors}.md`, `docs/history/decision-log.md`, `docs/agents/state/{task-board,current-status,open-questions,handoff-log}.md`.
+- **Verified (Windows 11, Visual Studio Build Tools 2022, MSVC 19.44, CMake 4.2, `ENGINE_WARNINGS_AS_ERRORS=ON`):** `cmake --build --preset windows-debug` with no warnings; `ctest --preset windows-debug` 24/24 (13 new `ApplicationTest` tests and `Sandbox.HeadlessRun_ExitsCleanly`); `headless` preset builds without raylib, 16/16; clang-format 19.1.7 `--dry-run -Werror` clean. `sandbox.exe --max-ticks 120` opened the window, printed `ticks executed: 120`, exit code 0, standard error empty (no leak report). `sandbox.exe --headless` ran 10 000 ticks without any raylib start-up line, exit code 0. Mutations: a deliberate `new int[16]` gave "Detected memory leaks! ... 64 bytes long" and failed the sandbox test; moving the tick after present failed 2 `ApplicationTest` tests.
+- **Not verified:** macOS and Linux builds (CI will run them after a push); closing the window by hand with the close button or Escape (the runs above ended through `--max-ticks`; the close path is covered by the fake-window tests).
+- **Repo state:** builds, tests pass; committed on `feat/pb-011-feat-open-app-win-n-run-main-loop`, the branch the Issue start workflow made for issue #34 (created from ClickUp). The workflow could not open the draft PR ("GitHub Actions is not permitted to create or approve pull requests", HTTP 403), so the PR is opened by hand.
+- **Next:** 1. Draft PR with `Closes #34`; CI then builds on Windows, macOS and Linux. 2. Işık answers Q-019. 3. PB-012 replaces the one-tick-per-frame loop with the fixed-timestep accumulator.
+- **Traps:** `RaylibWindow::shouldClose()` is also true after Escape (raylib's default exit key). `Application` holds references to the simulation and the renderer; both must outlive it. A headless run needs `maxTicks`, or `init` refuses it. CTest ignores the exit code when `PASS_REGULAR_EXPRESSION` is set, so the sandbox test uses only `FAIL_REGULAR_EXPRESSION`. `engine/rendering-raylib` is Zeynep Ertürk's area: ask her to look at the window wrapper too.
+- **Records:** DEC-046 (Proposed), Q-019, E-029, E-030.
+
+---
+
+### HND-019 — Fixed 1/60 s timestep loop (PB-012)
+- **Date:** 2026-11-10
+- **Agent:** claude-code (PB-012 session), working with Arda Karabulut
+- **Task:** TASK-006 (ClickUp PB-012), on top of HND-018
+- **Goal:** The simulation advances in fixed 1/60 s ticks whatever the render frame rate is.
+- **Result:** Done, ready for review. `engine/core`: `tick.hpp` (`Tick`, `ticksPerSecond`, `fixedDeltaSeconds`, `simulatedSeconds()`), `FrameClock` (PB-012.1), `FixedTimestep` (PB-012.2), the tick counter in `Application` and `ISimulation::runTick(Tick)` (PB-012.3), unit tests (PB-012.4). The loop rules follow srs.fr.1.2 to 1.6 and are recorded as DEC-047 (`Proposed`, Q-020).
+- **Files changed:** `engine/core/{CMakeLists.txt,include/engine/core/{application,simulation,tick,frame_clock,fixed_timestep}.hpp,src/{application,frame_clock,fixed_timestep}.cpp}`, `sandbox/src/main.cpp`, `tests/{CMakeLists.txt,unit/core/{application_test,fixed_timestep_test,frame_clock_test}.cpp,unit/core/even_frame_times.hpp}`, `docs/architecture/engine-layer.md`, `docs/troubleshooting/{environment-setup,common-errors}.md`, `docs/testing/test-checklists.md`, `docs/history/decision-log.md`, `docs/agents/state/{task-board,current-status,open-questions,handoff-log}.md`.
+- **Verified (Windows 11, MSVC 19.44, CMake 4.2, `ENGINE_WARNINGS_AS_ERRORS=ON`):** `windows-debug` builds with no warnings, `ctest` 49/49; `headless` preset 41/41; clang-format 19.1.7 clean. `sandbox.exe --max-ticks 300 --fps N` for N = 30, 60, 144 and 0: 300 ticks (5.00 s simulated) took 5.00, 5.01, 5.00 and 5.00 s of real time in 151, 301, 702 and 15 396 render frames; exit code 0 and an empty standard error each time. Mutations: `unitsPerTick` set to 1 000 000 020 (a tick of 16 666 667 ns) failed 7 tests; incrementing the counter before `runTick` failed 7 tests.
+- **Not verified:** macOS and Linux builds (CI after a push). The slow-simulation warning in a real window (covered by `FixedTimestep` tests; dragging the window should trigger it).
+- **Repo state:** builds, tests pass; committed on `feat/pb-012-feat-implement-fixed-timestep-1-60-s` (issue #36), which merges the PB-011 branch first, so its PR's base is the PB-011 branch and the diff shows only PB-012 (Işık asked for the PR before PB-011 is merged).
+- **Next:** 1. Merge PB-011 (#35) first. Then switch this PR's base to `main`; Işık resolves the conflicts that the squash merge of #35 causes, taking the PB-012 side in files both tasks touch. 2. Işık answers Q-020. 3. Later tasks: `RunError` in the loop (srs.fr.1.11), pause and step (srs.fr.1.16 to 1.18), headless run settings (srs.fr.7.x), a logger for the warning.
+- **Traps:** 1/60 s is not a whole number of nanoseconds, so tests use frame times such as 50 ms (exactly 3 ticks) or `evenFrameTimes()`. The first render frame of a run always runs 0 ticks. `FrameClock` is read once per render frame by `Application`; a second reading in the same frame would steal time from the accumulator, so the sandbox keeps its own `FrameClock` for the read-out. Ticks beyond 5 per frame are dropped, so a debugger break or a dragged window loses simulated time by design.
+- **Records:** DEC-047 (Proposed), Q-020, E-031; E-007 updated.
+
+### HND-020 — Accept DEC-046 and DEC-047; the editor hosts the application (PB-122)
+- **Date:** 2026-11-11
+- **Agent:** claude (PB-122 thread), working with Işık Dönger
+- **Task:** TASK-018 (ClickUp PB-122); closes TASK-006
+- **Goal:** Record Işık's acceptance of the PB-011 and PB-012 decisions, and make the editor the application that opens the main window.
+- **Result:** DEC-046 and DEC-047 `Accepted` (Q-019, Q-020 answered). DEC-048 records that the editor hosts `Application`, `sandbox` is a test host and games never host the engine. `editor/` now runs `Application` with `RaylibWindow`; it is no longer built in the `headless` preset. Rule S-6 no longer lists editor tooling as out of scope.
+- **Verified (Linux, GCC 13.3, CMake 3.28, `ENGINE_WARNINGS_AS_ERRORS=ON`):** `headless` preset builds, `ctest` 41/41, no `editor` target; a Debug build with raylib builds with no warnings, `ctest` 49/49; `editor --max-ticks 120` under Xvfb opened a 1280 x 720 window, closed it and exited with code 0, nothing on stderr; `editor --bogus` exits with code 2. clang-format 19.1.7 clean.
+- **Not verified:** Windows and macOS (CI after a push); closing the window by hand.
+- **Repo state:** builds, tests pass; committed on `feat/pb-122-make-the-editor-host-the-application-and` (issue #38).
+- **Next:** PB-110 (editor shell with dockable panels) builds on this window. The Issue start workflow failed to open the draft PR ("GitHub Actions is not permitted to create or approve pull requests"): the repository setting under Settings > Actions > General needs turning on.
+- **Records:** DEC-046, DEC-047 (accepted), DEC-048, Q-019, Q-020.
+
+---
+
+---
+
+### HND-021 — Physics adapter interface (PB-025)
+- **Date:** 2026-11-10
+- **Agent:** claude (PB-025 session), working with Zeynep Ertürk
+- **Task:** TASK-019 (ClickUp PB-025)
+- **Result:** Ready for review. `engine/physics/` (INTERFACE target `engine::physics`, links only `engine::core`): `body_desc.hpp`, `physics_types.hpp`, `physics_adapter.hpp`. `engine/core`: `vec2.hpp`, `entity_id.hpp` (copied from `ecs-api-design.md` §4 so the ECS reuses it). `tools/check_includes.py` added to the CI `format` job. `physics-adapter-design.md` §2 rewritten to the real interface.
+- **Decided by Zeynep:** name `IPhysicsAdapter` (not the ClickUp `IPhysicsWorld`); bodies addressed by `BodyId` as the design doc says, plus `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core`.
+- **Verified (Linux, GCC 13, `ENGINE_WARNINGS_AS_ERRORS=ON`, raylib on):** builds with no warnings; `ctest` 14/14; clang-format 19.1.7 clean; `check_includes.py` reports 0, and reports 1 when a Box2D include is added to `body_desc.hpp`.
+- **Not verified:** Windows and macOS builds (CI covers them); the headless preset.
+- **Next:** PB-026 implements `Box2DPhysicsAdapter` in `engine/physics-box2d/` (also needs PB-012, the fixed-timestep loop).
+- **Traps:** `BodyId` is 64-bit on purpose so the Box2D implementation can pack a `b2BodyId` into it. Collision events and raycasts return `EntityId`, not `BodyId`.
+- **Records:** DEC-049 (Accepted by Işık Dönger on 2026-11-11 during review of PR #33).
+
+---
+
+### HND-022 — Render frame phase order (US-1.1)
+- **Date:** 2026-11-12
+- **Agent:** claude (US-1.1 thread), working with Işık Dönger
+- **Task:** US-1.1 (#41), srs.fr.1.1 to 1.6
+- **Result:** srs.fr.1.2 to 1.6 were already met by PB-011/PB-012. The gap was srs.fr.1.1: input was polled at the end of the previous frame inside raylib's `EndDrawing()`. `IWindow` now has `collectInput()`, `beginFrame()`, `presentFrame()` (was `endFrame()`); `Application` calls collect input, ticks, render, present. raylib is built with `SUPPORT_CUSTOM_FRAME_CONTROL=1`, so `RaylibWindow` polls, swaps and caps the frame rate itself. The PB-008 spike was adapted the same way.
+- **Verified (Windows 11, MSVC, `windows-debug` preset):** builds with no new warnings; `ctest` 53/53; `editor --max-ticks 120` opened the window, ran 120 ticks in about 2 s (frame cap works) and exited with code 0; `box2d_raylib_spike --frames 120` exited with code 0. clang-format 19.1.7 clean.
+- **Not verified:** macOS and headless Linux (CI after push); typing in the window, since nothing reads input yet.
+- **Next:** US-1.3 (tick phases, srs.fr.1.12 to 1.15) and US-1.4 (pause).
+- **Traps:** with custom frame control raylib's `GetFrameTime()` and `GetFPS()` stay 0; measure time with `FrameClock` or `GetTime()`. Raylib code outside `RaylibWindow` must call `PollInputEvents()` and `SwapScreenBuffer()` itself.
+- **Records:** DEC-051 (Accepted by Işık Dönger on 2026-11-12).
+
+---
+
+### HND-023 — Decision statuses, commit approval, PR opening and merge conflicts (ci/131)
+- **Date:** 2026-11-12
+- **Agent:** claude (ci/131 thread), working with Işık Dönger
+- **Task:** branch `ci/131-update-agent-and-github-workflow`
+- **Result:** Ready for review. A decision is `Proposed` only while it waits for an answer in the conversation; a decision a PR carries is written `Accepted`, listed under "Decisions for review" in the PR template and approved in the review (DEC-052). Agents ask before committing, not before pushing (DEC-053). `tools/open_pr.py` opens the filled draft PR and the PR fill workflow is gone (DEC-054). Merge-conflict rules in `git-workflow.md` §4, `tools/check_ids.py` in the `docs` CI job, and the `Conflict flag` workflow with the `needs-sync` label (DEC-055).
+- **Verified (Windows 11, Python 3):** `check_ids.py` passes on the repo and fails on a copy with a duplicated DEC id; `open_pr.py --help` runs; the GraphQL query of `flag_conflicts.py` returns the open PRs (read only); `check_md_links.py` passes.
+- **Not verified:** `open_pr.py` creating a real PR and `conflict-flag.yml` labelling a real PR (both need a push; try them on this branch's PR).
+- **Next:** someone with admin rights checks that the label-sync workflow created `needs-sync` after the merge.
+- **Traps:** a PR opened by a workflow with `GITHUB_TOKEN` triggers no other workflows; that is one reason no workflow opens PRs.
+- **Records:** DEC-052, DEC-053, DEC-054, DEC-055 (all Accepted by Işık Dönger in the conversation on 2026-11-12, except the conflict flag of DEC-055, approved in the review); DEC-025 superseded; DEC-050 amended.
+
+---
+
+### HND-024 — Windowed and headless runs (US-1.2)
+- **Date:** 2026-11-15
+- **Agent:** claude (US-1.2 thread), working with Işık Dönger
+- **Task:** US-1.2 (#42), srs.fr.1.7 to 1.11
+- **Result:** srs.fr.1.7 and 1.10 were already met. Added `engine::RunError` and its handling in `Application` (message and tick to stderr, run stops at that tick, exit code 1, outcome `Error`; srs.fr.1.11), `Application::outcome()` with `RunOutcome`, `parseRunOptions()` for `--headless`, `--max-ticks`, `--seed`, `--input-recording` (srs.fr.1.8, 7.33), and `WindowConfig::fullscreen` (srs.fr.1.9). The sandbox uses the parser and has `--fullscreen` and `--fail-at-tick N`. DEC-057 lists the choices.
+- **Verified (Linux, GCC 13, Debug, warnings as errors):** full build with raylib, `ctest` 78/78; `headless` preset 66/66; sandbox headless with no `--max-ticks` ran 10 000 ticks; `--fail-at-tick 41` printed `error: tick 41: ...` and exited 1; invalid `--seed` and `--input-recording` exited 2 with no tick; normal mode under Xvfb ran 120 ticks in 2 s and a run error at tick 30 stopped it; `--fullscreen` opened under Xvfb. clang-format 19.1.7 clean.
+- **Not verified:** Windows 11 and macOS (CI after push); fullscreen on a real display.
+- **Next:** Editor parts in their stories: mode switch (US-17.3), Error Pause in Play mode (US-17.2, US-24.1), Rendering settings (US-27.4); the built game reads `parseRunOptions()` (US-28.x).
+- **Traps:** raylib keeps configuration flags after `CloseWindow()`, so a second window in the same process would still open fullscreen. Only `Application` may catch `RunError` (DEC-042).
+- **Records:** DEC-057 (Accepted in the PR, for review).
+
+---
+
+### HND-025 — The same tick phases in normal and headless mode (US-1.3)
+- **Date:** 2026-11-16
+- **Agent:** claude (US-1.3 thread), working with Işık Dönger
+- **Task:** US-1.3 (#43), srs.fr.1.12 to 1.15
+- **Result:** `TickPhase` and `tickPhases` in `engine/core/tick_phase.hpp`. `ISimulation::runTick(tick)` is now `runPhase(phase, TickContext)`, and `Application::runOneTick()`, used by both run modes, calls it for the seven phases in order. Before phase 1 it takes the tick's transitions from the run's `IInputSource` and applies them to the run's `InputActionState` (srs.fr.5.6, 5.7). `KeyboardQueue` (srs.fr.5.5) is the default source in normal mode, `NoInputSource` in headless mode; `ApplicationConfig::inputSource` sets another and the keyboard is then ignored. A phase that throws `RunError` ends its tick. The sandbox prints `tick phases run: N`. DEC-059 lists the choices. srs.fr.1.15 was already met by US-1.1; a test now checks that the renderer only sees completed ticks.
+- **Verified (Linux, GCC 13, Debug, warnings as errors):** full build with raylib, `ctest` 104/104; `headless` preset 91/91; sandbox headless 600 ticks printed `tick phases run: 4200`; sandbox normal mode under Xvfb ran 120 ticks (840 phases) in 2 s; editor under Xvfb ran 60 ticks and exited 0. clang-format 19.1.7 clean.
+- **Not verified:** Windows 11 and macOS (CI after push); real key presses, since nothing turns keys into actions yet.
+- **Next:** US-5.1 pushes key transitions into `Application::keyboardQueue()`; the ECS scheduler implements `runPhase()`; recording playback (US-5.4) and the agent become `IInputSource`s.
+- **Traps:** `TickContext::input` is a reference to the loop's state and is valid only during the phase call. A scripted input source must answer by tick number, not by call count, so that normal and headless runs read it the same way.
+- **Records:** DEC-059 (Accepted in the PR, for review).
+
+---
+
+### HND-026 — Pause, resume and step (US-1.4)
+- **Date:** 2026-11-16
+- **Agent:** claude (US-1.4 thread), working with Işık Dönger
+- **Task:** US-1.4 (#44), srs.fr.1.16 to 1.18
+- **Result:** `Application::requestPause()`, `resume()`, `requestStep()` and `isPaused()`. A pause takes effect at the next tick boundary, also from inside a tick; the frame's unstarted ticks are dropped and the part of a tick is kept. While paused the timestep gets no time; `resume()` takes the paused part of the next frame time off with the new `FrameClock::sinceFrameStart()`, so no paused time is simulated and no slow-simulation warning follows. Each step runs one tick in the next render frame without the accumulator. Headless runs cannot pause. DEC-060 lists the choices.
+- **Verified (Linux, GCC 13, Debug, warnings as errors):** `headless` preset build, `ctest` 102/102 (11 new tests). clang-format 19.1.7 clean.
+- **Not verified:** Windows 11 and macOS (CI after push); the editor build with raylib (CI); a real Pause button, since Play mode is US-17.2.
+- **Next:** US-17.2 wires Pause, Step and the toolbar counter to these calls; US-24.1 calls `requestPause()` from the tick that logs the first error.
+- **Traps:** call the pause functions on the loop's thread only. `resume()` must be called when the user resumes, not deferred to the next frame, or the time until that frame counts as paused.
+- **Records:** DEC-060 (Accepted in the PR, for review).
+
+
+---
+
+### HND-027 — Where agents work, and epics that close themselves (ci/136)
+- **Date:** 2026-11-16
+- **Agent:** claude (ci/136 thread), working with Işık Dönger
+- **Task:** no issue (PR #136, `no-issue` label)
+- **Result:** DEC-061: agents do code and repository docs work in their own cloud copy by default and use a member's computer only when the files, tools or signed-in accounts exist only there or the member asks; the cloud fallback for `tools/open_pr.py` is written down (git-workflow §1, AGENT-PROTOCOL 5a and 23a, rules P-12, CONTRIBUTING). DEC-062: `.github/workflows/epic-close.yml` runs `tools/close_epics.py` on closed, reopened and edited issues: it closes an epic once all its sub-issues are closed and no later stories are left, and otherwise labels it `increment-done` while only later stories are left; run by hand it checks every open epic, with a dry run option.
+- **Verified:** `tools/close_epics.py` with `DRY_RUN=true` against the live repository: the sweep checked 35 open epics and would close none (none has all sub-issues closed); the issue mode found EP-01 (#40, already closed) as the parent of #44 and EP-02 (#45) as the parent of #46 with 6 open sub-issues. `check_ids.py` and `check_md_links.py` pass.
+- **Not verified:** a real close by the workflow; that happens when the last open sub-issue of an epic closes after the merge.
+- **Next:** EP-01 (#40) was closed by hand with US-1.5 still in its later stories; reopen it if the team wants it to carry `increment-done`.
+- **Traps:** a close made with the workflow's own token starts no other workflow run, so the script walks up the parent chain itself.
+- **Records:** DEC-061, DEC-062 (Accepted in the PR, for review).
+
+---
+
+### HND-028 — Editor main window (US-14.1)
+- **Date:** 2026-11-16
+- **Agent:** claude (US-14.1 thread), working with Işık Dönger
+- **Task:** US-14.1 (#77), srs.fr.14.1 to 14.6
+- **Result:** The editor draws its main window with Dear ImGui v1.93.0-docking through rlImGui (`engine::rendering_raylib::ImGuiRenderer`): the menu bar with File, Edit, Assets, Entity, Component, Run, AI, Window and Help (items of D-01 to D-09, unbuilt ones disabled), the C-01 toolbar (all disabled for now), the Default layout (Hierarchy left, Scene and Game centre, Inspector right, Project and Console bottom) and a status bar. `editor_core` has the window-free menu model, `shortcutText()` (Ctrl/Cmd) and `EditorSession` (title, unsaved items, `confirmClose()`). `Application` got `confirmClose`, `requestClose()`, `setWindowTitle()`; `WindowConfig::escapeClosesWindow`; `IFrameRenderer::releaseGraphics()`. DEC-063 lists the choices.
+- **Verified (Linux, GCC 13, Debug, warnings as errors, raylib on):** build, `ctest` 130/130 (14 new or changed tests). The editor under Xvfb: the layout of srs.fr.14.1, File and Window menus with muted disabled items, Ctrl+6 brings Console to the front, Escape does not close, File > Exit ends the run with exit code 0, title "Aegis Editor 0.1". clang-format 19.1.7 clean, `check_includes.py` passes.
+- **Not verified:** Windows 11 and macOS (CI after push); Cmd shortcuts on a real Mac; the title with a real project (no Project Hub yet).
+- **Next:** US-15.x adds F-01 and reads `EditorSession::isUnsavedChangesDialogRequested()`; the Project Hub calls `openProject()`; the docking and layout stories build on the dock space in `MainWindowView`.
+- **Traps:** rlImGui must be shut down before the window closes, which `Application::shutdown()` does through `releaseGraphics()`. Dear ImGui docks the panels during the first frame, so bringing tabs to the front works from the second frame on. The default font has ASCII and Latin-1 only.
+- **Theme (same PR):** the editor now uses Inter and JetBrains Mono (embedded from `editor/assets/fonts`), the Figma palette and Font Awesome toolbar icons (DEC-064); `figma-vs-editor.png` in the thread compares it with B-02.
+- **Records:** DEC-063, DEC-064 (Accepted in the PR, for review).
+
+---
+
+### HND-029 — Editor status bar (US-14.2)
+- **Date:** 2026-11-17
+- **Agent:** claude (US-14.2 thread), working with Işık Dönger
+- **Task:** US-14.2 (#78), srs.fr.14.7 to 14.11
+- **Result:** `editor/include/editor/status_bar.hpp`: `EditorStatus` and `buildStatusBar()` build the status bar's items (message, debug flags, REC, mode, FPS, entities, AI service) with their colours, dots and click commands. `MainWindowView` draws them in the B-01 style; clicking the message opens the Console. DEC-066 lists the choices.
+- **Verified (Linux, GCC 13, Debug, warnings as errors, raylib on):** build, `ctest` 139/139 (9 new tests). The editor under Xvfb with every field filled in by a temporary local patch (not committed): all items in the design's order and colours, hover highlight and tooltip on the message, clicking it brings Console to the front.
+- **Not verified:** Windows 11 and macOS (CI after push).
+- **Next:** US-24.1 sets `lastConsoleMessage`; US-17.2 sets `mode`; the scene stories set `entityCount`; US-33.5 sets the AI state and enables the AI item's click (F-04 at AI and Privacy); EP-30 enables REC's click; the debug flag story fills `activeDebugFlags`.
+- **Traps:** `EditorStatus` is read every render frame; set it from the Editor's thread only.
+- **Records:** DEC-066 (Accepted in the PR, for review).
+
+---
+
+### HND-030 — Read-only assistant and configured AI service (US-11.2)
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/us112
+- **Task:** US-11.2 (#72), srs.fr.11.8 to 11.12
+- **Result:** Added the window-free `aegis::assistant` core with only a const Semantic Graph view and text output. Configured requests stream through the existing AgentBridge abstraction; the optional production implementation contains gRPC/protobuf. Cancellation is idempotent before, during and after streaming. `AEGIS_CHAT 1` stores questions, complete/stopped/partial answers, citations and per-message transmitted-data categories beneath the injected user-local project path, using validated bounded parsing and safe replacement. Suggestions are marked manual text and cannot execute engine or project operations. #71, #119 and #121 remain out of scope.
+- **Verified:** warnings-as-errors builds and full CTest suites pass for headless (138/138), macOS Debug (152/152) and optional gRPC headless (138/138). clang-format 19.1.7, include policy, ID consistency, documentation links and `git diff --check` pass. Tests use fakes and require no AI service or network.
+- **Not verified:** a live configured AI service, intentionally excluded from unit tests; Windows compiler/CI until the PR runs.
+- **Next:** review DEC-067 and the PR; later stories supply Semantic Graph data (#71), chat UI (#119) and provider/settings UI (#121).
+- **Traps:** never give the assistant an engine world, project writer or shared-settings path. Preserve streaming cancellation in AgentBridge instead of adding a second transport. Do not overwrite a corrupt or unsupported chat file.
+- **Records:** DEC-067 (Accepted in the PR, for review); PRB-005 (AppleClang warning from generated protobuf headers).
+
+---
+
+### HND-031 — RL-based automated game-testing literature review and AI-bridge context (PB-062)
+- **Date:** 2026-11-04, updated 2026-11-22
+- **Agent:** codex/gpt-5/pb062 (review); claude, PR #25 thread (merge with main and section 6)
+- **Task:** TASK-021 (ClickUp PB-062), GitHub issue #24, PR #25
+- **Goal:** Summarize the three required RL game-testing papers, review modl.ai and comparable tools, and derive implications for Aegis. Then answer Işık Dönger's review: how context from the AI-bridge layer improves autonomous testing.
+- **Result:** Ready for review. `research/rl-testing-lit.md` covers Bergdahl et al. (2020), Gordillo et al. (2021) and Zheng et al. (2019/Wuji); compares five tools; maps agent/oracle approaches to the four bug classes; proposes a goal-seeking plus curiosity PPO kernel with scripted/random baselines and deterministic oracles. New section 6 defines six bridge context tiers (C0 opaque observation to C5 snapshot/seed control), maps each to testing uses with literature evidence ([9]-[17]), lists `[PROPOSED]` bridge-contract additions (schema handshake, action mask, event stream, episode control, graph query) and a context-ablation experiment.
+- **Merge note:** main was merged in on 2026-11-22. The PR's TASK-017 and HND-015 collided with main's PB-006 entries, so main's numbers were kept and this work became TASK-021 and HND-031.
+- **Files changed:** `docs/research/rl-testing-lit.md` (new), `docs/README.md`, `docs/agents/state/{task-board,current-status,handoff-log}.md`.
+- **Verified:** `python3 tools/check_md_links.py docs` reports 0 broken links. Section 6 citations were checked against publisher/arXiv listings on 2026-11-22.
+- **Not verified:** Vendor claims were not tested hands-on. No proposal was implemented or benchmarked. [12]-[14] are recent preprints or single-team results.
+- **Next:** Team reviews; any `[PROPOSED]` bridge-contract change needs its own decision entry. The demo game (Q-016) must be chosen before scenario-specific bounds, goals or rewards can be fixed.
+- **Traps:** RL exploration does not itself prove a bug; logical rules need explicit oracles. Failure to reach a goal is evidence, not proof of unreachability. LLMs explain candidates; they are not oracles.

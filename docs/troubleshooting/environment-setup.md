@@ -54,7 +54,7 @@ How to add a test and run a single one: [`tests/README.md`](../../tests/README.m
 | --- | --- |
 | `windows-debug`, `windows-release` | Everything, Visual Studio generator (Windows only) |
 | `macos-debug`, `macos-release` | Everything, Unix Makefiles (macOS only) |
-| `headless` | No raylib: engine libraries, `editor`, `engine_tests`. No `sandbox` (R-4, R-6) |
+| `headless` | No raylib: engine libraries and `engine_tests`. No `editor`, no `sandbox` (R-4, R-6) |
 
 Clean: delete `build/<preset>/` (or all of `build/`). Opening the folder in Visual Studio, CLion or VS Code with the CMake Tools extension picks up the same presets.
 
@@ -63,10 +63,13 @@ Clean: delete `build/<preset>/` (or all of `build/`). Opening the folder in Visu
 | Program | Windows | macOS |
 | --- | --- | --- |
 | Sandbox (opens a window; Escape closes it) | `build\windows-debug\sandbox\Debug\sandbox.exe` | `build/macos-debug/sandbox/sandbox` |
-| Sandbox, closes itself after N frames | add `--frames 120` | add `--frames 120` |
-| Editor (placeholder, prints its version) | `build\windows-debug\editor\Debug\editor.exe` | `build/macos-debug/editor/editor` |
+| Sandbox, closes itself after N ticks | add `--max-ticks 120` | add `--max-ticks 120` |
+| Sandbox in headless mode (no window; 10 000 ticks unless `--max-ticks` is given) | add `--headless` | add `--headless` |
+| Sandbox with another render frame rate cap (default 60, 0 = no cap) | add `--fps 144` | add `--fps 144` |
+| Editor (opens the main window; Escape closes it) | `build\windows-debug\editor\Debug\editor.exe` | `build/macos-debug/editor/editor` |
+| Editor, closes itself after N ticks | add `--max-ticks 120` | add `--max-ticks 120` |
 
-Normal and headless run modes of the engine come with TASK-006.
+The sandbox runs on the engine's `Application` (PB-011, PB-012). Its window shows the ticks executed, the simulated time, the real time and the frame time, and it prints the totals when it ends: at any `--fps` value, 600 ticks take 10 s. In a Windows Debug build it reports memory leaks on the standard error output when it exits: a clean run prints nothing there, a leak prints "Detected memory leaks!" and the blocks. An unknown option, or a `--max-ticks` value outside 1 to 1 000 000, ends it with exit code 2.
 
 ## 6. Troubleshooting
 
@@ -97,3 +100,6 @@ Solved setup problems also go into `history/problem-log.md` (area `Build`) and g
 | 2026-10-24 | Exact prerequisites, build, test and run commands for the PB-002 skeleton | claude-code (PB-002 session) |
 | 2026-10-24 | Windows build verified with Visual Studio 2026 / MSVC 19.51; first configure takes several minutes (raylib download) | claude-code (PB-002 session) |
 | 2026-10-27 | Link to the how-to-add-a-test guide (PB-003) | claude-code (PB-003 session) |
+| 2026-11-10 | Sandbox options `--max-ticks` and `--headless`, leak report (PB-011) | claude-code (PB-011 session) |
+| 2026-11-10 | Sandbox option `--fps` and the time read-out (PB-012) | claude-code (PB-012 session) |
+| 2026-11-11 | Editor opens the main window on `Application`; not built in the `headless` preset (PB-122, DEC-048) | claude (PB-122 thread) |

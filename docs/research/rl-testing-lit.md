@@ -2,7 +2,8 @@
 
 Status: **research findings** for PB-062. Statements about Aegis's future playtest
 agent are `[PROPOSED]`; they do not override accepted decisions in
-[`decision-log.md`](../history/decision-log.md). Product information was checked
+[`decision-log.md`](../history/decision-log.md). Section 6 (AI-bridge context) was added on
+2026-11-22. Product information was checked
 against public vendor documentation on 2026-11-04 and is not an independent
 validation of vendor claims.
 
@@ -189,8 +190,10 @@ claims are summarized as documented, not treated as measured results.
 ## 5. Implications for Aegis
 
 The recommendations below are `[PROPOSED]`. They refine future Phase 11 work but
-do not decide the Python/C++ process boundary (DEC-011 is still deferred) or the
-demo game (Q-016).
+do not decide the demo game (Q-016). When this review was first written the
+Python/C++ process boundary was still open (DEC-011); it has since been decided as
+gRPC/protobuf behind `AgentBridge` (DEC-038, ADR-002). Section 6 builds on that
+decision.
 
 ### 5.1 Proposed playtest kernel
 
@@ -281,7 +284,141 @@ review before implementation.
 This sequence keeps the smallest useful vertical slice and makes the incremental
 value of RL measurable.
 
-## 6. References
+## 6. AI-bridge context for autonomous testing
+
+Status: **research findings and `[PROPOSED]` implications**, added 2026-11-22 in
+response to the PR #25 review. The bridge transport is decided (gRPC/protobuf behind
+`AgentBridge`, DEC-038). Everything below about what the bridge *carries* is a
+proposal; changing the wire contract needs its own decision entry.
+
+### 6.1 Why the bridge matters for testing
+
+The papers in section 2 all gave their agents **privileged engine state**: relative
+goal position, contact flags and semantic ray casts [1], [2], or instrumented
+server-side game state [3]. Each team hand-built that state for one game, and in
+every case the oracles were separate, game-specific code. The commercial tools in
+section 4 sit at the other end. modl.ai sees only pixels and OCR [4], and
+GameDriver and AltTester see an object hierarchy without meaning [7], [8].
+
+Aegis can do something none of them do: the engine already describes itself. The
+custom ECS registers every component with a description, units and field layout,
+every system declares what it reads and writes, every event is typed and numbered by
+tick, and runs are deterministic (`ecs-api-design.md` §11, §12, §16;
+`telemetry-and-events.md`). The AI-bridge layer (`AgentBridge`, plus the Semantic
+Graph it can send) can therefore hand a testing agent **general, structured context
+for any game built in the editor**, not a per-game feature vector. The research
+question is which parts of that context make the agent find more bugs, faster and
+more reproducibly.
+
+### 6.2 What context the bridge can provide
+
+| Tier | Context | Source in Aegis | Status |
+| --- | --- | --- | --- |
+| C0 | Per-tick observation bytes and one action id | `AgentBridge::Exchange(Observation) -> Action` in `proto/agent_bridge.proto` | Implemented seam; payload is opaque bytes |
+| C1 | Structured per-tick state: the components `AgentObservationSystem` declares it reads | `ecs-api-design.md` §16, item 2 | Designed, later than Phase 1 |
+| C2 | Session schema: component names, fields, units, descriptions, systems with `reads`/`writes`, event types | `Schema` record (§12), sent once per session (§16) | Designed; schema record is Phase 1 telemetry |
+| C3 | Event stream: typed events with sequence number, tick, phase, publisher, entities and payload | Event bus and `event` telemetry records | Designed; Phase 1 |
+| C4 | Semantic Graph: static structure (`System —writes→ Component`) plus tick-stamped runtime edges (`collidedWith`, `triggered`) | `semantic-layer.md` §2 | Planned (roadmap phase 10); only `structureForAssistant()` exists (DEC-067) |
+| C5 | Episode control: seed, `World::snapshot()`/`restore()`, input-only actions, deterministic replay | `ecs-api-design.md` §16; DEC-005 | Designed, later than Phase 1 |
+
+C0 is all the current proto carries. C1 to C5 are what makes the layer "AI-native"
+for testing.
+
+### 6.3 How each tier can improve autonomous testing
+
+| Tier | Testing use | Evidence | Expected gain for Aegis | Caveat |
+| --- | --- | --- | --- | --- |
+| C1 + C2 structured state with schema | A generic observation encoder built from the schema, so the same agent code works on any scene without hand-picked features | Privileged structured state made PPO training feasible in [1], [2]; pixels improved exploration but at higher cost [2]; LLM playtesters work better when the board is converted into structured input [12] | No per-game feature engineering; smaller payloads than pixels; observations are explainable because each value has a name and unit | The agent sees things a human cannot. That is fine for bug finding but invalidates "human difficulty" claims [1] |
+| C2 valid-action mask | Send which abstract actions are currently meaningful (e.g. "interact" only near an `Unlockable`) | Invalid action masking keeps a valid policy gradient and scales as the invalid action space grows, while penalising invalid actions does not [9] | Fewer wasted steps, faster training on interaction-heavy scenes | A wrong mask hides bugs that need "invalid" input; keep an unmasked baseline |
+| C3 event stream | (a) Rewards: goal reward from `Objective`/`Unlocked` events instead of hand-coded distance. (b) Exploration: count novelty over (event type, semantic state) cells, not only 5 m spatial bins. (c) Oracles: feed the same events to deterministic bug checks | Count-based spatial curiosity reached ~90% map coverage [2]; Go-Explore showed that domain-knowledge cell representations sharply improve hard exploration [10]; curiosity conditioned on known trajectories focused testing near intended routes in 3D maps [17]; Wuji found state coverage more informative than line coverage [3] | Event and semantic-state coverage can reach logic bugs that sit at an already-visited position (door with and without key) | Cell definitions change the metric; version them (section 5.3) |
+| C4 Semantic Graph | (a) Test targeting: find every `Unlockable` and its required item, every `Objective`, every obstacle without a collider, and turn them into goals or scenarios. (b) Change impact: after an edit, follow `writes`/`reads` edges to re-test only affected rules. (c) Triage: attach the causal chain (event → system → component change) to each bug candidate | Goals generated from game scenarios let synthetic agents match human testers on 45 injected bugs [11]; a knowledge graph of game elements and causal relations let an LLM tester locate update-affected functions and finish tests in fewer steps [14]; state abstraction is a core component of a deployed LLM MMORPG tester [13] | Goal-seeking PPO gets goals for free from the graph; regression runs focus on what changed; reports explain *why* | Graph quality depends on declared reads/writes being complete; undeclared access stops the run by design, which helps |
+| C5 snapshot, seed, determinism | "Return then explore": restore an archived state instead of replaying from the start; exact replay of every candidate | Go-Explore's key step is returning to archived states before exploring [10]; respawning from visited states extended the frontier in [2]; Wuji relied on replay to confirm bugs [3] | Cheaper exploration of deep states; every bug is reproducible from (build, scene, seed, snapshot, actions) | Determinism must hold across agent runs; already a design rule (R-6, DEC-005) |
+| C3 + C4 for the assistant | The read-only assistant diagnoses a candidate from cited ticks and entities (ip.fr.11.3) | Feeding raw game logs straight to an LLM did not identify logic and balance bugs well, while a structured two-stage method did [15]; zero-shot LLMs picked the buggy event in textual sequences about 70% of the time [16] | Bug reports explained in plain language, with evidence a developer can check | ~70% is not oracle quality: the LLM explains, deterministic oracles decide |
+
+### 6.4 Where an LLM can use the context (optional layer)
+
+A language model is not needed to play or to judge. Where it can help is
+**planning and explaining** from C2 to C4 context:
+
+1. Read the schema and graph and propose test goals in words ("open the door with
+   an empty inventory", "reach the goal without the key"), which become goals or
+   reward settings for the goal-seeking PPO policy.
+2. After a run, summarise the candidates and their causal chains for the
+   developer, citing ticks and entities.
+
+This keeps the existing rules: the assistant is read-only (ip.fr.11.6, DEC-067),
+uses the user's own provider (DEC-045), and sends no telemetry or source outside the
+machine unless the user allows that data category. RL training and the oracles stay
+local and do not need an LLM at all.
+
+### 6.5 Bug classes and the bridge context they need
+
+Codes follow `telemetry-and-events.md` §4; section 5.2 used the earlier `B-*` names.
+
+| Bug class | Context that helps find it | How the context is used |
+| --- | --- | --- |
+| `missing-collider` | C2 (which components imply a collider), C4 (entities with `RigidBody`/`Collectible`/`Unlockable`/`Objective` or tag `Obstacle`) | A static graph query flags the entity before any agent runs; C1 + C3 then confirm a pass-through at runtime with a replay |
+| `unlock-without-item` | C3 (`Unlocked` payload), C4 (required-item relation), C2 action mask | The graph yields the goal "unlock with the item missing"; goal-seeking PPO tries it under varied inventories; the oracle checks only the payload (srs.fr.9.5) |
+| `objective-not-reached` | C3 (`Objective` events), C4 (path and connectivity edges), C5 (multi-seed restarts) | Graph-derived goals plus restore-and-explore separate "agent too weak" from "level defect" across seeds |
+| `out-of-bounds` | C1 (position), C2 (map bounds), C3 (contacts before the crossing) | Curiosity over spatial and contact cells pushes the edges; the oracle reports the crossing tick and prior contacts |
+
+### 6.6 `[PROPOSED]` additions to the bridge contract
+
+The current proto is deliberately narrow (`Observation.payload` bytes, one
+`action_id`). To deliver C1 to C5 without per-component code generation
+(`ecs-api-design.md` §16), the bridge task could add:
+
+1. **A session handshake** that sends the `Schema` once (C2), so Python decodes
+   observation bytes by name and layout.
+2. **An action mask** next to each observation (C2), as a packed bit field.
+3. **Events since the last exchange** (C3), either inside the observation or on a
+   separate server-streaming telemetry RPC, so a slow consumer does not block the
+   tick loop.
+4. **Episode control RPCs** (C5): reset with a seed, restore a snapshot id, report
+   the replay identity.
+5. **A graph query or export call** (C4) for the playtest planner, read-only like
+   `structureForAssistant()`.
+
+Payload size must stay in the range PB-065 measured: a 256 B observation and a
+64 KiB one both stayed under 1.7 ms p99 with gRPC at 8 clients on Windows
+([`cpp-python-bridge.md`](cpp-python-bridge.md)). A compact structured observation
+for the small test scene (player, wall, door, key) should fit well under 1 KiB per
+tick; events are sparse. Pixels would not.
+
+### 6.7 How to show the bridge's value: a context ablation
+
+The strongest evidence for Aegis's unique feature is an **ablation** on the demo
+game's injected bugs. Keep the policy, scenario, seed set and frame budget fixed and
+add one context tier at a time:
+
+| Run | Context | What it tests |
+| --- | --- | --- |
+| A | Position and ray casts only (the [1], [2] baseline) | Baseline |
+| B | A + C1/C2 structured state, schema and action mask | Does generic structured state match or beat hand-built features? |
+| C | B + C3 events for reward, novelty cells and oracles | Does event coverage find logic bugs that spatial coverage misses? |
+| D | C + C4 graph-derived goals | Do graph goals find `unlock-without-item` and `objective-not-reached` sooner? |
+| E | D + C5 restore-and-explore | Does returning to archived states cut frames to first bug? |
+
+Report the section 5.3 metrics for each run, plus bytes per exchange and bridge
+time per tick. If C to E show no gain over B, the extra contract is not worth
+building yet.
+
+### 6.8 Risks and limits
+
+- **Privileged information.** Agents that know the goal and the rules find bugs
+  efficiently but do not measure human difficulty [1]. Keep "bug finding" and
+  "playtest feel" results apart.
+- **Garbage in.** The graph is only as good as the declared reads/writes and
+  component descriptions. The access check that stops undeclared access is what
+  keeps it honest.
+- **Over-fitting to the schema.** A policy trained on one schema version may break
+  when components change; version the observation schema with the policy.
+- **Overhead.** Streaming events every tick costs telemetry time (limit: 10% of
+  tick time, ip.nfr.1.3). Measure before adding a second stream.
+- **Evidence quality.** Several sources here ([12]-[14]) are recent preprints or
+  single-team results; treat their numbers as indicative only.
+
+## 7. References
 
 [1] J. Bergdahl, C. Gordillo, K. Tollmar, and L. Gisslén, “Augmenting
 automated game testing with deep reinforcement learning,” in *2020 IEEE
@@ -317,8 +454,51 @@ Available:
 [Online]. Available:
 [https://alttester.com/docs/unreal-sdk/latest/pages/overview.html](https://alttester.com/docs/unreal-sdk/latest/pages/overview.html)
 
+[9] S. Huang and S. Ontañón, “A closer look at invalid action masking in
+policy gradient algorithms,” in *Proc. 35th Int. FLAIRS Conf.*, 2022, doi:
+[10.32473/flairs.v35i.130584](https://doi.org/10.32473/flairs.v35i.130584).
+
+[10] A. Ecoffet, J. Huizinga, J. Lehman, K. O. Stanley, and J. Clune, “First
+return, then explore,” *Nature*, vol. 590, pp. 580-586, 2021, doi:
+[10.1038/s41586-020-03157-9](https://doi.org/10.1038/s41586-020-03157-9).
+
+[11] S. Ariyurek, A. Betin-Can, and E. Surer, “Automated video game testing
+using synthetic and humanlike agents,” *IEEE Trans. Games*, vol. 13, no. 1,
+pp. 50-67, 2021, doi:
+[10.1109/TG.2019.2947597](https://doi.org/10.1109/TG.2019.2947597).
+
+[12] Y. Zhao and C. Tang, “Towards LLM-based automatic playtest,” in *FSE
+Companion '25*, 2025, doi:
+[10.1145/3696630.3728700](https://doi.org/10.1145/3696630.3728700).
+Preprint: [arXiv:2507.09490](https://arxiv.org/abs/2507.09490).
+
+[13] C. Wang, L. Tang, M. Yuan, J. Yu, X. Xie, and J. Bu, “Leveraging LLM
+agents for automated video game testing,” arXiv:2509.22170, 2025. [Online].
+Available: [https://arxiv.org/abs/2509.22170](https://arxiv.org/abs/2509.22170)
+
+[14] E. Mu, J. Cai, Y. Lu, M. Zhang, K. Tei, and J. Li, “Knowledge
+graph-enhanced large language model for incremental game playtesting,”
+arXiv:2511.02534, 2025. [Online]. Available:
+[https://arxiv.org/abs/2511.02534](https://arxiv.org/abs/2511.02534)
+
+[15] C. Jin *et al.*, “Automatic bug detection in LLM-powered text-based games
+using LLMs,” in *Findings of the Association for Computational Linguistics: ACL
+2024*, 2024, pp. 15353-15368, doi:
+[10.18653/v1/2024.findings-acl.907](https://doi.org/10.18653/v1/2024.findings-acl.907).
+
+[16] M. R. Taesiri, F. Macklon, Y. Wang, H. Shen, and C.-P. Bezemer, “Large
+language models are pretty good zero-shot video game bug detectors,”
+arXiv:2210.02506, 2022. [Online]. Available:
+[https://arxiv.org/abs/2210.02506](https://arxiv.org/abs/2210.02506)
+
+[17] A. Sestini, L. Gisslén, J. Bergdahl, K. Tollmar, and A. D. Bagdanov,
+“Automated gameplay testing and validation with curiosity-conditioned
+proximal trajectories,” *IEEE Trans. Games*, vol. 16, no. 1, pp. 113-126,
+2024, doi: [10.1109/TG.2022.3226910](https://doi.org/10.1109/TG.2022.3226910).
+
 ## Change table
 
 | Date | Change | By |
 | --- | --- | --- |
 | 2026-11-04 | Created for PB-062: three-paper review, industry comparison and proposed Aegis implications | codex/gpt-5/pb062 |
+| 2026-11-22 | Section 6 added after the PR #25 review: how AI-bridge (`AgentBridge`) context improves autonomous testing, context tiers, `[PROPOSED]` contract additions and an ablation plan; section 5 note updated for DEC-038; references [9]-[17] | claude (PR #25 thread) |

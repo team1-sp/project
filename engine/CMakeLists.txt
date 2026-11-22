@@ -2,6 +2,7 @@
 # Only physics-box2d links Box2D and only rendering-raylib links raylib (R-3, R-4).
 add_subdirectory(core)
 add_subdirectory(bridge)
+add_subdirectory(physics)
 add_subdirectory(physics-box2d)
 
 if(ENGINE_WITH_RAYLIB)

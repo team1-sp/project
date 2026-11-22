@@ -4,27 +4,22 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
 
 ## Starting a task
 
-1. In ClickUp, set the task to **in progress** and press **Create GitHub issue** on it. Keep the PB id in the issue title (for example `PB-025 Define the physics adapter interface`).
-2. Within a minute, the **Issue start** workflow creates the branch and a draft pull request for the issue, and comments on the issue with the checkout command:
+The backlog is the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050). Epics (`EP-xx`) and user stories (`US-x.y`) come from the SRS; each story is a sub-issue of its epic, and its functional requirements are its acceptance criteria.
 
-   ```
-   git fetch origin
-   git switch feat/pb-025-define-the-physics-adapter-interface
-   ```
-
-   Branch names follow `<type>/pb-<nnn>-<short-description>`. For a bug without a PB item, create the branch yourself: `fix/<issue>-<short-description>`. Only `fix/` may use a bare issue number.
-   Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`. Lowercase, words joined with `-`.
-3. Commit and push to that branch. The draft PR already says `Closes #<issue>`.
+1. Create the branch for your issue, from **Development → Create a branch** on the issue (edit the suggested name) or by pushing it. Name it after the story: `<type>/us-<x.y>-<short-description>`, for example `feat/us-15.2-build-settings-file-menu`. For an issue that is not a story (a bug, a chore), use its number: `fix/142-door-opens-without-key`. A docs, ci or chore change that needs no issue uses the number of its own PR instead: `ci/131-update-agent-workflow` gives PR #131 titled `ci(#131): Update agent workflow`, with the `no-issue` label. Types: `feat`, `fix`, `test`, `refactor`, `docs`, `ci`, `chore`, `research`. Lowercase, words joined with `-`; one branch per story. The `branch-names` ruleset rejects other names.
+2. The **Issue start** workflow reacts at once. If the story is still blocked by open issues, it only comments which ones and leaves the card alone. Otherwise it moves the card to **In progress** on the project, assigns you if nobody is assigned, and comments the checkout command on the issue.
+3. Commit and push, then run `python tools/open_pr.py` on the branch. It opens a draft PR (with the `no-issue` label instead when the branch number has no issue) with `Closes #<issue>`, the issue's labels, milestone and assignees, and a title like `feat(US-1.1): Run every simulation tick in a fixed phase order` (DEC-054). GitHub needs at least one commit before a PR can exist. No workflow creates branches, commits or pull requests for you.
+4. Keep the branch in step with `main`: merge `origin/main` into it (no rebase) before each push and before asking for review, and whenever the PR gets the `needs-sync` label. Rules for resolving conflicts: [git-workflow.md §4](docs/guidelines/git-workflow.md#4-merge-conflicts) (DEC-055).
 
 ## Pull requests
 
 - The PR title is a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/) and becomes the commit on `main`:
-  `feat(PB-025): Define the physics adapter interface`. The scope is the PB id (DEC-035); the draft PR from the Issue start workflow already has this title.
+  `feat(US-1.1): Run every simulation tick in a fixed phase order`. The scope is the story id, or the issue number for other issues: `fix(#142): Door opens without the key` (DEC-050).
 - Keep PRs under about 400 changed lines.
 - Fill in the PR template, including how you verified the change.
 - Mark the PR **ready for review** when CI is green. Reviewers come from [.github/CODEOWNERS](.github/CODEOWNERS).
 - One approval from Işık Dönger or the advisor, Leyla Sezer (the code owners) is needed; area teammates are welcome to review too, but their approval does not count. Işık's own PRs need no approval. Reviews happen within 1 working day; comments are labelled `blocker`, `should`, `nit` or `question`, and only `blocker` holds up approval.
-- The author squash-merges. Afterwards, set the ClickUp task to **done**.
+- The author squash-merges. The issue closes and its card moves to **Done** on the project by itself. When the last open sub-issue of an epic closes, the `Epic close` workflow closes the epic too, or labels it `increment-done` if its "Later stories" list still has stories (DEC-062).
 
 ## Code style and Definition of Done
 
@@ -38,11 +33,11 @@ The short version of how we work. Details and reasons: [docs/guidelines/git-work
 
 ## AI agents
 
-An agent pushes a branch only after a human approves that push. A human approves and merges every PR an agent opens. See `docs/agents/rules.md` (S-2).
+An agent working on a member's own computer commits and pushes only after that member approves the change; an agent working in its own cloud copy of the repository commits, pushes and opens or updates the draft PR without asking (DEC-058). Agents do code work in their own cloud copy by default and use a member's computer only when the work needs it or the member asks (DEC-061). A human approves and merges every PR an agent opens. See `docs/agents/rules.md` (S-2).
 
 ## Issues
 
-- One issue per top-level ClickUp backlog item, titled like the task (`PB-025 Define the physics adapter interface`); sub-items are a checklist inside it.
-- Every issue has one assignee, `area:*` labels, a `priority:*` label and a milestone (Increment 1, Increment 2, Final Product).
+- SRS stories are issues titled with their id (`US-17.2 Play, pause and step the game in the editor`), added as a sub-issue of their epic (`EP-17 ...`). Stories not planned yet stay as a checklist in their epic until they are planned.
+- Every story has one assignee, an `area:*` label, its `uc:*` labels and a milestone (Increment 1, Increment 2, Final Product). Iteration, Estimate, Size and Priority are set on the project.
 - Bugs you find along the way get their own issue (use the Bug form).
 - Close issues through a merged PR, or as "not planned" with a one-line reason.

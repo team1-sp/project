@@ -29,9 +29,13 @@ Present frame
 ```
 
 Notes:
-- Physics runs at a **fixed timestep**; rendering at variable FPS. Use an accumulator: add elapsed time, run `Step(1/60)` while `accumulator >= 1/60`. Cap the number of steps per frame to avoid a "spiral of death" `[PROPOSED: cap 5]`.
+- The simulation runs in **ticks of exactly 1/60 s**; rendering runs at a variable frame rate. An accumulator adds the real time of each render frame and runs one tick for each whole 1/60 s. A render frame runs at most **5 ticks**; when more are due, the time of the further whole ticks is dropped, the part of a tick is kept, and the warning "Simulation is running slower than real time" is logged at most once per second (srs.fr.1.3, 1.4; DEC-047 `Proposed`). This stops the "spiral of death".
 - The engine's `Update` changes game state; `Draw` only renders current state. Raylib does not impose a loop structure: our own game loop owns the order (R-9) and calls Raylib only from the rendering step.
 - In headless mode time is *simulated*: each loop iteration advances exactly one fixed step; no sleeping and no dependence on the wall clock.
+
+**Where the loop lives (PB-011, DEC-046).** `engine/core` has `Application` (`init`, `run`, `shutdown`), which owns the loop and the window. It sees the window only as the `IWindow` interface; the window itself is `RaylibWindow` in `engine/rendering-raylib`, opened through a factory that a headless run never calls (R-4). Until `engine/ecs` exists the loop reaches the game through two interfaces in `engine/core`: `ISimulation::runPhase()` for everything that runs per tick and `IFrameRenderer::renderFrame()` for the render frame. Both run modes run a tick through the same function, `Application::runOneTick()` (US-1.3, DEC-059): it takes the tick's transitions from the run's `IInputSource`, applies them to the run's `InputActionState` by the rules of srs.fr.5.6 (srs.fr.1.14), then calls `runPhase()` for each of the seven `TickPhase`s of srs.fr.1.12 in order (`engine/core/tick_phase.hpp`). Normal mode's default source is the keyboard queue (`Application::keyboardQueue()`, srs.fr.5.5), headless mode's is None (srs.fr.7.3); `ApplicationConfig::inputSource` sets another, and the keyboard is then ignored (srs.fr.5.11). Keys reach the queue once the Input Map exists (US-5.1). A normal-mode render frame follows srs.fr.1.1 (US-1.1, DEC-051): `collectInput` (the only input poll of the frame), run the ticks, `beginFrame` and `renderFrame`, then `presentFrame` (present, then wait for the frame-rate cap). raylib is built with `SUPPORT_CUSTOM_FRAME_CONTROL`, so its `EndDrawing()` neither presents nor polls; `RaylibWindow` does both at the right step. Closing the window ends the run after the current render frame with exit code 0 (srs.fr.1.10). An unrecoverable run error is an `engine::RunError` (`engine/core/run_error.hpp`) thrown inside a tick; `Application` is the only code that catches it (DEC-042). It writes `error: tick N: <message>` to the standard error output, runs no further tick and renders no further frame, and `run()` returns a non-zero exit code with the outcome `Error` (srs.fr.1.11, US-1.2, DEC-057). `Application::outcome()` says why a run ended: `WindowClosed`, `MaxTicks` or `Error`. A game process reads its run mode and run settings from the command line with `parseRunOptions()` (`engine/core/run_options.hpp`): `--headless`, `--max-ticks` (default 10 000 headless), `--seed` and `--input-recording` (srs.fr.1.8, 7.33); `WindowConfig::fullscreen` opens the window fullscreen (srs.fr.1.9). The `editor` executable is the application that hosts `Application` and owns the main window; `sandbox` is a developer and CI test host, and games are built inside the editor, never as hosts (DEC-048). The editor draws its main window with Dear ImGui through `engine::rendering_raylib::ImGuiRenderer` (DEC-063, US-14.1). It keeps the window open while its unsaved-changes check refuses the close (`ApplicationConfig::confirmClose`, srs.fr.14.3), ends the run from File > Exit with `Application::requestClose()`, sets the title with `Application::setWindowTitle()` (srs.fr.14.2) and turns off closing on Escape (`WindowConfig::escapeClosesWindow`). `IFrameRenderer::releaseGraphics()` runs right before the window closes.
+
+**Time in the loop (PB-012, DEC-047).** `FrameClock` measures the real time of each render frame with `std::chrono::steady_clock`; it is read once per render frame, in `Application`, and nowhere in the simulation (R-6). `FixedTimestep` turns those frame times into ticks. Its accumulator counts nanoseconds times 60, a unit in which one tick is exactly 1 000 000 000, so frame times that add up to one second give exactly 60 ticks at any frame rate; a `double` accumulator runs 59 ticks in a second at 144 frames per second. `Application` keeps the tick counter (`Tick`, a `std::uint64_t` in `engine/core/tick.hpp`): 0 when a run starts and one more after every completed tick, so the tick number passed to `ISimulation::runPhase()` is the counter's value at the start of that tick (srs.fr.1.5), and simulated time is the counter times 1/60 s (srs.fr.1.6). The ECS will hand the same number to systems as `ctx.tick()`. A headless run uses no clock: it runs one tick after the other until `maxTicks` (srs.fr.7.4, 7.7). **Pause, resume and step (US-1.4, DEC-060).** `Application::requestPause()` pauses a normal-mode run at the next tick boundary, also when asked from inside a tick (Error Pause, srs.fr.24.6): the render frame's ticks that have not started are dropped and `FixedTimestep` keeps the part of a tick (srs.fr.1.16). While paused, render frames go on but the timestep gets no time (srs.fr.1.17). `resume()` takes the paused part of the next frame time off (`FrameClock::sinceFrameStart()`), so no paused time is simulated and no slow-simulation warning follows (srs.fr.1.18). `requestStep()` while paused runs one tick in the next render frame without the accumulator (srs.fr.17.14). Headless runs cannot pause.
 
 ## 2. Scene
 
@@ -49,9 +53,9 @@ Main job: store and process all game data.
 | World | Container owning entities, components and systems. |
 | Query | Filter selecting entities with a given component combination. |
 
-Example entities: `PlayerEntity` (Position, Velocity, Collider, Health, Sprite, Inventory), `WallEntity` (Position, Collider, Sprite), `DoorEntity` (Position, Collider, Sprite, DoorState, RequiredItem), `GoalEntity`.
+Example entities (the Phase 1 test scene, DEC-042): player (Position, Velocity, RigidBody, BoxCollider, Sprite, PlayerInput, Inventory), wall (Position, BoxCollider, Sprite, tag Obstacle), door (Position, BoxCollider, Sprite, Unlockable), key (Position, BoxCollider with isSensor, Sprite, Collectible), goal (Position, BoxCollider with isSensor, Objective).
 
-Example systems: `InputSystem`, `MovementSystem`, `PhysicsSystem`, `CollisionSystem`, `GameplaySystem` (+ `InteractionSystem`), `RenderSystem`, `TelemetrySystem`.
+Phase 1 systems: `InputApplication`, `PlayerMovement`, `PhysicsSyncIn`, `PhysicsSyncOut`, `Collect`, `Objective`, `Unlock`. Rendering and telemetry recording are not systems (srs.fr.1.13, DEC-042).
 
 Requirements: ip.fr.2.1–2.4 (create/destroy entities, add/remove/read/modify components, register systems with defined repeatable order, queries). Detail: [../design/ecs-design.md](../design/ecs-design.md).
 
@@ -104,18 +108,18 @@ Keyboard (gamepad: may) translated to actions: move, interact (ip.fr.5.1, 5.3). 
 
 ## 8. Telemetry (engine-side)
 
-Recorded each frame: state, events, timings (ip.fr.8.*). Details in [../design/telemetry-and-events.md](../design/telemetry-and-events.md). The engine only *records and exports*; interpreting is the Semantic layer's job.
+Recorded per tick: samples, events, entity lifecycle, timings (ip.fr.8.*, srs.fr.8.*), by a recorder that observes the World and the event bus. Details in [../design/telemetry-and-events.md](../design/telemetry-and-events.md). The engine only *records and exports*; interpreting is the Semantic layer's job.
 
 ## 9. Worked example: pressing "right"
 
-1. InputSystem reads the key → move-right action.
-2. MovementSystem updates `VelocityComponent`.
-3. Physics synchronisation pushes velocity to the body.
-4. Physics step (1/60 s) computes gravity, collisions.
-5. Adapter writes the body's new position to `PositionComponent`.
-6. Collision events are created.
-7. GameplaySystem processes the events.
-8. TelemetrySystem records state and events.
-9. RenderSystem reads Position + Sprite and draws.
+1. The keyboard transition is queued in the render frame; `InputApplication` turns it into the MoveRight action in `InputStateComponent` at the start of the tick.
+2. `PlayerMovement` writes `VelocityComponent` (a pending write, DEC-040).
+3. `PhysicsSyncIn` applies the pending velocity to the body.
+4. Physics step (1/60 s) computes gravity and collisions.
+5. `PhysicsSyncOut` writes the body's new position and velocity back and publishes `CollisionEvent`s.
+6. Handlers of `Collect` and `Objective` run at the end of that phase.
+7. `Unlock` runs in GameplayRules if Interact was pressed.
+8. The telemetry recorder records the tick's sample and events.
+9. After the tick, the renderer reads Position + Sprite and draws the frame.
 
 Each step must be observable on its own; a bug is located by finding the first step where the data is wrong.

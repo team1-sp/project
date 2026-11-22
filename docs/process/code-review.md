@@ -11,7 +11,7 @@ Applies to humans and agents. Reviewer ≠ author whenever possible. An agent re
 5. **Tests:** meaningful, fail when behaviour breaks, run headless, mapped to requirements.
 6. **Telemetry/observability:** new state/events visible? cost acceptable?
 7. **Readability:** names, size, comments explain why, follows `coding-standards.md`.
-8. **Docs/records:** updated? problem/decision entries present?
+8. **Docs/records:** updated? problem/decision entries present? Every new decision entry is listed under "Decisions for review" in the PR body. Treat each as proposed: approve it with the PR, or ask for a change or a rejection (DEC-052). Merging the PR accepts the listed entries.
 9. **Dependencies:** any new one has a decision entry.
 
 ## How to write feedback
