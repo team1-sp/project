@@ -30,9 +30,11 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 
 ## In progress / next
 - **US-33.1 (#118): open the assistant with useful context** — Review, draft PR #145. AI
-  menu/toolbar entry points, Ctrl+Shift+A toggle, typed Selection and Last run
-  contexts, consent-aware diagnosis routing and routing to the US-33.5 AI and Privacy window are
-  covered by focused headless tests. #72's public interfaces are unchanged; #71/#119/#120/#121 remain separate.
+  menu/toolbar entry points, Ctrl+Shift+A toggle, typed Selection and Last run contexts,
+  consent-aware diagnosis routing and routing to the US-33.5 AI and Privacy window are covered by
+  focused headless tests. The settings command also opens its shell before a project-backed
+  controller exists instead of remaining disabled. #72's public interfaces are unchanged;
+  #71/#119/#120/#121 remain separate.
 - **US-33.2 (#119): ask questions, control context and stop answers** — Review, PR #146, stacked on PR #145 (#144 is merged). Window-free `AssistantChat` in `editor_core` (composer, Send/Stop, one answer at a time, typed context chips with sizes, New Chat, History over `ChatStore`) sends only through `IChatQuestionSender`; production uses `GroundedAssistant` and runs `AnswerOperation` on a worker thread (DEC-071). The app still passes no bridge to the chat, so sends are refused until project opening supplies US-33.5's configured bridge.
 - **US-11.1 (#71): grounded answers with tick, entity and source citations** — Review. `GroundedAssistant::ask()` assembles only attached context through const query seams, diagnoses deterministically (debug flags, unlock failures, write records), returns typed `state`/`entity`/`source` citations validated against evidence, and runs through #72's `ReadOnlyAssistant` via `GroundedAgentBridge` with no shared API change. DEC-070 is carried for PR review. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips implement the seams in their stories.
 - **US-24.1 (#104): structured Console logging** — Done (PR #142). Canonical `LogEntry` and optional `ILogSink` in `engine/core`; window-free owning `ConsoleModel`, non-mutating filters/search/collapse, selection/details, Error Pause and Play lifecycle seams, external-editor and entity navigation abstractions in `editor_core`; ImGui Console panel filled. DEC-068 binds with the merge. US-17.2 (#85) calls the implemented Play start/stop seam when its controller lands.

@@ -82,7 +82,7 @@ After the merge, build and run the tests again before pushing.
 
 **Resolving:**
 
-- State and history files (`agents/state/*`, `history/*`, `testing/test-checklists.md`): keep **both** sides' entries. If both added the same id (DEC, HND, PRB, Q, TASK), the branch being synced renumbers its own entries and every reference to them. The `docs` CI job runs `tools/check_ids.py`, which fails on a duplicate id or a decision or problem entry missing from its index, because two appends can merge without any git conflict and still collide.
+- State and history files (`agents/state/*`, `history/*`, `testing/test-checklists.md`): keep **both** sides' entries. If both added the same id (DEC, HND, PRB, Q, TASK), the branch being synced renumbers its own entries and every reference to them. The `docs` CI job runs `tools/check_ids.py`, which fails on a duplicate id or a decision or problem entry missing from its index, because two appends can merge without any git conflict and still collide. The hooks in `.githooks/` run the same check before every commit and merge commit, so a collision shows up locally at sync time; enable them once per clone, agent and cloud copies included, with `git config core.hooksPath .githooks`.
 - Code and design docs: resolve only when both sides clearly fit together, then test. When they contradict each other (two designs, two decisions), stop and ask the human; do not pick a side.
 - An agent commits a merge without asking again when it had no conflicts, or only conflicts in state and history files resolved as above. A merge that needed any other resolution is shown to the human before it is committed (DEC-053), also in a cloud copy (DEC-058).
 

@@ -86,6 +86,10 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
   build failed while fetching pinned ImGui with `fatal: unable to access
   'https://github.com/ocornut/imgui.git/': Could not resolve host: github.com` and `Failed to
   clone repository`; rerunning the same build with approved network access succeeded.
+- **Occurrence:** 2026-11-22 — codex/gpt-5/118-assistant — configuring the isolated worktree while
+  fixing the AI Settings entry point failed while fetching pinned Box2D with `fatal: unable to
+  access 'https://github.com/erincatto/box2d.git/': Could not resolve host: github.com`; rerunning
+  the same headless configure/build with approved network access succeeded.
 - **Amendments:** 2026-11-04 — renumbered from PRB-002 by Işık Dönger while merging `main` into the PB-065 branch, because both branches had created a PRB-002.
 
 ---

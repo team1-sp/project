@@ -290,9 +290,9 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
   contexts, the consent-aware/settings seams, dynamic menu and toolbar commands, a thin Assistant
   panel/message box, routing to the US-33.5 AI and Privacy window, and focused fake-backed tests. #72's public
   interfaces were not changed; #71, #119, #120 and #121 internals remain out of scope.
-- **Verified:** targeted 31/31 editor tests and complete headless 163/163 passed; the macOS editor
-  built and completed a two-tick raylib/ImGui smoke run; clang-format 19, include policy, record IDs,
-  documentation links and `git diff --check` passed.
+- **Verified:** targeted Editor tests and complete headless tests passed before review. After the
+  US-33.5 merge, the AI Settings regression fix passed targeted 29/29 and complete headless
+  237/237 tests plus the macOS Editor build; final static checks are recorded in HND-037.
 - **Links:** GitHub #118, draft PR #145.
 
 ### TASK-025 — Ask questions, control context and stop answers (US-33.2 #119)

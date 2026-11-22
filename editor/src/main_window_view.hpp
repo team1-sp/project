@@ -47,7 +47,6 @@ public:
     void askAboutSelection() override;
     [[nodiscard]] bool canDiagnoseLastRun() const override;
     void diagnoseLastRun() override;
-    [[nodiscard]] bool canOpenAiPrivacySettings() const override;
     void openAiPrivacySettings() override;
 
 private:

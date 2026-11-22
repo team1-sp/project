@@ -40,6 +40,7 @@ project/
 ├── ai-services/              LAYER 3, Python 3.12 src-layout package (DEC-039); uses semantic/ when available
 ├── assets/                   small, license-recorded assets
 ├── tools/                    repo scripts (PR checks, link check, label sync, include check `check_includes.py`)
+├── .githooks/                git hooks: record-id check before commits and merge commits
 ├── docs/                     this documentation
 └── .github/                  workflows, CODEOWNERS, issue forms, PR template, labels
 ```

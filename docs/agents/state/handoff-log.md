@@ -502,7 +502,42 @@
 
 ---
 
-### HND-037 — AI Assistant chat, context chips and Stop (US-33.2)
+### HND-037 — Restore the AI Settings entry point after the US-33.5 merge
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/118-assistant
+- **Task:** TASK-024, GitHub #118, PR #145
+- **Goal:** Fix AI > AI Settings... doing nothing when the Editor has no project-backed settings
+  controller yet.
+- **Result:** Project Settings and AI Settings remain available and open the AI and Privacy shell;
+  without a project controller the shell says `No project open`, while an injected US-33.5
+  controller continues to render the full settings controls. The status-bar AI target uses the
+  same action.
+- **Verified:** targeted Editor CTest 29/29, complete headless CTest 237/237, the macOS Editor build,
+  clang-format 19, include policy, record IDs, documentation links and `git diff --check` passed.
+- **Not verified:** interactive clicking through the standalone raylib window because the
+  computer-use harness could not bind to that process; CI and Windows compilation remain pending.
+- **Repo state:** the human approved the completed diff for commit and push to
+  `feat/118-open-ai-assistant` under DEC-053/058.
+- **Next:** check PR #145 CI and address any review findings.
+- **Traps:** do not construct a settings controller with a fake path merely to enable the command;
+  project opening owns the real per-user project path and bridge factory.
+- **Records:** PRB-003 repeat occurrence; no new decision or open question.
+
+---
+
+### HND-039 — Check record ids locally with git hooks (#147)
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/147-hooks
+- **Task:** GitHub #147 (no issue)
+- **Result:** Added `.githooks/pre-commit`, which runs `tools/check_ids.py` and stops a commit when two record entries share an id, and `.githooks/pre-merge-commit`, which runs the same check for merges git completes without conflicts (those skip `pre-commit`). Documented `git config core.hooksPath .githooks` in `CONTRIBUTING.md` and `git-workflow.md` §4, and added `.githooks/` to `repository-structure.md`.
+- **Verified (macOS, git 2.53, Python 3.14):** in a scratch clone, a conflict-free merge giving two entries TASK-999 stopped before the merge commit, a plain commit adding a duplicate stopped, and a clean commit passed; `check_ids.py` and `check_md_links.py` pass.
+- **Not verified:** Windows Git Bash (the hooks are POSIX sh and fall back to `python`).
+- **Next:** each member and agent copy runs `git config core.hooksPath .githooks` once. The hooks catch collisions at sync time but do not prevent them; ids that cannot collide (for example issue number plus counter) would, and are a team decision.
+- **Traps:** the check reads the working tree, so a duplicate in unstaged changes also blocks a commit. HND-039 skips HND-034 to HND-038, already used by open PRs #145 and #146.
+
+---
+
+### HND-040 — AI Assistant chat, context chips and Stop (US-33.2)
 - **Date:** 2026-11-22
 - **Agent:** claude-code/opus-5.5/119-chat
 - **Task:** TASK-025, GitHub #119, srs.fr.33.5 to 33.12
@@ -517,7 +552,7 @@
 
 ---
 
-### HND-038 — Merge `main` and the resolved US-33.1 branch into the US-33.2 branch
+### HND-041 — Merge `main` and the resolved US-33.1 branch into the US-33.2 branch
 - **Date:** 2026-11-22
 - **Agent:** claude-code/opus-5.5/119-merge
 - **Task:** TASK-025, GitHub #119, PR #146
@@ -525,7 +560,21 @@
   PRs #143 and #144) instead of `main` directly, so the US-33.1/US-33.5 overlap keeps HND-036's
   resolution. `MainWindowView` takes `AssistantChat&` on top of that constructor; US-33.1's
   placeholder draft box stays replaced by `AssistantChatPanel`. Grounded assistant files equal
-  `main`. Records renumbered: US-33.2 is TASK-025, DEC-071 and HND-037, since `main` and #145 use
-  DEC-069/070, TASK-022 to 024 and HND-032 to 036.
+  `main`. Records renumbered: US-33.2 is TASK-025, DEC-071 and HND-040, since `main` and #145 use
+  DEC-069/070, TASK-022 to 024 and HND-032 to 037, and #147 uses HND-039.
 - **Verified:** see the PR #146 merge commit.
 - **Next:** CI and human review of PR #146; merge after PR #145.
+
+---
+
+### HND-042 — Merge `main` (US-33.1 #145, #147) into the US-33.2 branch
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/119-merge-main
+- **Task:** TASK-025, GitHub #119, PR #146
+- **Result:** `main` holds #145 squash-merged, so its commits look new to git. Merged `main` with
+  only the changes `main` has beyond `a6af34c` (the US-33.1 version already in this branch): #145's
+  fix `462ca5a` (AI Settings opens the shell without a project) and #147's git hooks. Code applied
+  without conflicts. Renumbered this branch's handoff entries to HND-040/HND-041 because `main`
+  uses HND-037 (#145) and HND-039 (#147).
+- **Verified:** see the merge commit's CI run.
+- **Next:** CI and human review of PR #146.
