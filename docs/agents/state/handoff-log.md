@@ -402,3 +402,31 @@
 - **Next:** merge current `origin/main`, renumber collided records, rerun verification, push the approved merge resolution, and review PR #142.
 - **Traps:** #85 must call `onPlayStarted()`/`onPlayStopped()` at its Play transitions. Collapse includes tick, stack, source and entity, so same text at different ticks stays separate. `AEGIS_CODE_EDITOR` overrides the default `code` executable.
 - **Records:** DEC-068 (Accepted in the PR, for review); PRB-003 occurrence.
+
+---
+
+### HND-032 — AI service and privacy project settings (US-33.5)
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/121-ai-privacy
+- **Task:** TASK-022, GitHub #121, srs.fr.33.28 to 33.33
+- **Goal:** Configure the per-project service/model and privacy settings without coupling state to
+  Dear ImGui or calling gRPC from UI code.
+- **Result:** Done — strict address/port validation, asynchronous health/model discovery through
+  AgentBridge, stale-address/request protection, model/send state, latency/failure presentation,
+  independent default-off sharing confirmations, Ask-before-send policy, user-local versioned
+  persistence and the AI and Privacy window/menu/status routes.
+- **Files changed:** AgentBridge/protobuf/gRPC bridge; `editor_core` settings/controller/store and
+  menu/status models; Dear ImGui view; focused tests/CMake; architecture/design/testing/agent records.
+- **Verified:** warnings-as-errors headless build + CTest 166/166; macOS Debug build including Editor
+  + CTest 179/179; optional gRPC warnings-as-errors build + CTest 166/166; clang-format 19.1.7,
+  include policy, record IDs, documentation links and `git diff --check` pass.
+- **Not verified:** live AI service interoperability and Windows compilation; CI covers Windows
+  after push. No provider credentials are stored or needed by tests.
+- **Repo state:** branch `feat/121-ai-service-privacy-settings`; implementation and verification are
+  complete, with review status tracked on GitHub #121 and its linked pull request.
+- **Next:** review DEC-069 and PR; Project Hub/project opening supplies the concrete user-local root
+  and bridge factory; #120 consumes `requiresConsent()` for the general sending dialog.
+- **Traps:** persisted model values are identifiers, never display names. Apply completions only when
+  both request id and address still match. Address changes must clear model/connection and both
+  address-bound permissions.
+- **Records:** DEC-069 (Accepted in the PR, for review); PRB-003 and PRB-005 occurrences.

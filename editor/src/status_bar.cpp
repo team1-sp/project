@@ -118,8 +118,7 @@ StatusBar buildStatusBar(const EditorStatus& status, double renderFramesPerSecon
                     (status.entityCount ? groupDigits(*status.entityCount) : std::string(noValue));
     bar.right.push_back(std::move(entities));
 
-    // srs.fr.14.9: the AI service state; clicking it opens Project Settings at the AI and Privacy
-    // tab (F-04), which comes with US-33.5, so the click stays off until then.
+    // srs.fr.14.9: the AI service state; clicking it opens Project Settings at AI and Privacy.
     StatusItem ai;
     if (status.aiService == AiServiceState::Connected) {
         ai.text = status.aiServiceName.empty()
@@ -131,6 +130,8 @@ StatusBar buildStatusBar(const EditorStatus& status, double renderFramesPerSecon
         ai.dot = StatusDot::Grey;
     }
     ai.click.label = "Open Project Settings at AI and Privacy";
+    ai.click.enabled = [&actions] { return actions.canOpenAiPrivacySettings(); };
+    ai.click.run = [&actions] { actions.openAiPrivacySettings(); };
     bar.right.push_back(std::move(ai));
 
     return bar;

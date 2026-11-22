@@ -15,6 +15,11 @@ if(AEGIS_WITH_GRPC_BRIDGE)
     set(PROTO_HEADER "${GENERATED_DIR}/agent_bridge.pb.h")
     set(GRPC_SOURCE "${GENERATED_DIR}/agent_bridge.grpc.pb.cc")
     set(GRPC_HEADER "${GENERATED_DIR}/agent_bridge.grpc.pb.h")
+    set(HEALTH_PROTO_FILE "${PROJECT_SOURCE_DIR}/proto/grpc/health/v1/health.proto")
+    set(HEALTH_PROTO_SOURCE "${GENERATED_DIR}/grpc/health/v1/health.pb.cc")
+    set(HEALTH_PROTO_HEADER "${GENERATED_DIR}/grpc/health/v1/health.pb.h")
+    set(HEALTH_GRPC_SOURCE "${GENERATED_DIR}/grpc/health/v1/health.grpc.pb.cc")
+    set(HEALTH_GRPC_HEADER "${GENERATED_DIR}/grpc/health/v1/health.grpc.pb.h")
 
     add_custom_command(
         OUTPUT "${PROTO_SOURCE}" "${PROTO_HEADER}" "${GRPC_SOURCE}" "${GRPC_HEADER}"
@@ -29,10 +34,29 @@ if(AEGIS_WITH_GRPC_BRIDGE)
         VERBATIM
     )
 
+    add_custom_command(
+        OUTPUT
+            "${HEALTH_PROTO_SOURCE}"
+            "${HEALTH_PROTO_HEADER}"
+            "${HEALTH_GRPC_SOURCE}"
+            "${HEALTH_GRPC_HEADER}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${GENERATED_DIR}/grpc/health/v1"
+        COMMAND protobuf::protoc
+            --proto_path "${PROJECT_SOURCE_DIR}/proto"
+            --cpp_out "${GENERATED_DIR}"
+            --grpc_out "${GENERATED_DIR}"
+            --plugin=protoc-gen-grpc=$<TARGET_FILE:gRPC::grpc_cpp_plugin>
+            "${HEALTH_PROTO_FILE}"
+        DEPENDS "${HEALTH_PROTO_FILE}"
+        VERBATIM
+    )
+
     add_library(engine_bridge_grpc STATIC
         src/grpc_agent_bridge.cpp
         "${PROTO_SOURCE}"
         "${GRPC_SOURCE}"
+        "${HEALTH_PROTO_SOURCE}"
+        "${HEALTH_GRPC_SOURCE}"
     )
     add_library(engine::bridge_grpc ALIAS engine_bridge_grpc)
     target_include_directories(engine_bridge_grpc
