@@ -8,6 +8,7 @@ add_library(engine_core STATIC
     src/input_actions.cpp
     src/input_source.cpp
     src/leak_check.cpp
+    src/logging.cpp
     src/run_options.cpp
     src/tick_phase.cpp
     src/version.cpp

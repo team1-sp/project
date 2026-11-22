@@ -4,6 +4,7 @@
 #include <array>
 #include <cfloat>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <utility>
 
@@ -74,9 +75,14 @@ void buildDefaultLayout(ImGuiID dockSpaceId, const ImGuiViewport& viewport) {
 } // namespace
 
 MainWindowView::MainWindowView(EditorSession& session, const EditorStatus& status,
-                               CloseEditor closeEditor, SetTitle setTitle)
+                               ConsoleModel& console, IExternalCodeEditor& externalEditor,
+                               IEntityNavigator& entityNavigator, CloseEditor closeEditor,
+                               SetTitle setTitle)
     : session_(session)
     , status_(status)
+    , console_(console)
+    , externalEditor_(externalEditor)
+    , entityNavigator_(entityNavigator)
     , closeEditor_(std::move(closeEditor))
     , setTitle_(std::move(setTitle))
     , platform_(currentPlatform())
@@ -420,6 +426,8 @@ void MainWindowView::drawStatusBar() {
 void MainWindowView::drawPanels() {
     const ImGuiViewport& viewport = *ImGui::GetMainViewport();
     const ImGuiID dockSpaceId = ImGui::GetID(dockSpaceName);
+    const std::optional<Panel> focusThisFrame = panelToFocus_;
+    panelToFocus_.reset();
     if (frameIndex_ == 0) {
         buildDefaultLayout(dockSpaceId, viewport);
     }
@@ -436,15 +444,136 @@ void MainWindowView::drawPanels() {
         // ImGui docks the panels in the first frame, so they are brought to the front in the
         // second.
         const bool startsInFront = panel == Panel::Scene || panel == Panel::Project;
-        if (panelToFocus_ == panel || (frameIndex_ == 1 && startsInFront)) {
+        if (focusThisFrame == panel || (frameIndex_ == 1 && startsInFront)) {
             ImGui::SetNextWindowFocus();
         }
-        if (ImGui::Begin(panelName(panel))) {
-            ImGui::TextDisabled("%s", session_.isProjectOpen() ? "" : "No project open");
+        const std::string windowName =
+            panel == Panel::Console ? console_.tabLabel() : std::string(panelName(panel));
+        if (ImGui::Begin(windowName.c_str())) {
+            if (panel == Panel::Console) {
+                drawConsolePanel();
+            } else {
+                ImGui::TextDisabled("%s", session_.isProjectOpen() ? "" : "No project open");
+            }
         }
         ImGui::End();
     }
-    panelToFocus_.reset();
+}
+
+void MainWindowView::drawConsolePanel() {
+    if (ImGui::Button("Clear")) {
+        console_.clear();
+    }
+    ImGui::SameLine();
+    bool clearOnPlay = console_.clearOnPlay();
+    if (ImGui::Checkbox("Clear on Play", &clearOnPlay)) {
+        console_.setClearOnPlay(clearOnPlay);
+    }
+    ImGui::SameLine();
+    bool collapse = console_.collapse();
+    if (ImGui::Checkbox("Collapse", &collapse)) {
+        console_.setCollapse(collapse);
+    }
+    ImGui::SameLine();
+    bool errorPause = console_.errorPause();
+    if (ImGui::Checkbox("Error Pause", &errorPause)) {
+        console_.setErrorPause(errorPause);
+    }
+
+    const editor::ConsoleCounts counts = console_.counts();
+    const auto severityToggle = [&](engine::LogSeverity severity, const char* icon,
+                                    std::size_t count, const char* id) {
+        bool visible = console_.isSeverityVisible(severity);
+        ImGui::SameLine();
+        const std::string label = std::string(icon) + " " + std::to_string(count) + id;
+        if (ImGui::Checkbox(label.c_str(), &visible)) {
+            console_.setSeverityVisible(severity, visible);
+        }
+    };
+    severityToggle(engine::LogSeverity::Info, ICON_FA_CIRCLE_INFO, counts.info, "##Info");
+    severityToggle(engine::LogSeverity::Warning, ICON_FA_TRIANGLE_EXCLAMATION, counts.warning,
+                   "##Warning");
+    severityToggle(engine::LogSeverity::Error, ICON_FA_CIRCLE_XMARK, counts.error, "##Error");
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(std::max(140.0F, ImGui::GetContentRegionAvail().x));
+    if (ImGui::InputTextWithHint("##ConsoleSearch", "Search messages", consoleSearch_.data(),
+                                 consoleSearch_.size())) {
+        console_.setSearch(consoleSearch_.data());
+    }
+
+    const engine::LogEntry* selected = console_.selectedEntry();
+    const float detailHeight =
+        selected != nullptr ? ImGui::GetContentRegionAvail().y * 0.38F : 0.0F;
+    const float rowsHeight = selected != nullptr ? ImGui::GetContentRegionAvail().y - detailHeight
+                                                 : ImGui::GetContentRegionAvail().y;
+    constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
+                                           ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable;
+    if (ImGui::BeginTable("##ConsoleRows", 3, tableFlags, ImVec2(0.0F, rowsHeight))) {
+        ImGui::TableSetupColumn("Level", ImGuiTableColumnFlags_WidthFixed, 58.0F);
+        ImGui::TableSetupColumn("Message", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Tick", ImGuiTableColumnFlags_WidthFixed, 72.0F);
+        ImGui::TableHeadersRow();
+        for (const ConsoleRow& row : console_.visibleRows()) {
+            const engine::LogEntry& log = console_.entries()[row.entryIndex];
+            const char* icon = ICON_FA_CIRCLE_INFO;
+            if (log.severity == engine::LogSeverity::Warning) {
+                icon = ICON_FA_TRIANGLE_EXCLAMATION;
+            } else if (log.severity == engine::LogSeverity::Error) {
+                icon = ICON_FA_CIRCLE_XMARK;
+            }
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            const std::string selectableId = "##ConsoleRow" + std::to_string(row.entryIndex);
+            const bool isSelected = console_.selectedIndex() == row.entryIndex;
+            if (ImGui::Selectable(selectableId.c_str(), isSelected,
+                                  ImGuiSelectableFlags_SpanAllColumns |
+                                      ImGuiSelectableFlags_AllowDoubleClick)) {
+                console_.select(row.entryIndex);
+                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                    const ConsoleActivation activation =
+                        console_.activate(row.entryIndex, externalEditor_, entityNavigator_);
+                    if (activation.entityNavigationRequested) {
+                        panelToFocus_ = Panel::Hierarchy;
+                    }
+                }
+            }
+            ImGui::SameLine();
+            ImGui::TextUnformatted(icon);
+            ImGui::TableSetColumnIndex(1);
+            ImGui::TextUnformatted(log.message.c_str());
+            if (row.count > 1) {
+                ImGui::SameLine();
+                ImGui::TextDisabled("x%zu", row.count);
+            }
+            ImGui::TableSetColumnIndex(2);
+            if (log.tick) {
+                ImGui::Text("%llu", static_cast<unsigned long long>(*log.tick));
+            } else {
+                ImGui::TextDisabled("—");
+            }
+        }
+        ImGui::EndTable();
+    }
+
+    selected = console_.selectedEntry();
+    if (selected == nullptr) {
+        return;
+    }
+    ImGui::SeparatorText("Details");
+    ImGui::Text("%s  ·  Tick ", engine::logSeverityName(selected->severity));
+    ImGui::SameLine(0.0F, 0.0F);
+    if (selected->tick) {
+        ImGui::Text("%llu", static_cast<unsigned long long>(*selected->tick));
+    } else {
+        ImGui::TextDisabled("—");
+    }
+    ImGui::TextWrapped("%s", selected->message.c_str());
+    if (selected->stackTrace) {
+        ImGui::Spacing();
+        ImGui::TextDisabled("Stack trace");
+        ImGui::TextUnformatted(selected->stackTrace->c_str());
+    }
 }
 
 } // namespace editor

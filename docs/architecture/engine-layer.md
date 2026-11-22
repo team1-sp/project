@@ -37,6 +37,16 @@ Notes:
 
 **Time in the loop (PB-012, DEC-047).** `FrameClock` measures the real time of each render frame with `std::chrono::steady_clock`; it is read once per render frame, in `Application`, and nowhere in the simulation (R-6). `FixedTimestep` turns those frame times into ticks. Its accumulator counts nanoseconds times 60, a unit in which one tick is exactly 1 000 000 000, so frame times that add up to one second give exactly 60 ticks at any frame rate; a `double` accumulator runs 59 ticks in a second at 144 frames per second. `Application` keeps the tick counter (`Tick`, a `std::uint64_t` in `engine/core/tick.hpp`): 0 when a run starts and one more after every completed tick, so the tick number passed to `ISimulation::runPhase()` is the counter's value at the start of that tick (srs.fr.1.5), and simulated time is the counter times 1/60 s (srs.fr.1.6). The ECS will hand the same number to systems as `ctx.tick()`. A headless run uses no clock: it runs one tick after the other until `maxTicks` (srs.fr.7.4, 7.7). **Pause, resume and step (US-1.4, DEC-060).** `Application::requestPause()` pauses a normal-mode run at the next tick boundary, also when asked from inside a tick (Error Pause, srs.fr.24.6): the render frame's ticks that have not started are dropped and `FixedTimestep` keeps the part of a tick (srs.fr.1.16). While paused, render frames go on but the timestep gets no time (srs.fr.1.17). `resume()` takes the paused part of the next frame time off (`FrameClock::sinceFrameStart()`), so no paused time is simulated and no slow-simulation warning follows (srs.fr.1.18). `requestStep()` while paused runs one tick in the next render frame without the accumulator (srs.fr.17.14). Headless runs cannot pause.
 
+**Structured logs and the Console (US-24.1, DEC-068).** `engine/core/logging.hpp` defines the
+owning `LogEntry` contract and the non-owning `ILogSink` seam. `ApplicationConfig::logSink` routes
+run warnings and errors to a structured destination; with no sink, stderr remains the headless and
+command-line fallback. The Editor's window-independent `ConsoleModel` owns entries in insertion
+order, computes counters and non-mutating filter/search/collapse projections, and updates
+`EditorStatus.lastConsoleMessage`. Error Pause injects `Application::requestPause()` and therefore
+uses the loop's existing tick-boundary behavior. Clear on Play and the first-error gate are reset by
+the `onPlayStarted()` event that US-17.2's controller will call. Full contract and identity rules:
+[Console and Structured Logging](../design/console-logging.md).
+
 ## 2. Scene
 
 A **scene** is the container for everything in one part of the game: lights, sound, environment elements, UI elements and game objects (entities). `[TBD: whether a Scene wraps a World 1:1]`

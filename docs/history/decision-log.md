@@ -75,6 +75,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-065 | srs.fr.14.15 is reworded: a panel tab dragged out of its dock becomes a floating panel inside the main window, not a separate operating-system window | Accepted | 2026-11-17 |
 | DEC-066 | US-14.2: the status bar is built from a window-free `EditorStatus` model in `editor_core` (message, debug flags in orange, REC, mode, FPS, entities, AI service dot); clicking the message opens the Console; the AI and REC clicks wait for their panels | Accepted | 2026-11-17 |
 | DEC-067 | US-11.2: a window-free read-only assistant core uses AgentBridge streaming, cancellable answer operations and versioned user-local chat storage | Accepted | 2026-11-22 |
+| DEC-068 | US-24.1: structured logs are owned by a window-free Console model; projection is non-mutating; search ignores case; collapse identity includes every structured field; Play lifecycle, pause, editor launch and entity navigation use injected seams | Accepted | 2026-11-22 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -1059,3 +1060,22 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Revisit when:** #71 fixes concrete citation schemas, the project-local path owner defines the
   directory layout, or AgentBridge streaming/deadline evidence requires a wire revision.
 - **Supersedes / Related:** DEC-001, DEC-038, DEC-039, DEC-045, TASK-020, US-11.2 (#72).
+
+### DEC-068 — US-24.1: structured Console logging and navigation contracts
+- **Date:** 2026-11-22
+- **Status:** Accepted (carried by the US-24.1 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-24.1 pull request   **Recorded by:** codex/gpt-5/104-console
+- **Proposed by:** codex/gpt-5/104-console, from srs.fr.24.1 to 24.11 and issue #104
+- **Context:** The Editor had an empty Console panel and `EditorStatus.lastConsoleMessage`, while `Application` wrote warnings and errors directly to stderr. US-24.1 needs one structured entry format, non-destructive view operations, Error Pause through the existing game loop, Clear on Play before US-17.2's controller exists, and testable source/entity activation before the related Preferences and Hierarchy stories exist.
+- **Options considered:**
+  1. Store Console entries in the ImGui view, or own them in a window-independent `ConsoleModel`. The model is chosen so headless tests cover all state and projection behavior.
+  2. Collapse by message text alone, or require every structured field to match. Full equality is chosen so messages at different ticks or with different stacks, sources or entities never lose important inspection context.
+  3. Search with exact case, or ignore case. Case-insensitive substring search is chosen to match the Hierarchy search rule and normal editor search behavior.
+  4. Call operating-system/editor and selection code directly, or inject interfaces. `IExternalCodeEditor` and `IEntityNavigator` are chosen; the production launcher runs the configured command without a shell and entity navigation updates shared selection state.
+- **Decision:** `engine::LogEntry` is the canonical owning record: severity, complete message, optional tick, stack trace, source location and entity. `ConsoleModel` owns entries in insertion order on the Editor/game-loop thread, supplies counters and index-based filtered/collapsed rows without mutating entries, updates `EditorStatus`, and exposes `onPlayStarted()`/`onPlayStopped()` until #85 connects the final Play controller. Collapse compares every `LogEntry` field and search is a case-insensitive substring of the message. The first ticked Error of a Play run calls an injected callback wired to `Application::requestPause()`.
+- **Rationale:** this keeps Dear ImGui out of state/filtering tests, preserves all diagnostic context, reuses the accepted tick-boundary pause mechanism, avoids global mutable logger state and prevents tests from opening external applications.
+- **Consequences:** `ApplicationConfig::logSink` optionally receives structured entries and stderr remains the fallback for command-line/headless use. The Editor's external code-editor command defaults to `code` and can be set with `AEGIS_CODE_EDITOR`; it receives `--goto file:line`. US-17.2 (#85) must call the two lifecycle methods at its existing Play transition, and future Hierarchy/Inspector/Scene work observes `EntityNavigation::selectedEntity()`.
+- **Docs updated:** `design/console-logging.md`, `architecture/engine-layer.md`, `guidelines/repository-structure.md`, `testing/test-checklists.md`, agent state and handoff.
+- **Course documents affected (for humans):** none; this implements SRS A srs.fr.24.1 to 24.11.
+- **Revisit when:** US-17.2 introduces the Play controller, Project Preferences owns the editor command, or entity selection gains scene-qualified/stable references.
+- **Supersedes / Related:** DEC-057, DEC-060, DEC-063, DEC-066, TASK-021, GitHub #104, #85, #88, #123.
