@@ -158,6 +158,26 @@ Tests are in `tests/unit/editor/console_model_test.cpp` and
   (srs.fr.33.31–33.33) — `AiPrivacySettingsTest.Privacy*`, `*AskBeforeEverySend*`
 - [x] Per-user project settings round trip outside shared settings —
   `AiPrivacySettingsTest.ProjectSettingsRoundTripUsesUserLocalSettingsArea`
+- [x] Natural-language questions with attached context items through the chat-facing API, routed
+  over AgentBridge with fakes (srs.fr.11.1) — `GroundedAssistantTest.Ask_*`
+- [x] State answers from Semantic Graph and run records, e.g. why an unlock failed (srs.fr.11.2) —
+  `GroundedDiagnosis.UnlockFailedEvent_*`, `GroundedDiagnosis.SampledChange*`
+- [x] Debug flags of srs.fr.12.9–12.12 named as the cause only when applied, recorded and exercised;
+  not applied, not recorded, not exercised and unobservable cases say so (srs.fr.11.3) —
+  `GroundedDiagnosis.*Applied*`, `GroundedDiagnosis.*NotApplied*`, `GroundedDiagnosis.*NotExercised`,
+  `GroundedDiagnosis.*RecordingOff*`, `GroundedDiagnosis.*Unobservable*`
+- [x] State, entity and source citations are typed, round-trip, keep Start distinct from tick 0 and
+  are validated against retrieved evidence (srs.fr.11.4) — `GroundedCitation.*`, `EvidenceCheck.*`,
+  `GroundedAssistantTest.Ask_RemovesModelCitationsNotBackedByEvidence`
+- [x] Only listed `Scripts/` files are read, with content hashes (srs.fr.11.5) —
+  `ContextAssemblyTest.SourceCode_*`, `ScriptsFolderReader.*`, `ContentHash.*`
+- [x] Only the question, consent-allowed earlier messages and attached items are used; disallowed
+  context is refused before sending (srs.fr.11.6) — `ContextAssemblyTest.*`,
+  `GroundedAssistantTest.Ask_UnauthorizedContext*`, `GroundedAssistantTest.Ask_EarlierMessages*`
+- [x] Missing evidence is named and hypotheses are labelled (srs.fr.11.7) —
+  `GroundedDiagnosis.NoAttachedEvidence_*`, `GroundedDiagnosis.*Hypothesis`
+- [x] Answering leaves project files byte-identical (read-only, srs.fr.11.8) —
+  `GroundedAssistantTest.Ask_WithScriptsFolderReader_IsReadOnlyOutsideUserLocalChat`
 
 ## Performance (ip.nfr.1.*) — reference hardware `[TBD]`
 

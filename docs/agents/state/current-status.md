@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-11-22
-updated_by: codex/gpt-5/121-ai-privacy
+updated_by: claude-code/opus-5.5/us111
 ---
 
 # Current Status
@@ -8,7 +8,7 @@ updated_by: codex/gpt-5/121-ai-privacy
 Snapshot of the project. Overwrite this file each session (keep it short). History belongs in `handoff-log.md`. **The truth is the `Accepted` entries in `history/decision-log.md`.**
 
 ## One-line summary
-Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The fixed game loop, pause API, Editor main window and status bar are merged. US-11.2 adds the read-only assistant core. US-33.5 adds per-user project AI/privacy settings, AgentBridge health/model discovery and the AI and Privacy window on its review branch. US-24.1 adds the structured Console on its review branch. The custom ECS is designed but not built. **The demo game is undecided** (Q-016).
+Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The fixed game loop, pause API, Editor main window and status bar are merged. US-11.2 adds the read-only assistant core, AgentBridge streaming, optional gRPC client and user-local chat persistence. US-24.1 adds the structured Console model and fills the existing Console panel. US-33.5 adds per-user project AI/privacy settings, AgentBridge health/model discovery and the AI and Privacy window. US-11.1 adds grounded assistant answers with typed citations on its review branch. The custom ECS is designed but not built. **The demo game is undecided** (Q-016).
 
 ## Phase
 Roadmap phase **1 — Project and technology decisions**: all exit criteria are met (see `plan.md`); the human confirms closing it. Phase 2 starts with the skeleton (TASK-005).
@@ -24,17 +24,18 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 
 ## Decisions status (details: `history/decision-log.md`)
 
-- **Accepted:** core entries DEC-001…009 and DEC-013…067 as indexed in the decision log, except entries explicitly marked Proposed or Superseded. US-1.2 through US-1.4, the Editor main window and status bar, and US-11.2 are merged in PRs #133–#141. In review: DEC-068 (US-24.1 structured Console contract) and DEC-069 (US-33.5 AI/privacy settings contract). DEC-058 and DEC-061 govern agent work on a member's computer versus a cloud copy.
+- **Accepted:** core entries DEC-001…009 and DEC-013…069 as indexed in the decision log, except entries explicitly marked Proposed or Superseded. US-1.2 through US-1.4, the Editor main window and status bar, and US-11.2 are merged in PRs #133–#141. US-24.1 is merged in PR #142 and US-33.5 in PR #143. In review: DEC-070 (US-11.1 grounded answers and citations). DEC-058 and DEC-061 govern agent work on a member's computer versus a cloud copy.
 - **Proposed / deferred by the human ("too early"):** MCP later (DEC-010); LLM-instructive component metadata (Q-013). Agents do not raise these.
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
 
 ## In progress / next
-- **US-24.1 (#104): structured Console logging** — Review. Canonical `LogEntry` and optional `ILogSink` in `engine/core`; window-free owning `ConsoleModel`, non-mutating filters/search/collapse, selection/details, Error Pause and Play lifecycle seams, external-editor and entity navigation abstractions in `editor_core`; ImGui Console panel filled. DEC-068 is carried for PR review. US-17.2 (#85) calls the implemented Play start/stop seam when its controller lands.
-- **US-33.5 (#121): AI service and privacy settings** — Review. Window-free validation,
+- **US-11.1 (#71): grounded answers with tick, entity and source citations** — Review. `GroundedAssistant::ask()` assembles only attached context through const query seams, diagnoses deterministically (debug flags, unlock failures, write records), returns typed `state`/`entity`/`source` citations validated against evidence, and runs through #72's `ReadOnlyAssistant` via `GroundedAgentBridge` with no shared API change. DEC-070 is carried for PR review. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips implement the seams in their stories.
+- **US-24.1 (#104): structured Console logging** — Done (PR #142). Canonical `LogEntry` and optional `ILogSink` in `engine/core`; window-free owning `ConsoleModel`, non-mutating filters/search/collapse, selection/details, Error Pause and Play lifecycle seams, external-editor and entity navigation abstractions in `editor_core`; ImGui Console panel filled. DEC-068 binds with the merge. US-17.2 (#85) calls the implemented Play start/stop seam when its controller lands.
+- **US-33.5 (#121): AI service and privacy settings** — Done (PR #143). Window-free validation,
   controller, asynchronous stale-response protection and `AEGIS_AI_PRIVACY 1` user-local settings;
   standard gRPC health check and model discovery behind AgentBridge; Dear ImGui AI and Privacy
-  rendering; source/telemetry confirmation and Ask-before-send policy for #120. DEC-069 is carried
-  for PR review.
+  rendering; source/telemetry confirmation and Ask-before-send policy for #120. DEC-069 binds with
+  the merge.
 - **US-11.2 (#72): read-only assistant and configured AI service** — Done (PR #141). `aegis::assistant` exposes only read-only Semantic Graph input and text output, obtains responses through AgentBridge, cancels streaming safely, and persists `AEGIS_CHAT 1` histories under an injected user-local project path. #71, #119 and #121 remain separate.
 - **US-14.2 (#78): status bar with the editor's current state** — Done (PR #138). `EditorStatus` and `buildStatusBar()` in `editor_core` (srs.fr.14.7 to 14.11); clicking the message opens the Console. The AI service and REC clicks wait for US-33.5 and EP-30; the sources (Console, Play mode, scenes, telemetry, debug flags) fill `EditorStatus` in their stories.
 - **US-14.1 (#77): Editor main window with menus, toolbar and panels** — Done (PR #137). Dear ImGui with rlImGui (DEC-063); the nine menus of D-01 to D-09 with unbuilt items disabled, the C-01 toolbar, the Default panel layout, the status bar, the title with project, scene and "*", the unsaved-changes check on close, Ctrl/Cmd shortcuts. F-01 waits for US-15.x, the project for the Project Hub (US-13.x).
