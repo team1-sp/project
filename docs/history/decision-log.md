@@ -40,7 +40,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-029 | Platforms: develop on Windows and macOS (Windows priority); the engine application and the development tool must run on both; games are built for Windows only for now | Accepted | 2026-10-15 |
 | DEC-030 | Compilers: whatever each platform needs; none pinned now | Accepted | 2026-10-15 |
 | DEC-031 | Coding standards, Definition of Done and clang-format 19 accepted | Accepted | 2026-10-23 |
-| DEC-032 | Only Işık Dönger and the advisor approve PRs; Işık's own PRs need no approval; `main` ruleset on | Accepted | 2026-10-23 |
+| DEC-032 | Only Işık Dönger and the advisor approve PRs; Işık's own PRs need no approval; `main` ruleset on | Accepted (advisor part superseded by DEC-151.1) | 2026-10-23 |
 | DEC-033 | Raylib version is 6.2 | Accepted | 2026-10-24 |
 | DEC-034 | The product name is Aegis | Accepted | 2026-10-24 |
 | DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Superseded by DEC-050 | 2026-10-24 |
@@ -81,6 +81,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-071 | US-33.2: the AI Assistant chat state is a window-free `editor_core` model that sends only through an injectable sender over `GroundedAssistant`, runs `AnswerOperation` on a worker thread, shows a running answer only after it ends, keeps chips across questions, and sizes chips by their evidence bytes | Accepted | 2026-11-22 |
 | DEC-148.1 | New record ids are `<PREFIX>-<GitHub #>.<counter>` (the issue the PR closes, or the PR's own number for no-issue work), tasks are `TASK-<issue #>`, old ids stay; the append-only logs merge with `merge=union`; `check_ids.py` accepts both forms and fails a PR whose new ids use another number | Accepted | 2026-11-22 |
 | DEC-149.1 | The task board is retired: tasks are GitHub issues and the issue's assignee is the claim, no new TASK ids, `task-board.md` is archived; `current-status.md` becomes an increment-level page that a PR edits only when something on it changes | Accepted | 2026-11-22 |
+| DEC-151.1 | The advisor, Leyla Sezer, is no longer a code owner; Işık Dönger is the only code owner and approver; the `main` ruleset is unchanged | Accepted | 2026-11-22 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -427,6 +428,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Docs updated:** `.github/CODEOWNERS`, `CONTRIBUTING.md`, `guidelines/git-workflow.md`.
 - **Course documents affected (for humans):** none known.
 - **Related:** DEC-024, DEC-027.
+- **Amendments:** 2026-11-22 — the advisor is no longer a code owner; Işık Dönger is the only one (DEC-151.1).
 
 ### DEC-033 — Raylib version is 6.2
 - **Date:** 2026-10-24
@@ -1210,4 +1212,18 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none known; SRS/Initial Plan text about a repo task board, if any, is for the humans to check.
 - **Revisit when:** agents need an offline task list again, or `current-status.md` starts changing in most PRs.
 - **Supersedes / Related:** DEC-148.1 (part 2), DEC-050, DEC-055, Q-015.
+
+### DEC-151.1 — Işık Dönger is the only code owner
+- **Date:** 2026-11-22
+- **Status:** Accepted (carried by PR #151, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (in the conversation "Make record IDs collision-free", 2026-11-22)   **Recorded by:** claude-code/opus-5.5/148-ids
+- **Human's words:** asked whether removing `leylasezer` "as a codeowner and a reviewer" needs a PR or a repository setting, then: "you can now go ahead and also create the pr for codeowners change".
+- **Context:** DEC-032 made Işık Dönger and the advisor, Leyla Sezer (`@leylasezer196`), the only code owners, so GitHub requested the advisor's review on every PR.
+- **Decision:** `.github/CODEOWNERS` lists only `@isikdonger`. The `main` ruleset stays as it is (one code-owner approval, admin bypass through a PR), so every other member's PR needs Işık's approval and Işık's own PRs still need none. The advisor's repository access and Product Owner role are not changed by this entry.
+- **Rationale:** `[rationale not given beyond the words above]`
+- **Consequences:** GitHub no longer requests the advisor's review automatically; the advisor can still review when asked, but that approval does not count toward merging. Merges of other members' PRs depend on Işık alone.
+- **Docs updated:** `.github/CODEOWNERS`, `CONTRIBUTING.md`, `guidelines/git-workflow.md`.
+- **Course documents affected (for humans):** none known.
+- **Revisit when:** another approver is needed (for example while Işık is unavailable).
+- **Supersedes / Related:** supersedes the advisor part of DEC-032; DEC-024.
 
