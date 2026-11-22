@@ -114,6 +114,14 @@ Tests are in `tests/unit/core/`.
 - [ ] Never modifies engine/source (11.6)
 - [ ] No external transmission unless enabled (ip.nfr.2.1)
 - [ ] Response time target (ip.nfr.1.5)
+- [x] Read-only public boundary and manual text suggestions (srs.fr.11.8–11.9) —
+  `ReadOnlyAssistantTest.DesignSuggestion_IsManualTextAndCannotMutateGraphOrProjectFiles`
+- [x] Configured answers use AgentBridge (srs.fr.11.10) —
+  `ReadOnlyAssistantTest.ConfiguredQuestion_RoutesOnlyThroughAgentBridgeAndPersistsReply`
+- [x] Cancellation before, during and after an answer is safe and idempotent (srs.fr.11.11) —
+  `ReadOnlyAssistantTest.Cancel*`
+- [x] Versioned user-local chats round-trip messages, citations and data categories and reject bad
+  data safely (srs.fr.11.12) — `ChatStoreTest.*`
 
 ## Performance (ip.nfr.1.*) — reference hardware `[TBD]`
 

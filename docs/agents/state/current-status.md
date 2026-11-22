@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-11-16
-updated_by: claude (US-14.1 thread)
+last_updated: 2026-11-22
+updated_by: codex/gpt-5/us112
 ---
 
 # Current Status
@@ -8,7 +8,7 @@ updated_by: claude (US-14.1 thread)
 Snapshot of the project. Overwrite this file each session (keep it short). History belongs in `handoff-log.md`. **The truth is the `Accepted` entries in `history/decision-log.md`.**
 
 ## One-line summary
-Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The custom ECS is designed (PB-010, merged; Phase 1 slice this semester, DEC-043) but not built. PB-011 adds the application window and the game loop (`Application`, `IWindow`, `RaylibWindow`) and PB-012 the fixed 1/60 s timestep (`FrameClock`, `FixedTimestep`, the tick counter); both are in review on local branches. The Python 3.12 `ai-services` package is a skeleton; AI capabilities remain deferred. **The demo game is undecided** (Q-016).
+Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The custom ECS is designed (PB-010, merged; Phase 1 slice this semester, DEC-043) but not built. US-11.2 now has a window-free read-only assistant core, cancellable AgentBridge streaming, an optional production gRPC client and versioned user-local chat persistence (DEC-067); the Semantic Graph, grounded diagnosis, chat UI and AI settings remain their own stories. **The demo game is undecided** (Q-016).
 
 ## Phase
 Roadmap phase **1 — Project and technology decisions**: all exit criteria are met (see `plan.md`); the human confirms closing it. Phase 2 starts with the skeleton (TASK-005).
@@ -29,6 +29,10 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
 
 ## In progress / next
+- **US-11.2 (#72): read-only assistant and configured AI service** — Review. `aegis::assistant`
+  exposes only read-only Semantic Graph input and text output, obtains responses through AgentBridge,
+  cancels deterministic streaming safely, and persists `AEGIS_CHAT 1` histories under an injected
+  user-local project path. DEC-067 is in the PR for review; #71, #119 and #121 remain separate.
 - **US-14.2 (#78): status bar with the editor's current state** — Review. `EditorStatus` and `buildStatusBar()` in `editor_core` (srs.fr.14.7 to 14.11); clicking the message opens the Console. The AI service and REC clicks wait for US-33.5 and EP-30; the sources (Console, Play mode, scenes, telemetry, debug flags) fill `EditorStatus` in their stories. DEC-066 in the PR for review.
 - **US-14.1 (#77): Editor main window with menus, toolbar and panels** — Review. Dear ImGui with rlImGui (DEC-063); the nine menus of D-01 to D-09 with unbuilt items disabled, the C-01 toolbar, the Default panel layout, the status bar, the title with project, scene and "*", the unsaved-changes check on close, Ctrl/Cmd shortcuts. F-01 waits for US-15.x, the project for the Project Hub (US-13.x).
 - **US-1.4 (#44): pause, resume and step** — Review. `Application::requestPause()`, `resume()`, `requestStep()`, `isPaused()` (srs.fr.1.16 to 1.18, 17.14); DEC-060 in the PR for review. Play mode controls wait for US-17.2, Error Pause for US-24.1.
