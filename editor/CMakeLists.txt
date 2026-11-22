@@ -2,6 +2,7 @@
 # (US-14.1), and the status bar's items (US-14.2). It links neither raylib nor Dear ImGui, so
 # the tests use it in every preset.
 add_library(editor_core STATIC
+    src/ai_privacy_settings.cpp
     src/assistant_entry_points.cpp
     src/command.cpp
     src/console_model.cpp
@@ -13,7 +14,7 @@ add_library(editor_core STATIC
 )
 add_library(editor::core ALIAS editor_core)
 target_include_directories(editor_core PUBLIC include)
-target_link_libraries(editor_core PUBLIC engine::core)
+target_link_libraries(editor_core PUBLIC aegis::assistant engine::bridge engine::core)
 engine_set_warnings(editor_core)
 
 # Editor app: hosts engine::Application and owns the main window (DEC-048). It opens a window,

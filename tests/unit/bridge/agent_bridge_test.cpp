@@ -18,6 +18,16 @@ public:
         return {{observation.gameInstanceId, observation.sequence, 7}, {}};
     }
 
+    [[nodiscard]] engine::bridge::HealthCheckResult
+    checkHealth(std::chrono::milliseconds /*timeout*/) override {
+        return {engine::bridge::HealthServingStatus::Serving, {}};
+    }
+
+    [[nodiscard]] engine::bridge::ModelListResult
+    listModels(std::chrono::milliseconds /*timeout*/) override {
+        return {{{"echo", "Echo"}}, {}};
+    }
+
     [[nodiscard]] std::unique_ptr<engine::bridge::AssistantResponseStream>
     startAssistantResponse(const engine::bridge::AssistantRequest&,
                            std::chrono::milliseconds) override {

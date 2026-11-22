@@ -76,6 +76,8 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-066 | US-14.2: the status bar is built from a window-free `EditorStatus` model in `editor_core` (message, debug flags in orange, REC, mode, FPS, entities, AI service dot); clicking the message opens the Console; the AI and REC clicks wait for their panels | Accepted | 2026-11-17 |
 | DEC-067 | US-11.2: a window-free read-only assistant core uses AgentBridge streaming, cancellable answer operations and versioned user-local chat storage | Accepted | 2026-11-22 |
 | DEC-068 | US-24.1: structured logs are owned by a window-free Console model; projection is non-mutating; search ignores case; collapse identity includes every structured field; Play lifecycle, pause, editor launch and entity navigation use injected seams | Accepted | 2026-11-22 |
+| DEC-069 | US-33.5: AI/privacy settings use a window-free controller, address-bound AgentBridge health/model operations and versioned user-local project persistence | Accepted | 2026-11-22 |
+| DEC-070 | US-11.1: grounded answers use read-only evidence query seams, a deterministic diagnosis, typed citations serialised as `state`/`entity`/`source` key=value payloads, and an AgentBridge decorator that carries the grounded context in `semanticGraphStructure` and validates citations before they reach the chat | Accepted | 2026-11-22 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -1079,3 +1081,68 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none; this implements SRS A srs.fr.24.1 to 24.11.
 - **Revisit when:** US-17.2 introduces the Play controller, Project Preferences owns the editor command, or entity selection gains scene-qualified/stable references.
 - **Supersedes / Related:** DEC-057, DEC-060, DEC-063, DEC-066, TASK-021, GitHub #104, #85, #88, #123.
+
+### DEC-069 — US-33.5 uses a window-free settings controller and AgentBridge service discovery
+- **Date:** 2026-11-22
+- **Status:** Accepted (carried by the US-33.5 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-33.5 pull request   **Recorded by:** codex/gpt-5/121-ai-privacy
+- **Context:** US-33.5 (#121) needs independently testable address validation, asynchronous health
+  and model discovery, address-race protection, privacy policy and per-user project persistence.
+  Merged #141 supplied an address-bound `AgentBridge` answer stream but no health or model operation.
+  The general Project Settings framework, Project Hub and per-question consent dialog are separate
+  stories.
+- **Options considered:**
+  1. Call gRPC from Dear ImGui, or extend the transport-neutral AgentBridge seam. The seam is chosen
+     so UI/model tests use fakes and protocol types remain inside the optional transport target.
+  2. Let asynchronous callbacks mutate controller state, or poll typed completions carrying request
+     identifiers and addresses. Polling is chosen so mutations stay on the UI thread and stale
+     completions are deterministically rejected.
+  3. Store these values with shared project settings, or under an injected current-user project
+     area. The user-local area is required by srs.fr.33.57 and prevents privacy choices from entering
+     version control.
+- **Decision:** `AiPrivacySettingsController` owns all window-independent state and persists
+  `AEGIS_AI_PRIVACY 1` beneath `<user-local-project>/settings/ai-privacy.settings` through temporary
+  and backup replacement. `AiPrivacySettings` implements #72's `DataTransmissionPolicy` and exposes
+  per-category consent need for #120. `AgentBridge` adds synchronous, deadline-taking
+  `checkHealth()` and `listModels()` operations; `AgentBridgeRequestRunner` executes them
+  asynchronously through an injected address-bound bridge factory and clock. The production bridge
+  uses wire-compatible `grpc.health.v1.Health/Check` plus `AgentBridge.ListModels`; UI code sees only
+  transport-neutral results. Dear ImGui renders the controller and the Edit menu, AI menu and status
+  bar share one availability-checked action.
+- **Rationale:** this is the smallest complete slice that keeps protocol code out of the UI, makes
+  every timing/race transition fakeable, reuses #72's service boundary and stores no credentials.
+- **Consequences:** Project-opening code supplies the user-local project root and a production bridge
+  factory when that lifecycle lands. #120 reads `requiresConsent()` but owns the general send/dialog
+  sequence. A successful health check triggers a fresh five-second model-list request; changing the
+  address clears the model/connection and both address-bound permissions.
+- **Docs updated:** `design/ai-privacy-settings.md`, `architecture/ai-assistant-layer.md`,
+  `guidelines/repository-structure.md`, `testing/test-checklists.md`, agent state and handoff.
+- **Course documents affected (for humans):** none; this follows srs.fr.33.28–33.33, 33.57 and
+  srs.nfr.4.11.
+- **Revisit when:** Project Hub supplies default service addresses, the cross-platform project path
+  owner standardizes the concrete user-local root, or #120 connects the send pipeline.
+- **Supersedes / Related:** DEC-038, DEC-045, DEC-067, TASK-022, GitHub #121, #120.
+
+### DEC-070 — US-11.1: grounded answers, typed citations and an AgentBridge decorator
+- **Date:** 2026-11-22
+- **Status:** Accepted (part 1 decided in the conversation; parts 2–6 carried by the US-11.1 pull request, binding once a human merges it, DEC-052)
+- **Decided by:** ardasaritas (part 1, in the US-11.1 agent session, 2026-11-22); the reviewer of the US-11.1 pull request (parts 2–6)   **Recorded by:** claude-code/opus-5.5/us111
+- **Human's words:** asked how to proceed because #72's `AssistantRequest` has no field for evidence, attached context or earlier messages and `ReadOnlyAssistant` persists citations as they stream, the human chose "Decorator, no API change".
+- **Context:** US-11.1 (#71) needs grounded answers with structured citations (srs.fr.11.1–11.7). DEC-067 left citation semantics, evidence and diagnosis to #71 and fixed the AgentBridge request as `question`, `semanticGraphStructure` and `dataCategories`. `main` has no Semantic Graph, telemetry recording, debug flags or EP-33 context items yet. The task forbids changing the shared #72 APIs concurrently.
+- **Options considered:**
+  1. Transport of grounded context: (a) an `AgentBridge` decorator that fills the existing `semanticGraphStructure` string with a versioned grounded-context document and filters the response stream; (b) stop and ask for new `AssistantRequest`/proto fields and a `ReadOnlyAssistant` hook; (c) domain logic only, no transport. (a) delivers every criterion without editing a shared header or the proto.
+  2. Citation form: (a) typed C++ values serialised as fixed-order `key=value` lines under the kinds `state`, `entity`, `source`; (b) parse citations from answer text. (a) keeps citations as data (DEC-067 stores kind/payload strings).
+  3. Evidence access: (a) narrow const query interfaces (`SemanticGraphQuery`, `RunTelemetryQuery`, `AssetCatalogQuery`, `ProjectSourceReader`) returning copies; (b) give the assistant engine or recording objects. (a) keeps the assistant read-only (DEC-067) and testable with fakes.
+- **Decision:**
+  1. `GroundedAgentBridge` decorates the configured `AgentBridge` for one question: it puts the `AEGIS_GROUNDED_CONTEXT 1` document in `semanticGraphStructure`, streams the deterministic diagnosis first, passes only AI-service citations that decode as typed citations and match the retrieved evidence (re-encoded canonically, the rest counted in a note), keeps only data categories the request carried, and refuses a request for another question. `GroundedAssistant::ask()` drives it through `ReadOnlyAssistant`, so cancellation and `ChatStore` persistence are #72's.
+  2. Citations: `StateCitation{run, Start | tick}`, `EntityCitation{id, name, source scene, runtime-created, optional run with optional Start | tick}`, `SourceCitation{attached file, line from 1, content hash}`. Payloads: `run=…`/`point=start|tick:N`; `id`, `name`, `scene`, `runtime`, optional `run`, `point`; `file`, `line`, `hash`. Values escape only `%`, LF, CR. Decoding is strict. Start is never tick 0.
+  3. Content hash: `sha256:` + 64 lowercase hex digits of the file bytes at question time, from a local FIPS 180-4 implementation (no new dependency, S-5).
+  4. Context and consent: only the question, earlier messages of the chat, and the attached items are read. An attached item whose data category the policy does not allow, a Source code path outside `Scripts/` (or with `.`/`..`/empty segments, backslash, drive or absolute prefix), an unreadable file or more than 200 KB of sources refuses the whole question before anything is sent. Earlier messages carrying a now-denied category become `[earlier message left out: contains <category>]`; included messages pass their categories on (srs.fr.33.46, 33.56, 33.59). Categories: `semantic-graph`, `telemetry` (Last run, event nodes, collided with / triggered edges, run log entries), `source-code` (Source code, file names in graph nodes, script assets, stack traces). Last run defaults to the last 600 ticks; Start records are always kept.
+  5. Debug flags (srs.fr.11.3): a flag is named as the cause only when the report does not say "not applied", its debug-injection record exists, and a retrieved record shows its effect: a position sample of another entity inside a removed collider's unrotated bounds (no collider, out of bounds); an `UnlockedEvent` for the target whose `requiredItem` is not in `inventory` (unlock without item); an event involving an added ring obstacle and another entity (unreachable objective). Otherwise the answer says not applied, not recorded, not exercised, or that the needed records are missing.
+  6. A sampled value change is attributed only to a recorded write in the interval; declared writers of the component become a hypothesis prefixed "Hypothesis (not established by the evidence):", and the missing write record is named.
+- **Rationale:** every #71 criterion is met with the #72 seams unchanged; the deterministic part makes the debug-flag and abstention rules testable without a model.
+- **Consequences:** the Python AI service (later story) reads the grounded document from `semantic_graph_structure` and returns citations in the payload form above. If the wire later gets dedicated context fields, only `GroundedAgentBridge` changes. The Semantic layer, telemetry recording, asset catalogue and EP-33 chips implement the query seams and context items in their stories; until then they are exercised with fakes. Field-by-field removal of denied data (srs.fr.33.54), consent dialogs and request preview UI remain EP-33/#121.
+- **Docs updated:** `architecture/ai-assistant-layer.md`, `architecture/semantic-layer.md`, `guidelines/repository-structure.md`, `testing/test-checklists.md`, `agents/state/task-board.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`, `history/problem-log.md`.
+- **Course documents affected (for humans):** none; this implements SRS A srs.fr.11.1–11.7.
+- **Revisit when:** the AgentBridge request gains structured context fields, the telemetry recording defines its record schema (srs.fr.8.29), or the demo game fixes the event and payload names used for unlocks and collisions.
+- **Supersedes / Related:** DEC-038, DEC-067, DEC-069 (US-33.5 settings and `checkHealth()`/`listModels()`), TASK-020, TASK-023, US-11.1 (#71), #119, #121.

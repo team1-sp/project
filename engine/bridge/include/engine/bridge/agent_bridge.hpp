@@ -31,6 +31,41 @@ struct ExchangeResult {
     [[nodiscard]] bool succeeded() const noexcept { return error.empty(); }
 };
 
+enum class ServiceFailureKind { None, Unavailable, DeadlineExceeded, RemoteStatus };
+
+// Transport-neutral service failure. `status` is the protocol status name for RemoteStatus and
+// `message` is safe presentation text supplied by the service/transport.
+struct ServiceFailure {
+    ServiceFailureKind kind = ServiceFailureKind::None;
+    std::string status;
+    std::string message;
+
+    [[nodiscard]] bool failed() const noexcept { return kind != ServiceFailureKind::None; }
+};
+
+enum class HealthServingStatus { Unknown, Serving, NotServing };
+
+struct HealthCheckResult {
+    HealthServingStatus status = HealthServingStatus::Unknown;
+    ServiceFailure failure;
+
+    [[nodiscard]] bool isServing() const noexcept {
+        return status == HealthServingStatus::Serving && !failure.failed();
+    }
+};
+
+struct AvailableModel {
+    std::string identifier;
+    std::string displayName;
+};
+
+struct ModelListResult {
+    std::vector<AvailableModel> models;
+    ServiceFailure failure;
+
+    [[nodiscard]] bool succeeded() const noexcept { return !failure.failed(); }
+};
+
 // An opaque citation returned by the AI service. The assistant stores the kind and payload
 // verbatim so later stories can add structured citation kinds without changing this seam.
 struct AssistantCitation {
@@ -94,6 +129,12 @@ public:
 
     [[nodiscard]] virtual ExchangeResult exchange(const Observation& observation,
                                                   std::chrono::milliseconds timeout) = 0;
+
+    // Runs grpc.health.v1.Health/Check for this bridge's configured address.
+    [[nodiscard]] virtual HealthCheckResult checkHealth(std::chrono::milliseconds timeout) = 0;
+
+    // Lists model identifiers and display names from the configured AgentBridge service.
+    [[nodiscard]] virtual ModelListResult listModels(std::chrono::milliseconds timeout) = 0;
 
     // Starts the configured AgentBridge Answer RPC. The bridge owns transport details; callers see
     // only engine-owned values and a cancellable stream.

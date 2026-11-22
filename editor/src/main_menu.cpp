@@ -78,7 +78,12 @@ Menu fileMenu(IEditorActions& actions) {
 }
 
 // D-02.
-Menu editMenu() {
+Menu editMenu(IEditorActions& actions) {
+    MenuEntry projectSettings;
+    projectSettings.command.label = "Project Settings...";
+    projectSettings.command.enabled = [&actions] { return actions.canOpenAiPrivacySettings(); };
+    projectSettings.command.run = [&actions] { actions.openAiPrivacySettings(); };
+    projectSettings.separatorBefore = true;
     return Menu{"Edit",
                 {
                     notBuilt("Undo", ctrl(Key::Z)),
@@ -92,7 +97,7 @@ Menu editMenu() {
                     notBuilt("Select All", ctrl(Key::A), true),
                     notBuilt("Frame Selected", plain(Key::F)),
                     notBuilt("Find", ctrl(Key::F)),
-                    notBuilt("Project Settings...", std::nullopt, true),
+                    std::move(projectSettings),
                     notBuilt("Preferences...", ctrl(Key::Comma)),
                 }};
 }
@@ -180,8 +185,8 @@ Menu aiMenu(IEditorActions& actions) {
 
     MenuEntry aiSettings;
     aiSettings.command.label = "AI Settings...";
-    aiSettings.command.enabled = always;
-    aiSettings.command.run = [&actions] { actions.openAiSettings(); };
+    aiSettings.command.enabled = [&actions] { return actions.canOpenAiPrivacySettings(); };
+    aiSettings.command.run = [&actions] { actions.openAiPrivacySettings(); };
     aiSettings.separatorBefore = true;
 
     return Menu{"AI",
@@ -264,7 +269,7 @@ const char* panelName(Panel panel) {
 std::vector<Menu> buildMainMenu(IEditorActions& actions) {
     std::vector<Menu> menus;
     menus.push_back(fileMenu(actions));
-    menus.push_back(editMenu());
+    menus.push_back(editMenu(actions));
     menus.push_back(assetsMenu());
     menus.push_back(entityMenu());
     menus.push_back(componentMenu());

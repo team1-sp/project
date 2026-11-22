@@ -89,7 +89,8 @@ TEST_F(EntryPointTest, CtrlShiftACommand_OpensAndClosesAssistantPanel) {
             return entryPoints.canDiagnoseLastRun();
         }
         void diagnoseLastRun() override { entryPoints.diagnoseLastRun(); }
-        void openAiSettings() override { entryPoints.openAiSettings(); }
+        [[nodiscard]] bool canOpenAiPrivacySettings() const override { return false; }
+        void openAiPrivacySettings() override {}
         editor::AssistantEntryPoints& entryPoints;
     } actions(entryPoints);
     const std::vector<editor::Command> toolbar = editor::buildToolbar(actions);

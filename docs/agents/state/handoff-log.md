@@ -405,10 +405,49 @@
 
 ---
 
-### HND-032 — AI Assistant Editor entry points (US-33.1)
+### HND-032 — AI service and privacy project settings (US-33.5)
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/121-ai-privacy
+- **Task:** TASK-022, GitHub #121, srs.fr.33.28 to 33.33
+- **Goal:** Configure the per-project service/model and privacy settings without coupling state to
+  Dear ImGui or calling gRPC from UI code.
+- **Result:** Done — strict address/port validation, asynchronous health/model discovery through
+  AgentBridge, stale-address/request protection, model/send state, latency/failure presentation,
+  independent default-off sharing confirmations, Ask-before-send policy, user-local versioned
+  persistence and the AI and Privacy window/menu/status routes.
+- **Files changed:** AgentBridge/protobuf/gRPC bridge; `editor_core` settings/controller/store and
+  menu/status models; Dear ImGui view; focused tests/CMake; architecture/design/testing/agent records.
+- **Verified:** warnings-as-errors headless build + CTest 166/166; macOS Debug build including Editor
+  + CTest 179/179; optional gRPC warnings-as-errors build + CTest 166/166; clang-format 19.1.7,
+  include policy, record IDs, documentation links and `git diff --check` pass.
+- **Not verified:** live AI service interoperability and Windows compilation; CI covers Windows
+  after push. No provider credentials are stored or needed by tests.
+- **Repo state:** branch `feat/121-ai-service-privacy-settings`; implementation and verification are
+  complete, with review status tracked on GitHub #121 and its linked pull request.
+- **Next:** review DEC-069 and PR; Project Hub/project opening supplies the concrete user-local root
+  and bridge factory; #120 consumes `requiresConsent()` for the general sending dialog.
+- **Traps:** persisted model values are identifiers, never display names. Apply completions only when
+  both request id and address still match. Address changes must clear model/connection and both
+  address-bound permissions.
+- **Records:** DEC-069 (Accepted in the PR, for review); PRB-003 and PRB-005 occurrences.
+
+### HND-033 — Grounded assistant answers with tick, entity and source citations (US-11.1)
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/us111
+- **Task:** TASK-023, GitHub #71, srs.fr.11.1 to 11.7
+- **Result:** Added the `assistant/.../grounded/` pipeline: question and context-item models; const evidence query seams and `ScriptsFolderReader`; `assembleContext()` with category policy, `Scripts/` allowlist, 200 KB limit, 600-tick default and earlier-message consent; deterministic `diagnose()` with debug-flag, unlock and write-record rules; typed state/entity/source citations with strict codec, SHA-256 content hash and evidence validation; `GroundedAgentBridge` and `GroundedAssistant::ask()` over #72's unchanged `ReadOnlyAssistant`.
+- **Verified:** headless warnings-as-errors build and CTest 224/224 after merging `main` with US-33.5 (58 new); macOS Debug warnings-as-errors build and CTest 237/237; clang-format 19.1.7, include, link and id checks and `git diff --check` clean. Tests use fakes only.
+- **Not verified:** Windows (CI), a live AI service, and real Semantic Graph/telemetry data, which do not exist on `main` yet.
+- **Next:** review DEC-070. The Semantic Graph, telemetry recording, asset catalogue and EP-33 context chips implement `SemanticGraphQuery`, `RunTelemetryQuery`, `AssetCatalogQuery` and produce `ContextItem`s; #119 calls `GroundedAssistant::ask()`; the Python service reads `semantic_graph_structure` and returns citations in the DEC-070 payload form.
+- **Traps:** never add a mutating method to the query seams; keep Start and tick 0 distinct; a debug flag is a cause only with an injection record and an observed effect. Fixture members that depend on a path must get it in their declaration (PRB-006).
+- **Records:** DEC-070 (part 1 decided in the conversation; parts 2–6 for review), PRB-006.
+
+---
+
+### HND-034 — AI Assistant Editor entry points (US-33.1)
 - **Date:** 2026-11-22
 - **Agent:** codex/gpt-5/118-assistant
-- **Task:** TASK-022, GitHub #118
+- **Task:** TASK-024, GitHub #118
 - **Goal:** Implement the five AI Editor entry points without taking ownership of grounded answers,
   full chat/context management, consent-dialog internals, settings internals or new transport.
 - **Result:** Done locally; awaiting human approval to commit, push and open the draft PR.
@@ -429,21 +468,34 @@
 
 ---
 
-### HND-033 — AI Assistant entry points pushed for review
+### HND-035 — AI Assistant entry points pushed for review
 - **Date:** 2026-11-22
 - **Agent:** codex/gpt-5/118-assistant
-- **Task:** TASK-022, GitHub #118
+- **Task:** TASK-024, GitHub #118
 - **Goal:** Commit and publish the human-approved US-33.1 implementation.
 - **Result:** Commit `0c96323` pushed to `feat/118-open-ai-assistant`; draft PR #145 opened with
   `Closes #118`, the acceptance checklist and verification results.
-- **Files changed:** no implementation changes after HND-032; live task/status records now point to
+- **Files changed:** no implementation changes after HND-034; live task/status records now point to
   PR #145.
 - **Verified:** latest `origin/main` remained the branch base; pre-commit ID/link/diff checks passed;
   GitHub accepted the branch and created the draft PR.
 - **Not verified:** GitHub CI and human review are pending.
 - **Repo state:** branch pushed and tracking `origin/feat/118-open-ai-assistant`; draft PR #145 open.
 - **Next:** watch CI, address review findings, and let a human mark ready/merge when approved.
-- **Traps:** none beyond HND-032.
+- **Traps:** none beyond HND-034.
 - **Records:** no new decision, problem or open question.
 
 ---
+
+### HND-036 — Merge `main` (US-33.5, US-11.1) into the US-33.1 branch
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/118-merge
+- **Task:** TASK-024, GitHub #118, PR #145
+- **Result:** Resolved conflicts with PRs #143 and #144. The US-33.1 placeholder Project Settings
+  shell is removed; AI > AI Settings... uses US-33.5's `canOpenAiPrivacySettings()` /
+  `openAiPrivacySettings()`, and `AssistantEntryPoints::openAiSettings()` requests are forwarded by
+  `MainWindowView` to the same AI and Privacy window. `IEditorActions::openAiSettings()` is gone.
+  Records renumbered: this story is TASK-024 and HND-034/035, since `main` used TASK-022/023 and
+  HND-032/033.
+- **Verified:** see the PR #145 merge commit.
+- **Next:** CI and human review of PR #145.

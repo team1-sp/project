@@ -5,6 +5,7 @@
 #include <cfloat>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <string>
 #include <utility>
 
@@ -75,12 +76,12 @@ void buildDefaultLayout(ImGuiID dockSpaceId, const ImGuiViewport& viewport) {
 
 } // namespace
 
-MainWindowView::MainWindowView(EditorSession& session, const EditorStatus& status,
-                               ConsoleModel& console, AssistantEntryPoints& assistant,
+MainWindowView::MainWindowView(EditorSession& session, EditorStatus& status, ConsoleModel& console,
+                               AssistantEntryPoints& assistant,
                                ProjectSettingsState& projectSettings,
                                IExternalCodeEditor& externalEditor,
                                IEntityNavigator& entityNavigator, CloseEditor closeEditor,
-                               SetTitle setTitle)
+                               SetTitle setTitle, AiPrivacySettingsController* aiSettings)
     : session_(session)
     , status_(status)
     , console_(console)
@@ -88,6 +89,7 @@ MainWindowView::MainWindowView(EditorSession& session, const EditorStatus& statu
     , projectSettings_(projectSettings)
     , externalEditor_(externalEditor)
     , entityNavigator_(entityNavigator)
+    , aiSettings_(aiSettings)
     , closeEditor_(std::move(closeEditor))
     , setTitle_(std::move(setTitle))
     , platform_(currentPlatform())
@@ -102,6 +104,12 @@ void MainWindowView::draw() {
         ImGui::GetIO().IniFilename = nullptr;
     }
 
+    if (aiSettings_ != nullptr) {
+        aiSettings_->poll();
+        status_.aiService = aiSettings_->connectionState() == ConnectionState::Connected
+                                ? AiServiceState::Connected
+                                : AiServiceState::Offline;
+    }
     updateTitle();
     for (const Menu& menu : menus_) {
         runShortcuts(menu.entries);
@@ -119,6 +127,7 @@ void MainWindowView::draw() {
     drawToolbar();
     drawStatusBar();
     drawPanels();
+    openRequestedProjectSettings();
     drawProjectSettings();
     if (frameIndex_ < 2) {
         ++frameIndex_;
@@ -159,8 +168,29 @@ void MainWindowView::diagnoseLastRun() {
     assistant_.diagnoseLastRun();
 }
 
-void MainWindowView::openAiSettings() {
-    assistant_.openAiSettings();
+bool MainWindowView::canOpenAiPrivacySettings() const {
+    return aiSettings_ != nullptr;
+}
+
+void MainWindowView::openAiPrivacySettings() {
+    if (aiSettings_ == nullptr) {
+        return;
+    }
+    projectSettingsOpen_ = true;
+    aiSettings_->openTab();
+    std::snprintf(serviceAddress_.data(), serviceAddress_.size(), "%s",
+                  aiSettings_->addressDraft().c_str());
+}
+
+void MainWindowView::openRequestedProjectSettings() {
+    if (!projectSettings_.isOpen()) {
+        return;
+    }
+    projectSettings_.close();
+    // AI and Privacy is the only Project Settings tab so far (US-33.5).
+    if (projectSettings_.selectedTab() == ProjectSettingsTab::AiAndPrivacy) {
+        openAiPrivacySettings();
+    }
 }
 
 void MainWindowView::updateTitle() {
@@ -544,30 +574,6 @@ void MainWindowView::drawAssistantPanel() {
     }
 }
 
-void MainWindowView::drawProjectSettings() {
-    if (!projectSettings_.isOpen()) {
-        return;
-    }
-    bool open = true;
-    if (ImGui::Begin("Project Settings", &open)) {
-        if (ImGui::BeginTabBar("##ProjectSettingsTabs")) {
-            const ImGuiTabItemFlags flags =
-                projectSettings_.selectedTab() == ProjectSettingsTab::AiAndPrivacy
-                    ? ImGuiTabItemFlags_SetSelected
-                    : ImGuiTabItemFlags_None;
-            if (ImGui::BeginTabItem("AI and Privacy", nullptr, flags)) {
-                ImGui::TextDisabled("AI and Privacy settings are provided by US-33.5.");
-                ImGui::EndTabItem();
-            }
-            ImGui::EndTabBar();
-        }
-    }
-    ImGui::End();
-    if (!open) {
-        projectSettings_.close();
-    }
-}
-
 void MainWindowView::drawConsolePanel() {
     if (ImGui::Button("Clear")) {
         console_.clear();
@@ -682,6 +688,121 @@ void MainWindowView::drawConsolePanel() {
         ImGui::TextDisabled("Stack trace");
         ImGui::TextUnformatted(selected->stackTrace->c_str());
     }
+}
+
+void MainWindowView::drawProjectSettings() {
+    if (!projectSettingsOpen_ || aiSettings_ == nullptr) {
+        return;
+    }
+
+    ImGui::SetNextWindowSize(ImVec2(620.0F, 480.0F), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin("Project Settings", &projectSettingsOpen_)) {
+        ImGui::End();
+        return;
+    }
+
+    ImGui::SeparatorText("AI and Privacy");
+    ImGui::TextUnformatted("Service address");
+    ImGui::SetNextItemWidth(-130.0F);
+    if (ImGui::InputText("##AiServiceAddress", serviceAddress_.data(), serviceAddress_.size())) {
+        aiSettings_->setAddressDraft(serviceAddress_.data());
+    }
+    const bool addressLostFocus = ImGui::IsItemDeactivatedAfterEdit();
+    ImGui::SameLine();
+    if (ImGui::Button("Test Connection")) {
+        aiSettings_->setAddressDraft(serviceAddress_.data());
+        aiSettings_->testConnection();
+    } else if (addressLostFocus) {
+        aiSettings_->setAddressDraft(serviceAddress_.data());
+        if (aiSettings_->commitAddressOnFocusLoss()) {
+            aiSettings_->testConnection();
+        }
+    }
+    if (!aiSettings_->addressError().empty()) {
+        ImGui::TextColored(ImVec4(0.92F, 0.28F, 0.28F, 1.0F), "%s",
+                           aiSettings_->addressError().c_str());
+    }
+
+    const ConnectionState connection = aiSettings_->connectionState();
+    if (connection == ConnectionState::Checking) {
+        ImGui::TextDisabled("Checking connection...");
+    } else if (!aiSettings_->connectionText().empty()) {
+        const ImVec4 colour = connection == ConnectionState::Connected
+                                  ? ImVec4(0.28F, 0.82F, 0.45F, 1.0F)
+                                  : ImVec4(0.92F, 0.28F, 0.28F, 1.0F);
+        ImGui::TextColored(colour, "%s", aiSettings_->connectionText().c_str());
+    }
+
+    ImGui::Spacing();
+    ImGui::TextUnformatted("Model");
+    const std::string modelText = aiSettings_->modelFieldText();
+    const bool modelsAvailable = aiSettings_->modelListState() == ModelListState::Available;
+    ImGui::BeginDisabled(!modelsAvailable);
+    ImGui::SetNextItemWidth(-1.0F);
+    if (ImGui::BeginCombo("##AiModel", modelText.c_str())) {
+        for (const engine::bridge::AvailableModel& model : aiSettings_->models()) {
+            const bool selected = model.identifier == aiSettings_->settings().modelIdentifier;
+            const std::string label = model.displayName + "##" + model.identifier;
+            if (ImGui::Selectable(label.c_str(), selected)) {
+                (void)aiSettings_->selectModel(model.identifier);
+            }
+            if (selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::EndDisabled();
+    if (aiSettings_->modelListState() == ModelListState::Loading) {
+        ImGui::TextDisabled("Loading models...");
+    }
+    if (!aiSettings_->modelsError().empty()) {
+        ImGui::TextColored(ImVec4(0.92F, 0.28F, 0.28F, 1.0F), "%s",
+                           aiSettings_->modelsError().c_str());
+    }
+    if (!aiSettings_->sendingEnabled()) {
+        ImGui::TextDisabled("Sending disabled: %s", aiSettings_->sendDisabledReason().data());
+    }
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Data sharing");
+    bool sourceCode = aiSettings_->settings().allowSourceCode;
+    if (ImGui::Checkbox("Allow sending source code", &sourceCode)) {
+        aiSettings_->requestAllow(ProjectDataCategory::SourceCode, sourceCode);
+    }
+    bool telemetry = aiSettings_->settings().allowTelemetry;
+    if (ImGui::Checkbox("Allow sending telemetry", &telemetry)) {
+        aiSettings_->requestAllow(ProjectDataCategory::Telemetry, telemetry);
+    }
+    bool askEveryTime = aiSettings_->settings().askBeforeEverySend;
+    if (ImGui::Checkbox("Ask before every send", &askEveryTime)) {
+        aiSettings_->setAskBeforeEverySend(askEveryTime);
+    }
+
+    if (aiSettings_->pendingConfirmation() != PrivacyConfirmation::None) {
+        ImGui::OpenPopup("Confirm data sharing");
+    }
+    if (ImGui::BeginPopupModal("Confirm data sharing", nullptr,
+                               ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextWrapped("%s", aiSettings_->confirmationText().c_str());
+        if (ImGui::Button("Enable")) {
+            aiSettings_->confirmPrivacyChange();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            aiSettings_->cancelPrivacyChange();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    if (!aiSettings_->persistenceError().empty()) {
+        ImGui::Spacing();
+        ImGui::TextColored(ImVec4(0.92F, 0.28F, 0.28F, 1.0F), "Could not save settings: %s",
+                           aiSettings_->persistenceError().c_str());
+    }
+    ImGui::End();
 }
 
 } // namespace editor
