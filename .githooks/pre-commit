@@ -1,0 +1,13 @@
+#!/bin/sh
+# Stops a commit when two record entries share an id (DEC-055); CI runs the same check.
+# Enable once per clone: git config core.hooksPath .githooks
+root=$(git rev-parse --show-toplevel) || exit 1
+python=$(command -v python3 || command -v python)
+if [ -z "$python" ]; then
+    echo "pre-commit: python not found, skipping tools/check_ids.py (CI still runs it)" >&2
+    exit 0
+fi
+"$python" "$root/tools/check_ids.py" "$root" || {
+    echo "Record ids collide. Renumber your branch's entries (git-workflow.md §4), then commit again." >&2
+    exit 1
+}

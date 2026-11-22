@@ -441,3 +441,13 @@
 - **Next:** review DEC-070. The Semantic Graph, telemetry recording, asset catalogue and EP-33 context chips implement `SemanticGraphQuery`, `RunTelemetryQuery`, `AssetCatalogQuery` and produce `ContextItem`s; #119 calls `GroundedAssistant::ask()`; the Python service reads `semantic_graph_structure` and returns citations in the DEC-070 payload form.
 - **Traps:** never add a mutating method to the query seams; keep Start and tick 0 distinct; a debug flag is a cause only with an injection record and an observed effect. Fixture members that depend on a path must get it in their declaration (PRB-006).
 - **Records:** DEC-070 (part 1 decided in the conversation; parts 2–6 for review), PRB-006.
+
+### HND-039 — Check record ids locally with git hooks (#147)
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/147-hooks
+- **Task:** GitHub #147 (no issue)
+- **Result:** Added `.githooks/pre-commit`, which runs `tools/check_ids.py` and stops a commit when two record entries share an id, and `.githooks/pre-merge-commit`, which runs the same check for merges git completes without conflicts (those skip `pre-commit`). Documented `git config core.hooksPath .githooks` in `CONTRIBUTING.md` and `git-workflow.md` §4, and added `.githooks/` to `repository-structure.md`.
+- **Verified (macOS, git 2.53, Python 3.14):** in a scratch clone, a conflict-free merge giving two entries TASK-999 stopped before the merge commit, a plain commit adding a duplicate stopped, and a clean commit passed; `check_ids.py` and `check_md_links.py` pass.
+- **Not verified:** Windows Git Bash (the hooks are POSIX sh and fall back to `python`).
+- **Next:** each member and agent copy runs `git config core.hooksPath .githooks` once. The hooks catch collisions at sync time but do not prevent them; ids that cannot collide (for example issue number plus counter) would, and are a team decision.
+- **Traps:** the check reads the working tree, so a duplicate in unstaged changes also blocks a commit. HND-039 skips HND-034 to HND-038, already used by open PRs #145 and #146.
