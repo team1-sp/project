@@ -35,6 +35,10 @@ RECORDS = {
     "docs/agents/state/open-questions.md": "Q",
     "docs/history/task-board-archive.md": "TASK",  # retired by DEC-149.1; kept for history
 }
+# Where record files used to live, so a moved file's entries do not count as new.
+FORMER = {
+    "docs/agents/state/task-board.md": "TASK",  # moved to the archive by DEC-149.1
+}
 INDEXED = ("DEC", "PRB")
 CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?) #(\d+)", re.IGNORECASE)
 NUMBER = r"[1-9]\d*"
@@ -102,13 +106,20 @@ def file_at(root, rev, rel):
     return result.stdout if result.returncode == 0 else ""
 
 
-def check_added(rel, prefix, text, base_text, numbers):
+def base_ids(root, rev):
+    """Return {prefix: set of heading ids} at the base revision, including former locations."""
+    ids = collections.defaultdict(set)
+    for rel, prefix in list(RECORDS.items()) + list(FORMER.items()):
+        ids[prefix].update(headings(file_at(root, rev, rel), prefix))
+    return ids
+
+
+def check_added(rel, prefix, text, before, numbers):
     """Ids added since the base must use one of `numbers` in the new form."""
     errors = []
     _, new = id_forms(prefix)
     example = "TASK-<n>" if prefix == "TASK" else f"{prefix}-<n>.<counter>"
     allowed = " or ".join(f"#{n}" for n in sorted(numbers))
-    before = set(headings(base_text, prefix))
     for record in dict.fromkeys(headings(text, prefix)):
         if record in before:
             continue
@@ -129,6 +140,7 @@ def main(argv=None):
 
     numbers = pr_numbers(os.environ.get("GITHUB_EVENT_PATH")) if args.base else set()
     errors = []
+    before = base_ids(root, args.base) if numbers else {}
     for rel, prefix in RECORDS.items():
         path = root / rel
         if not path.exists():
@@ -136,7 +148,7 @@ def main(argv=None):
         text = path.read_text(encoding="utf-8")
         errors += check_file(rel, prefix, text)
         if numbers:
-            errors += check_added(rel, prefix, text, file_at(root, args.base, rel), numbers)
+            errors += check_added(rel, prefix, text, before[prefix], numbers)
     if args.base and not numbers:
         print("No 'Closes #n' or no-issue label found; new ids were not matched to the PR.")
     for error in errors:
