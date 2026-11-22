@@ -25,6 +25,6 @@ Never delete or rewrite an entry once it is on `main`. Until its pull request is
 - **Docs updated:** list of project files changed to match (filled during propagation).
 - **Course documents affected (for humans):** files under `senior-project/docs/` that now disagree. Agents do not edit them.
 - **Revisit when:** trigger or date.
-- **Supersedes / Related:** DEC-###, TASK-###, Q-###, PRB-###
+- **Supersedes / Related:** DEC-…, #issue, Q-…, PRB-…
 - **Amendments:** (dated lines added later, e.g. `2026-10-14 — rationale given by <human>: …`)
 ```

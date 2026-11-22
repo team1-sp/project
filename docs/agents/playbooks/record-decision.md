@@ -43,12 +43,12 @@ Rules for the review route:
    - `architecture/` (tech-stack, overview, layer docs, glossary)
    - `design/` (adapter, ECS, telemetry, demo)
    - `guidelines/`, `process/`, `testing/`, `troubleshooting/`
-   - `agents/rules.md` (invariants, rule text), `agents/state/*` (status, plan, task board, open questions), playbooks, templates
+   - `agents/rules.md` (invariants, rule text), `agents/state/*` (status, plan, open questions), playbooks, templates
    - `history/problem-log.md` / `common-errors.md` entries that become obsolete (mark `obsolete`, do not delete)
    - code, tests and comments (if code exists)
-6. **Update them all** to the new decision. Replace `[TBD]` markers, remove obsolete conditional sections, unblock tasks (`Blocked → Ready`), close the answered `Q-###` (`Answered`, link the `DEC-###`), update `current-status.md` and `plan.md`. Record the list in the entry's `Docs updated` field.
+6. **Update them all** to the new decision. Replace `[TBD]` markers, remove obsolete conditional sections, unblock issues that waited on it, close the answered `Q-###` (`Answered`, link the `DEC-###`), update `current-status.md` and `plan.md`. Record the list in the entry's `Docs updated` field.
 7. **Course documents drift.** Anything in `senior-project/docs/` (Initial Plan etc.) that now disagrees: do **not** edit. Add the list to the entry's `Course documents affected (for humans)` field and mention it in your reply. They are for the course, not the truth.
-8. **Create follow-up work** the decision implies (new `TASK-###`, new `Q-###` for questions it opens).
+8. **Create follow-up work** the decision implies (ask the human for new issues, add a `Q-…` for questions it opens).
 9. **Verify propagation:** search again for the old term; the only remaining mentions must be in `history/` (past entries) or clearly marked as history.
 10. **Tell the human** in 2–4 lines: what was recorded, what was updated, which course documents they may want to update, and what new questions it raised.
 11. Handoff entry lists the decision IDs.

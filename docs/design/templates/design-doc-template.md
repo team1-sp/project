@@ -8,7 +8,7 @@ Copy to `design/<topic>.md`. Keep it to 1–3 pages. Delete guidance text.
 - **Status:** Draft | In review | Accepted | Implemented | Superseded
 - **Author(s):** <name / agent-id>   **Reviewers:** <names>
 - **Layer:** Engine | Semantic | AI
-- **Serves:** ip.fr.x.y, ...        **Decisions:** DEC-###   **Tasks:** TASK-###
+- **Serves:** ip.fr.x.y, ...        **Decisions:** DEC-###   **Issues:** #…
 
 ## 1. Problem
 What are we solving and why now? (3–5 sentences)

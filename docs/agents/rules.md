@@ -21,7 +21,7 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | # | Rule |
 | --- | --- |
 | P-1 | MUST follow [AGENT-PROTOCOL.md](AGENT-PROTOCOL.md) each session. |
-| P-2 | MUST claim a task on the board before working; MUST release or complete it before ending. |
+| P-2 | MUST work only on an issue assigned to the member you work for (or a no-issue `docs`/`ci`/`chore` PR); MUST say in the handoff and on the issue when you leave it unfinished (DEC-149.1). |
 | P-3 | MUST NOT make or silently change a decision. **Humans decide; agents consult** (DEC-017). Surface uncertainty with a `DECISION NEEDED` block and log it `Proposed` while you wait for the answer. Write `Accepted` only for a decision a human approves: one they made in the conversation (who, when, words), or one your PR lists under "Decisions for review" (binding only once a human merges it; DEC-052). Then propagate it everywhere (`playbooks/record-decision.md`). |
 | P-4 | MUST NOT resolve any open choice yourself — anything marked `[TBD]` or not covered by an `Accepted` decision (currently e.g. ECS implementation, build system, Box2D version, test framework). Raise it with the human; write against the abstraction only if that is genuinely neutral. Decided stack: C++ (DEC-013), Box2D (DEC-014), Raylib (DEC-015), 2D only (DEC-016). |
 | P-5 | MUST NOT claim something works unless you ran it. State clearly what was and was not executed. |
@@ -31,7 +31,7 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | P-9 | MUST update documentation that your change invalidates, in the same task. After any human decision, update **every** affected document (`playbooks/record-decision.md`). |
 | P-11 | MUST tell the human about every material uncertainty or document conflict, in your reply — not only in a file. Course documents (Initial Plan etc.) are not authoritative; the decision log is. |
 | P-12 | SHOULD do code and repository docs work in your own cloud copy of the repository; MUST work on a member's computer only when the files, tools or signed-in accounts exist only there, or the member asks, and there MUST ask before every commit and push (DEC-058, DEC-061; `guidelines/git-workflow.md` §1). |
-| P-10 | MUST NOT leave the repo with failing build/tests without a `Blocked` task describing it. |
+| P-10 | MUST NOT leave the repo with failing build/tests without an issue describing it. |
 
 ## C. Safety and scope rules
 
@@ -47,9 +47,9 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 
 ## D. What agents MAY do without asking
 
-- Create/update tasks on the board for the work they are doing.
+- Comment on the issue they are working on.
 - Append to `history/*`, `handoff-log.md`, `open-questions.md`.
 - Edit `testing/`, `troubleshooting/` and `agents/state/` docs.
-- Add tests, fix bugs inside a claimed task, update docs made stale by their change.
+- Add tests, fix bugs inside the issue they work on, update docs made stale by their change.
 - Propose decisions (`Proposed` while the question is open in the conversation, binds nobody), record human decisions as `Accepted` with propagation, and write a decision their PR carries as `Accepted`, listed under "Decisions for review" (the human approves or rejects it in the review; DEC-052).
 - Ask the human questions at any time; that is part of the job.

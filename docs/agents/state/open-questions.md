@@ -42,10 +42,10 @@ Statuses: `Open` · `Answered` · `Obsolete`.
 ### Q-015 — Task IDs: TASK-### (docs) or PB-### (ClickUp)?
 - **To:** human:isik
 - **Asked by:** claude-code/sonnet-5.5/012r on 2026-10-16
-- **Status:** Open
+- **Status:** Answered 2026-11-22 (DEC-149.1)
 - **Context:** GitHub branches, PR titles and issues use ClickUp's `PB-###` ids (DEC-028, `git-workflow.md`). The agent docs still use `TASK-###` on `agents/state/task-board.md`, in commit trailers (`Refs: TASK-###`) and in playbooks. Two id systems for the same work will drift.
 - **Options (not decisions):** (A) ClickUp is the only task list; `task-board.md` keeps only a short pointer plus a `PB` column mapping; agent docs say `PB-###`. (B) Keep `task-board.md` as an agent-facing mirror, each `TASK-###` carries its `PB-###`. (C) Leave as is. I lean (B) now (smallest change, agents keep a file they can read offline) and (A) later.
-- **Answer:** —
+- **Answer:** neither: ClickUp was replaced by GitHub issues (DEC-050), and the task board and TASK ids were retired; tasks are GitHub issues (DEC-149.1).
 
 ### Q-005 — Project / product name?
 - **To:** human:team

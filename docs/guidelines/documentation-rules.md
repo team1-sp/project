@@ -34,7 +34,7 @@
 
 ## 4. Entry IDs
 
-New entries (DEC-148.1) are `<PREFIX>-<GitHub #>.<counter>`: `DEC-80.1`, `HND-80.2`, `PRB-142.1`, `Q-80.1`, `GEN-80.1`. The GitHub number is the issue the pull request closes (`Closes #80`), or the pull request's own number for `docs`/`ci`/`chore` work with the `no-issue` label (`DEC-148.1`). The counter starts at 1 for each prefix and number and counts up within that work. Tasks are one per issue: `TASK-80`. Issues and pull requests share one number sequence, so two branches can never produce the same id.
+New entries (DEC-148.1) are `<PREFIX>-<GitHub #>.<counter>`: `DEC-80.1`, `HND-80.2`, `PRB-142.1`, `Q-80.1`, `GEN-80.1`. The GitHub number is the issue the pull request closes (`Closes #80`), or the pull request's own number for `docs`/`ci`/`chore` work with the `no-issue` label (`DEC-148.1`). The counter starts at 1 for each prefix and number and counts up within that work. Tasks are GitHub issues and get no record id (DEC-149.1). Issues and pull requests share one number sequence, so two branches can never produce the same id.
 
 Entries written before DEC-148.1 keep their 3-digit ids (`DEC-071`, `HND-042`, `TASK-025`) and are never renumbered. `tools/check_ids.py` accepts both forms, and in pull request CI fails when a new id does not use the pull request's number.
 

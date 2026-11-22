@@ -6,7 +6,7 @@ Append to the bottom of `state/handoff-log.md`. Max ~25 lines. Link IDs instead 
 ### HND-<n>.<k> — Short title
 - **Date:** YYYY-MM-DD
 - **Agent:** <tool>/<model>/<session-id>
-- **Task:** TASK-<issue #> or the issue/PR number
+- **Work:** the issue (`#80`, `US-15.1`) and PR, or the PR alone for no-issue work
 - **Goal:** what you set out to do.
 - **Result:** Done | Partial | Blocked | Failed — one sentence.
 - **Files changed:** list (or "none").

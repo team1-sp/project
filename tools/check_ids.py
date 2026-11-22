@@ -2,7 +2,7 @@
 
 New entries use `<PREFIX>-<GitHub #>.<counter>`, for example DEC-148.1 or HND-80.2, where the
 number is the issue the pull request closes, or the pull request's own number for no-issue work.
-Task entries are one per issue: `TASK-<issue #>`. Entries written before DEC-148.1 keep their
+Tasks are GitHub issues (DEC-149.1); the archived task board keeps its TASK-0nn ids. Entries written before DEC-148.1 keep their
 3-digit ids (DEC-071, HND-042, TASK-025) and are never renumbered.
 
 Always checked (CI and the .githooks hooks):
@@ -33,7 +33,11 @@ RECORDS = {
     "docs/history/genai-usage-log.md": "GEN",
     "docs/agents/state/handoff-log.md": "HND",
     "docs/agents/state/open-questions.md": "Q",
-    "docs/agents/state/task-board.md": "TASK",
+    "docs/history/task-board-archive.md": "TASK",  # retired by DEC-149.1; kept for history
+}
+# Where record files used to live, so a moved file's entries do not count as new.
+FORMER = {
+    "docs/agents/state/task-board.md": "TASK",  # moved to the archive by DEC-149.1
 }
 INDEXED = ("DEC", "PRB")
 CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?) #(\d+)", re.IGNORECASE)
@@ -61,7 +65,7 @@ def index_rows(text, prefix):
 def check_file(rel, prefix, text):
     errors = []
     old, new = id_forms(prefix)
-    example = "TASK-<issue #>" if prefix == "TASK" else f"{prefix}-<GitHub #>.<counter>"
+    example = "no new TASK ids (DEC-149.1)" if prefix == "TASK" else f"{prefix}-<GitHub #>.<counter>"
     ids = headings(text, prefix)
     for record in ids:
         if not (old.fullmatch(record) or new.fullmatch(record)):
@@ -102,13 +106,20 @@ def file_at(root, rev, rel):
     return result.stdout if result.returncode == 0 else ""
 
 
-def check_added(rel, prefix, text, base_text, numbers):
+def base_ids(root, rev):
+    """Return {prefix: set of heading ids} at the base revision, including former locations."""
+    ids = collections.defaultdict(set)
+    for rel, prefix in list(RECORDS.items()) + list(FORMER.items()):
+        ids[prefix].update(headings(file_at(root, rev, rel), prefix))
+    return ids
+
+
+def check_added(rel, prefix, text, before, numbers):
     """Ids added since the base must use one of `numbers` in the new form."""
     errors = []
     _, new = id_forms(prefix)
     example = "TASK-<n>" if prefix == "TASK" else f"{prefix}-<n>.<counter>"
     allowed = " or ".join(f"#{n}" for n in sorted(numbers))
-    before = set(headings(base_text, prefix))
     for record in dict.fromkeys(headings(text, prefix)):
         if record in before:
             continue
@@ -129,6 +140,7 @@ def main(argv=None):
 
     numbers = pr_numbers(os.environ.get("GITHUB_EVENT_PATH")) if args.base else set()
     errors = []
+    before = base_ids(root, args.base) if numbers else {}
     for rel, prefix in RECORDS.items():
         path = root / rel
         if not path.exists():
@@ -136,7 +148,7 @@ def main(argv=None):
         text = path.read_text(encoding="utf-8")
         errors += check_file(rel, prefix, text)
         if numbers:
-            errors += check_added(rel, prefix, text, file_at(root, args.base, rel), numbers)
+            errors += check_added(rel, prefix, text, before[prefix], numbers)
     if args.base and not numbers:
         print("No 'Closes #n' or no-issue label found; new ids were not matched to the PR.")
     for error in errors:
