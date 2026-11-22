@@ -68,6 +68,20 @@ bool parseOptions(int argc, char** argv, engine::ApplicationConfig& config) {
     return true;
 }
 
+std::string configuredCodeEditor() {
+#ifdef _WIN32
+    char* value = nullptr;
+    std::size_t valueSize = 0;
+    const errno_t result = _dupenv_s(&value, &valueSize, "AEGIS_CODE_EDITOR");
+    std::string executable = result == 0 && value != nullptr ? value : "code";
+    std::free(value);
+    return executable;
+#else
+    const char* value = std::getenv("AEGIS_CODE_EDITOR");
+    return value != nullptr ? value : "code";
+#endif
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -83,9 +97,7 @@ int main(int argc, char** argv) {
             (void)runningApp->requestPause();
         }
     });
-    const char* configuredEditor = std::getenv("AEGIS_CODE_EDITOR");
-    editor::ProcessExternalCodeEditor externalEditor(configuredEditor != nullptr ? configuredEditor
-                                                                                 : "code");
+    editor::ProcessExternalCodeEditor externalEditor(configuredCodeEditor());
     editor::EntityNavigation entityNavigation;
 
     engine::ApplicationConfig config;
