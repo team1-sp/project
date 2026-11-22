@@ -402,3 +402,18 @@
 - **Next:** merge current `origin/main`, renumber collided records, rerun verification, push the approved merge resolution, and review PR #142.
 - **Traps:** #85 must call `onPlayStarted()`/`onPlayStopped()` at its Play transitions. Collapse includes tick, stack, source and entity, so same text at different ticks stays separate. `AEGIS_CODE_EDITOR` overrides the default `code` executable.
 - **Records:** DEC-068 (Accepted in the PR, for review); PRB-003 occurrence.
+
+---
+
+### HND-032 — RL-based automated game-testing literature review and AI-bridge context (PB-062)
+- **Date:** 2026-11-04, updated 2026-11-22
+- **Agent:** codex/gpt-5/pb062 (review); claude, PR #25 thread (merges with main and section 6)
+- **Task:** TASK-022 (ClickUp PB-062), GitHub issue #24, PR #25
+- **Goal:** Summarize the three required RL game-testing papers, review modl.ai and comparable tools, and derive implications for Aegis. Then answer Işık Dönger's review: how context from the AI-bridge layer improves autonomous testing.
+- **Result:** Ready for review. `research/rl-testing-lit.md` covers Bergdahl et al. (2020), Gordillo et al. (2021) and Zheng et al. (2019/Wuji); compares five tools; maps agent/oracle approaches to the four bug classes; proposes a goal-seeking plus curiosity PPO kernel with scripted/random baselines and deterministic oracles. New section 6 defines six bridge context tiers (C0 opaque observation to C5 snapshot/seed control), maps each to testing uses with literature evidence ([9]-[17]), lists `[PROPOSED]` bridge-contract additions (schema handshake, action mask, event stream, episode control, graph query) and a context-ablation experiment.
+- **Merge note:** main was merged in twice on 2026-11-22. The PR's ids collided first with PB-006 (TASK-017/HND-015), then with US-24.1 (TASK-021/HND-031); main's numbers were kept each time, so this work is now TASK-022 and HND-032.
+- **Files changed:** `docs/research/rl-testing-lit.md` (new), `docs/README.md`, `docs/agents/state/{task-board,current-status,handoff-log}.md`.
+- **Verified:** `python3 tools/check_md_links.py docs` reports 0 broken links; `tools/check_ids.py` passes. Section 6 citations were checked against publisher/arXiv listings on 2026-11-22.
+- **Not verified:** Vendor claims were not tested hands-on. No proposal was implemented or benchmarked. [12]-[14] are recent preprints or single-team results.
+- **Next:** Team reviews; any `[PROPOSED]` bridge-contract change needs its own decision entry. The demo game (Q-016) must be chosen before scenario-specific bounds, goals or rewards can be fixed.
+- **Traps:** RL exploration does not itself prove a bug; logical rules need explicit oracles. Failure to reach a goal is evidence, not proof of unreachability. LLMs explain candidates; they are not oracles.

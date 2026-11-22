@@ -29,6 +29,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
 
 ## In progress / next
+- **TASK-022 (ClickUp PB-062, PR #25): RL-based automated game-testing research** — Review. Three papers, five tools and `[PROPOSED]` Aegis implications in `research/rl-testing-lit.md`; section 6 (2026-11-22) adds how AI-bridge context (`AgentBridge`, schema, events, Semantic Graph, snapshots) improves autonomous testing, with a context-ablation plan.
 - **US-24.1 (#104): structured Console logging** — Review. Canonical `LogEntry` and optional `ILogSink` in `engine/core`; window-free owning `ConsoleModel`, non-mutating filters/search/collapse, selection/details, Error Pause and Play lifecycle seams, external-editor and entity navigation abstractions in `editor_core`; ImGui Console panel filled. DEC-068 is carried for PR review. US-17.2 (#85) calls the implemented Play start/stop seam when its controller lands.
 - **US-11.2 (#72): read-only assistant and configured AI service** — Done (PR #141). `aegis::assistant` exposes only read-only Semantic Graph input and text output, obtains responses through AgentBridge, cancels streaming safely, and persists `AEGIS_CHAT 1` histories under an injected user-local project path. #71, #119 and #121 remain separate.
 - **US-14.2 (#78): status bar with the editor's current state** — Done (PR #138). `EditorStatus` and `buildStatusBar()` in `editor_core` (srs.fr.14.7 to 14.11); clicking the message opens the Console. The AI service and REC clicks wait for US-33.5 and EP-30; the sources (Console, Play mode, scenes, telemetry, debug flags) fill `EditorStatus` in their stories.
@@ -49,6 +50,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 | --- | --- |
 | Build | Skeleton builds on Linux (GCC 13) Windows (MSVC 19.51, Visual Studio 2026) `[VERIFIED 2026-10-24]` and macOS (Apple Clang) `[VERIFIED 2026-10-27]` |
 | Tests | With PB-011 and PB-012: 49/49 on Windows (MSVC 19.44, `windows-debug`) and 41/41 in the `headless` preset on the same machine `[VERIFIED 2026-11-10]`; macOS and Linux not run yet. Before: 2/2 pass on Linux, Windows and macOS `[VERIFIED 2026-10-27]`; with PB-008, 9/9 on Linux (GCC 13), macOS (Zeynep Ertürk) and Windows (local Visual Studio 2026 build and the `windows-latest` CI job); the spike window itself has not been run on Windows `[VERIFIED 2026-11-01]` |
+| Docs | PB-062 research review and its AI-bridge section; relative links verified `[VERIFIED 2026-11-22]` |
 | Python | Python 3.12.13 clean-environment install succeeds; Ruff clean; pytest 1/1; `pip check` clean `[VERIFIED 2026-11-04]` |
 | Docs | Scaffold created 2026-10-12; updated 2026-10-13 for the stack decision and the decision-authority rule |
 
