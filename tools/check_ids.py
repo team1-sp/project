@@ -2,7 +2,7 @@
 
 New entries use `<PREFIX>-<GitHub #>.<counter>`, for example DEC-148.1 or HND-80.2, where the
 number is the issue the pull request closes, or the pull request's own number for no-issue work.
-Task entries are one per issue: `TASK-<issue #>`. Entries written before DEC-148.1 keep their
+Tasks are GitHub issues (DEC-149.1); the archived task board keeps its TASK-0nn ids. Entries written before DEC-148.1 keep their
 3-digit ids (DEC-071, HND-042, TASK-025) and are never renumbered.
 
 Always checked (CI and the .githooks hooks):
@@ -33,7 +33,7 @@ RECORDS = {
     "docs/history/genai-usage-log.md": "GEN",
     "docs/agents/state/handoff-log.md": "HND",
     "docs/agents/state/open-questions.md": "Q",
-    "docs/agents/state/task-board.md": "TASK",
+    "docs/history/task-board-archive.md": "TASK",  # retired by DEC-149.1; kept for history
 }
 INDEXED = ("DEC", "PRB")
 CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?) #(\d+)", re.IGNORECASE)
@@ -61,7 +61,7 @@ def index_rows(text, prefix):
 def check_file(rel, prefix, text):
     errors = []
     old, new = id_forms(prefix)
-    example = "TASK-<issue #>" if prefix == "TASK" else f"{prefix}-<GitHub #>.<counter>"
+    example = "no new TASK ids (DEC-149.1)" if prefix == "TASK" else f"{prefix}-<GitHub #>.<counter>"
     ids = headings(text, prefix)
     for record in ids:
         if not (old.fullmatch(record) or new.fullmatch(record)):

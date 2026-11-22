@@ -594,3 +594,18 @@
 - **Traps:** this is the first entry in the new form, so the index now mixes old and new ids.
 - **Records:** DEC-148.1, HND-148.1.
 
+---
+
+### HND-149.1 — Retire the task board and make current-status.md increment-level
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/148-ids
+- **Work:** PR #149 (no issue), stacked on PR #148
+- **Goal:** stop `task-board.md` and `current-status.md` from conflicting between parallel PRs (DEC-149.1).
+- **Result:** Done, awaiting review of PR #149.
+- **Files changed:** see the `Docs updated` list of DEC-149.1.
+- **Verified:** `tools/check_ids.py .` and `tools/check_md_links.py .` pass; grep for `task-board`/`TASK-` leaves only history and the archive.
+- **Not verified:** the new current-status.md "What exists" table was written from the folder layout and the decision log, not from a build.
+- **Next:** merge #148 first, then #149. `plan.md` is stale and needs its own update.
+- **Traps:** claims are now the issue's assignee; don't recreate a task file.
+- **Records:** DEC-149.1, HND-149.1, Q-015 answered.
+

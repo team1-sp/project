@@ -80,6 +80,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-070 | US-11.1: grounded answers use read-only evidence query seams, a deterministic diagnosis, typed citations serialised as `state`/`entity`/`source` key=value payloads, and an AgentBridge decorator that carries the grounded context in `semanticGraphStructure` and validates citations before they reach the chat | Accepted | 2026-11-22 |
 | DEC-071 | US-33.2: the AI Assistant chat state is a window-free `editor_core` model that sends only through an injectable sender over `GroundedAssistant`, runs `AnswerOperation` on a worker thread, shows a running answer only after it ends, keeps chips across questions, and sizes chips by their evidence bytes | Accepted | 2026-11-22 |
 | DEC-148.1 | New record ids are `<PREFIX>-<GitHub #>.<counter>` (the issue the PR closes, or the PR's own number for no-issue work), tasks are `TASK-<issue #>`, old ids stay; the append-only logs merge with `merge=union`; `check_ids.py` accepts both forms and fails a PR whose new ids use another number | Accepted | 2026-11-22 |
+| DEC-149.1 | The task board is retired: tasks are GitHub issues and the issue's assignee is the claim, no new TASK ids, `task-board.md` is archived; `current-status.md` becomes an increment-level page that a PR edits only when something on it changes | Accepted | 2026-11-22 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -1189,3 +1190,24 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none.
 - **Revisit when:** the team retires the task board, or ids from different PRs still collide.
 - **Supersedes / Related:** refines DEC-055 (collided record ids are no longer expected for new entries); DEC-050, DEC-052, PR #147.
+- **Amendments:** 2026-11-22 — part 2 (`TASK-<issue #>`) is superseded by DEC-149.1, which retires the task board and TASK ids.
+
+### DEC-149.1 — Tasks are GitHub issues; the task board is retired and current-status.md is increment-level
+- **Date:** 2026-11-22
+- **Status:** Accepted (approach decided in the conversation; details carried by PR #149, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (in the conversation "Make record IDs collision-free", 2026-11-22); the reviewer of PR #149   **Recorded by:** claude-code/opus-5.5/148-ids
+- **Human's words:** "updating on the main is not a option." Then: "I think retiring task-board.md and rewriting the current-status.md is the best approach."
+- **Context:** after DEC-148.1, record ids no longer collide, but `task-board.md` and `current-status.md` still conflict between parallel PRs because every PR edits them in place (status rows, the "In progress / next" list, `last_updated`). Updating them only on `main` after merging is ruled out. The task board was written before DEC-050 as the agents' lock (claims without a lock server); since DEC-050 the GitHub issue's assignee, one branch per story and the Issue start workflow do that job, so the board only mirrors the project. Q-015 (TASK vs PB ids) was still open.
+- **Options considered:** (a) update both files only after merging, on `main` (ruled out by the human); (b) keep both and live with the conflicts; (c) retire the task board and make `current-status.md` a page that rarely changes.
+- **Decision:**
+  1. Tasks are GitHub issues on the project (team1-sp #3). An agent's claim is the issue's assignee (the member it works for) plus the work branch; blocked work is a comment on the issue plus a `Q-…` entry; Review and Done follow the PR and the merge. No new `TASK` ids are created (this supersedes DEC-148.1 part 2).
+  2. `docs/agents/state/task-board.md` moves to `docs/history/task-board-archive.md`, frozen, so `TASK-000` to `TASK-025` references still resolve. `templates/task.md` is removed. `check_ids.py` still checks the archive's ids.
+  3. `current-status.md` holds only increment-level content: phase, what exists per area, health, and what every new agent must know. Its per-story "In progress / next" list, decision lists and `last_updated` header are removed. A PR edits it only when the change makes something on it wrong; per-PR progress goes in the handoff entry.
+  4. AGENT-PROTOCOL, rules P-2/P-10 and section D, the communication protocol, the agents README, the development process, the record-decision playbook and the templates follow from 1–3. Q-015 is answered by this entry.
+- **Rationale:** both files stop being edited by every PR, so they stop conflicting, and agents and humans read status in one place (the project) instead of two that drift.
+- **Consequences:** agents need GitHub access to see what is planned and claimed; offline sessions read the issue text the human gives them. `plan.md` is stale (still Phase 1) and should be revisited separately. `open-questions.md` is still edited in place, but rarely.
+- **Docs updated:** `agents/state/current-status.md` (rewritten), `history/task-board-archive.md` (moved, header), `agents/templates/task.md` (removed), `agents/AGENT-PROTOCOL.md`, `agents/rules.md`, `agents/README.md`, `agents/communication-protocol.md`, `agents/playbooks/record-decision.md`, `agents/templates/{handoff,problem-entry,decision-entry}.md`, `agents/state/open-questions.md` (Q-015), `design/templates/design-doc-template.md`, `process/development-process.md`, `guidelines/{documentation-rules,git-workflow}.md`, `docs/README.md`, `CONTRIBUTING.md`, `tools/check_ids.py`.
+- **Course documents affected (for humans):** none known; SRS/Initial Plan text about a repo task board, if any, is for the humans to check.
+- **Revisit when:** agents need an offline task list again, or `current-status.md` starts changing in most PRs.
+- **Supersedes / Related:** DEC-148.1 (part 2), DEC-050, DEC-055, Q-015.
+

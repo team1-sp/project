@@ -31,13 +31,13 @@ Options:
   A) <option> — pros / cons
   B) <option> — pros / cons
 My recommendation (optional): <A/B + reason>. The decision is yours.
-What I will do meanwhile: <unblocked work, or "nothing; task Blocked">
+What I will do meanwhile: <unblocked work, or "nothing; blocked">
 ```
 
 3. **Also record it** in `state/open-questions.md` (`Q-###`, `To: human:<name>` — the project manager is Işık Dönger unless the topic belongs to someone else) so it survives if the human is away or the chat ends. Mark the dependent task `Blocked` and move to other work.
 4. **When the human answers** (in chat, in the file, or via another agent's handoff): follow [playbooks/record-decision.md](playbooks/record-decision.md) immediately — log it as `Accepted`, update every affected document, close the question.
 
-An unattended session cannot ask live: do the preparatory work, write the question and the options, mark the task `Blocked`, and stop that line of work.
+An unattended session cannot ask live: do the preparatory work, write the question and the options, note on the issue that it is blocked, and stop that line of work.
 
 If you are only *reasonably certain* (e.g. a small implementation detail inside an accepted design that no document covers), you may proceed — but state the choice in the task result and handoff so a human can overrule it. Anything touching architecture, scope, technology, requirements or process is never "small".
 
@@ -45,15 +45,15 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 
 ## Phase 0 — Boot (read before touching anything)
 
-1. Read [README.md](README.md), [rules.md](rules.md), then `state/current-status.md`, `state/task-board.md`, the last ~5 entries of `state/handoff-log.md`, and `state/open-questions.md`.
+1. Read [README.md](README.md), [rules.md](rules.md), then `state/current-status.md`, the last ~5 entries of `state/handoff-log.md`, and `state/open-questions.md`.
 2. Note the `last_updated` of each state file. If `current-status.md` is more than 7 days old, treat it as possibly stale and verify against the actual repo (file listing, `git log` if available) before trusting it.
 3. Read the **index of `history/decision-log.md`** — this is the current truth. Anything `Accepted` binds you.
 4. Identify your **agent ID** (`<tool>/<model>/<short-session-id>`).
 5. Find your task:
-   - A human gave you a task → find or create the matching task on the task board (`TASK-<issue #>`).
-   - No instructions → take the highest-priority task with status `Ready`. Never take a task someone else has `Claimed` (unless the claim is stale, see [communication-protocol.md](communication-protocol.md)).
+   - A human gave you a task → find its GitHub issue (a story `US-x.y`, a bug, a chore). Work without an issue is a `docs`/`ci`/`chore` PR with the `no-issue` label ([git-workflow.md](../guidelines/git-workflow.md)).
+   - No instructions → ask the human; the [GitHub project](https://github.com/orgs/team1-sp/projects/3) shows what is planned and who has it. Never take an issue that has another assignee or an open branch (unless the human hands it over).
 5a. **Pick where to work** (DEC-061, [git-workflow.md §1](../guidelines/git-workflow.md)): code and repository docs in your own cloud copy of the repository by default; a member's computer (folder access to edit files, Remote Control to run commands) only when the files, tools or signed-in accounts exist only there, or the member asks.
-6. **Claim** the task on the task board *before* starting work (status `Claimed`, your agent ID, today's date).
+6. **Claim** the issue *before* starting work (DEC-149.1): the issue's assignee is the member you work for, and the work branch exists. Creating the branch moves the card to In progress (Issue start workflow). There is no task board and no `TASK` id.
 6a. **Record ids** (DEC-148.1): every entry you add (DEC, HND, PRB, Q, GEN) is `<PREFIX>-<GitHub #>.<counter>`, where the number is the issue your PR closes, or the PR's own number for no-issue work: `HND-80.1`, `DEC-80.1`, `DEC-80.2`. Do not take "highest id + 1"; old 3-digit ids stay. CI rejects a new id with another number ([documentation-rules.md §4](../guidelines/documentation-rules.md#4-entry-ids)).
 
 ## Phase 1 — Understand (read-only)
@@ -90,13 +90,13 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
 22. **AI-generated text for a course deliverable?** → append to `history/genai-usage-log.md` (see [guidelines/genai-usage-rules.md](../guidelines/genai-usage-rules.md)).
 23. **Docs affected?** Update the architecture/design/testing doc that your change made wrong. A change that makes a doc lie is not done.
 23a. **Commit, push, PR** ([git-workflow.md](../guidelines/git-workflow.md), DEC-053 to DEC-055, DEC-058, DEC-061): working on a member's own computer, show them the change and commit and push only after they approve it; working in your own cloud copy of the repository, commit and push without asking. Merge `origin/main` into the branch, build and test again, then push. After the first push, open the draft PR with `python tools/open_pr.py`; in a cloud session it fails (GraphQL is blocked), so open it with the GitHub `create_pull_request` tool and set labels, milestone and assignee with `gh api -X PATCH` (DEC-061). Merge `main` again before marking it ready for review, and whenever the PR gets the `needs-sync` label.
-24. Update the task on the board (`Review` or `Done` or `Blocked`) with a one-paragraph result.
-25. Update `state/current-status.md` (what changed, what is next, `last_updated`, `updated_by`).
+24. Report the result in the PR body and, if the work is blocked, in a comment on the issue plus a `Q-…` entry. The card's status follows the branch, the PR and the merge.
+25. Edit `state/current-status.md` only if your change makes something on it wrong (a new module or library, a new trap, a phase change, a health check you re-ran). Per-PR progress goes in your handoff entry, not there (DEC-149.1).
 
 ## Phase 5 — Hand off
 
 26. Append a handoff entry to `state/handoff-log.md` using [templates/handoff.md](templates/handoff.md): what you did, what you verified (and how), what you did *not* verify, what to do next, traps, and any decisions awaiting a human.
-27. Release any claim you will not finish (status back to `Ready` with a note).
+27. If you stop before finishing, say so in the handoff and on the issue so a human can hand it on.
 28. Final message to the human (if any): result in 2–4 sentences, files changed, and every `DECISION NEEDED` still open. No narration of steps.
 
 ---

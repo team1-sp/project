@@ -31,9 +31,9 @@ Source: Initial Plan §3 (customised Agile Scrum). Re-read that section if the t
 
 ## 4. Task flow
 
-`Backlog → Ready → Claimed → Review → Done` (+ `Blocked`, `Dropped`). Definition of Ready: has acceptance criteria, no open human decision it depends on, ≤ 1 day. Definition of Done: [definition-of-done.md](definition-of-done.md).
+The card's status on the GitHub project: Backlog → Ready → In progress → In review → Done. Definition of Ready: has acceptance criteria, no open human decision it depends on, ≤ 1 day. Definition of Done: [definition-of-done.md](definition-of-done.md).
 
-The human-facing planning tool is the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050; it replaced ClickUp); the repo's `task-board.md` is the **agent-facing mirror**. Put the issue number in the task entry; the board must not contradict the project (humans win on conflict).
+The human-facing planning tool is the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050; it replaced ClickUp); it is also the agents' task list. The repo's old `task-board.md` mirror was retired (DEC-149.1) and is archived in `history/task-board-archive.md`.
 
 ## 5. Change control
 

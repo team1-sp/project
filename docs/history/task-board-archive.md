@@ -3,10 +3,12 @@ last_updated: 2026-11-22
 updated_by: claude-code/opus-5.5/119-merge
 ---
 
-# Task Board
+# Task Board (archived)
+
+**Retired on 2026-11-22 by DEC-149.1. Do not add or edit entries.** Tasks are GitHub issues on the [GitHub project](https://github.com/orgs/team1-sp/projects/3); an issue's assignee is its claim. This file keeps `TASK-000` to `TASK-025` so old references still resolve.
 
 Statuses: `Backlog` · `Ready` · `Claimed` · `Review` · `Done` · `Blocked` · `Dropped`.
-Rules: claim before working; one owner per task; see [communication-protocol.md](../communication-protocol.md). Entry template: [templates/task.md](../templates/task.md).
+Rules (historical): claim before working; one owner per task; see [communication-protocol.md](../agents/communication-protocol.md).
 
 ## Board (summary — keep in sync with entries below)
 

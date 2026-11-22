@@ -13,10 +13,10 @@ The documents here are the *shared memory and message bus*. If it is not written
 1. [AGENT-PROTOCOL.md](AGENT-PROTOCOL.md) — the procedure. Follow it literally.
 2. [rules.md](rules.md) — hard rules and architecture invariants.
 3. [state/current-status.md](state/current-status.md) — where the project is right now.
-4. [state/task-board.md](state/task-board.md) — what is claimed, ready, blocked, done.
-5. [state/handoff-log.md](state/handoff-log.md) — the last ~5 entries, newest at the bottom.
-6. [state/open-questions.md](state/open-questions.md) — things waiting for a human.
-7. The index of [../history/decision-log.md](../history/decision-log.md) — the current truth.
+4. [state/handoff-log.md](state/handoff-log.md) — the last ~5 entries, newest at the bottom.
+5. [state/open-questions.md](state/open-questions.md) — things waiting for a human.
+6. The index of [../history/decision-log.md](../history/decision-log.md) — the current truth.
+7. Your GitHub issue; what is planned and who has it is on the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-149.1).
 8. Then only the architecture/design/testing docs relevant to your task.
 
 ## Contents
@@ -27,9 +27,8 @@ The documents here are the *shared memory and message bus*. If it is not written
 | [rules.md](rules.md) | MUST / MUST NOT rules and invariants | maintainers |
 | [communication-protocol.md](communication-protocol.md) | File-based messaging, claims, handoffs, conflicts, IDs | maintainers |
 | [model-compatibility.md](model-compatibility.md) | Writing/reading conventions that work for any model | maintainers |
-| [state/current-status.md](state/current-status.md) | Snapshot of progress | any agent, every session |
+| [state/current-status.md](state/current-status.md) | Increment-level snapshot: phase, what exists, health, traps | any agent, only when something on it changes |
 | [state/plan.md](state/plan.md) | Live plan: current phase, next steps | any agent / human |
-| [state/task-board.md](state/task-board.md) | Tasks, owners, status | any agent / human |
 | [state/handoff-log.md](state/handoff-log.md) | Append-only session handoffs | any agent, every session |
 | [state/open-questions.md](state/open-questions.md) | Questions for humans / other agents | any agent / human |
 | [playbooks/](playbooks/) | Approach per kind of work, incl. [record-decision](playbooks/record-decision.md) (human decision → log → update every doc) | maintainers |

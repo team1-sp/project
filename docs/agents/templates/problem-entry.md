@@ -15,7 +15,7 @@ Append to `history/problem-log.md` (and add a row to its index table). The id is
 - **How verified:** command/test that shows it is fixed.
 - **Prevention:** test, assertion, doc or rule added so it cannot silently return.
 - **Keywords:** comma-separated: exact error strings, component names, library names.
-- **Related:** TASK-###, DEC-###, other PRB-###
+- **Related:** #issue, DEC-…, other PRB-…
 - **Occurrences:** (append "YYYY-MM-DD — agent — note" if it happens again)
 ```
 

@@ -1,77 +1,48 @@
----
-last_updated: 2026-11-22
-updated_by: claude-code/opus-5.5/119-merge
----
-
 # Current Status
 
-Snapshot of the project. Overwrite this file each session (keep it short). History belongs in `handoff-log.md`. **The truth is the `Accepted` entries in `history/decision-log.md`.**
-
-## One-line summary
-Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The fixed game loop, pause API, Editor main window and status bar are merged. US-11.2 adds the read-only assistant core, AgentBridge streaming, optional gRPC client and user-local chat persistence. US-24.1 adds the structured Console model and fills the existing Console panel. US-33.5 adds per-user project AI/privacy settings, AgentBridge health/model discovery and the AI and Privacy window. US-11.1 adds grounded assistant answers with typed citations on its review branch. US-33.1's Editor entry points are implemented and verified in draft PR #145; US-33.2's chat, context chips and Stop are stacked on it in PR #146. The custom ECS is designed but not built. **The demo game is undecided** (Q-016).
+Increment-level snapshot of the project (DEC-149.1). **Edit it only when your change makes something on this page wrong**: a phase change, a new module or library, a health check you re-ran, a new trap every agent must know. Per-PR progress belongs in your [handoff entry](handoff-log.md), and what is planned or in progress, and who has it, is on the [GitHub project](https://github.com/orgs/team1-sp/projects/3). **The truth is the `Accepted` entries in [`history/decision-log.md`](../../history/decision-log.md).**
 
 ## Phase
-Roadmap phase **1 — Project and technology decisions**: all exit criteria are met (see `plan.md`); the human confirms closing it. Phase 2 starts with the skeleton (TASK-005).
 
-## What exists `[VERIFIED 2026-10-12/13 by directory listing]`
+Increment 1 (prototype): the Increment 1 stories (SRS B) are the issues in the Increment 1 milestone (DEC-050). The C++ skeleton builds on Windows, macOS and headless Linux. For which stories are done, in review or next, read the project board, the milestone and the last handoff entries.
 
-| Item | State |
-| --- | --- |
-| `team1-sp/project` (GitHub, public) | C++/CMake engine skeleton, sandbox, tests, engineering docs and workflows; `ai-services/` now contains the Python 3.12 package/tooling skeleton. |
-| `senior-project/docs/` (course deliverables) | Initial Plan sections mostly written. **Not authoritative; not edited by agents.** It may still say "C++ or C#" etc. (see "Course documents affected" in the decision entries) |
-| `senior-project/shader-test/` | Graphics benchmark spec, shared assets, per-library folders. Benchmark finished (no notable difference; team chose by code complexity and ease of use). Raylib decided (DEC-015) |
-| Process | Scrum, 2-week sprints, weekly progress meeting, sprint review with advisor |
+## What exists
 
-## Decisions status (details: `history/decision-log.md`)
+| Area | Where | State |
+| --- | --- | --- |
+| Engine core | `engine/core` | Fixed game loop with the seven tick phases, windowed and headless runs, pause/resume/step, input sources, structured logging. `ISimulation` waits for the ECS. |
+| Physics | `engine/physics`, `engine/physics-box2d` | `IPhysicsAdapter` interface; Box2D is built and linked in `physics-box2d`, the adapter implementation is still to come. |
+| Rendering | `engine/rendering-raylib` | Raylib window behind the rendering abstraction; never initialised headless. |
+| AgentBridge | `engine/bridge`, `proto/` | Engine side of the gRPC/protobuf contract to the Python AI service (localhost only for the prototype). |
+| Editor | `editor/` | Hosts `Application` and owns the main window (DEC-048). Dear ImGui + rlImGui (DEC-063): menus, toolbar, panels, status bar, Console, AI Assistant panel and AI and Privacy settings. |
+| Assistant | `assistant/` | Read-only assistant core, grounded answers with typed citations, user-local chat history. |
+| AI service | `ai-services/` | Python 3.12 package (DEC-039). |
+| Sandbox | `sandbox/` | Developer and CI test host only; not a product. |
+| Tests | `tests/` | GoogleTest, headless. |
+| Course deliverables | separate `senior-project/docs/` repo | **Not authoritative; not edited by agents.** |
 
-- **Accepted:** core entries DEC-001…009 and DEC-013…069 as indexed in the decision log, except entries explicitly marked Proposed or Superseded. US-1.2 through US-1.4, the Editor main window and status bar, and US-11.2 are merged in PRs #133–#141. US-24.1 is merged in PR #142 and US-33.5 in PR #143. In review: DEC-070 (US-11.1 grounded answers and citations). DEC-058 and DEC-061 govern agent work on a member's computer versus a cloud copy.
-- **Proposed / deferred by the human ("too early"):** MCP later (DEC-010); LLM-instructive component metadata (Q-013). Agents do not raise these.
-- **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
+Folder rules: [guidelines/repository-structure.md](../../guidelines/repository-structure.md).
 
-## In progress / next
-- **US-33.1 (#118): open the assistant with useful context** — Review, draft PR #145. AI
-  menu/toolbar entry points, Ctrl+Shift+A toggle, typed Selection and Last run contexts,
-  consent-aware diagnosis routing and routing to the US-33.5 AI and Privacy window are covered by
-  focused headless tests. The settings command also opens its shell before a project-backed
-  controller exists instead of remaining disabled. #72's public interfaces are unchanged;
-  #71/#119/#120/#121 remain separate.
-- **US-33.2 (#119): ask questions, control context and stop answers** — Review, PR #146, stacked on PR #145 (#144 is merged). Window-free `AssistantChat` in `editor_core` (composer, Send/Stop, one answer at a time, typed context chips with sizes, New Chat, History over `ChatStore`) sends only through `IChatQuestionSender`; production uses `GroundedAssistant` and runs `AnswerOperation` on a worker thread (DEC-071). The app still passes no bridge to the chat, so sends are refused until project opening supplies US-33.5's configured bridge.
-- **US-11.1 (#71): grounded answers with tick, entity and source citations** — Review. `GroundedAssistant::ask()` assembles only attached context through const query seams, diagnoses deterministically (debug flags, unlock failures, write records), returns typed `state`/`entity`/`source` citations validated against evidence, and runs through #72's `ReadOnlyAssistant` via `GroundedAgentBridge` with no shared API change. DEC-070 is carried for PR review. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips implement the seams in their stories.
-- **US-24.1 (#104): structured Console logging** — Done (PR #142). Canonical `LogEntry` and optional `ILogSink` in `engine/core`; window-free owning `ConsoleModel`, non-mutating filters/search/collapse, selection/details, Error Pause and Play lifecycle seams, external-editor and entity navigation abstractions in `editor_core`; ImGui Console panel filled. DEC-068 binds with the merge. US-17.2 (#85) calls the implemented Play start/stop seam when its controller lands.
-- **US-33.5 (#121): AI service and privacy settings** — Done (PR #143). Window-free validation,
-  controller, asynchronous stale-response protection and `AEGIS_AI_PRIVACY 1` user-local settings;
-  standard gRPC health check and model discovery behind AgentBridge; Dear ImGui AI and Privacy
-  rendering; source/telemetry confirmation and Ask-before-send policy for #120. DEC-069 binds with
-  the merge.
-- **US-11.2 (#72): read-only assistant and configured AI service** — Done (PR #141). `aegis::assistant` exposes only read-only Semantic Graph input and text output, obtains responses through AgentBridge, cancels streaming safely, and persists `AEGIS_CHAT 1` histories under an injected user-local project path. #71, #119 and #121 remain separate.
-- **US-14.2 (#78): status bar with the editor's current state** — Done (PR #138). `EditorStatus` and `buildStatusBar()` in `editor_core` (srs.fr.14.7 to 14.11); clicking the message opens the Console. The AI service and REC clicks wait for US-33.5 and EP-30; the sources (Console, Play mode, scenes, telemetry, debug flags) fill `EditorStatus` in their stories.
-- **US-14.1 (#77): Editor main window with menus, toolbar and panels** — Done (PR #137). Dear ImGui with rlImGui (DEC-063); the nine menus of D-01 to D-09 with unbuilt items disabled, the C-01 toolbar, the Default panel layout, the status bar, the title with project, scene and "*", the unsaved-changes check on close, Ctrl/Cmd shortcuts. F-01 waits for US-15.x, the project for the Project Hub (US-13.x).
-- **US-1.4 (#44): pause, resume and step** — Done (PR #135). `Application::requestPause()`, `resume()`, `requestStep()`, `isPaused()` (srs.fr.1.16 to 1.18, 17.14). Play mode controls wait for US-17.2; US-24.1 uses the pause API for Error Pause.
-- **US-1.3 (#43): the same tick phases in normal and headless mode** — Done (PR #134). `TickPhase` in `engine/core`; `Application::runOneTick()` builds the tick's `InputActionState` from the run's `IInputSource` (keyboard queue, None) and calls `ISimulation::runPhase()` for the seven phases in order (srs.fr.1.12 to 1.15); DEC-059 in the PR for review. Keys reach the keyboard queue with US-5.1.
-- **US-1.2 (#42): windowed and headless runs** — Done (PR #133). `RunError` handling in the game loop (srs.fr.1.11), `parseRunOptions()` for `--headless`/`--max-ticks`/`--seed`/`--input-recording` (srs.fr.1.8, 7.33), `WindowConfig::fullscreen`; DEC-057 in the PR for review. Editor parts wait for US-17.2, US-17.3, US-27.4.
-0. **TASK-006 (ClickUp PB-011, PB-012): window, game loop and fixed timestep** — Done: PR #35 and #37 merged 2026-11-10; DEC-046 and DEC-047 accepted 2026-11-11.
-1. **TASK-018 (ClickUp PB-122): the editor hosts `Application` and opens the main window** — Review, issue #38, branch `feat/pb-122-make-the-editor-host-the-application-and` (DEC-048).
-2. **TASK-019 (ClickUp PB-025): physics adapter interface** — Review, issue #32, PR #33. `engine/physics/` with `IPhysicsAdapter`, `Vec2`/`EntityId` in `engine/core`, include check in CI. Next: PB-026 (Box2D implementation, needs PB-012).
-3. **PB-010.3:** ECS design review and ADR-001 (sparse-set storage) are still open.
-4. **DEC-037** (PB-008 spike exception) still waits on Işık. Human answers Q-014 (leftovers) and Q-015 (task ids).
-5. Then the ECS Phase 1 implementation (`design/ecs-api-design.md` §17), which fills `ISimulation`.
+## Open questions and decisions
+
+Read the index of the decision log and [open-questions.md](open-questions.md). Do not copy their lists here.
 
 ## Health
 
 | Check | Result |
 | --- | --- |
-| Build | Skeleton builds on Linux (GCC 13) Windows (MSVC 19.51, Visual Studio 2026) `[VERIFIED 2026-10-24]` and macOS (Apple Clang) `[VERIFIED 2026-10-27]` |
-| Tests | With PB-011 and PB-012: 49/49 on Windows (MSVC 19.44, `windows-debug`) and 41/41 in the `headless` preset on the same machine `[VERIFIED 2026-11-10]`; macOS and Linux not run yet. Before: 2/2 pass on Linux, Windows and macOS `[VERIFIED 2026-10-27]`; with PB-008, 9/9 on Linux (GCC 13), macOS (Zeynep Ertürk) and Windows (local Visual Studio 2026 build and the `windows-latest` CI job); the spike window itself has not been run on Windows `[VERIFIED 2026-11-01]` |
-| Python | Python 3.12.13 clean-environment install succeeds; Ruff clean; pytest 1/1; `pip check` clean `[VERIFIED 2026-11-04]` |
-| Docs | Scaffold created 2026-10-12; updated 2026-10-13 for the stack decision and the decision-authority rule |
+| CI | Every PR runs `ci.yml`: builds on Windows, macOS and headless Linux, tests, Python, docs, format and hygiene checks; `ci-ok` is required on `main`. |
+| Build | Skeleton builds on Linux (GCC 13), Windows (MSVC, Visual Studio 2026) `[VERIFIED 2026-10-24]` and macOS (Apple Clang) `[VERIFIED 2026-10-27]`. |
+| Python | Python 3.12 clean-environment install, Ruff, pytest and `pip check` pass `[VERIFIED 2026-11-04]`. |
 
 ## Things a new agent should know immediately
 
 - **Humans decide; agents consult.** Put every real uncertainty to the human (`DECISION NEEDED`); log their decision as `Accepted`; update every doc (`playbooks/record-decision.md`).
 - Course documents are not the truth; the decision log is.
-- Stack is fixed: C++20 / custom ECS / Box2D v3.1.1 (behind the adapter) / Raylib 6.2 (behind the rendering abstraction) / CMake + GoogleTest; `ai-services` uses Python 3.12 (DEC-039). **2D only** — no 3D work.
-- Work through GitHub: branch `<type>/pb-<nnn>-…`, PR with Conventional Commit title, Işık Dönger or an area owner approves, agents on a member's computer commit and push only after that member approves, agents in a cloud copy commit and push without asking, then open the draft PR with `tools/open_pr.py` (DEC-024/027/053/054/058; `guidelines/git-workflow.md`).
-- Raylib must not be initialised in headless mode. The window is opened only through `RaylibWindow::open`, by `Application`, in normal mode.
+- Stack is fixed: C++20 / custom ECS / Box2D v3.1.1 (behind the adapter) / Raylib 6.2 (behind the rendering abstraction) / CMake + GoogleTest; `ai-services` uses Python 3.12 (DEC-039). **2D only**, no 3D work.
+- Work through GitHub ([CONTRIBUTING.md](../../../CONTRIBUTING.md), [git-workflow.md](../../guidelines/git-workflow.md)): one branch per issue (`feat/us-15.2-…`, `fix/142-…`, or `ci/<PR #>-…` with `no-issue`), Conventional Commit PR titles, merge `main` before each push. Agents on a member's computer commit and push only after that member approves; agents in a cloud copy commit, push and open the draft PR without asking (DEC-058, DEC-061).
+- Tasks are GitHub issues; the issue's assignee is the claim (DEC-149.1). New record ids carry the GitHub number: `DEC-80.1`, `HND-80.2` (DEC-148.1).
+- Raylib must not be initialised in headless mode. The window is opened only through `RaylibWindow::open`, by `Application`, in normal (windowed) mode.
 - The `editor` is the application that hosts the engine and owns the main window; `sandbox` is only a developer and CI test host; games are built inside the editor (DEC-048).
 - The demo game is `[UNDECIDED]` (Q-016). Do not design or build a demo game, or treat any example (door, key, maze) as its spec, until the team chooses it.
 - The course requires disclosure of AI-generated text in deliverables (`guidelines/genai-usage-rules.md`).
