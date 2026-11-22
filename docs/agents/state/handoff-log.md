@@ -590,7 +590,7 @@
 - **Files changed:** `tools/check_ids.py`, `.github/workflows/ci.yml`, `.gitattributes`, `.githooks/pre-commit`, `.github/pull_request_template.md`, `CONTRIBUTING.md`, `docs/guidelines/{documentation-rules,git-workflow}.md`, `docs/agents/{AGENT-PROTOCOL,communication-protocol}.md`, `docs/agents/templates/*`, `docs/history/{decision-log,genai-usage-log}.md`.
 - **Verified:** `check_ids.py` on the repo; with fake pull_request events (matching and wrong numbers, old-form, malformed and duplicate ids); a local merge of two branches that both append to `handoff-log.md` completes without a conflict.
 - **Not verified:** the CI step on GitHub until this PR's run.
-- **Next:** human decides whether TASK ids stay (`TASK-<issue #>`) or new work drops them; `current-status.md`/`task-board.md` conflicts are a separate later decision.
+- **Next:** review of PR #148. TASK ids stay as `TASK-<issue #>` (Işık Dönger, 2026-11-22). `current-status.md`/`task-board.md` conflicts are a separate later decision.
 - **Traps:** this is the first entry in the new form, so the index now mixes old and new ids.
 - **Records:** DEC-148.1, HND-148.1.
 
