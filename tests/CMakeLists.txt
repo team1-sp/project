@@ -13,6 +13,9 @@ add_executable(engine_tests
     unit/core/version_test.cpp
     unit/editor/main_menu_test.cpp
     unit/editor/ai_privacy_settings_test.cpp
+    unit/editor/assistant_chat_context_test.cpp
+    unit/editor/assistant_chat_grounded_test.cpp
+    unit/editor/assistant_chat_test.cpp
     unit/editor/assistant_entry_points_test.cpp
     unit/editor/console_model_test.cpp
     unit/editor/status_bar_test.cpp

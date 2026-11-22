@@ -6,7 +6,9 @@
 #include <string>
 #include <vector>
 
+#include "assistant_chat_panel.hpp"
 #include "editor/ai_privacy_settings.hpp"
+#include "editor/assistant_chat.hpp"
 #include "editor/assistant_entry_points.hpp"
 #include "editor/command.hpp"
 #include "editor/console_model.hpp"
@@ -29,9 +31,9 @@ public:
 
     // `session` and `status` must outlive the view.
     MainWindowView(EditorSession& session, EditorStatus& status, ConsoleModel& console,
-                   AssistantEntryPoints& assistant, ProjectSettingsState& projectSettings,
-                   IExternalCodeEditor& externalEditor, IEntityNavigator& entityNavigator,
-                   CloseEditor closeEditor, SetTitle setTitle,
+                   AssistantEntryPoints& assistant, AssistantChat& assistantChat,
+                   ProjectSettingsState& projectSettings, IExternalCodeEditor& externalEditor,
+                   IEntityNavigator& entityNavigator, CloseEditor closeEditor, SetTitle setTitle,
                    AiPrivacySettingsController* aiSettings = nullptr);
 
     // Builds this render frame's interface. Call it between ImGui::NewFrame() and ImGui::Render().
@@ -65,6 +67,8 @@ private:
     EditorStatus& status_;
     ConsoleModel& console_;
     AssistantEntryPoints& assistant_;
+    AssistantChat& assistantChat_;
+    AssistantChatPanel assistantChatPanel_;
     ProjectSettingsState& projectSettings_;
     IExternalCodeEditor& externalEditor_;
     IEntityNavigator& entityNavigator_;
@@ -78,8 +82,6 @@ private:
     // The panel that showPanel() asked to bring to the front in the next frame.
     std::optional<Panel> panelToFocus_;
     std::array<char, 256> consoleSearch_{};
-    std::array<char, 1024> assistantDraft_{};
-    std::string shownAssistantDraft_;
     std::array<char, 512> serviceAddress_{};
     bool projectSettingsOpen_ = false;
     // Render frames drawn so far, counted up to 2.

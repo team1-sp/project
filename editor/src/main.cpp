@@ -8,6 +8,7 @@
 //   --max-ticks N  close the window after N ticks (1 to 1 000 000); without it, the editor runs
 //                  until the window is closed
 #include <charconv>
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -16,6 +17,8 @@
 #include <system_error>
 #include <utility>
 
+#include "editor/assistant_chat.hpp"
+#include "editor/assistant_chat_services.hpp"
 #include "editor/assistant_entry_points.hpp"
 #include "editor/console_model.hpp"
 #include "editor/editor_session.hpp"
@@ -31,6 +34,7 @@
 #include "engine/rendering_raylib/imgui_renderer.hpp"
 #include "engine/rendering_raylib/raylib_window.hpp"
 #include "main_window_view.hpp"
+#include "no_project_assistant.hpp"
 #include "theme.hpp"
 
 namespace {
@@ -126,6 +130,24 @@ int main(int argc, char** argv) {
     editor::ProjectSettingsState projectSettings;
     editor::AssistantEntryPoints assistant(selection, latestRun, questions, projectSettings);
 
+    // AI Assistant chat (US-33.2) over US-11.1's GroundedAssistant and US-11.2's ChatStore. No
+    // project is open yet to supply US-33.5's configured bridge, so the bridge is null and every
+    // send is refused with the assistant's reason; the draft and chips stay.
+    const editor::no_project::NoUserArea chatArea;
+    aegis::assistant::ChatStore chatStore(chatArea);
+    const editor::no_project::AssistantSources assistantSources;
+    const editor::no_project::SendNothing dataPolicy;
+    editor::GroundedChatQuestionSender chatSender(chatStore, nullptr, assistantSources.view(),
+                                                  dataPolicy, {});
+    const editor::ChatStoreLoader chatLoader(chatStore);
+    const editor::EditorContextItemProvider chatItems(selection, latestRun, console);
+    const editor::GroundedContextSizeEstimator chatSizes(assistantSources.view());
+    unsigned int chatCounter = 0;
+    editor::AssistantChat assistantChat(
+        chatSender, chatLoader, chatItems, chatSizes, [&chatCounter] {
+            return editor::makeChatId(std::chrono::system_clock::now(), ++chatCounter);
+        });
+
     engine::ApplicationConfig config;
     config.window.widthPixels = 1280;
     config.window.heightPixels = 720;
@@ -144,8 +166,8 @@ int main(int argc, char** argv) {
 
     NoProjectSimulation simulation;
     editor::MainWindowView mainWindow(
-        session, status, console, assistant, projectSettings, externalEditor, selection,
-        [&runningApp] { runningApp->requestClose(); },
+        session, status, console, assistant, assistantChat, projectSettings, externalEditor,
+        selection, [&runningApp] { runningApp->requestClose(); },
         [&runningApp](const std::string& title) { runningApp->setWindowTitle(title); });
     engine::rendering_raylib::ImGuiRenderer renderer([&mainWindow] { mainWindow.draw(); },
                                                      editor::applyTheme);

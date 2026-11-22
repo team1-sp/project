@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-11-22
-updated_by: claude-code/opus-5.5/118-merge
+updated_by: claude-code/opus-5.5/119-merge
 ---
 
 # Current Status
@@ -8,7 +8,7 @@ updated_by: claude-code/opus-5.5/118-merge
 Snapshot of the project. Overwrite this file each session (keep it short). History belongs in `handoff-log.md`. **The truth is the `Accepted` entries in `history/decision-log.md`.**
 
 ## One-line summary
-Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The fixed game loop, pause API, Editor main window and status bar are merged. US-11.2 adds the read-only assistant core, AgentBridge streaming, optional gRPC client and user-local chat persistence. US-24.1 adds the structured Console model and fills the existing Console panel. US-33.5 adds per-user project AI/privacy settings, AgentBridge health/model discovery and the AI and Privacy window. US-11.1 adds grounded assistant answers with typed citations on its review branch. US-33.1's Editor entry points are implemented and verified in draft PR #145. The custom ECS is designed but not built. **The demo game is undecided** (Q-016).
+Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The fixed game loop, pause API, Editor main window and status bar are merged. US-11.2 adds the read-only assistant core, AgentBridge streaming, optional gRPC client and user-local chat persistence. US-24.1 adds the structured Console model and fills the existing Console panel. US-33.5 adds per-user project AI/privacy settings, AgentBridge health/model discovery and the AI and Privacy window. US-11.1 adds grounded assistant answers with typed citations on its review branch. US-33.1's Editor entry points are implemented and verified in draft PR #145; US-33.2's chat, context chips and Stop are stacked on it in PR #146. The custom ECS is designed but not built. **The demo game is undecided** (Q-016).
 
 ## Phase
 Roadmap phase **1 — Project and technology decisions**: all exit criteria are met (see `plan.md`); the human confirms closing it. Phase 2 starts with the skeleton (TASK-005).
@@ -35,6 +35,7 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
   focused headless tests. The settings command also opens its shell before a project-backed
   controller exists instead of remaining disabled. #72's public interfaces are unchanged;
   #71/#119/#120/#121 remain separate.
+- **US-33.2 (#119): ask questions, control context and stop answers** — Review, PR #146, stacked on PR #145 (#144 is merged). Window-free `AssistantChat` in `editor_core` (composer, Send/Stop, one answer at a time, typed context chips with sizes, New Chat, History over `ChatStore`) sends only through `IChatQuestionSender`; production uses `GroundedAssistant` and runs `AnswerOperation` on a worker thread (DEC-071). The app still passes no bridge to the chat, so sends are refused until project opening supplies US-33.5's configured bridge.
 - **US-11.1 (#71): grounded answers with tick, entity and source citations** — Review. `GroundedAssistant::ask()` assembles only attached context through const query seams, diagnoses deterministically (debug flags, unlock failures, write records), returns typed `state`/`entity`/`source` citations validated against evidence, and runs through #72's `ReadOnlyAssistant` via `GroundedAgentBridge` with no shared API change. DEC-070 is carried for PR review. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips implement the seams in their stories.
 - **US-24.1 (#104): structured Console logging** — Done (PR #142). Canonical `LogEntry` and optional `ILogSink` in `engine/core`; window-free owning `ConsoleModel`, non-mutating filters/search/collapse, selection/details, Error Pause and Play lifecycle seams, external-editor and entity navigation abstractions in `editor_core`; ImGui Console panel filled. DEC-068 binds with the merge. US-17.2 (#85) calls the implemented Play start/stop seam when its controller lands.
 - **US-33.5 (#121): AI service and privacy settings** — Done (PR #143). Window-free validation,

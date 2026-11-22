@@ -78,6 +78,7 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-068 | US-24.1: structured logs are owned by a window-free Console model; projection is non-mutating; search ignores case; collapse identity includes every structured field; Play lifecycle, pause, editor launch and entity navigation use injected seams | Accepted | 2026-11-22 |
 | DEC-069 | US-33.5: AI/privacy settings use a window-free controller, address-bound AgentBridge health/model operations and versioned user-local project persistence | Accepted | 2026-11-22 |
 | DEC-070 | US-11.1: grounded answers use read-only evidence query seams, a deterministic diagnosis, typed citations serialised as `state`/`entity`/`source` key=value payloads, and an AgentBridge decorator that carries the grounded context in `semanticGraphStructure` and validates citations before they reach the chat | Accepted | 2026-11-22 |
+| DEC-071 | US-33.2: the AI Assistant chat state is a window-free `editor_core` model that sends only through an injectable sender over `GroundedAssistant`, runs `AnswerOperation` on a worker thread, shows a running answer only after it ends, keeps chips across questions, and sizes chips by their evidence bytes | Accepted | 2026-11-22 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -1146,3 +1147,24 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none; this implements SRS A srs.fr.11.1–11.7.
 - **Revisit when:** the AgentBridge request gains structured context fields, the telemetry recording defines its record schema (srs.fr.8.29), or the demo game fixes the event and payload names used for unlocks and collisions.
 - **Supersedes / Related:** DEC-038, DEC-067, DEC-069 (US-33.5 settings and `checkHealth()`/`listModels()`), TASK-020, TASK-023, US-11.1 (#71), #119, #121.
+
+### DEC-071 — US-33.2: AI Assistant chat state, sending seam and threading
+- **Date:** 2026-11-22
+- **Status:** Accepted (part 1 decided in the conversation; parts 2–6 carried by the US-33.2 pull request, binding once a human merges it, DEC-052)
+- **Decided by:** ardasaritas (part 1, stacking on the open #71 and #118 PRs, in the US-33.2 agent session, 2026-11-22); the reviewer of the US-33.2 pull request (parts 2–6)   **Recorded by:** claude-code/opus-5.5/119-chat
+- **Human's words:** asked whether to wait for PRs #144 and #145 or build on them, the human answered "they are done, let's stack, continue".
+- **Context:** US-33.2 (#119) needs the composer, Stop, chips, New Chat and History (srs.fr.33.5–33.12) over #71's `GroundedAssistant`/`ContextItem`, #72's `AnswerOperation`/`ChatStore` and #118's panel, without changing those interfaces. `AnswerOperation::run()` blocks while it writes the answer into the shared `Chat` under a private mutex, so another thread cannot safely read that message while it streams. #118's `IConsentAwareQuestionSender` returns nothing and carries only Selection and Last run, so it cannot report a rejection or a running answer.
+- **Options considered:** (a) a new editor-owned sending seam returning a running-answer handle, worker thread per answer, draw the running answer only after it ends; (b) ask #72 for a thread-safe answer snapshot to show text while it streams; (c) extend #118's sender. (a) meets every criterion without touching shared headers; live streaming text is not one of srs.fr.33.5–33.12.
+- **Decision:**
+  1. Stack #119 on the open #71 (#144) and #118 (#145) branches; #144 has since merged.
+  2. `AssistantChat` in `editor_core` owns the draft, chips, open chat and History; Dear ImGui only draws it. It sends only through `IChatQuestionSender`; production `GroundedChatQuestionSender` calls `GroundedAssistant::ask()` and runs the returned `AnswerOperation` on its own thread; Stop calls `AnswerOperation::cancel()` once. One answer at a time; New Chat and History wait until it ends.
+  3. While an answer runs, the panel draws every message except the one being written, with a spinner and Stop; the full answer (or the stopped part) appears when the operation ends.
+  4. Whitespace-only messages are empty. A rejected send keeps the draft and chips; a successful send clears the draft and keeps the chips for the next question. An entry point's Selection replaces only the Selection chip.
+  5. A chip's size is `renderContextDocument()` with the item minus without it, both with an empty diagnosis (US-11.1 rewords its diagnosis when evidence is attached, which would hide the item's bytes). Measuring ignores the data-sharing policy because nothing is sent.
+  6. History lists the chats of the current Editor session and reopens them with `ChatStore::load()`; citations stay `{kind, payload}` and are decoded only for display.
+- **Rationale:** every criterion is met with #71, #72 and #118 interfaces unchanged and the state model testable without a window.
+- **Consequences:** live streaming text needs a thread-safe answer snapshot on `AnswerOperation` (a #72 change). Listing chats saved in earlier Editor sessions needs a `ChatStore` listing operation. Graph nodes, Source code, Asset and Component type chips are attachable once their panels provide a selection. US-33.3 decorates `IChatQuestionSender` for consent and offline rules; US-33.5 supplies the bridge, model and policy.
+- **Docs updated:** `architecture/ai-assistant-layer.md`, `guidelines/repository-structure.md`, `agents/state/task-board.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`, `history/problem-log.md`.
+- **Course documents affected (for humans):** none; this implements SRS A srs.fr.33.5–33.12.
+- **Revisit when:** #72 gains an answer snapshot or chat listing, or the consent story needs to intercept sends differently.
+- **Supersedes / Related:** DEC-067, DEC-070, TASK-020, TASK-024, TASK-023, US-33.1 (#118), US-11.1 (#71), #120, #121.

@@ -21,6 +21,7 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 | PRB-004 | Bridge benchmark did not build or run on Windows (vcpkg ZeroMQ name, gRPC C4996, pybind11 output folder, missing .exe lookup) | Build | Solved | 2026-11-04 |
 | PRB-005 | Generated protobuf code failed AppleClang warnings-as-errors | Build / AgentBridge | Solved | 2026-11-22 |
 | PRB-006 | Test fixture wrote a chat file into the build folder: store built from a path member before it was set | Tests / Assistant | Solved | 2026-11-22 |
+| PRB-007 | Chip sizes missing or zero: empty question refused, then diagnosis text cancelled the item's bytes | Editor / Assistant | Solved | 2026-11-22 |
 
 ---
 
@@ -161,5 +162,26 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
   temp_directory_path
 - **Related:** TASK-023, DEC-067
 - **Occurrences:** US-11.1 tests
+
+---
+
+### PRB-007 — Chip sizes were missing or zero when measured through GroundedAssistant::prepare()
+- **Date:** 2026-11-22
+- **Area:** Editor / Assistant
+- **Status:** Solved
+- **Symptom:** `AssistantChatGroundedTest.ChipSizesAreTheBytesTheItemAddsToTheContextDocument` failed
+  first with `Value of: source.has_value() Actual: false Expected: true`, then with
+  `Expected: (*source) >= (std::string("bool unlocked = false;\n").size()), actual: 0 vs 23`.
+- **Context:** US-33.2 `GroundedContextSizeEstimator`, headless preset.
+- **Root cause:** `assembleContext()` refuses an empty question (`question is empty`); after giving
+  it a text, the diagnosis in the context document shortened when evidence was attached, cancelling
+  the source file's bytes.
+- **Solution:** measure with a fixed placeholder question and render both documents with
+  `renderContextDocument(context, Diagnosis{})`, so only the item's evidence differs.
+- **How verified:** the test passes; headless 258/258 and macOS Debug 271/271 with warnings as errors.
+- **Prevention:** measure one item's contribution against an otherwise identical document.
+- **Keywords:** context chip size, assembleContext, question is empty, renderContextDocument, diagnosis
+- **Related:** TASK-025, DEC-071, DEC-070
+- **Occurrences:** US-33.2 tests
 
 ---

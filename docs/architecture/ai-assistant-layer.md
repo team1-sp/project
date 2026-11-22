@@ -2,8 +2,8 @@
 
 Uses the semantic graph and project data to explain, diagnose and help with design. Sub-layers: **Architecture reading → LLM model → User assistant**.
 
-Status: **US-11.2 core and US-33.5 AI/privacy settings implemented**; grounded questions and the
-chat UI remain planned.
+Status: **US-11.2 core, US-33.5 AI/privacy settings, US-11.1 grounded answers and the US-33.2 chat
+state implemented**; consent dialogs and offline handling remain planned.
 The Semantic layer has no query implementation yet, so US-11.2 depends only on the minimal
 read-only `SemanticGraphView` structure seam (DEC-067).
 
@@ -122,5 +122,24 @@ The concrete Semantic Graph, telemetry recording, asset catalogue and the EP-33 
 not built yet; they implement these seams in their own stories. Tests use deterministic fakes and no
 network or model. The production `DataTransmissionPolicy` is US-33.5's `AiPrivacySettings`;
 `GroundedAgentBridge` forwards `checkHealth()` and `listModels()` unchanged to the bridge it wraps.
-Consent dialogs, field-by-field removal of denied data (srs.fr.33.54), request preview and the chat
-panel remain #120, EP-33 and #119.
+Consent dialogs, field-by-field removal of denied data (srs.fr.33.54) and request preview remain
+#120 and EP-33; the chat panel is US-33.2 (§10).
+
+## 10. Implemented US-33.2 chat panel state
+
+The Editor's AI Assistant panel keeps its state in `editor_core` (DEC-071), window-free and tested
+headlessly; `assistant_chat_panel.cpp` only draws it with Dear ImGui.
+
+| Unit | What it does |
+| --- | --- |
+| `AssistantChat` | Composer draft (Enter sends, Shift+Enter is a new line, whitespace-only is empty), Send/Stop state, one running answer at a time, New Chat and History. A rejected send keeps the draft and chips; a successful one clears the draft and keeps the chips. |
+| `ContextChipSet`, `ContextChip` | One chip per US-11.1 `ContextItem` type with a stable id, label, detail and the bytes it adds to the request; changes return a new set. The + menu lists only types not attached. |
+| `IChatQuestionSender` | The only sending seam, so US-33.3 can add consent and offline rules around it. `GroundedChatQuestionSender` calls `GroundedAssistant::ask()` and runs US-11.2's `AnswerOperation::run()` on a worker thread; Stop calls `AnswerOperation::cancel()` once. |
+| `ChatStoreLoader` | History reopens chats through US-11.2's `ChatStore::load()`; citations stay `{kind, payload}` and are decoded with `decodeCitation()` only for display. |
+| `GroundedContextSizeEstimator` | A chip's size is the length of the `renderContextDocument()` output with the item minus without it, both without a diagnosis; it reads only the const sources. |
+| `EditorContextItemProvider` | Selection, Graph, Last run and the selected Console entry; the other types have no Editor source yet. |
+
+While an answer runs, the panel draws every message except the one the worker thread writes, then
+the whole chat once the operation has finished; switching chats waits for the answer to end. The
+History list holds the chats opened in this Editor session; `ChatStore` has no listing operation, so
+chats saved in earlier sessions are not listed yet.

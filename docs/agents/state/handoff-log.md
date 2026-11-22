@@ -522,6 +522,9 @@
 - **Traps:** do not construct a settings controller with a fake path merely to enable the command;
   project opening owns the real per-user project path and bridge factory.
 - **Records:** PRB-003 repeat occurrence; no new decision or open question.
+
+---
+
 ### HND-039 — Check record ids locally with git hooks (#147)
 - **Date:** 2026-11-22
 - **Agent:** claude-code/opus-5.5/147-hooks
@@ -531,3 +534,47 @@
 - **Not verified:** Windows Git Bash (the hooks are POSIX sh and fall back to `python`).
 - **Next:** each member and agent copy runs `git config core.hooksPath .githooks` once. The hooks catch collisions at sync time but do not prevent them; ids that cannot collide (for example issue number plus counter) would, and are a team decision.
 - **Traps:** the check reads the working tree, so a duplicate in unstaged changes also blocks a commit. HND-039 skips HND-034 to HND-038, already used by open PRs #145 and #146.
+
+---
+
+### HND-040 — AI Assistant chat, context chips and Stop (US-33.2)
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/119-chat
+- **Task:** TASK-025, GitHub #119, srs.fr.33.5 to 33.12
+- **Goal:** composer, Send/Stop, context chips, New Chat and History over the #71/#72/#118 public interfaces.
+- **Result:** Done locally on `feat/119-ai-chat-context`, stacked on `feat/118-open-ai-assistant` merged with `feat/71-grounded-assistant-answers` (commit `694ad0a`; agent-record conflicts kept both entries, #71's is TASK-023/HND-033 on `main`). Added `AssistantChat`, `ContextChipSet`, `GroundedChatQuestionSender`, `ChatStoreLoader`, `GroundedContextSizeEstimator`, `EditorContextItemProvider` and the ImGui `AssistantChatPanel`; #71, #72 and #118 headers unchanged.
+- **Verified:** headless and macOS Debug builds with warnings as errors, CTest 258/258 and 271/271; GCC 15 headless with warnings as errors 258/258 after merging #145's CI fix 7a22193; new tests repeated 200 times; clang-format 19.1.7, `check_includes`, `check_ids`, `check_md_links`, `git diff --check`; `editor --max-ticks 2` exits 0.
+- **Not verified:** ThreadSanitizer (instrumented binary crashed in gtest discovery), clicking through the panel, Windows/CI, a live AI service.
+- **Repo state:** committed and pushed to `feat/119-ai-chat-context` with the member's approval (DEC-058); draft PR opened against `main`.
+- **Next:** human review of PR #146 after PR #145 merges.
+- **Traps:** do not read the answer message while `isAnswering()`; `NoUserArea` returns an empty path, so plugging in a real bridge before a project path exists would write chats relative to the working directory (PRB-006).
+- **Records:** DEC-071, PRB-007.
+
+---
+
+### HND-041 — Merge `main` and the resolved US-33.1 branch into the US-33.2 branch
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/119-merge
+- **Task:** TASK-025, GitHub #119, PR #146
+- **Result:** Merged `feat/118-open-ai-assistant` at `a6af34c` (which already contains `main` with
+  PRs #143 and #144) instead of `main` directly, so the US-33.1/US-33.5 overlap keeps HND-036's
+  resolution. `MainWindowView` takes `AssistantChat&` on top of that constructor; US-33.1's
+  placeholder draft box stays replaced by `AssistantChatPanel`. Grounded assistant files equal
+  `main`. Records renumbered: US-33.2 is TASK-025, DEC-071 and HND-040, since `main` and #145 use
+  DEC-069/070, TASK-022 to 024 and HND-032 to 037, and #147 uses HND-039.
+- **Verified:** see the PR #146 merge commit.
+- **Next:** CI and human review of PR #146; merge after PR #145.
+
+---
+
+### HND-042 — Merge `main` (US-33.1 #145, #147) into the US-33.2 branch
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/119-merge-main
+- **Task:** TASK-025, GitHub #119, PR #146
+- **Result:** `main` holds #145 squash-merged, so its commits look new to git. Merged `main` with
+  only the changes `main` has beyond `a6af34c` (the US-33.1 version already in this branch): #145's
+  fix `462ca5a` (AI Settings opens the shell without a project) and #147's git hooks. Code applied
+  without conflicts. Renumbered this branch's handoff entries to HND-040/HND-041 because `main`
+  uses HND-037 (#145) and HND-039 (#147).
+- **Verified:** see the merge commit's CI run.
+- **Next:** CI and human review of PR #146.
