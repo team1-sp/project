@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "agent_bridge.grpc.pb.h"
+#include "grpc/health/v1/health.grpc.pb.h"
 #include <grpcpp/grpcpp.h>
 
 namespace engine::bridge {
@@ -16,6 +17,62 @@ namespace protocol = ::aegis::bridge::v1;
 [[nodiscard]] std::chrono::system_clock::time_point
 deadlineAfter(std::chrono::milliseconds timeout) {
     return std::chrono::system_clock::now() + timeout;
+}
+
+[[nodiscard]] const char* statusName(grpc::StatusCode code) {
+    switch (code) {
+    case grpc::StatusCode::CANCELLED:
+        return "CANCELLED";
+    case grpc::StatusCode::UNKNOWN:
+        return "UNKNOWN";
+    case grpc::StatusCode::INVALID_ARGUMENT:
+        return "INVALID_ARGUMENT";
+    case grpc::StatusCode::DEADLINE_EXCEEDED:
+        return "DEADLINE_EXCEEDED";
+    case grpc::StatusCode::NOT_FOUND:
+        return "NOT_FOUND";
+    case grpc::StatusCode::ALREADY_EXISTS:
+        return "ALREADY_EXISTS";
+    case grpc::StatusCode::PERMISSION_DENIED:
+        return "PERMISSION_DENIED";
+    case grpc::StatusCode::RESOURCE_EXHAUSTED:
+        return "RESOURCE_EXHAUSTED";
+    case grpc::StatusCode::FAILED_PRECONDITION:
+        return "FAILED_PRECONDITION";
+    case grpc::StatusCode::ABORTED:
+        return "ABORTED";
+    case grpc::StatusCode::OUT_OF_RANGE:
+        return "OUT_OF_RANGE";
+    case grpc::StatusCode::UNIMPLEMENTED:
+        return "UNIMPLEMENTED";
+    case grpc::StatusCode::INTERNAL:
+        return "INTERNAL";
+    case grpc::StatusCode::UNAVAILABLE:
+        return "UNAVAILABLE";
+    case grpc::StatusCode::DATA_LOSS:
+        return "DATA_LOSS";
+    case grpc::StatusCode::UNAUTHENTICATED:
+        return "UNAUTHENTICATED";
+    case grpc::StatusCode::OK:
+        return "OK";
+    case grpc::StatusCode::DO_NOT_USE:
+        return "UNKNOWN";
+    }
+    return "UNKNOWN";
+}
+
+[[nodiscard]] ServiceFailure mapFailure(const grpc::Status& status) {
+    if (status.ok()) {
+        return {};
+    }
+    if (status.error_code() == grpc::StatusCode::UNAVAILABLE) {
+        return {ServiceFailureKind::Unavailable, {}, status.error_message()};
+    }
+    if (status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED) {
+        return {ServiceFailureKind::DeadlineExceeded, {}, status.error_message()};
+    }
+    return {ServiceFailureKind::RemoteStatus, statusName(status.error_code()),
+            status.error_message()};
 }
 
 class GrpcAssistantResponseStream final : public AssistantResponseStream {
@@ -82,8 +139,42 @@ private:
 class GrpcAgentBridge final : public AgentBridge {
 public:
     explicit GrpcAgentBridge(std::string serviceAddress)
-        : stub_(protocol::AgentBridge::NewStub(
-              grpc::CreateChannel(std::move(serviceAddress), grpc::InsecureChannelCredentials()))) {
+        : channel_(
+              grpc::CreateChannel(std::move(serviceAddress), grpc::InsecureChannelCredentials()))
+        , stub_(protocol::AgentBridge::NewStub(channel_))
+        , healthStub_(::grpc::health::v1::Health::NewStub(channel_)) {}
+
+    [[nodiscard]] HealthCheckResult checkHealth(std::chrono::milliseconds timeout) override {
+        ::grpc::health::v1::HealthCheckRequest request;
+        request.set_service("aegis.bridge.v1.AgentBridge");
+        ::grpc::health::v1::HealthCheckResponse response;
+        grpc::ClientContext context;
+        context.set_deadline(deadlineAfter(timeout));
+        const grpc::Status status = healthStub_->Check(&context, request, &response);
+        if (!status.ok()) {
+            return {HealthServingStatus::Unknown, mapFailure(status)};
+        }
+        if (response.status() == ::grpc::health::v1::HealthCheckResponse::SERVING) {
+            return {HealthServingStatus::Serving, {}};
+        }
+        return {HealthServingStatus::NotServing, {}};
+    }
+
+    [[nodiscard]] ModelListResult listModels(std::chrono::milliseconds timeout) override {
+        protocol::ListModelsRequest request;
+        protocol::ListModelsResponse response;
+        grpc::ClientContext context;
+        context.set_deadline(deadlineAfter(timeout));
+        const grpc::Status status = stub_->ListModels(&context, request, &response);
+        if (!status.ok()) {
+            return {{}, mapFailure(status)};
+        }
+        ModelListResult result;
+        result.models.reserve(static_cast<std::size_t>(response.models_size()));
+        for (const protocol::Model& model : response.models()) {
+            result.models.push_back({model.identifier(), model.display_name()});
+        }
+        return result;
     }
 
     [[nodiscard]] ExchangeResult exchange(const Observation& observation,
@@ -110,7 +201,9 @@ public:
     }
 
 private:
+    std::shared_ptr<grpc::Channel> channel_;
     std::shared_ptr<protocol::AgentBridge::Stub> stub_;
+    std::unique_ptr<::grpc::health::v1::Health::Stub> healthStub_;
 };
 
 } // namespace

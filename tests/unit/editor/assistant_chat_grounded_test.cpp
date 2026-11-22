@@ -70,6 +70,15 @@ public:
         return std::make_unique<HeldStream>(control);
     }
 
+    [[nodiscard]] engine::bridge::HealthCheckResult
+    checkHealth(std::chrono::milliseconds) override {
+        return {};
+    }
+
+    [[nodiscard]] engine::bridge::ModelListResult listModels(std::chrono::milliseconds) override {
+        return {};
+    }
+
     std::shared_ptr<HeldStreamControl> control = std::make_shared<HeldStreamControl>();
 };
 

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "assistant_chat_panel.hpp"
+#include "editor/ai_privacy_settings.hpp"
 #include "editor/assistant_chat.hpp"
 #include "editor/assistant_entry_points.hpp"
 #include "editor/command.hpp"
@@ -29,10 +30,11 @@ public:
     using SetTitle = std::function<void(const std::string&)>;
 
     // `session` and `status` must outlive the view.
-    MainWindowView(EditorSession& session, const EditorStatus& status, ConsoleModel& console,
+    MainWindowView(EditorSession& session, EditorStatus& status, ConsoleModel& console,
                    AssistantEntryPoints& assistant, AssistantChat& assistantChat,
                    ProjectSettingsState& projectSettings, IExternalCodeEditor& externalEditor,
-                   IEntityNavigator& entityNavigator, CloseEditor closeEditor, SetTitle setTitle);
+                   IEntityNavigator& entityNavigator, CloseEditor closeEditor, SetTitle setTitle,
+                   AiPrivacySettingsController* aiSettings = nullptr);
 
     // Builds this render frame's interface. Call it between ImGui::NewFrame() and ImGui::Render().
     void draw();
@@ -45,7 +47,8 @@ public:
     void askAboutSelection() override;
     [[nodiscard]] bool canDiagnoseLastRun() const override;
     void diagnoseLastRun() override;
-    void openAiSettings() override;
+    [[nodiscard]] bool canOpenAiPrivacySettings() const override;
+    void openAiPrivacySettings() override;
 
 private:
     void updateTitle();
@@ -56,11 +59,13 @@ private:
     void drawStatusBar();
     void drawPanels();
     void drawAssistantPanel();
-    void drawProjectSettings();
     void drawConsolePanel();
+    void drawProjectSettings();
+    // Turns an AI-and-Privacy request from the assistant entry points into the settings window.
+    void openRequestedProjectSettings();
 
     EditorSession& session_;
-    const EditorStatus& status_;
+    EditorStatus& status_;
     ConsoleModel& console_;
     AssistantEntryPoints& assistant_;
     AssistantChat& assistantChat_;
@@ -68,6 +73,7 @@ private:
     ProjectSettingsState& projectSettings_;
     IExternalCodeEditor& externalEditor_;
     IEntityNavigator& entityNavigator_;
+    AiPrivacySettingsController* aiSettings_;
     CloseEditor closeEditor_;
     SetTitle setTitle_;
     Platform platform_;
@@ -77,6 +83,8 @@ private:
     // The panel that showPanel() asked to bring to the front in the next frame.
     std::optional<Panel> panelToFocus_;
     std::array<char, 256> consoleSearch_{};
+    std::array<char, 512> serviceAddress_{};
+    bool projectSettingsOpen_ = false;
     // Render frames drawn so far, counted up to 2.
     int frameIndex_ = 0;
 };

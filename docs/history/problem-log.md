@@ -81,7 +81,7 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 - **Prevention:** Expect fresh dependency installs to need network approval in restricted sessions, and use `set -e` for multi-command verification so the first failure controls the exit status.
 - **Keywords:** pip, PyPI, setuptools 84.2.1, no matching distribution, nodename nor servname, sandbox, network
 - **Related:** TASK-017, PB-006, DEC-039
-- **Occurrences:** 2026-11-22 — codex/gpt-5/104-console — CMake FetchContent for the fresh US-24.1 worktree failed with `fatal: unable to access 'https://github.com/erincatto/box2d.git/': Could not resolve host: github.com`; rerunning the headless workflow with approved network access succeeded. The full macOS configure later stalled while fetching; it completed using the same pinned sources already present in the sibling `project-us-11-2` build through `FETCHCONTENT_SOURCE_DIR_*` cache variables.
+- **Occurrences:** 2026-11-22 — codex/gpt-5/104-console — CMake FetchContent for the fresh US-24.1 worktree failed with `fatal: unable to access 'https://github.com/erincatto/box2d.git/': Could not resolve host: github.com`; rerunning the headless workflow with approved network access succeeded. The full macOS configure later stalled while fetching; it completed using the same pinned sources already present in the sibling `project-us-11-2` build through `FETCHCONTENT_SOURCE_DIR_*` cache variables. 2026-11-22 — codex/gpt-5/121-ai-privacy — the fresh headless and macOS US-33.5 configurations hit the same DNS error; approved access completed headless, and the macOS build reused the pinned sibling sources through the same cache variables.
 - **Occurrence:** 2026-11-22 — codex/gpt-5/118-assistant — the first windowed Editor
   build failed while fetching pinned ImGui with `fatal: unable to access
   'https://github.com/ocornut/imgui.git/': Could not resolve host: github.com` and `Failed to
@@ -133,7 +133,7 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 - **Keywords:** AppleClang, protobuf 36.2, Abseil, _Nullable, _Nonnull,
   -Wnullability-extension, warnings as errors, agent_bridge.pb.cc
 - **Related:** DEC-038, DEC-067, TASK-020
-- **Occurrences:** US-11.2 local gRPC build
+- **Occurrences:** US-11.2 local gRPC build. US-33.5's warnings-as-errors gRPC build first failed with `error: enumeration value 'DO_NOT_USE' not handled in switch [-Werror,-Wswitch]`; adding the sentinel case to the exhaustive status-name mapping made the health/model bridge build pass.
 
 ---
 
@@ -156,7 +156,7 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
   declaration, never in `SetUp()`.
 - **Keywords:** GoogleTest fixture, member initialisation order, SetUp, ChatStore, userLocalArea,
   temp_directory_path
-- **Related:** TASK-022, DEC-067
+- **Related:** TASK-023, DEC-067
 - **Occurrences:** US-11.1 tests
 
 ---
@@ -177,7 +177,7 @@ Areas: ECS · Physics · Adapter · Rendering · Input · Gameplay · Telemetry 
 - **How verified:** the test passes; headless 258/258 and macOS Debug 271/271 with warnings as errors.
 - **Prevention:** measure one item's contribution against an otherwise identical document.
 - **Keywords:** context chip size, assembleContext, question is empty, renderContextDocument, diagnosis
-- **Related:** TASK-024, DEC-070, DEC-069
+- **Related:** TASK-025, DEC-071, DEC-070
 - **Occurrences:** US-33.2 tests
 
 ---

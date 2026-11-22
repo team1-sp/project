@@ -39,7 +39,9 @@ public:
     virtual void askAboutSelection() = 0;
     [[nodiscard]] virtual bool canDiagnoseLastRun() const = 0;
     virtual void diagnoseLastRun() = 0;
-    virtual void openAiSettings() = 0;
+    // Opens Project Settings at AI and Privacy when a project settings controller is available.
+    [[nodiscard]] virtual bool canOpenAiPrivacySettings() const = 0;
+    virtual void openAiPrivacySettings() = 0;
 };
 
 // One line of a menu: a command, or a submenu of further entries.

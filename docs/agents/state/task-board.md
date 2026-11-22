@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-11-22
-updated_by: claude-code/opus-5.5/119-chat
+updated_by: claude-code/opus-5.5/119-merge
 ---
 
 # Task Board
@@ -34,9 +34,10 @@ Rules: claim before working; one owner per task; see [communication-protocol.md]
 | TASK-019 | Define the physics adapter interface — ClickUp PB-025 | Review | Zeynep Ertürk + claude (PB-025 session) | TASK-016 | ip.fr.3.1, R-3 |
 | TASK-020 | Keep the assistant read-only and on the configured AI service — US-11.2 #72 | Done (PR #141) | codex/gpt-5/us112 | DEC-001, DEC-038, DEC-039, DEC-045 | srs.fr.11.8–11.12 |
 | TASK-021 | Filter, search and inspect Console log messages — US-24.1 #104 | Done (PR #142) | codex/gpt-5/104-console | TASK-006, #77 | srs.fr.24.1–24.11 |
-| TASK-022 | Open the AI Assistant with context from the current selection — US-33.1 #118 | Review (draft PR #145) | codex/gpt-5/118-assistant | #72, #77 | srs.fr.33.1–33.4 |
+| TASK-022 | Configure the AI service and data sharing per project — US-33.5 #121 | Done (PR #143) | codex/gpt-5/121-ai-privacy | TASK-020 | srs.fr.33.28–33.33 |
 | TASK-023 | Assistant answers that cite ticks, entities and source lines — US-11.1 #71 | Review | claude-code/opus-5.5/us111 | TASK-020 | srs.fr.11.1–11.7 |
-| TASK-024 | Ask questions, control context and stop answers — US-33.2 #119 | Review (draft PR) | claude-code/opus-5.5/119-chat | TASK-022, TASK-023, TASK-020 | srs.fr.33.5–33.12 |
+| TASK-024 | Open the AI Assistant with context from the current selection — US-33.1 #118 | Review (draft PR #145) | codex/gpt-5/118-assistant | #72, #77 | srs.fr.33.1–33.4 |
+| TASK-025 | Ask questions, control context and stop answers — US-33.2 #119 | Review (PR #146) | claude-code/opus-5.5/119-chat | TASK-024, TASK-023, TASK-020 | srs.fr.33.5–33.12 |
 
 Blocked tasks become `Ready` when the dependency is `Done` **and** the related decision is `Accepted` (decided by a human).
 
@@ -202,11 +203,63 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
 - **Result:** Added canonical owning `LogEntry`/`ILogSink`, the window-free `ConsoleModel`, the complete ImGui panel, first-error tick-boundary pause through `Application::requestPause()`, Play lifecycle events, production external-editor launching, shared entity selection, status integration, focused tests and DEC-068/docs. After merging PR #141, verified headless (150/150) and `macos-debug` (163/163), clang-format 19.1.7, include/link/id checks and `git diff --check`. The standalone raylib window launched successfully before the merge; the computer-use harness could not bind to that non-bundle process for visual interaction.
 - **Links:** GitHub #104, DEC-068
 
-### TASK-022 — Open the AI Assistant with context from the current selection (US-33.1 #118)
+### TASK-022 — Configure the AI service and data sharing per project (US-33.5 #121)
+- **Status:** Done (PR #143)
+- **Claimed by:** codex/gpt-5/121-ai-privacy
+- **Serves:** srs.fr.33.28–33.33
+- **Depends on:** TASK-020 / PR #141
+- **Touches:** AgentBridge health/model discovery operations, window-free Editor settings/controller and persistence, Dear ImGui AI & Privacy tab, focused tests and relevant documentation
+- **Goal:** Add per-project AI service, model and privacy settings with deterministic validation, asynchronous stale-response protection and no direct gRPC use from Editor code.
+- **Plan:**
+  - Extend the transport-neutral AgentBridge seam only with the missing health-check and model-list operations, then implement their optional gRPC transport mapping.
+  - Add a window-independent AI/privacy settings model and controller with injected service factory, clock and asynchronous completion queue.
+  - Persist only the validated service address, model identifier and three permission booleans in
+    the current user's project-local settings area, outside shared project settings; never persist
+    credentials.
+  - Render the AI & Privacy tab in the existing Dear ImGui Project Settings panel, including confirmations, model/connection states and send-disabled tooltip state.
+  - Cover address parsing, list/selection transitions, timeout/latency, privacy confirmations, persistence and stale responses in headless fake-backed tests.
+  - Run relevant headless and windowed builds/tests, clang-format/static/docs checks and `git diff --check`.
+- **Risks:** The merged #141 contract has no health or model-list operation; this task must add the smallest compatible operations without changing assistant-domain request/streaming contracts. Asynchronous work must not outlive UI/controller state.
+- **Verification:** CMake headless and macOS presets, focused CTest filters and full suites, optional gRPC build, clang-format 19, repository static/documentation checks and `git diff --check`.
+- **Result:** Added strict host/IPv4/bracketed-IPv6 validation; model discovery and selection
+  transitions; five-second standard gRPC health checks with latency/specific errors; stale-response
+  generations; default-off, independently confirmed source/telemetry permissions; persisted Ask
+  before every send; `DataTransmissionPolicy`/consent access for #120; `AEGIS_AI_PRIVACY 1`
+  persistence under the injected user-local project area; and the Dear ImGui AI and Privacy window
+  reached through Edit, AI and the status bar when a project controller is present. Headless 166/166,
+  macOS 179/179 and optional-gRPC 166/166 tests pass; format, include, ID, link and diff checks pass.
+  See HND-032 and DEC-069.
+- **Links:** GitHub #121.
+
+### TASK-023 — Assistant answers that cite ticks, entities and source lines (US-11.1 #71)
+- **Status:** Review
+- **Claimed by:** claude-code/opus-5.5/us111 on 2026-11-22
+- **Serves:** srs.fr.11.1–11.7
+- **Depends on:** TASK-020 (US-11.2 #72, merged in PR #141)
+- **Touches:** `assistant/` grounded pipeline, `tests/unit/assistant/grounded/`, AI/semantic architecture docs, decision/problem logs, agent state
+- **Goal:** Grounded answers from attached context only, with typed state, entity and source citations validated against retrieved evidence, a deterministic debug-flag diagnosis and explicit abstention, using #72's AgentBridge, cancellation and persistence unchanged.
+- **Acceptance criteria:**
+  - [x] srs.fr.11.1 chat-facing API `GroundedAssistant::ask()` accepts the question and attached context items.
+  - [x] srs.fr.11.2 state questions answered from Semantic Graph and run records.
+  - [x] srs.fr.11.3 diagnosis from telemetry, event payloads and write records; debug-flag rules for applied/exercised/recorded and the opposite cases; declarations never presented as the cause.
+  - [x] srs.fr.11.4 typed citations (state, entity, source with content hash); Start distinct from tick 0.
+  - [x] srs.fr.11.5 only the listed `Scripts/` files are read.
+  - [x] srs.fr.11.6 only question, consent-allowed earlier messages and attached items.
+  - [x] srs.fr.11.7 missing information named; hypotheses labelled.
+- **Plan:**
+  - Separate question/context models, read-only evidence query seams, context assembly, diagnosis, citations and formatting.
+  - Carry the grounded context and validate citations with an AgentBridge decorator; no shared API changes (human choice, DEC-070 part 1).
+  - Deterministic fakes for all tests; no network or model.
+  - Run headless and macOS warnings-as-errors builds and tests, clang-format 19, include/link/id checks, `git diff --check`.
+- **Verification:** see HND-033.
+- **Result:** see HND-033 and DEC-070. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips are implemented by their own stories against the new seams.
+- **Links:** GitHub #71, DEC-070, PRB-006
+
+### TASK-024 — Open the AI Assistant with context from the current selection (US-33.1 #118)
 - **Status:** Review (draft PR #145)
 - **Claimed by:** codex/gpt-5/118-assistant on 2026-11-22
 - **Serves:** srs.fr.33.1–33.4, srs.fr.17.22, srs.fr.33.35, srs.fr.33.41
-- **Depends on:** GitHub issues #72 and #77 (both merged)
+- **Depends on:** GitHub issues #72 and #77 (both merged); TASK-022 (US-33.5) for the AI and Privacy window
 - **Touches:** narrow `editor_core` command/state seams, thin Dear ImGui menu/shortcut integration,
   focused unit/headless tests, and mandatory agent records
 - **Goal:** Add the five AI editor entry points and route them through existing assistant, selection,
@@ -230,46 +283,23 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
     Selection context, drafts `Why…`, and does not send.
   - [x] Diagnose Last Run is enabled only with a report, derives the typed last-600-tick context,
     and submits a new diagnosis only through `IConsentAwareQuestionSender`.
-  - [x] AI Settings opens the Project Settings shell on AI and Privacy without implementing the tab.
+  - [x] AI Settings opens the US-33.5 AI and Privacy window (merged from `main`).
   - [x] `editor_core` has no assistant-service/AgentBridge dependency, so entry points cannot bypass
     consent or call the AI service directly.
 - **Result:** Added window-independent entry-point orchestration, typed selection and Last run
   contexts, the consent-aware/settings seams, dynamic menu and toolbar commands, a thin Assistant
-  panel/message box and Project Settings shell, and focused fake-backed tests. #72's public
+  panel/message box, routing to the US-33.5 AI and Privacy window, and focused fake-backed tests. #72's public
   interfaces were not changed; #71, #119, #120 and #121 internals remain out of scope.
 - **Verified:** targeted 31/31 editor tests and complete headless 163/163 passed; the macOS editor
   built and completed a two-tick raylib/ImGui smoke run; clang-format 19, include policy, record IDs,
   documentation links and `git diff --check` passed.
 - **Links:** GitHub #118, draft PR #145.
-### TASK-023 — Assistant answers that cite ticks, entities and source lines (US-11.1 #71)
-- **Status:** Review
-- **Claimed by:** claude-code/opus-5.5/us111 on 2026-11-22
-- **Serves:** srs.fr.11.1–11.7
-- **Depends on:** TASK-020 (US-11.2 #72, merged in PR #141)
-- **Touches:** `assistant/` grounded pipeline, `tests/unit/assistant/grounded/`, AI/semantic architecture docs, decision/problem logs, agent state
-- **Goal:** Grounded answers from attached context only, with typed state, entity and source citations validated against retrieved evidence, a deterministic debug-flag diagnosis and explicit abstention, using #72's AgentBridge, cancellation and persistence unchanged.
-- **Acceptance criteria:**
-  - [x] srs.fr.11.1 chat-facing API `GroundedAssistant::ask()` accepts the question and attached context items.
-  - [x] srs.fr.11.2 state questions answered from Semantic Graph and run records.
-  - [x] srs.fr.11.3 diagnosis from telemetry, event payloads and write records; debug-flag rules for applied/exercised/recorded and the opposite cases; declarations never presented as the cause.
-  - [x] srs.fr.11.4 typed citations (state, entity, source with content hash); Start distinct from tick 0.
-  - [x] srs.fr.11.5 only the listed `Scripts/` files are read.
-  - [x] srs.fr.11.6 only question, consent-allowed earlier messages and attached items.
-  - [x] srs.fr.11.7 missing information named; hypotheses labelled.
-- **Plan:**
-  - Separate question/context models, read-only evidence query seams, context assembly, diagnosis, citations and formatting.
-  - Carry the grounded context and validate citations with an AgentBridge decorator; no shared API changes (human choice, DEC-069).
-  - Deterministic fakes for all tests; no network or model.
-  - Run headless and macOS warnings-as-errors builds and tests, clang-format 19, include/link/id checks, `git diff --check`.
-- **Verification:** see HND-032.
-- **Result:** see HND-032 and DEC-069. The Semantic Graph, telemetry recording, asset catalogue and EP-33 chips are implemented by their own stories against the new seams.
-- **Links:** GitHub #71, DEC-069, PRB-006
 
-### TASK-024 — Ask questions, control context and stop answers (US-33.2 #119)
-- **Status:** Review (draft PR)
+### TASK-025 — Ask questions, control context and stop answers (US-33.2 #119)
+- **Status:** Review (PR #146)
 - **Claimed by:** claude-code/opus-5.5/119-chat on 2026-11-22
 - **Serves:** srs.fr.33.5–33.12
-- **Depends on:** TASK-020 (#72, merged), TASK-023 (#71, draft PR #144), TASK-022 (#118, draft PR #145); stacked on both open branches by the member's decision (DEC-070 part 1)
+- **Depends on:** TASK-020 (#72, merged), TASK-023 (#71, merged in PR #144), TASK-024 (#118, PR #145); stacked on both open branches by the member's decision (DEC-071 part 1)
 - **Touches:** new `editor_core` chat/context/services units, a new thin ImGui panel file, small wiring in `main.cpp` and `main_window_view.*`, `editor/CMakeLists.txt`, tests and records
 - **Goal:** the chat composer, Send/Stop, context chips, New Chat and History over the #71/#72/#118 public interfaces.
 - **Plan:**
@@ -277,5 +307,5 @@ Blocked tasks become `Ready` when the dependency is `Done` **and** the related d
   - Thin `AssistantChatPanel` replacing #118's draft-only panel body; entry-point Ask about selection imports its draft and Selection chip.
   - Unit tests with fakes plus an integration test with the real #71/#72 classes and a fake bridge.
 - **Risks:** stacked on unmerged PRs; `AnswerOperation` has no thread-safe snapshot, so the running answer is drawn after it ends.
-- **Result:** implemented as planned (DEC-070). Headless and macOS Debug with warnings as errors: 258/258 and 271/271; GCC 15 headless 258/258 after merging #145's CI fix 7a22193; 38 new tests, 200 repeats stable; clang-format 19, include/id/link checks and `git diff --check` clean; two-tick windowed smoke run exits 0. Not run: ThreadSanitizer (the instrumented test binary crashed during gtest discovery on this machine), interactive panel use, Windows. In the app every send is refused with "AI service is not configured" until #121 supplies a bridge.
-- **Links:** GitHub #119, DEC-070, PRB-007
+- **Result:** implemented as planned (DEC-071). Headless and macOS Debug with warnings as errors: 258/258 and 271/271; GCC 15 headless 258/258 after merging #145's CI fix 7a22193; 38 new tests, 200 repeats stable; clang-format 19, include/id/link checks and `git diff --check` clean; two-tick windowed smoke run exits 0. Not run: ThreadSanitizer (the instrumented test binary crashed during gtest discovery on this machine), interactive panel use, Windows. In the app every send is refused with "AI service is not configured" until #121 supplies a bridge.
+- **Links:** GitHub #119, DEC-071, PRB-007

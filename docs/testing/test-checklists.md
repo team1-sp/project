@@ -148,6 +148,16 @@ Tests are in `tests/unit/editor/console_model_test.cpp` and
   `ReadOnlyAssistantTest.Cancel*`
 - [x] Versioned user-local chats round-trip messages, citations and data categories and reject bad
   data safely (srs.fr.11.12) — `ChatStoreTest.*`
+- [x] Service address forms, port bounds and previous-valid retention (srs.fr.33.28) —
+  `ServiceAddressValidation.*`, `AiPrivacySettingsTest.InvalidAddress*`
+- [x] Model discovery states, identifier preservation, send-disabled reason and stale responses
+  (srs.fr.33.29) — `AiPrivacySettingsTest.*List*`, `*Stale*`
+- [x] Five-second health deadline, serving latency and specific failures (srs.fr.33.30) —
+  `AiPrivacySettingsTest.TestConnection*`, `*HealthRequest*`
+- [x] Default-off, category-specific confirmation/cancellation and Ask-before-send persistence
+  (srs.fr.33.31–33.33) — `AiPrivacySettingsTest.Privacy*`, `*AskBeforeEverySend*`
+- [x] Per-user project settings round trip outside shared settings —
+  `AiPrivacySettingsTest.ProjectSettingsRoundTripUsesUserLocalSettingsArea`
 - [x] Natural-language questions with attached context items through the chat-facing API, routed
   over AgentBridge with fakes (srs.fr.11.1) — `GroundedAssistantTest.Ask_*`
 - [x] State answers from Semantic Graph and run records, e.g. why an unlock failed (srs.fr.11.2) —

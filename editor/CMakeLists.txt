@@ -2,6 +2,7 @@
 # (US-14.1), the status bar's items (US-14.2) and the AI Assistant chat state (US-33.2). It
 # links neither raylib nor Dear ImGui, so the tests use it in every preset.
 add_library(editor_core STATIC
+    src/ai_privacy_settings.cpp
     src/assistant_chat.cpp
     src/assistant_chat_context.cpp
     src/assistant_chat_services.cpp
@@ -18,7 +19,8 @@ add_library(editor::core ALIAS editor_core)
 target_include_directories(editor_core PUBLIC include)
 # The AI Assistant chat (US-33.2) uses US-11.1/US-11.2's window-free assistant core.
 find_package(Threads REQUIRED)
-target_link_libraries(editor_core PUBLIC engine::core aegis::assistant PRIVATE Threads::Threads)
+target_link_libraries(editor_core PUBLIC aegis::assistant engine::bridge engine::core
+                      PRIVATE Threads::Threads)
 engine_set_warnings(editor_core)
 
 # Editor app: hosts engine::Application and owns the main window (DEC-048). It opens a window,

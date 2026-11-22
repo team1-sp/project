@@ -131,8 +131,8 @@ int main(int argc, char** argv) {
     editor::AssistantEntryPoints assistant(selection, latestRun, questions, projectSettings);
 
     // AI Assistant chat (US-33.2) over US-11.1's GroundedAssistant and US-11.2's ChatStore. No
-    // AI service is configured until US-33.5, so the bridge is null and every send is refused with
-    // the assistant's reason; the draft and chips stay.
+    // project is open yet to supply US-33.5's configured bridge, so the bridge is null and every
+    // send is refused with the assistant's reason; the draft and chips stay.
     const editor::no_project::NoUserArea chatArea;
     aegis::assistant::ChatStore chatStore(chatArea);
     const editor::no_project::AssistantSources assistantSources;

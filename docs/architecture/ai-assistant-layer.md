@@ -2,8 +2,8 @@
 
 Uses the semantic graph and project data to explain, diagnose and help with design. Sub-layers: **Architecture reading → LLM model → User assistant**.
 
-Status: **US-11.2 core, US-11.1 grounded answers and the US-33.2 chat state implemented**; settings,
-consent dialogs and offline handling remain planned.
+Status: **US-11.2 core, US-33.5 AI/privacy settings, US-11.1 grounded answers and the US-33.2 chat
+state implemented**; consent dialogs and offline handling remain planned.
 The Semantic layer has no query implementation yet, so US-11.2 depends only on the minimal
 read-only `SemanticGraphView` structure seam (DEC-067).
 
@@ -97,15 +97,17 @@ grounded-diagnosis stories:
   kind, text, citations and data-category names. Replacement uses a temporary file and backup;
   corrupt or unsupported existing files are rejected rather than overwritten (srs.fr.11.12).
 
-The concrete project path, service address/model selection, transmission-policy values and UI are
-intentionally left to their own project/settings and panel stories (#121 and #119). Citation
-interpretation and grounded diagnosis remain #71; US-11.2 stores opaque citation kind/payload pairs
-without inventing them.
+US-33.5 supplies the validated address, model identifier and `DataTransmissionPolicy` implementation
+from a window-free controller. It extends the transport-neutral bridge with the standard gRPC health
+check and model discovery, keeps transport work off the UI thread, and persists no secrets under the
+injected user-local project settings area. See
+[`design/ai-privacy-settings.md`](../design/ai-privacy-settings.md). The per-question consent dialog
+remains #120; citation interpretation and grounded diagnosis are US-11.1 (§9).
 
 ## 9. Implemented US-11.1 grounded answers
 
 `aegis::assistant` adds the grounded pipeline under `assistant/include/aegis/assistant/grounded/`
-(DEC-069). Each stage is a separate unit:
+(DEC-070). Each stage is a separate unit:
 
 | Stage | Unit | What it does |
 | --- | --- | --- |
@@ -118,12 +120,14 @@ without inventing them.
 
 The concrete Semantic Graph, telemetry recording, asset catalogue and the EP-33 context chips are
 not built yet; they implement these seams in their own stories. Tests use deterministic fakes and no
-network or model. Consent dialogs, field-by-field removal of denied data (srs.fr.33.54), request
-preview and the chat panel remain #121, EP-33 and #119.
+network or model. The production `DataTransmissionPolicy` is US-33.5's `AiPrivacySettings`;
+`GroundedAgentBridge` forwards `checkHealth()` and `listModels()` unchanged to the bridge it wraps.
+Consent dialogs, field-by-field removal of denied data (srs.fr.33.54) and request preview remain
+#120 and EP-33; the chat panel is US-33.2 (§10).
 
 ## 10. Implemented US-33.2 chat panel state
 
-The Editor's AI Assistant panel keeps its state in `editor_core` (DEC-070), window-free and tested
+The Editor's AI Assistant panel keeps its state in `editor_core` (DEC-071), window-free and tested
 headlessly; `assistant_chat_panel.cpp` only draws it with Dear ImGui.
 
 | Unit | What it does |

@@ -76,8 +76,9 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 | DEC-066 | US-14.2: the status bar is built from a window-free `EditorStatus` model in `editor_core` (message, debug flags in orange, REC, mode, FPS, entities, AI service dot); clicking the message opens the Console; the AI and REC clicks wait for their panels | Accepted | 2026-11-17 |
 | DEC-067 | US-11.2: a window-free read-only assistant core uses AgentBridge streaming, cancellable answer operations and versioned user-local chat storage | Accepted | 2026-11-22 |
 | DEC-068 | US-24.1: structured logs are owned by a window-free Console model; projection is non-mutating; search ignores case; collapse identity includes every structured field; Play lifecycle, pause, editor launch and entity navigation use injected seams | Accepted | 2026-11-22 |
-| DEC-069 | US-11.1: grounded answers use read-only evidence query seams, a deterministic diagnosis, typed citations serialised as `state`/`entity`/`source` key=value payloads, and an AgentBridge decorator that carries the grounded context in `semanticGraphStructure` and validates citations before they reach the chat | Accepted | 2026-11-22 |
-| DEC-070 | US-33.2: the AI Assistant chat state is a window-free `editor_core` model that sends only through an injectable sender over `GroundedAssistant`, runs `AnswerOperation` on a worker thread, shows a running answer only after it ends, keeps chips across questions, and sizes chips by their evidence bytes | Accepted | 2026-11-22 |
+| DEC-069 | US-33.5: AI/privacy settings use a window-free controller, address-bound AgentBridge health/model operations and versioned user-local project persistence | Accepted | 2026-11-22 |
+| DEC-070 | US-11.1: grounded answers use read-only evidence query seams, a deterministic diagnosis, typed citations serialised as `state`/`entity`/`source` key=value payloads, and an AgentBridge decorator that carries the grounded context in `semanticGraphStructure` and validates citations before they reach the chat | Accepted | 2026-11-22 |
+| DEC-071 | US-33.2: the AI Assistant chat state is a window-free `editor_core` model that sends only through an injectable sender over `GroundedAssistant`, runs `AnswerOperation` on a worker thread, shows a running answer only after it ends, keeps chips across questions, and sizes chips by their evidence bytes | Accepted | 2026-11-22 |
 
 ### Decisions still open (no entry yet — do not decide silently)
 
@@ -1082,7 +1083,48 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Revisit when:** US-17.2 introduces the Play controller, Project Preferences owns the editor command, or entity selection gains scene-qualified/stable references.
 - **Supersedes / Related:** DEC-057, DEC-060, DEC-063, DEC-066, TASK-021, GitHub #104, #85, #88, #123.
 
-### DEC-069 — US-11.1: grounded answers, typed citations and an AgentBridge decorator
+### DEC-069 — US-33.5 uses a window-free settings controller and AgentBridge service discovery
+- **Date:** 2026-11-22
+- **Status:** Accepted (carried by the US-33.5 pull request; binds once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-33.5 pull request   **Recorded by:** codex/gpt-5/121-ai-privacy
+- **Context:** US-33.5 (#121) needs independently testable address validation, asynchronous health
+  and model discovery, address-race protection, privacy policy and per-user project persistence.
+  Merged #141 supplied an address-bound `AgentBridge` answer stream but no health or model operation.
+  The general Project Settings framework, Project Hub and per-question consent dialog are separate
+  stories.
+- **Options considered:**
+  1. Call gRPC from Dear ImGui, or extend the transport-neutral AgentBridge seam. The seam is chosen
+     so UI/model tests use fakes and protocol types remain inside the optional transport target.
+  2. Let asynchronous callbacks mutate controller state, or poll typed completions carrying request
+     identifiers and addresses. Polling is chosen so mutations stay on the UI thread and stale
+     completions are deterministically rejected.
+  3. Store these values with shared project settings, or under an injected current-user project
+     area. The user-local area is required by srs.fr.33.57 and prevents privacy choices from entering
+     version control.
+- **Decision:** `AiPrivacySettingsController` owns all window-independent state and persists
+  `AEGIS_AI_PRIVACY 1` beneath `<user-local-project>/settings/ai-privacy.settings` through temporary
+  and backup replacement. `AiPrivacySettings` implements #72's `DataTransmissionPolicy` and exposes
+  per-category consent need for #120. `AgentBridge` adds synchronous, deadline-taking
+  `checkHealth()` and `listModels()` operations; `AgentBridgeRequestRunner` executes them
+  asynchronously through an injected address-bound bridge factory and clock. The production bridge
+  uses wire-compatible `grpc.health.v1.Health/Check` plus `AgentBridge.ListModels`; UI code sees only
+  transport-neutral results. Dear ImGui renders the controller and the Edit menu, AI menu and status
+  bar share one availability-checked action.
+- **Rationale:** this is the smallest complete slice that keeps protocol code out of the UI, makes
+  every timing/race transition fakeable, reuses #72's service boundary and stores no credentials.
+- **Consequences:** Project-opening code supplies the user-local project root and a production bridge
+  factory when that lifecycle lands. #120 reads `requiresConsent()` but owns the general send/dialog
+  sequence. A successful health check triggers a fresh five-second model-list request; changing the
+  address clears the model/connection and both address-bound permissions.
+- **Docs updated:** `design/ai-privacy-settings.md`, `architecture/ai-assistant-layer.md`,
+  `guidelines/repository-structure.md`, `testing/test-checklists.md`, agent state and handoff.
+- **Course documents affected (for humans):** none; this follows srs.fr.33.28–33.33, 33.57 and
+  srs.nfr.4.11.
+- **Revisit when:** Project Hub supplies default service addresses, the cross-platform project path
+  owner standardizes the concrete user-local root, or #120 connects the send pipeline.
+- **Supersedes / Related:** DEC-038, DEC-045, DEC-067, TASK-022, GitHub #121, #120.
+
+### DEC-070 — US-11.1: grounded answers, typed citations and an AgentBridge decorator
 - **Date:** 2026-11-22
 - **Status:** Accepted (part 1 decided in the conversation; parts 2–6 carried by the US-11.1 pull request, binding once a human merges it, DEC-052)
 - **Decided by:** ardasaritas (part 1, in the US-11.1 agent session, 2026-11-22); the reviewer of the US-11.1 pull request (parts 2–6)   **Recorded by:** claude-code/opus-5.5/us111
@@ -1104,9 +1146,9 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Docs updated:** `architecture/ai-assistant-layer.md`, `architecture/semantic-layer.md`, `guidelines/repository-structure.md`, `testing/test-checklists.md`, `agents/state/task-board.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`, `history/problem-log.md`.
 - **Course documents affected (for humans):** none; this implements SRS A srs.fr.11.1–11.7.
 - **Revisit when:** the AgentBridge request gains structured context fields, the telemetry recording defines its record schema (srs.fr.8.29), or the demo game fixes the event and payload names used for unlocks and collisions.
-- **Supersedes / Related:** DEC-038, DEC-067, TASK-020, TASK-022, US-11.1 (#71), #119, #121.
+- **Supersedes / Related:** DEC-038, DEC-067, DEC-069 (US-33.5 settings and `checkHealth()`/`listModels()`), TASK-020, TASK-023, US-11.1 (#71), #119, #121.
 
-### DEC-070 — US-33.2: AI Assistant chat state, sending seam and threading
+### DEC-071 — US-33.2: AI Assistant chat state, sending seam and threading
 - **Date:** 2026-11-22
 - **Status:** Accepted (part 1 decided in the conversation; parts 2–6 carried by the US-33.2 pull request, binding once a human merges it, DEC-052)
 - **Decided by:** ardasaritas (part 1, stacking on the open #71 and #118 PRs, in the US-33.2 agent session, 2026-11-22); the reviewer of the US-33.2 pull request (parts 2–6)   **Recorded by:** claude-code/opus-5.5/119-chat
@@ -1114,7 +1156,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Context:** US-33.2 (#119) needs the composer, Stop, chips, New Chat and History (srs.fr.33.5–33.12) over #71's `GroundedAssistant`/`ContextItem`, #72's `AnswerOperation`/`ChatStore` and #118's panel, without changing those interfaces. `AnswerOperation::run()` blocks while it writes the answer into the shared `Chat` under a private mutex, so another thread cannot safely read that message while it streams. #118's `IConsentAwareQuestionSender` returns nothing and carries only Selection and Last run, so it cannot report a rejection or a running answer.
 - **Options considered:** (a) a new editor-owned sending seam returning a running-answer handle, worker thread per answer, draw the running answer only after it ends; (b) ask #72 for a thread-safe answer snapshot to show text while it streams; (c) extend #118's sender. (a) meets every criterion without touching shared headers; live streaming text is not one of srs.fr.33.5–33.12.
 - **Decision:**
-  1. Stack #119 on the open #71 (#144) and #118 (#145) branches.
+  1. Stack #119 on the open #71 (#144) and #118 (#145) branches; #144 has since merged.
   2. `AssistantChat` in `editor_core` owns the draft, chips, open chat and History; Dear ImGui only draws it. It sends only through `IChatQuestionSender`; production `GroundedChatQuestionSender` calls `GroundedAssistant::ask()` and runs the returned `AnswerOperation` on its own thread; Stop calls `AnswerOperation::cancel()` once. One answer at a time; New Chat and History wait until it ends.
   3. While an answer runs, the panel draws every message except the one being written, with a spinner and Stop; the full answer (or the stopped part) appears when the operation ends.
   4. Whitespace-only messages are empty. A rejected send keeps the draft and chips; a successful send clears the draft and keeps the chips for the next question. An entry point's Selection replaces only the Selection chip.
@@ -1125,4 +1167,4 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Docs updated:** `architecture/ai-assistant-layer.md`, `guidelines/repository-structure.md`, `agents/state/task-board.md`, `agents/state/current-status.md`, `agents/state/handoff-log.md`, `history/problem-log.md`.
 - **Course documents affected (for humans):** none; this implements SRS A srs.fr.33.5–33.12.
 - **Revisit when:** #72 gains an answer snapshot or chat listing, or the consent story needs to intercept sends differently.
-- **Supersedes / Related:** DEC-067, DEC-069, TASK-020, TASK-022, TASK-023, US-33.1 (#118), US-11.1 (#71), #120, #121.
+- **Supersedes / Related:** DEC-067, DEC-070, TASK-020, TASK-024, TASK-023, US-33.1 (#118), US-11.1 (#71), #120, #121.
