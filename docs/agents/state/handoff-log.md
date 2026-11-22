@@ -609,3 +609,15 @@
 - **Traps:** claims are now the issue's assignee; don't recreate a task file.
 - **Records:** DEC-149.1, HND-149.1, Q-015 answered.
 
+---
+
+### HND-150.1 — Remove the advisor as a code owner
+- **Date:** 2026-11-22
+- **Agent:** claude-code/opus-5.5/148-ids
+- **Work:** PR #150 (no issue)
+- **Result:** Done, awaiting review. `.github/CODEOWNERS` lists only `@isikdonger` (DEC-150.1); CONTRIBUTING and git-workflow updated.
+- **Verified:** `tools/check_ids.py` and `tools/check_md_links.py` pass.
+- **Not verified:** that GitHub stops requesting the advisor's review; check on the next PR after merge.
+- **Next:** if the advisor should also lose repository access, that is a repository setting (Settings → Collaborators), not part of this PR.
+- **Records:** DEC-150.1, HND-150.1.
+
