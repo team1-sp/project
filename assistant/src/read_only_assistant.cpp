@@ -30,12 +30,12 @@ void addCategory(std::vector<std::string>& categories, std::string category) {
 
 class AnswerOperation::State {
 public:
-    State(Chat& chat, ChatStore& store, std::size_t answerIndex,
-          std::unique_ptr<engine::bridge::AssistantResponseStream> stream)
-        : chat(chat)
-        , store(store)
-        , answerIndex(answerIndex)
-        , stream(std::move(stream)) {}
+    State(Chat& sourceChat, ChatStore& chatStore, std::size_t targetAnswerIndex,
+          std::unique_ptr<engine::bridge::AssistantResponseStream> responseStream)
+        : chat(sourceChat)
+        , store(chatStore)
+        , answerIndex(targetAnswerIndex)
+        , stream(std::move(responseStream)) {}
 
     [[nodiscard]] AnswerResult run() {
         {
