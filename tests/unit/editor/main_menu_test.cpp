@@ -24,8 +24,21 @@ public:
     void showPanel(Panel panel) override {
         calls.push_back(std::string("show ") + editor::panelName(panel));
     }
+    void openAssistant() override { calls.push_back("open assistant"); }
+    void toggleAssistant() override {
+        assistantOpen = !assistantOpen;
+        calls.push_back("toggle assistant");
+    }
+    [[nodiscard]] bool canAskAboutSelection() const override { return selectionAvailable; }
+    void askAboutSelection() override { calls.push_back("ask selection"); }
+    [[nodiscard]] bool canDiagnoseLastRun() const override { return runAvailable; }
+    void diagnoseLastRun() override { calls.push_back("diagnose run"); }
+    void openAiSettings() override { calls.push_back("open AI settings"); }
 
     std::vector<std::string> calls;
+    bool selectionAvailable = false;
+    bool runAvailable = false;
+    bool assistantOpen = false;
 };
 
 const Menu& menuTitled(const std::vector<Menu>& menus, const char* title) {
@@ -77,8 +90,8 @@ TEST(MainMenuTest, MenuBar_HoldsTheNineMenusInOrder) {
                                                 "Run", "AI", "Window", "Help"}));
 }
 
-// srs.fr.14.5: only the items whose feature is built are enabled: File > Exit and the six
-// panels of Window > General. Every other item is disabled.
+// srs.fr.14.5: only implemented items are enabled. Selection and run commands stay disabled
+// until their corresponding state exists.
 TEST(MainMenuTest, ItemsNotBuiltYet_AreDisabled) {
     RecordingActions actions;
     const std::vector<Menu> menus = editor::buildMainMenu(actions);
@@ -94,9 +107,10 @@ TEST(MainMenuTest, ItemsNotBuiltYet_AreDisabled) {
         }
     }
 
-    EXPECT_EQ(enabled, (std::vector<std::string>{"File > Exit", "Window > Scene", "Window > Game",
-                                                 "Window > Hierarchy", "Window > Inspector",
-                                                 "Window > Project", "Window > Console"}));
+    EXPECT_EQ(enabled, (std::vector<std::string>{
+                           "File > Exit", "AI > Open Assistant", "AI > AI Settings...",
+                           "Window > Scene", "Window > Game", "Window > Hierarchy",
+                           "Window > Inspector", "Window > Project", "Window > Console"}));
 }
 
 // File > Exit and Window > General call the Editor's actions.
@@ -111,6 +125,36 @@ TEST(MainMenuTest, EnabledItems_CallTheirActions) {
     entryLabelled(general.submenu, "Scene").command.run();
 
     EXPECT_EQ(actions.calls, (std::vector<std::string>{"exit", "show Console", "show Scene"}));
+}
+
+TEST(MainMenuTest, AiContextCommandsFollowSelectionAndRunAvailability) {
+    RecordingActions actions;
+    std::vector<Menu> menus = editor::buildMainMenu(actions);
+    const Menu& ai = menuTitled(menus, "AI");
+    const editor::Command& ask = entryLabelled(ai.entries, "Ask about Selection").command;
+    const editor::Command& diagnose = entryLabelled(ai.entries, "Diagnose Last Run").command;
+
+    EXPECT_FALSE(ask.isEnabled());
+    EXPECT_FALSE(diagnose.isEnabled());
+
+    actions.selectionAvailable = true;
+    actions.runAvailable = true;
+    EXPECT_TRUE(ask.isEnabled());
+    EXPECT_TRUE(diagnose.isEnabled());
+    ask.run();
+    diagnose.run();
+    EXPECT_EQ(actions.calls, (std::vector<std::string>{"ask selection", "diagnose run"}));
+}
+
+TEST(MainMenuTest, AiOpenAndSettingsCommandsCallTheirEditorActions) {
+    RecordingActions actions;
+    const std::vector<Menu> menus = editor::buildMainMenu(actions);
+    const Menu& ai = menuTitled(menus, "AI");
+
+    entryLabelled(ai.entries, "Open Assistant").command.run();
+    entryLabelled(ai.entries, "AI Settings...").command.run();
+
+    EXPECT_EQ(actions.calls, (std::vector<std::string>{"open assistant", "open AI settings"}));
 }
 
 // srs.fr.14.22, 14.23: Window > General lists the panels in order, on Ctrl+1 to Ctrl+6.
@@ -141,14 +185,17 @@ TEST(MainMenuTest, OpenRecentWithoutRecentScenes_IsEmptySubmenu) {
     EXPECT_TRUE(openRecent.submenu.empty());
 }
 
-// srs.fr.14.5: the toolbar's features are not built yet, so every control is disabled.
-TEST(MainMenuTest, Toolbar_AllControlsDisabled) {
-    const std::vector<editor::Command> toolbar = editor::buildToolbar();
+// srs.fr.14.5: only the implemented AI Assistant toolbar control is enabled.
+TEST(MainMenuTest, Toolbar_OnlyAssistantIsEnabled) {
+    RecordingActions actions;
+    const std::vector<editor::Command> toolbar = editor::buildToolbar(actions);
 
     ASSERT_FALSE(toolbar.empty());
-    for (const editor::Command& command : toolbar) {
-        EXPECT_FALSE(command.isEnabled()) << command.label;
+    for (std::size_t i = 0; i + 1 < toolbar.size(); ++i) {
+        EXPECT_FALSE(toolbar[i].isEnabled()) << toolbar[i].label;
     }
+    EXPECT_TRUE(toolbar.back().isEnabled());
+    EXPECT_EQ(editor::shortcutText(*toolbar.back().shortcut, Platform::Windows), "Ctrl+Shift+A");
 }
 
 // srs.fr.14.6: Ctrl on Windows, Cmd in its place on macOS.

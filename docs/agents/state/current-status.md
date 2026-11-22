@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-11-22
-updated_by: codex/gpt-5/104-console
+updated_by: codex/gpt-5/118-assistant
 ---
 
 # Current Status
@@ -8,7 +8,7 @@ updated_by: codex/gpt-5/104-console
 Snapshot of the project. Overwrite this file each session (keep it short). History belongs in `handoff-log.md`. **The truth is the `Accepted` entries in `history/decision-log.md`.**
 
 ## One-line summary
-Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The fixed game loop, pause API, Editor main window and status bar are merged. US-11.2 adds the read-only assistant core, AgentBridge streaming, optional gRPC client and user-local chat persistence. US-24.1 adds the structured Console model and fills the existing Console panel on its review branch. The custom ECS is designed but not built. **The demo game is undecided** (Q-016).
+Early implementation. Architecture and the core engine stack are defined. The C++ skeleton builds on Windows, macOS and headless Linux. The fixed game loop, pause API, Editor main window, status bar, read-only assistant core and structured Console are merged. US-33.1's Editor entry points are implemented and verified; the human approved committing, pushing and opening the draft PR. The custom ECS is designed but not built. **The demo game is undecided** (Q-016).
 
 ## Phase
 Roadmap phase **1 — Project and technology decisions**: all exit criteria are met (see `plan.md`); the human confirms closing it. Phase 2 starts with the skeleton (TASK-005).
@@ -29,6 +29,10 @@ Roadmap phase **1 — Project and technology decisions**: all exit criteria are 
 - **Open (asked of the human):** which demo game to build (Q-016); repo leftovers — visibility/branch protection, license, access, LFS (Q-014); TASK-### vs PB-### ids (Q-015); sprint dates (Q-002); confirmation of DEC-001…008 (Q-004); the PB-008 spike's R-3/R-4 exception (DEC-037, Q-017); the PB-011 structure choices (DEC-046, Q-019); the PB-012 loop rules (DEC-047, Q-020).
 
 ## In progress / next
+- **US-33.1 (#118): open the assistant with useful context** — Review (self), approved for push and
+  draft PR. AI menu/toolbar entry points, Ctrl+Shift+A toggle, typed Selection and Last run
+  contexts, consent-aware diagnosis routing and AI-and-Privacy settings navigation are covered by
+  focused headless tests. #72's public interfaces are unchanged; #71/#119/#120/#121 remain separate.
 - **US-24.1 (#104): structured Console logging** — Review. Canonical `LogEntry` and optional `ILogSink` in `engine/core`; window-free owning `ConsoleModel`, non-mutating filters/search/collapse, selection/details, Error Pause and Play lifecycle seams, external-editor and entity navigation abstractions in `editor_core`; ImGui Console panel filled. DEC-068 is carried for PR review. US-17.2 (#85) calls the implemented Play start/stop seam when its controller lands.
 - **US-11.2 (#72): read-only assistant and configured AI service** — Done (PR #141). `aegis::assistant` exposes only read-only Semantic Graph input and text output, obtains responses through AgentBridge, cancels streaming safely, and persists `AEGIS_CHAT 1` histories under an injected user-local project path. #71, #119 and #121 remain separate.
 - **US-14.2 (#78): status bar with the editor's current state** — Done (PR #138). `EditorStatus` and `buildStatusBar()` in `editor_core` (srs.fr.14.7 to 14.11); clicking the message opens the Console. The AI service and REC clicks wait for US-33.5 and EP-30; the sources (Console, Play mode, scenes, telemetry, debug flags) fill `EditorStatus` in their stories.

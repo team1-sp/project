@@ -402,3 +402,29 @@
 - **Next:** merge current `origin/main`, renumber collided records, rerun verification, push the approved merge resolution, and review PR #142.
 - **Traps:** #85 must call `onPlayStarted()`/`onPlayStopped()` at its Play transitions. Collapse includes tick, stack, source and entity, so same text at different ticks stays separate. `AEGIS_CODE_EDITOR` overrides the default `code` executable.
 - **Records:** DEC-068 (Accepted in the PR, for review); PRB-003 occurrence.
+
+---
+
+### HND-032 — AI Assistant Editor entry points (US-33.1)
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/118-assistant
+- **Task:** TASK-022, GitHub #118
+- **Goal:** Implement the five AI Editor entry points without taking ownership of grounded answers,
+  full chat/context management, consent-dialog internals, settings internals or new transport.
+- **Result:** Done locally; awaiting human approval to commit, push and open the draft PR.
+- **Files changed:** `editor_core` assistant entry-point/selection seams, existing menu/toolbar and
+  thin ImGui shell, focused tests/CMake, and mandatory agent records.
+- **Verified:** targeted Editor CTest 31/31; complete headless CTest 163/163; macOS `editor` build;
+  two-tick windowed smoke run; clang-format 19 dry run; include, ID and Markdown-link checks; diff
+  check. All passed. No Python files changed.
+- **Not verified:** interactive clicking/focus on Windows or macOS; CI and Windows compiler pending
+  the PR. Typed event/finding and run-report producers await their owning stories.
+- **Repo state:** branch `feat/118-open-ai-assistant`; clean builds/tests; changes uncommitted by
+  DEC-053/058 until the human approves the completed diff.
+- **Next:** approve the diff; merge latest `origin/main` if it moved; commit, push, run
+  `tools/open_pr.py` with the requested title/body, and check CI.
+- **Traps:** Diagnose has no AgentBridge/assistant dependency; it can route only through
+  `IConsentAwareQuestionSender`. #72's public interfaces were not changed.
+- **Records:** PRB-003 repeat occurrence; no decision or open question created.
+
+---

@@ -162,16 +162,37 @@ Menu runMenu() {
 }
 
 // D-07.
-Menu aiMenu() {
+Menu aiMenu(IEditorActions& actions) {
+    MenuEntry openAssistant;
+    openAssistant.command.label = "Open Assistant";
+    openAssistant.command.enabled = always;
+    openAssistant.command.run = [&actions] { actions.openAssistant(); };
+
+    MenuEntry askAboutSelection;
+    askAboutSelection.command.label = "Ask about Selection";
+    askAboutSelection.command.enabled = [&actions] { return actions.canAskAboutSelection(); };
+    askAboutSelection.command.run = [&actions] { actions.askAboutSelection(); };
+
+    MenuEntry diagnoseLastRun;
+    diagnoseLastRun.command.label = "Diagnose Last Run";
+    diagnoseLastRun.command.enabled = [&actions] { return actions.canDiagnoseLastRun(); };
+    diagnoseLastRun.command.run = [&actions] { actions.diagnoseLastRun(); };
+
+    MenuEntry aiSettings;
+    aiSettings.command.label = "AI Settings...";
+    aiSettings.command.enabled = always;
+    aiSettings.command.run = [&actions] { actions.openAiSettings(); };
+    aiSettings.separatorBefore = true;
+
     return Menu{"AI",
                 {
-                    notBuilt("Open Assistant"),
-                    notBuilt("Ask about Selection"),
-                    notBuilt("Diagnose Last Run"),
+                    std::move(openAssistant),
+                    std::move(askAboutSelection),
+                    std::move(diagnoseLastRun),
                     notBuilt("Open Semantic Graph", std::nullopt, true),
                     notBuilt("Rebuild Graph"),
                     notBuilt("Export Graph..."),
-                    notBuilt("AI Settings...", std::nullopt, true),
+                    std::move(aiSettings),
                 }};
 }
 
@@ -248,14 +269,14 @@ std::vector<Menu> buildMainMenu(IEditorActions& actions) {
     menus.push_back(entityMenu());
     menus.push_back(componentMenu());
     menus.push_back(runMenu());
-    menus.push_back(aiMenu());
+    menus.push_back(aiMenu(actions));
     menus.push_back(windowMenu(actions));
     menus.push_back(helpMenu());
     return menus;
 }
 
-std::vector<Command> buildToolbar() {
-    return {
+std::vector<Command> buildToolbar(IEditorActions& actions) {
+    std::vector<Command> commands = {
         toolbarCommand("Hand", plain(Key::Q)),
         toolbarCommand("Move", plain(Key::W)),
         toolbarCommand("Rotate", plain(Key::E)),
@@ -269,6 +290,9 @@ std::vector<Command> buildToolbar() {
         toolbarCommand("Step", Shortcut{Key::P, true, false, true}),
         toolbarCommand("AI Assistant", ctrlShift(Key::A)),
     };
+    commands.back().enabled = always;
+    commands.back().run = [&actions] { actions.toggleAssistant(); };
+    return commands;
 }
 
 } // namespace editor

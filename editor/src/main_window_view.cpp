@@ -67,6 +67,7 @@ void buildDefaultLayout(ImGuiID dockSpaceId, const ImGuiViewport& viewport) {
     ImGui::DockBuilderDockWindow(panelName(Panel::Scene), centre);
     ImGui::DockBuilderDockWindow(panelName(Panel::Game), centre);
     ImGui::DockBuilderDockWindow(panelName(Panel::Inspector), right);
+    ImGui::DockBuilderDockWindow("AI Assistant", right);
     ImGui::DockBuilderDockWindow(panelName(Panel::Project), bottom);
     ImGui::DockBuilderDockWindow(panelName(Panel::Console), bottom);
     ImGui::DockBuilderFinish(dockSpaceId);
@@ -75,19 +76,23 @@ void buildDefaultLayout(ImGuiID dockSpaceId, const ImGuiViewport& viewport) {
 } // namespace
 
 MainWindowView::MainWindowView(EditorSession& session, const EditorStatus& status,
-                               ConsoleModel& console, IExternalCodeEditor& externalEditor,
+                               ConsoleModel& console, AssistantEntryPoints& assistant,
+                               ProjectSettingsState& projectSettings,
+                               IExternalCodeEditor& externalEditor,
                                IEntityNavigator& entityNavigator, CloseEditor closeEditor,
                                SetTitle setTitle)
     : session_(session)
     , status_(status)
     , console_(console)
+    , assistant_(assistant)
+    , projectSettings_(projectSettings)
     , externalEditor_(externalEditor)
     , entityNavigator_(entityNavigator)
     , closeEditor_(std::move(closeEditor))
     , setTitle_(std::move(setTitle))
     , platform_(currentPlatform())
     , menus_(buildMainMenu(*this))
-    , toolbar_(buildToolbar()) {
+    , toolbar_(buildToolbar(*this)) {
 }
 
 void MainWindowView::draw() {
@@ -101,12 +106,20 @@ void MainWindowView::draw() {
     for (const Menu& menu : menus_) {
         runShortcuts(menu.entries);
     }
+    for (const Command& command : toolbar_) {
+        const std::optional<Shortcut> shortcut = command.shortcutOn(platform_);
+        if (shortcut && command.isEnabled() &&
+            ImGui::Shortcut(keyChord(*shortcut), ImGuiInputFlags_RouteGlobal)) {
+            command.run();
+        }
+    }
     drawMenuBar();
     // The toolbar and the status bar take their height off the main viewport's work area first,
     // so the dock space fills what is left between them.
     drawToolbar();
     drawStatusBar();
     drawPanels();
+    drawProjectSettings();
     if (frameIndex_ < 2) {
         ++frameIndex_;
     }
@@ -120,6 +133,34 @@ void MainWindowView::exit() {
 
 void MainWindowView::showPanel(Panel panel) {
     panelToFocus_ = panel;
+}
+
+void MainWindowView::openAssistant() {
+    assistant_.openAssistant();
+}
+
+void MainWindowView::toggleAssistant() {
+    assistant_.toggleAssistant();
+}
+
+bool MainWindowView::canAskAboutSelection() const {
+    return assistant_.canAskAboutSelection();
+}
+
+void MainWindowView::askAboutSelection() {
+    assistant_.askAboutSelection();
+}
+
+bool MainWindowView::canDiagnoseLastRun() const {
+    return assistant_.canDiagnoseLastRun();
+}
+
+void MainWindowView::diagnoseLastRun() {
+    assistant_.diagnoseLastRun();
+}
+
+void MainWindowView::openAiSettings() {
+    assistant_.openAiSettings();
 }
 
 void MainWindowView::updateTitle() {
@@ -457,6 +498,73 @@ void MainWindowView::drawPanels() {
             }
         }
         ImGui::End();
+    }
+    drawAssistantPanel();
+}
+
+void MainWindowView::drawAssistantPanel() {
+    if (!assistant_.isAssistantOpen()) {
+        return;
+    }
+
+    const bool focusMessageBox = assistant_.takeMessageBoxFocusRequest();
+    if (focusMessageBox) {
+        ImGui::SetNextWindowFocus();
+    }
+    bool open = true;
+    if (ImGui::Begin("AI Assistant", &open)) {
+        for (const AssistantContext& context : assistant_.attachedContexts()) {
+            ImGui::TextUnformatted(std::holds_alternative<SelectionContext>(context) ? "Selection"
+                                                                                     : "Last run");
+            ImGui::SameLine();
+        }
+        if (!assistant_.attachedContexts().empty()) {
+            ImGui::NewLine();
+        }
+
+        const std::string& draft = assistant_.messageDraft();
+        if (draft != shownAssistantDraft_) {
+            shownAssistantDraft_ = draft;
+            std::fill(assistantDraft_.begin(), assistantDraft_.end(), '\0');
+            const std::size_t count = std::min(draft.size(), assistantDraft_.size() - 1);
+            std::copy_n(draft.data(), count, assistantDraft_.data());
+        }
+        if (focusMessageBox) {
+            ImGui::SetKeyboardFocusHere();
+        }
+        if (ImGui::InputTextMultiline("##AssistantMessage", assistantDraft_.data(),
+                                      assistantDraft_.size(), ImVec2(-FLT_MIN, 90.0F))) {
+            shownAssistantDraft_ = assistantDraft_.data();
+            assistant_.setMessageDraft(shownAssistantDraft_);
+        }
+    }
+    ImGui::End();
+    if (!open) {
+        assistant_.closeAssistant();
+    }
+}
+
+void MainWindowView::drawProjectSettings() {
+    if (!projectSettings_.isOpen()) {
+        return;
+    }
+    bool open = true;
+    if (ImGui::Begin("Project Settings", &open)) {
+        if (ImGui::BeginTabBar("##ProjectSettingsTabs")) {
+            const ImGuiTabItemFlags flags =
+                projectSettings_.selectedTab() == ProjectSettingsTab::AiAndPrivacy
+                    ? ImGuiTabItemFlags_SetSelected
+                    : ImGuiTabItemFlags_None;
+            if (ImGui::BeginTabItem("AI and Privacy", nullptr, flags)) {
+                ImGui::TextDisabled("AI and Privacy settings are provided by US-33.5.");
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
+    }
+    ImGui::End();
+    if (!open) {
+        projectSettings_.close();
     }
 }
 

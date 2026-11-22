@@ -14,7 +14,9 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 
+#include "editor/assistant_entry_points.hpp"
 #include "editor/console_model.hpp"
 #include "editor/editor_session.hpp"
 #include "editor/entity_navigation.hpp"
@@ -42,6 +44,26 @@ constexpr int exitCodeBadOption = 2;
 class NoProjectSimulation final : public engine::ISimulation {
 public:
     void runPhase(engine::TickPhase /*phase*/, const engine::TickContext& /*context*/) override {}
+};
+
+class NoLatestRunSource final : public editor::ILatestRunSource {
+public:
+    [[nodiscard]] std::optional<editor::LatestRun> latestRun() const override {
+        return std::nullopt;
+    }
+};
+
+// The run-report and consent-dialog stories provide the production consumer. Until both exist,
+// Diagnose Last Run is disabled because NoLatestRunSource has no report; this queue ensures a
+// future source still cannot reach an AI service except through the consent-aware seam.
+class PendingConsentQuestionQueue final : public editor::IConsentAwareQuestionSender {
+public:
+    void sendNewQuestion(editor::AssistantQuestion question) override {
+        pending_ = std::move(question);
+    }
+
+private:
+    std::optional<editor::AssistantQuestion> pending_;
 };
 
 // Fills `config` from the command line. Returns false, after naming the option on the standard
@@ -98,7 +120,11 @@ int main(int argc, char** argv) {
         }
     });
     editor::ProcessExternalCodeEditor externalEditor(configuredCodeEditor());
-    editor::EntityNavigation entityNavigation;
+    editor::EntityNavigation selection;
+    NoLatestRunSource latestRun;
+    PendingConsentQuestionQueue questions;
+    editor::ProjectSettingsState projectSettings;
+    editor::AssistantEntryPoints assistant(selection, latestRun, questions, projectSettings);
 
     engine::ApplicationConfig config;
     config.window.widthPixels = 1280;
@@ -118,7 +144,7 @@ int main(int argc, char** argv) {
 
     NoProjectSimulation simulation;
     editor::MainWindowView mainWindow(
-        session, status, console, externalEditor, entityNavigation,
+        session, status, console, assistant, projectSettings, externalEditor, selection,
         [&runningApp] { runningApp->requestClose(); },
         [&runningApp](const std::string& title) { runningApp->setWindowTitle(title); });
     engine::rendering_raylib::ImGuiRenderer renderer([&mainWindow] { mainWindow.draw(); },

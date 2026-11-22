@@ -25,6 +25,13 @@ public:
     void showPanel(Panel panel) override {
         calls.push_back(std::string("show ") + editor::panelName(panel));
     }
+    void openAssistant() override {}
+    void toggleAssistant() override {}
+    [[nodiscard]] bool canAskAboutSelection() const override { return false; }
+    void askAboutSelection() override {}
+    [[nodiscard]] bool canDiagnoseLastRun() const override { return false; }
+    void diagnoseLastRun() override {}
+    void openAiSettings() override {}
 
     std::vector<std::string> calls;
 };

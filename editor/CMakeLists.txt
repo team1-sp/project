@@ -2,6 +2,7 @@
 # (US-14.1), and the status bar's items (US-14.2). It links neither raylib nor Dear ImGui, so
 # the tests use it in every preset.
 add_library(editor_core STATIC
+    src/assistant_entry_points.cpp
     src/command.cpp
     src/console_model.cpp
     src/editor_session.cpp
