@@ -1219,7 +1219,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Decided by:** Işık Dönger (in the conversation "Make record IDs collision-free", 2026-11-22)   **Recorded by:** claude-code/opus-5.5/148-ids
 - **Human's words:** asked whether removing `leylasezer` "as a codeowner and a reviewer" needs a PR or a repository setting, then: "you can now go ahead and also create the pr for codeowners change".
 - **Context:** DEC-032 made Işık Dönger and the advisor, Leyla Sezer (`@leylasezer196`), the only code owners, so GitHub requested the advisor's review on every PR.
-- **Decision:** `.github/CODEOWNERS` lists only `@isikdonger`. The `main` ruleset stays as it is (one code-owner approval, admin bypass through a PR), so every other member's PR needs Işık's approval and his own PRs still need none. The advisor's repository access and her role as Product Owner are not changed by this entry.
+- **Decision:** `.github/CODEOWNERS` lists only `@isikdonger`. The `main` ruleset stays as it is (one code-owner approval, admin bypass through a PR), so every other member's PR needs Işık's approval and Işık's own PRs still need none. The advisor's repository access and her role as Product Owner are not changed by this entry.
 - **Rationale:** `[rationale not given beyond the words above]`
 - **Consequences:** GitHub no longer requests the advisor's review automatically; she can still review when asked, but her approval does not count toward merging. Merges of other members' PRs depend on Işık alone.
 - **Docs updated:** `.github/CODEOWNERS`, `CONTRIBUTING.md`, `guidelines/git-workflow.md`.
