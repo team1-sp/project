@@ -375,3 +375,16 @@
 - **Next:** US-24.1 sets `lastConsoleMessage`; US-17.2 sets `mode`; the scene stories set `entityCount`; US-33.5 sets the AI state and enables the AI item's click (F-04 at AI and Privacy); EP-30 enables REC's click; the debug flag story fills `activeDebugFlags`.
 - **Traps:** `EditorStatus` is read every render frame; set it from the Editor's thread only.
 - **Records:** DEC-066 (Accepted in the PR, for review).
+
+---
+
+### HND-030 — Read-only assistant and configured AI service (US-11.2)
+- **Date:** 2026-11-22
+- **Agent:** codex/gpt-5/us112
+- **Task:** US-11.2 (#72), srs.fr.11.8 to 11.12
+- **Result:** Added the window-free `aegis::assistant` core with only a const Semantic Graph view and text output. Configured requests stream through the existing AgentBridge abstraction; the optional production implementation contains gRPC/protobuf. Cancellation is idempotent before, during and after streaming. `AEGIS_CHAT 1` stores questions, complete/stopped/partial answers, citations and per-message transmitted-data categories beneath the injected user-local project path, using validated bounded parsing and safe replacement. Suggestions are marked manual text and cannot execute engine or project operations. #71, #119 and #121 remain out of scope.
+- **Verified:** warnings-as-errors builds and full CTest suites pass for headless (138/138), macOS Debug (152/152) and optional gRPC headless (138/138). clang-format 19.1.7, include policy, ID consistency, documentation links and `git diff --check` pass. Tests use fakes and require no AI service or network.
+- **Not verified:** a live configured AI service, intentionally excluded from unit tests; Windows compiler/CI until the PR runs.
+- **Next:** review DEC-067 and the PR; later stories supply Semantic Graph data (#71), chat UI (#119) and provider/settings UI (#121).
+- **Traps:** never give the assistant an engine world, project writer or shared-settings path. Preserve streaming cancellation in AgentBridge instead of adding a second transport. Do not overwrite a corrupt or unsupported chat file.
+- **Records:** DEC-067 (Accepted in the PR, for review); PRB-005 (AppleClang warning from generated protobuf headers).

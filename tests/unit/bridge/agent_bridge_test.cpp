@@ -1,6 +1,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -15,6 +16,12 @@ public:
     exchange(const engine::bridge::Observation& observation,
              std::chrono::milliseconds /*timeout*/) override {
         return {{observation.gameInstanceId, observation.sequence, 7}, {}};
+    }
+
+    [[nodiscard]] std::unique_ptr<engine::bridge::AssistantResponseStream>
+    startAssistantResponse(const engine::bridge::AssistantRequest&,
+                           std::chrono::milliseconds) override {
+        return {};
     }
 };
 
