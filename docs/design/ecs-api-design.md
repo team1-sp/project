@@ -24,9 +24,9 @@
 | # | Topic | Decision | Main reason |
 | --- | --- | --- | --- |
 | D-1 | Storage | Sparse sets: one independent pool per component type, no groups | PB-010.1 research |
-| D-2 | Identity | Two IDs: `Entity` handle `{index, generation}` for runtime storage; 64-bit `EntityId` (srs.fr.2.107) as identity. References, events, telemetry and scenes store `EntityId` | Task text + SRS |
+| D-2 | Identity | Two IDs: `Entity` handle `{index, generation}` for runtime storage; 64-bit `EntityId` (srs.fr.2.104) as identity. References, events, telemetry and scenes store `EntityId` | Task text + SRS |
 | D-3 | Order | Every query iterates in ascending `EntityId`. Pools use swap-and-pop during command playback and each pool touched is **sorted once at the end of playback**, so pools are always sorted when systems run | Coding standard rule 6 (DEC-031); a sorted insert per command would shift the pool on most gameplay changes (§6) |
-| D-4 | Structural changes | Systems and event handlers record them in a `CommandBuffer`, played back **at the end of each tick phase, after event dispatch**. Direct `World` calls only outside system execution | srs.fr.2.119, E-003 |
+| D-4 | Structural changes | Systems and event handlers record them in a `CommandBuffer`, played back **at the end of each tick phase, after event dispatch**. Direct `World` calls only outside system execution | srs.fr.2.116, E-003 |
 | D-5 | Create during a tick | `commands.createEntity()` assigns handle and `EntityId` **now**; components appear at playback | Deterministic IDs, usable references |
 | D-6 | Reflection | Registration builder with member pointers, no macros. Each field is stored as `{offset, FieldType, count}`; only managed fields get type-erased accessors | Coding standard §4 "avoid macros"; per-tick telemetry, snapshots and the AI bridge read fields without indirect calls (§11) |
 | D-7 | Type key | `static constexpr std::string_view typeName` in every ECS type, hashed at compile time | Stable across runs and DLLs (skypjack part 8) |
@@ -37,7 +37,7 @@
 | D-12 | Entity data | `World` keeps `EntityId`, generation, enabled flag; name, tag, layer, hierarchy, source scene are built-in components | Same storage, reflection, saving |
 | D-13 | Component enabled flag | Parallel flag array in each pool; Position and Velocity have none | srs.fr.2.11 |
 | D-14 | Component kinds | **Unmanaged** (trivially copyable) and **managed** (owns heap memory), auto-detected | Unity-like split |
-| D-15 | Query API | `each<Ts...>(fn)` plus `query<Ts...>()` builder with `with / without / withTag / withLayer` | srs.fr.2.57 |
+| D-15 | Query API | `each<Ts...>(fn)` plus `query<Ts...>()` builder with `with / without / withTag / withLayer` | srs.fr.2.56 |
 | D-16 | Singletons | Singleton components on engine-created, runtime-only entities; `single<T>()` | Unity style |
 | D-17 | Tags | `<Name>Tag`, empty structs, no storage | Coding standard §2 (DEC-044) |
 | D-18 | Dead references | Cleared **eagerly** through reflection when destructions are played back | srs.fr.2.44 |
@@ -88,7 +88,7 @@ struct Entity {
 };
 inline constexpr Entity nullEntity{};
 
-// The entity's identity (srs.fr.2.107). Never reused in a run or editing session (srs.fr.2.2).
+// The entity's identity (srs.fr.2.104). Never reused in a run or editing session (srs.fr.2.2).
 // 0 = no entity (empty reference); 1 … 2^32 − 1 Editor range; 2^32 and above runtime range.
 enum class EntityId : std::uint64_t {};
 inline constexpr EntityId noEntity{0};
@@ -114,7 +114,7 @@ nextRuntimeId_ : EntityId                  reset to firstRuntimeEntityId at ever
 - **Create:** take an index from the free list or append one; record the `EntityId` (given by the caller or the next runtime ID).
 - **Destroy:** increment the slot's generation, so every handle to it becomes stale; put the index on the free list. A slot whose generation would wrap past 2³² − 1 is retired instead of reused.
 - **isAlive(e):** `e.index < slots_.size() && slots_[e.index].alive && slots_[e.index].generation == e.generation`.
-- **Runtime IDs** (srs.fr.2.65): increasing from `firstRuntimeEntityId` in every run, so runs of the same content give the same IDs. **Editor IDs** (srs.fr.2.64, the watermark) are allocated by the Editor and passed in; the ECS only checks they are unused. ID collisions on scene load (srs.fr.2.66) are the scene loader's job; it uses `find()` and `allocateRuntimeId()`.
+- **Runtime IDs** (srs.fr.2.63): increasing from `firstRuntimeEntityId` in every run, so runs of the same content give the same IDs. **Editor IDs** (srs.fr.2.62, the watermark) are allocated by the Editor and passed in; the ECS only checks they are unused. ID collisions on scene load (srs.fr.2.64) are the scene loader's job; it uses `find()` and `allocateRuntimeId()`.
 - Handle indices are reused in any order without affecting determinism: nothing observable depends on them, because pools are ordered by `EntityId` (D-3).
 
 ## 5. World API
@@ -126,14 +126,14 @@ public:
 
     // Entities. Direct calls are for loading, the Editor and tests; systems use the
     // CommandBuffer (§9). Calling these while a system runs is an error (§10).
-    Entity createEntity();                        // next runtime EntityId (srs.fr.2.65)
+    Entity createEntity();                        // next runtime EntityId (srs.fr.2.63)
     Entity createEntity(EntityId id);             // explicit ID (scene load, Editor)
     void destroyEntity(Entity e);                 // with all descendants (srs.fr.2.4)
     bool isAlive(Entity e) const;
     std::optional<Entity> find(EntityId id) const;
     EntityId idOf(Entity e) const;
     EntityId allocateRuntimeId();
-    void setEnabled(Entity e, bool enabled);      // not structural (srs.fr.2.119)
+    void setEnabled(Entity e, bool enabled);      // not structural (srs.fr.2.116)
     bool isEnabled(Entity e) const;
     void setParent(Entity child, Entity parent);  // nullEntity makes it a root
 
@@ -161,7 +161,7 @@ public:
 
     // Runs.
     void beginRun();                              // resets the runtime ID counter
-    void endRun();                                // drops queued events (srs.fr.2.102)
+    void endRun();                                // drops queued events (srs.fr.2.99)
 
     // Snapshots (D-24). Design of the format, Play mode and Editor undo: separate document.
     WorldSnapshot snapshot() const;               // entity table, pools, ID counters, event queues
@@ -192,8 +192,8 @@ struct NameComponent {                 // unmanaged, so every built-in pool can 
 struct EntityInfoComponent {           // unmanaged
     static constexpr std::string_view typeName = "EntityInfo";
     TagId tag = untaggedTag;           // one value from the project's tag list (srs.fr.2.53)
-    std::uint8_t layer = 0;            // 0 … 31, 0 = Default (srs.fr.2.54, 2.82)
-    AssetId sourceScene{};             // srs.fr.2.85
+    std::uint8_t layer = 0;            // 0 … 31, 0 = Default (srs.fr.2.54, 2.80)
+    AssetId sourceScene{};             // srs.fr.2.83
 };
 
 struct HierarchyComponent {            // unmanaged; links are EntityIds (D-2)
@@ -268,7 +268,7 @@ ctx.each<const VelocityComponent, PositionComponent>(
 ctx.query<HealthComponent>()
     .with<PlayerInputComponent>()          // must also have it; no parameter
     .without<InvulnerableTag>()            // must not have it
-    .withTag(playerTag)                    // srs.fr.2.57
+    .withTag(playerTag)                    // srs.fr.2.56
     .withLayer(2)
     .each([](Entity e, HealthComponent& health) { /* ... */ });
 ```
@@ -293,7 +293,7 @@ public:
 2. Iterates in **ascending `EntityId`** (rule 6). The smallest of the `Ts` pools drives the loop. Every pool is sorted the same way, so the output is ascending.
 3. Results are never cached; each call reads the pools as they are (ecs-design.md §5).
 4. No structural change can happen during the loop: systems only record commands. A direct `World` structural call during iteration is an error.
-5. Disabling an entity sets its flag at once (`isEnabled` and handlers see it), but **queries see it from the next system on** (srs.fr.2.119). The table keeps a separate `queryEnabled` flag. `setEnabled` changes `enabled` and appends the entity to a short pending list; the scheduler applies that list to `queryEnabled` at one fixed point, before each system's `update()` and before each event handler call. A query that is already running never sees a change, and no check of "is a query running" is needed.
+5. Disabling an entity sets its flag at once (`isEnabled` and handlers see it), but **queries see it from the next system on** (srs.fr.2.116). The table keeps a separate `queryEnabled` flag. `setEnabled` changes `enabled` and appends the entity to a short pending list; the scheduler applies that list to `queryEnabled` at one fixed point, before each system's `update()` and before each event handler call. A query that is already running never sees a change, and no check of "is a query running" is needed.
 
 ```
 each<A, B, C>(fn):
@@ -399,7 +399,7 @@ public:
 **Run order** (srs.fr.2.50, 2.51), computed per phase:
 
 1. A system in a group takes the group's phase. A system that names a different phase is refused. `PhysicsStep` accepts no systems.
-2. A rule that names a group applies to every member of the group. A rule against a system in another phase is ignored if the phase order already satisfies it, and refused if it contradicts it. A rule that names an unknown system is ignored with a warning (srs.fr.2.105).
+2. A rule that names a group applies to every member of the group. A rule against a system in another phase is ignored if the phase order already satisfies it, and refused if it contradicts it. A rule that names an unknown system is ignored with a warning (srs.fr.2.102).
 3. **Stable topological sort** (Kahn's algorithm): among the systems whose predecessors have all been placed, take the one that comes first in the manual order (initially registration order). This keeps the user's order wherever the rules allow.
 4. If systems are left over, the rules form a cycle: the new order is refused, the last valid order is kept, and the systems in the cycle are reported.
 5. Disabled systems and groups keep their place in the order; they are skipped when the phase runs.
@@ -432,7 +432,7 @@ runPhase(phase):
         if enabled: system.update(ctx)       commands are only recorded
     events.dispatch(phase)                    handlers run; their commands join the same buffer
     commands.playback()                       structural changes become visible
-    observers: bodies of destroyed/disabled entities are disabled (srs.fr.2.119)
+    observers: bodies of destroyed/disabled entities are disabled (srs.fr.2.116)
 ```
 
 **`createEntity()`** allocates the handle and the next runtime `EntityId` at once. It touches no pool, so it is safe during iteration, and the new `EntityId` can be stored in other components straight away. The entity has no components (not even the built-ins) until playback, so no query sees it before then. Since systems run in a fixed order, IDs are allocated in a deterministic order.
@@ -446,17 +446,17 @@ runPhase(phase):
 | `get<T>(e)`, `tryGet<T>(e)` | error / `nullptr` |
 | `setEnabled(e, …)` | applied to the slot; takes effect at playback |
 | `commands().add/remove/setParent(e, …)` | recorded as usual |
-| `commands().destroy(e)` in the same phase | create and destroy cancel out: the slot is freed at playback, the `EntityId` is never reused, no observer is notified, and reference clearing (rule 4) still clears stored copies of the ID |
+| `commands().destroy(e)` in the same phase | create and destroy cancel out: the slot is freed at playback, the `EntityId` is never reused, no observer is notified, and reference clearing (rule 4) still clears stored copies of the ID. Exception: when the same buffer also parents an entity to it, it is created and destroyed for real, so the child is destroyed with it (srs.fr.2.4, DEC-46.4) |
 
 **Playback rules:**
 
 1. Commands are applied **in recording order**.
 2. An `add` for a type the entity already has, a `remove` for a type it lacks, and any command on an entity destroyed earlier in the same playback are skipped with a warning that names the system, the entity and the type.
-3. **`destroy`:** collect the entity and its descendants (depth-first, in child order). For each one: notify the observers (the Physics Adapter disables the body now and destroys it in the next sync-in, srs.fr.2.119), unlink it from the hierarchy, remove it from every pool, and free its slot.
+3. **`destroy`:** collect the entity and its descendants (depth-first, in child order). For each one: notify the observers (the Physics Adapter disables the body now and destroys it in the next sync-in, srs.fr.2.116), unlink it from the hierarchy, remove it from every pool, and free its slot.
 4. **Reference clearing** (srs.fr.2.44, D-18): after the destructions, every reflected `EntityId` field (including elements of `std::vector<EntityId>`) that holds a destroyed ID is set to `noEntity`. At `finalize()` the registry builds the list of `(type, field offset)` pairs that hold `EntityRef` fields; playback walks only those pools, reads the field at its offset, and checks it against the sorted vector of IDs destroyed in this playback (binary search). Only phases that destroyed something do this pass.
 5. **Sort:** every pool touched by this playback is re-sorted by `EntityId` (§6), so the next phase sees sorted pools.
 
-**Disable** is not a command. `ctx.setEnabled(e, false)` sets the flag at once, queries see it from the next query, and the body follows at the end of the phase (srs.fr.2.119, 2.120).
+**Disable** is not a command. `ctx.setEnabled(e, false)` sets the flag at once, queries see it from the next query, and the body follows at the end of the phase (srs.fr.2.116, 2.117).
 
 ```cpp
 class IWorldObserver {                     // engine-internal: Physics Adapter, telemetry
@@ -682,9 +682,9 @@ struct Schema {                            // plain data, no accessors
 Schema buildSchema(const TypeRegistry& types, const SystemScheduler& systems);
 ```
 
-**Where handlers run** (D-22). A handler runs at the dispatch point of the phase where its event was published, not in its system's own phase (event bus §4). Its writes therefore happen there. `runsIn` lists, for each subscription, the phases of every declared publisher of that event: systems through `publishes<E>()`, engine modules that are not systems through `types.enginePublisher(name, phase).publishes<E>()`. When a publisher is itself a handler, its events wait for the next dispatch point (srs.fr.2.78), so the next phase is listed too. In the example of the event bus document, `Collect` has phase `GameplayRules` but its `Collision` subscription has `runsIn: ["PhysicsSyncOut"]` (the `PhysicsSyncOut` system publishes `Collision`, DEC-041), which is where its `Inventory` writes happen.
+**Where handlers run** (D-22). A handler runs at the dispatch point of the phase where its event was published, not in its system's own phase (event bus §4). Its writes therefore happen there. `runsIn` lists, for each subscription, the phases of every declared publisher of that event: systems through `publishes<E>()`, engine modules that are not systems through `types.enginePublisher(name, phase).publishes<E>()`. When a publisher is itself a handler, its events wait for the next dispatch point (srs.fr.2.76), so the next phase is listed too. In the example of the event bus document, `Collect` has phase `GameplayRules` but its `Collision` subscription has `runsIn: ["PhysicsSyncOut"]` (the `PhysicsSyncOut` system publishes `Collision`, DEC-041), which is where its `Inventory` writes happen.
 
-**Flow:** the ECS builds the `Schema` (no file I/O in `engine/ecs`). The writer in `engine/telemetry` writes it as the **first record after the run header** of every telemetry file. The Semantic Architecture Layer reads only that file (R-1). Project scripts never reload during a run (srs.fr.2.40), so one schema per file is always correct. The Editor's type cache (srs.fr.2.121) can store the same structure.
+**Flow:** the ECS builds the `Schema` (no file I/O in `engine/ecs`). The writer in `engine/telemetry` writes it as the **first record after the run header** of every telemetry file. The Semantic Architecture Layer reads only that file (R-1). Project scripts never reload during a run (srs.fr.2.40), so one schema per file is always correct. The Editor's type cache (srs.fr.2.118) can store the same structure.
 
 Example (one line in the file, wrapped here):
 
@@ -710,16 +710,18 @@ The JSON-lines format follows `telemetry-and-events.md`, which is still `[PROPOS
 
 ## 13. Traceability
 
+SRS numbers follow the final SRS A (2026-11-14). The companion event bus document still uses the numbering of the 2026-11-05 draft; it is updated with US-2.8.
+
 | SRS | Where |
 | --- | --- |
-| 2.1, 2.2, 2.61, 2.64–2.66, 2.107 | §4 |
-| 2.3, 2.4, 2.44, 2.119, 2.120 | §9 |
-| 2.5, 2.53, 2.54, 2.85 | §5 built-in components |
+| 2.1, 2.2, 2.62–2.64, 2.104 | §4 |
+| 2.3, 2.4, 2.44, 2.116, 2.117 | §9 |
+| 2.5, 2.53, 2.54, 2.83 | §5 built-in components |
 | 2.6–2.10 | §5, §6 |
-| 2.11, 2.15, 2.18, 2.57 | §6, §7 |
+| 2.11, 2.15, 2.18, 2.56 | §6, §7 |
 | 2.12, 2.16, 2.36–2.39 | §8, §11, §12 |
 | 2.13, 2.14, 2.17, 2.48–2.52 | §8 |
-| 2.45–2.47, 2.77–2.84, 2.102, 2.116–2.118 | companion file |
+| 2.45–2.47, 2.75–2.82, 2.99, 2.113–2.115 | companion file |
 
 ## 14. Follow-ups this design creates
 
@@ -761,7 +763,7 @@ The team builds about 20 % of the whole project this semester (human decision, 2
 
 | Area | Phase 1 (this semester) | Later |
 | --- | --- | --- |
-| Entities | Entity table, runtime and Editor IDs, `find`/`idOf`, dense ID lookup | Hierarchy (`setParent`, recursive destroy), entity and component enabled flags |
+| Entities | Entity table, runtime and Editor IDs, `find`/`idOf`, dense ID lookup; hierarchy (`setParent`, recursive destroy); entity and component enabled flags (DEC-46.3) | — |
 | Storage | `ComponentPool<T>` with sort-at-playback, tags, unmanaged components | Managed components (`String`, `List`); in Phase 1 a list is a `FixedArray<T, N>`, e.g. the inventory |
 | Queries | `each<Ts...>` in ascending `EntityId` | `query<Ts...>()` builder (`with`, `without`, tag, layer), `includeDisabled` |
 | Systems | `ISystem`, `describe()` with phase, reads, writes, create/destroy/enable/random flags; access check; registration order inside a phase; timings; factories | Groups, `runsBefore`/`runsAfter`, manual order, cycle reporting, enable/disable of systems and groups |
@@ -772,5 +774,7 @@ The team builds about 20 % of the whole project this semester (human decision, 2
 | Physics link | Write tracking for Position/Velocity, `writeUntracked`, `PhysicsSyncIn`/`PhysicsSyncOut` systems (DEC-040, DEC-041) | Hierarchy-following transforms |
 | Time, randomness, errors | `fixedDeltaSeconds()`, `GameplayRandom` (PCG32), `RunError` | — |
 | Agent I/O and snapshot | Rules only: input is the only way in, no static state in systems, unmanaged built-ins | `AgentObservationSystem`, `snapshot()`/`restore()`, the bridge itself |
+
+DEC-46.3 (2026-11-23) moved the hierarchy and the entity and component enabled flags into Phase 1, because the Increment 1 stories US-2.1 and US-2.2 require them (srs.fr.2.4, 2.5, 2.11).
 
 Phase 1 is the critical path for the semantic layer (it needs the schema and real telemetry) and for the Increment 1 demo.
