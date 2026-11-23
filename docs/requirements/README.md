@@ -44,7 +44,11 @@ A story's heading is the subsection title in SRS 6.1; its acceptance criteria in
 
 1. A requirement change is a decision: **humans decide** (DEC-017). Code work that finds a requirement wrong or missing proposes the change in its PR: edit the requirement here and log a `DEC` that quotes the old and the new wording, listed under "Decisions for review" (DEC-052). It binds only when a human merges the PR.
 2. Keep every line shape above. One requirement is one line.
-3. **Ids are numbered from 1 without gaps** in each group and story, the SRS convention. Removing or inserting a requirement renumbers the later ones in that group, so search the repository for the old ids (`grep -rn "srs.fr.14.1[5-9]"`) and update code comments, tests and docs in the same PR.
+3. **Ids are numbered from 1 without gaps** in each group, the SRS convention, and a script keeps them that way (DEC-152.3). Never renumber by hand:
+   - **Add:** put the line where it belongs with a placeholder id in its group, `- **srs.fr.14.new** ...` (`srs.fr.14.new2` for a second one), plus its `Use cases` line.
+   - **Remove:** delete its two lines, and point any reference to it at the requirement that replaces it.
+   - **Move:** move the two lines to the other epic file.
+   - Then run `python tools/renumber_requirements.py`. It numbers every group in file order, rewrites every reference across the repository in one pass (code, tests, docs; not `docs/history/`, the handoff log or `docs/research/`), and adds the old → new table to [renumbering.md](renumbering.md). It refuses to run while a removed id is still referenced, and lists where. CI runs it with `--check`.
 4. Do not edit `team1-sp/docs`. Its Markdown and Word files are rebuilt from here only when a deliverable is submitted (S-3).
 
 ## How the docs repository uses this folder

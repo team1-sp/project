@@ -64,7 +64,7 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
    - `history/problems/` — only when you hit a problem: search the area file (and the index in its README) for the error text, the component, the symptom. If a solution exists, apply it first.
    - `troubleshooting/common-errors.md` — anticipated pitfalls.
 9. **Detect conflicts.** If a document contradicts an `Accepted` decision (including course documents), the decision wins. Do not "fix" course documents (S-3); list them for the human (see `record-decision.md`, "Course documents drift"). Fix project docs in the same task.
-10. Read the requirements the task serves: your story's section in its epic file under [`docs/requirements/functional/`](../requirements/README.md) (only that file). If a requirement looks wrong or conflicts with a decision, that is uncertainty → raise it; once a human decides, change it there in your PR ([requirements README](../requirements/README.md#changing-a-requirement)).
+10. Read the requirements the task serves: your story's section in its epic file under [`docs/requirements/functional/`](../requirements/README.md) (only that file). If a requirement looks wrong or conflicts with a decision, that is uncertainty → raise it; once a human decides, change it there in your PR and run `tools/renumber_requirements.py` ([requirements README](../requirements/README.md#changing-a-requirement)).
 11. Anything uncertain or only a human can answer → **Raising uncertainty** (above). Do not guess.
 
 ## Phase 2 — Plan (write it down)

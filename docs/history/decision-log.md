@@ -1193,3 +1193,18 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Course documents affected (for humans):** SRS 6.1, 6.3, 6.4 and 7.1–7.6 get GENERATED markers and are rebuilt from this repository by the docs-repository script.
 - **Revisit when:** the SDD outline exists, or renumbering ids causes trouble in code.
 - **Supersedes / Related:** DEC-017, DEC-022, DEC-152.1, S-3; the user's rule of 2026-11-16 on SRS changes from code work (refined by part 3).
+
+### DEC-152.3 — Requirement ids stay continuous, and a script renumbers them and their references
+- **Date:** 2026-11-24
+- **Status:** Accepted (decided in the conversation; details carried by PR #152, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (in the conversation "Bridge project docs and docs repo", 2026-11-24); the reviewer of PR #152   **Recorded by:** claude-code/opus-5.5/6r0a
+- **Human's words:** "I think all ids do need to be continous, but I also do not like rebuilding ids each time." Then: "can you make a script to run for renumbering automatically instead of an agent rebuilding it, that would work for me if it will keep the usage down enough."
+- **Context:** DEC-152.2 part 4 kept the SRS rule that ids run 1..n without gaps, which renumbers later ids on every insertion or removal; about 300 references in code, tests and docs cite these ids. Stable ids with "Removed" lines and a batch renumber at submission were offered and declined.
+- **Options considered:** (a) stable ids with gaps; (b) renumber in a batch at submission; (c) continuous ids at all times, renumbered by a script in the PR that changes a requirement.
+- **Decision:** (c). A requirement is added with a placeholder id (`srs.fr.<n>.new`), removed by deleting its lines, or moved between epic files; `tools/renumber_requirements.py` then numbers every `srs.fr` and `srs.nfr` group in file order, rewrites every changed id in one pass across tracked text files except `docs/history/`, the handoff log and `docs/research/`, and appends the old → new table to `docs/requirements/renumbering.md`. It writes nothing while a removed id is still referenced. CI runs it with `--check`, which also fails on any reference to a requirement that does not exist. User stories (`US-x.y`) are not renumbered: they name GitHub issues and branches.
+- **Rationale:** the SRS keeps its continuous numbering, and nobody (human or agent) spends effort on renumbering: one command, no AI.
+- **Consequences:** a PR that inserts a requirement early in a group touches every file that cites the later ids (a test run showed 42 files for one insertion in group 1); two PRs that change the same group at once conflict in those lines, and the later one runs the script again after merging `main`. History keeps old ids; `renumbering.md` traces them. The first `--check` found three stale references (two `srs.fr.6.10` in design docs, fixed to srs.fr.12.8; the research notes are excluded as history).
+- **Docs updated:** `requirements/README.md`, `agents/AGENT-PROTOCOL.md`, `design/{ecs-design,physics-adapter-design}.md`, `.github/workflows/ci.yml`, `tools/renumber_requirements.py` (new), `tools/check_requirements.py`.
+- **Course documents affected (for humans):** none; the SRS keeps continuous ids.
+- **Revisit when:** renumbering PRs collide often.
+- **Supersedes / Related:** refines DEC-152.2 part 4.

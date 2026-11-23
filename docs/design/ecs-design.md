@@ -35,7 +35,7 @@ Units follow [../components.md](../components.md) (DEC-036): meters, seconds, ki
 | `PlayerInputComponent` (`PlayerInput`) | `inputMap` (`AssetId`, empty = project map), `speedMetersPerSecond` | unmanaged | spawn code | PlayerMovement, Collect, Unlock, Objective |
 | `InventoryComponent` (`Inventory`) | `items` (`FixedArray<AssetId, 8>`) | unmanaged in Phase 1 | Collect | Unlock, telemetry |
 | `CollectibleComponent` (`Collectible`) | `itemId` (`AssetId`) | unmanaged | spawn code | Collect |
-| `UnlockableComponent` (`Unlockable`) | `requiredItem` (`AssetId`), `interactionRangeMeters`, `isUnlocked`, `lockedSprite`, `unlockedSprite` | unmanaged | Unlock | PhysicsSyncIn (sensor rule, srs.fr.6.10), renderer |
+| `UnlockableComponent` (`Unlockable`) | `requiredItem` (`AssetId`), `interactionRangeMeters`, `isUnlocked`, `lockedSprite`, `unlockedSprite` | unmanaged | Unlock | PhysicsSyncIn (sensor rule, srs.fr.12.8), renderer |
 | `ObjectiveComponent` (`Objective`) | none | empty, but a component (not a tag), so it can get its own enabled flag later | spawn code | Objective |
 | `InputStateComponent` (`InputState`, singleton, runtime only) | per action `pressed`, `released`, `held` bits for MoveUp, MoveDown, MoveLeft, MoveRight, Interact; `moveX`, `moveY` (movement vector, srs.fr.5.19) | unmanaged | InputApplication | PlayerMovement, Unlock, agent bridge |
 

@@ -186,3 +186,14 @@
 - **Records:** DEC-152.2, HND-152.2.
 
 ---
+
+### HND-152.3 — Continuous requirement ids kept by a script
+- **Date:** 2026-11-24
+- **Agent:** claude-code/opus-5.5/6r0a
+- **Work:** PR #152 (no issue)
+- **Result:** Done, awaiting review. `tools/renumber_requirements.py` (DEC-152.3) and its `--check` in CI.
+- **Verified:** on a copy, one placeholder inserted in group 1 → 19 ids renumbered in 42 files, code comments followed (srs.fr.1.4 → 1.5), `check_requirements.py` and `--check` pass afterwards; deleting a referenced requirement makes the script stop and list the references. On this branch `--check` passes after fixing two stale `srs.fr.6.10` references.
+- **Next:** none for this PR beyond review.
+- **Records:** DEC-152.3, HND-152.3.
+
+---

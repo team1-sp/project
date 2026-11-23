@@ -81,6 +81,7 @@ Statuses: `Proposed` (waiting for an answer; binds nobody) · `Accepted` (bindin
 | DEC-151.1 | Işık Dönger is the only code owner and approver; the advisor is no longer a code owner | Accepted | 2026-11-22 |
 | DEC-152.1 | Agents read a one-line decision index; handoffs rotate; problems split by area; closed records go to archives | Accepted | 2026-11-24 |
 | DEC-152.2 | The project owns the requirements (`docs/requirements/`); the docs repo rebuilds deliverables from it by script | Accepted | 2026-11-24 |
+| DEC-152.3 | Requirement ids stay continuous; `tools/renumber_requirements.py` renumbers them and every reference | Accepted | 2026-11-24 |
 
 ### Still open, no entry yet (do not decide silently)
 

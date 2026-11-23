@@ -13,7 +13,8 @@ non-functional/<name>.md
     `# <title>`, optional `## <subsection>` headings, and `srs.nfr.<n>.<m>` items as list lines
     or table rows.
 
-Ids are numbered from 1 without gaps in each group and story, in file order.
+Ids are numbered from 1 without gaps in each group, in file order. tools/renumber_requirements.py
+restores that after an edit (DEC-152.3).
 
 Usage: python tools/check_requirements.py [repo root]
 """
@@ -77,7 +78,7 @@ def check_functional(path, errors):
             if previous_fr:
                 errors.append(f"{where}: the requirement above needs a `  - Use cases: ...; Initial Plan: ...` line")
             if (int(match.group(1)), int(match.group(2))) != (group, expected_fr):
-                errors.append(f"{where}: expected srs.fr.{group}.{expected_fr} (ids run from 1 without gaps)")
+                errors.append(f"{where}: expected srs.fr.{group}.{expected_fr} (ids run from 1 without gaps; run `python tools/renumber_requirements.py`)")
             expected_fr = int(match.group(2)) + 1
             frs_in_story += 1
             previous_fr = True
@@ -118,7 +119,7 @@ def check_nonfunctional(paths, errors):
         groups.setdefault(group, []).append(item)
     for group, items in groups.items():
         if sorted(items) != list(range(1, len(items) + 1)):
-            errors.append(f"srs.nfr.{group}.*: ids must run from 1 without gaps, found {sorted(items)}")
+            errors.append(f"srs.nfr.{group}.*: ids must run from 1 without gaps, found {sorted(items)}; run `python tools/renumber_requirements.py`")
 
 
 def main(argv=None):
