@@ -24,7 +24,7 @@ using engine::World;
 
 // srs.fr.2.1, 2.63: runtime entities get increasing IDs from the start of the runtime range.
 TEST(World, CreateEntity_GivesIncreasingRuntimeIds) {
-    World world;
+    World world{ecs_test::types()};
 
     const Entity first = world.createEntity();
     const Entity second = world.createEntity();
@@ -37,7 +37,7 @@ TEST(World, CreateEntity_GivesIncreasingRuntimeIds) {
 
 // srs.fr.2.5: name, enabled flag, tag, layer and an optional parent, from the start.
 TEST(World, CreateEntity_HasTheBuiltInComponentsWithDefaults) {
-    World world;
+    World world{ecs_test::types()};
 
     const Entity e = world.createEntity();
 
@@ -52,7 +52,7 @@ TEST(World, CreateEntity_HasTheBuiltInComponentsWithDefaults) {
 }
 
 TEST(World, BuiltInComponents_CanBeChanged) {
-    World world;
+    World world{ecs_test::types()};
     const Entity e = world.createEntity();
 
     EXPECT_TRUE(world.get<NameComponent>(e).name.assign("Player"));
@@ -64,7 +64,7 @@ TEST(World, BuiltInComponents_CanBeChanged) {
 
 // srs.fr.2.2: a destroyed entity's ID never goes to another entity in the same run.
 TEST(World, DestroyedId_IsNotGivenToANewEntity) {
-    World world;
+    World world{ecs_test::types()};
     const Entity first = world.createEntity();
     const EntityId firstId = world.idOf(first);
 
@@ -77,7 +77,7 @@ TEST(World, DestroyedId_IsNotGivenToANewEntity) {
 }
 
 TEST(World, DestroyEntity_MakesItsHandleStale) {
-    World world;
+    World world{ecs_test::types()};
     const Entity e = world.createEntity();
 
     world.destroyEntity(e);
@@ -91,7 +91,7 @@ TEST(World, DestroyEntity_MakesItsHandleStale) {
 }
 
 TEST(World, CreateEntityWithEditorId_IsFoundByThatId) {
-    World world;
+    World world{ecs_test::types()};
 
     const Entity e = world.createEntity(editorId(42));
 
@@ -101,7 +101,7 @@ TEST(World, CreateEntityWithEditorId_IsFoundByThatId) {
 
 // srs.fr.2.1: no two loaded entities share an ID.
 TEST(World, CreateEntityWithAnIdInUse_IsRefused) {
-    World world;
+    World world{ecs_test::types()};
     world.createEntity(editorId(42));
 
     EXPECT_THROW(world.createEntity(editorId(42)), RunError);
@@ -111,7 +111,7 @@ TEST(World, CreateEntityWithAnIdInUse_IsRefused) {
 
 // srs.fr.2.63, 2.104: a runtime-range ID must come from allocateRuntimeId().
 TEST(World, CreateEntityWithAnUnreservedRuntimeId_IsRefused) {
-    World world;
+    World world{ecs_test::types()};
 
     EXPECT_THROW(world.createEntity(engine::firstRuntimeEntityId), RunError);
 
@@ -123,7 +123,7 @@ TEST(World, CreateEntityWithAnUnreservedRuntimeId_IsRefused) {
 
 // srs.fr.2.63: runs of the same content give the same IDs.
 TEST(World, BeginRun_StartsRuntimeIdsAgain) {
-    World world;
+    World world{ecs_test::types()};
     world.createEntity(editorId(1));
     const Entity runtime = world.createEntity();
     world.destroyEntity(runtime);
@@ -135,15 +135,15 @@ TEST(World, BeginRun_StartsRuntimeIdsAgain) {
 
 // srs.fr.2.2: restarting runtime IDs while a runtime entity lives would reuse its ID.
 TEST(World, BeginRunWithALiveRuntimeEntity_IsRefused) {
-    World world;
+    World world{ecs_test::types()};
     world.createEntity();
 
     EXPECT_THROW(world.beginRun(), RunError);
 }
 
 TEST(World, TwoWorlds_GiveTheSameIdsForTheSameCalls) {
-    World a;
-    World b;
+    World a{ecs_test::types()};
+    World b{ecs_test::types()};
     std::vector<EntityId> idsA;
     std::vector<EntityId> idsB;
 
@@ -161,7 +161,7 @@ TEST(World, TwoWorlds_GiveTheSameIdsForTheSameCalls) {
 
 // srs.fr.2.5, 2.116: the enabled flag changes at once and observers hear about it.
 TEST(World, SetEnabled_ChangesTheFlagAndTellsObserversOnce) {
-    World world;
+    World world{ecs_test::types()};
     RecordingObserver observer;
     world.addObserver(observer);
     const Entity e = world.createEntity();
@@ -177,7 +177,7 @@ TEST(World, SetEnabled_ChangesTheFlagAndTellsObserversOnce) {
 
 // The pools stay in ascending EntityId, whatever order entities are created in (D-3).
 TEST(World, EntitiesCreatedOutOfIdOrder_AreKeptInIdOrderInThePools) {
-    World world;
+    World world{ecs_test::types()};
     world.createEntity(editorId(30));
     world.createEntity(editorId(10));
     world.createEntity(editorId(20));

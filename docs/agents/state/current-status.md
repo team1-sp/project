@@ -11,7 +11,7 @@ Increment 1 (prototype): the Increment 1 stories (SRS B) are the issues in the I
 | Area | Where | State |
 | --- | --- | --- |
 | Engine core | `engine/core` | Fixed game loop with the seven tick phases, windowed and headless runs, pause/resume/step, input sources, structured logging. `ISimulation` waits for the ECS. |
-| ECS | `engine/ecs` | Entities with Editor- and runtime-range IDs, the hierarchy, the enabled flag and the built-in Name, EntityInfo and Hierarchy components in sorted sparse-set pools; `CommandBuffer` for deferred creation, destruction and parenting (US-2.1). Components, systems and queries, and events come with US-2.2, US-2.3 and US-2.8; `ISimulation` is not backed by the ECS yet. |
+| ECS | `engine/ecs` | Entities with Editor- and runtime-range IDs, the hierarchy, the enabled flag and the built-in Name, EntityInfo and Hierarchy components in sorted sparse-set pools; `CommandBuffer` for deferred creation, destruction and parenting (US-2.1). `TypeRegistry` with each component type's semantic description and field layout, Position and Velocity, adding, removing, reading and changing components with their enabled flags, also through the `CommandBuffer` (US-2.2). Systems and queries, and events come with US-2.3 and US-2.8; `ISimulation` is not backed by the ECS yet. |
 | Physics | `engine/physics`, `engine/physics-box2d` | `IPhysicsAdapter` interface; Box2D is built and linked in `physics-box2d`, the adapter implementation is still to come. |
 | Rendering | `engine/rendering-raylib` | Raylib window behind the rendering abstraction; never initialised headless. |
 | AgentBridge | `engine/bridge`, `proto/` | Engine side of the gRPC/protobuf contract to the Python AI service (localhost only for the prototype). |

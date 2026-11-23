@@ -9,7 +9,9 @@ namespace engine {
 
 // Text of at most N bytes (UTF-8) stored inside the object, so a component that holds it stays
 // trivially copyable (an unmanaged component, D-14) and its pool can be copied as raw memory.
-// Unused bytes are always zero, so two equal strings are also equal byte for byte.
+// Unused bytes are always zero, so two equal strings are also equal byte for byte. The layout is
+// fixed, N chars followed by the length byte, because reflection reads and writes it as raw bytes
+// (field.cpp).
 template <std::size_t N>
 class FixedString {
     static_assert(N > 0 && N <= 255, "the length is stored in one byte");

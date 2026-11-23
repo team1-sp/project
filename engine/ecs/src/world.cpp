@@ -15,6 +15,17 @@ std::string text(EntityId id) {
 
 } // namespace
 
+World::World(const TypeRegistry& types)
+    : types_(types) {
+    if (!types.isFinalized()) {
+        throw RunError("World: the type registry must be finalized first");
+    }
+    for (const ComponentTypeInfo& info : types.components()) {
+        pools_.push_back(types.makePool(info));
+    }
+    hierarchies_ = &typedPool<HierarchyComponent>("World");
+}
+
 Entity World::createEntity() {
     return createEntity(allocateRuntimeId());
 }
@@ -61,6 +72,21 @@ void World::setParent(Entity child, Entity parent) {
     link(child, parent);
 }
 
+const IComponentPool* World::pool(TypeId type) const {
+    const ComponentTypeInfo* info = types_.find(type);
+    return info == nullptr ? nullptr : pools_[info->index].get();
+}
+
+void World::forEachComponent(
+    Entity e, const std::function<void(const ComponentTypeInfo&, const void*)>& fn) const {
+    checkAlive(e, "World::forEachComponent");
+    for (const ComponentTypeInfo& info : types_.components()) {
+        if (const void* component = pools_[info.index]->rawOf(e)) {
+            fn(info, component);
+        }
+    }
+}
+
 void World::beginRun() {
     if (entities_.hasAliveRuntimeEntity()) {
         throw RunError("World::beginRun: entities with runtime IDs from an earlier run are still "
@@ -83,18 +109,30 @@ void World::checkNewId(EntityId id, std::string_view operation) const {
     }
     if (id >= firstRuntimeEntityId) {
         if (!entities_.isReservedRuntimeId(id)) {
-            throw RunError(std::string(operation) + ": " + text(id) +
+            throw RunError(std::string(operation) + ": " + engine::text(id) +
                            " is in the runtime range but was not reserved with "
                            "allocateRuntimeId(), or an entity already used it");
         }
     } else if (entities_.find(id)) {
-        throw RunError(std::string(operation) + ": " + text(id) +
+        throw RunError(std::string(operation) + ": " + engine::text(id) +
                        " is already used by a loaded entity");
     }
 }
 
-std::string World::missingComponentMessage(Entity e, std::string_view type) const {
-    return "World::get: " + text(entities_.idOf(e)) + " has no " + std::string(type) + " component";
+std::string World::text(Entity e) const {
+    return engine::text(entities_.idOf(e));
+}
+
+void World::notifyAdded(Entity e, TypeId type) {
+    for (IWorldObserver* observer : observers_) {
+        observer->onComponentAdded(e, type);
+    }
+}
+
+void World::notifyRemoved(Entity e, TypeId type) {
+    for (IWorldObserver* observer : observers_) {
+        observer->onComponentRemoved(e, type);
+    }
 }
 
 Entity World::reserveEntity() {
@@ -102,9 +140,9 @@ Entity World::reserveEntity() {
 }
 
 void World::addBuiltIns(Entity e, EntityId id) {
-    names_.add(e, id, NameComponent{});
-    infos_.add(e, id, EntityInfoComponent{});
-    hierarchies_.add(e, id, HierarchyComponent{});
+    typedPool<NameComponent>("World").add(e, id, NameComponent{});
+    typedPool<EntityInfoComponent>("World").add(e, id, EntityInfoComponent{});
+    hierarchies_->add(e, id, HierarchyComponent{});
 }
 
 void World::destroyTree(Entity root) {
@@ -117,8 +155,8 @@ void World::destroyTree(Entity root) {
         }
     }
     for (const Entity e : subtree_) {
-        for (IComponentPool* pool : pools_) {
-            pool->removeIfPresent(e);
+        for (const std::unique_ptr<IComponentPool>& components : pools_) {
+            components->removeIfPresent(e);
         }
         entities_.destroy(e);
     }
@@ -128,9 +166,8 @@ std::optional<std::string> World::parentProblem(Entity child, Entity parent) con
     if (!entities_.isAlive(child)) {
         return "the child handle is not alive";
     }
-    const HierarchyComponent* childLinks = hierarchies_.tryGet(child);
-    if (childLinks == nullptr) {
-        return text(entities_.idOf(child)) + " has no Hierarchy component yet";
+    if (!hierarchies_->contains(child)) {
+        return text(child) + " has no Hierarchy component yet";
     }
     if (parent == nullEntity) {
         return std::nullopt;
@@ -138,15 +175,15 @@ std::optional<std::string> World::parentProblem(Entity child, Entity parent) con
     if (!entities_.isAlive(parent)) {
         return "the parent handle is not alive";
     }
-    if (!hierarchies_.contains(parent)) {
-        return text(entities_.idOf(parent)) + " has no Hierarchy component yet";
+    if (!hierarchies_->contains(parent)) {
+        return text(parent) + " has no Hierarchy component yet";
     }
     // `parent` must not be `child` or one of its descendants: walk up from `parent`.
     const EntityId childId = entities_.idOf(child);
     for (EntityId ancestor = entities_.idOf(parent); ancestor != noEntity;
-         ancestor = hierarchies_.tryGet(linked(ancestor))->parent) {
+         ancestor = hierarchies_->tryGet(linked(ancestor))->parent) {
         if (ancestor == childId) {
-            return text(entities_.idOf(parent)) + " cannot become the parent of " + text(childId) +
+            return text(parent) + " cannot become the parent of " + engine::text(childId) +
                    ", because it is that entity or one of its descendants";
         }
     }
@@ -182,7 +219,7 @@ void World::link(Entity child, Entity parent) {
 }
 
 void World::unlink(Entity child) {
-    HierarchyComponent* childLinks = hierarchies_.tryGet(child);
+    HierarchyComponent* childLinks = hierarchies_->tryGet(child);
     if (childLinks == nullptr || childLinks->parent == noEntity) {
         return;
     }
@@ -205,15 +242,16 @@ Entity World::linked(EntityId id) const {
     const std::optional<Entity> e = entities_.find(id);
     if (!e) {
         // setParent() and destroyTree() keep every link pointing at a live entity.
-        throw RunError("World: a hierarchy link points at " + text(id) + ", which is not loaded");
+        throw RunError("World: a hierarchy link points at " + engine::text(id) +
+                       ", which is not loaded");
     }
     return *e;
 }
 
 HierarchyComponent& World::hierarchyOf(Entity e) {
-    HierarchyComponent* links = hierarchies_.tryGet(e);
+    HierarchyComponent* links = hierarchies_->tryGet(e);
     if (links == nullptr) {
-        throw RunError("World: " + text(entities_.idOf(e)) + " has no Hierarchy component");
+        throw RunError("World: " + text(e) + " has no Hierarchy component");
     }
     return *links;
 }
@@ -227,13 +265,13 @@ void World::collectSubtree(Entity root) {
         const Entity e = pending_.back();
         pending_.pop_back();
         subtree_.push_back(e);
-        const HierarchyComponent* links = hierarchies_.tryGet(e);
+        const HierarchyComponent* links = hierarchies_->tryGet(e);
         if (links == nullptr) {
             continue; // created by a CommandBuffer and not played back: no children
         }
         const std::size_t firstPushed = pending_.size();
         for (EntityId child = links->firstChild; child != noEntity;
-             child = hierarchies_.tryGet(linked(child))->nextSibling) {
+             child = hierarchies_->tryGet(linked(child))->nextSibling) {
             pending_.push_back(linked(child));
         }
         std::reverse(pending_.begin() + static_cast<std::ptrdiff_t>(firstPushed), pending_.end());
@@ -241,8 +279,8 @@ void World::collectSubtree(Entity root) {
 }
 
 void World::sortPools() {
-    for (IComponentPool* pool : pools_) {
-        pool->sortIfDirty();
+    for (const std::unique_ptr<IComponentPool>& components : pools_) {
+        components->sortIfDirty();
     }
 }
 

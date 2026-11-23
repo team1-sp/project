@@ -1,8 +1,9 @@
 #pragma once
 
-#include <array>
 #include <concepts>
 #include <cstddef>
+#include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -16,34 +17,34 @@
 #include "engine/ecs/component_pool.hpp"
 #include "engine/ecs/entity.hpp"
 #include "engine/ecs/entity_table.hpp"
+#include "engine/ecs/type_id.hpp"
+#include "engine/ecs/type_registry.hpp"
 #include "engine/ecs/world_observer.hpp"
 
 namespace engine {
 
 class CommandBuffer;
 
-// The built-in component types (D-12). Until the type registry and the general component API
-// arrive with US-2.2, they are the only components a World stores.
-template <typename T>
-concept BuiltInComponent = std::same_as<T, NameComponent> || std::same_as<T, EntityInfoComponent> ||
-                           std::same_as<T, HierarchyComponent>;
-
 // Everything one simulation holds: its entities and their components (design/ecs-api-design.md
-// §3, §5). A process may hold several Worlds; nothing in a World is global or shared (D-23).
+// §3, §5). A process may hold several Worlds that share one finalized TypeRegistry; nothing in a
+// World is global or shared (D-23).
 //
 // The calls below change the World at once. They are for scene loading, the Editor and tests;
 // systems record structural changes in a CommandBuffer instead, which applies them at the end of
-// the tick phase (§9, srs.fr.2.116). Every failed precondition (a stale handle, an ID in use, a
-// missing component, a parent that would make a cycle) throws engine::RunError (D-29,
-// srs.fr.1.11), in every build.
+// the tick phase (§9, srs.fr.2.116). Every failed precondition (a stale handle, an ID in use, an
+// unregistered type, a missing or duplicate component, a parent that would make a cycle) throws
+// engine::RunError (D-29, srs.fr.1.11), in every build.
 class World {
 public:
-    World() = default;
+    // `types` must be finalized and must outlive the World. The World makes one pool per type.
+    explicit World(const TypeRegistry& types);
     World(const World&) = delete;
     World& operator=(const World&) = delete;
     World(World&&) = delete;
     World& operator=(World&&) = delete;
     ~World() = default;
+
+    [[nodiscard]] const TypeRegistry& types() const { return types_; }
 
     // --- Entities (srs.fr.2.1 to 2.5) ---
 
@@ -66,8 +67,8 @@ public:
     [[nodiscard]] std::size_t entityCount() const { return entities_.aliveCount(); }
 
     // The entity enabled flag (srs.fr.2.5). Changing it is not a structural change: the flag
-    // changes at once (srs.fr.2.116) and observers are told. Systems skip disabled entities once
-    // systems and queries exist (US-2.3, srs.fr.2.15).
+    // changes at once (srs.fr.2.116) and observers are told. It affects only this entity, not its
+    // descendants. Systems skip disabled entities once systems and queries exist (US-2.3).
     void setEnabled(Entity e, bool enabled);
     [[nodiscard]] bool isEnabled(Entity e) const;
 
@@ -75,56 +76,75 @@ public:
     // Refused when `parent` is `child` itself or one of its descendants.
     void setParent(Entity child, Entity parent);
 
-    // --- Built-in components (D-12) ---
+    // --- Components (srs.fr.2.6 to 2.12) ---
 
-    // Every entity has all three from its creation until it is destroyed, except an entity a
-    // CommandBuffer created that has not been played back yet. The Hierarchy component is
-    // read-only here: setParent() keeps its links consistent.
-    template <BuiltInComponent T>
+    // Adds a component of a registered type (srs.fr.2.6); an entity has at most one of each type
+    // (srs.fr.2.10), so adding a second is refused. A new component is enabled. Every entity
+    // already has the built-in components.
+    template <ComponentType T>
+    T& add(Entity e, T value = T{});
+    // Removes a component (srs.fr.2.7). The built-in components cannot be removed.
+    template <ComponentType T>
+    void remove(Entity e);
+
+    template <ComponentType T>
     [[nodiscard]] bool has(Entity e) const {
         checkAlive(e, "World::has");
-        return pool<T>().contains(e);
+        return typedPool<T>("World::has").contains(e);
     }
 
-    template <BuiltInComponent T>
+    // Read access (srs.fr.2.8). Null when the entity has no such component.
+    template <ComponentType T>
     [[nodiscard]] const T* tryGet(Entity e) const {
         checkAlive(e, "World::tryGet");
-        return pool<T>().tryGet(e);
+        return typedPool<T>("World::tryGet").tryGet(e);
     }
 
-    template <BuiltInComponent T>
+    // Write access (srs.fr.2.9). The Hierarchy component is read-only here: setParent() keeps its
+    // links consistent.
+    template <ComponentType T>
         requires(!std::same_as<T, HierarchyComponent>)
     [[nodiscard]] T* tryGet(Entity e) {
         return const_cast<T*>(std::as_const(*this).tryGet<T>(e));
     }
 
-    template <BuiltInComponent T>
+    template <ComponentType T>
     [[nodiscard]] const T& get(Entity e) const {
         const T* component = tryGet<T>(e);
         if (component == nullptr) {
-            throw RunError(missingComponentMessage(e, T::typeName));
+            throw RunError("World::get: " + text(e) + " has no " + std::string(T::typeName) +
+                           " component");
         }
         return *component;
     }
 
-    template <BuiltInComponent T>
+    template <ComponentType T>
         requires(!std::same_as<T, HierarchyComponent>)
     [[nodiscard]] T& get(Entity e) {
         return const_cast<T&>(std::as_const(*this).get<T>(e));
     }
 
-    // Read-only view of a component type's storage, in ascending EntityId, for code that reads
-    // every component of a type, such as telemetry and scene saving (§12).
-    template <BuiltInComponent T>
+    // The component enabled flag (srs.fr.2.11). Position, Velocity and the built-in components
+    // have none, and setting it on them is refused. Systems skip a disabled component once systems
+    // and queries exist (US-2.3).
+    template <ComponentType T>
+    void setComponentEnabled(Entity e, bool enabled);
+    template <ComponentType T>
+    [[nodiscard]] bool isComponentEnabled(Entity e) const;
+
+    // Read-only view of a type's storage, in ascending EntityId, for code that reads every
+    // component of a type, such as telemetry and scene saving (§12).
+    template <ComponentType T>
     [[nodiscard]] const ComponentPool<T>& pool() const {
-        if constexpr (std::same_as<T, NameComponent>) {
-            return names_;
-        } else if constexpr (std::same_as<T, EntityInfoComponent>) {
-            return infos_;
-        } else {
-            return hierarchies_;
-        }
+        return typedPool<T>("World::pool");
     }
+    // The same, by type ID; null for a type that is not registered.
+    [[nodiscard]] const IComponentPool* pool(TypeId type) const;
+    // Calls `fn` for each component of `e`, in registration order of the types, with the type's
+    // description and the component's raw memory (the Inspector, scene saving).
+    void
+    forEachComponent(Entity e,
+                     const std::function<void(const ComponentTypeInfo&, const void*)>& fn) const;
 
     // --- Runs ---
 
@@ -145,9 +165,32 @@ public:
 private:
     friend class CommandBuffer;
 
+    template <ComponentType T>
+    [[nodiscard]] const ComponentTypeInfo& infoOf(std::string_view operation) const {
+        const ComponentTypeInfo* info = types_.find<T>();
+        if (info == nullptr) {
+            throw RunError(std::string(operation) + ": component type " + std::string(T::typeName) +
+                           " is not registered");
+        }
+        return *info;
+    }
+
+    template <ComponentType T>
+    [[nodiscard]] const ComponentPool<T>& typedPool(std::string_view operation) const {
+        return static_cast<const ComponentPool<T>&>(*pools_[infoOf<T>(operation).index]);
+    }
+
+    template <ComponentType T>
+    [[nodiscard]] ComponentPool<T>& typedPool(std::string_view operation) {
+        return const_cast<ComponentPool<T>&>(std::as_const(*this).typedPool<T>(operation));
+    }
+
     void checkAlive(Entity e, std::string_view operation) const;
     void checkNewId(EntityId id, std::string_view operation) const;
-    [[nodiscard]] std::string missingComponentMessage(Entity e, std::string_view type) const;
+    // "entity <id>" for messages; `e` must be alive.
+    [[nodiscard]] std::string text(Entity e) const;
+    void notifyAdded(Entity e, TypeId type);
+    void notifyRemoved(Entity e, TypeId type);
 
     // An entity created by a CommandBuffer: handle and ID now, components at playback (D-5).
     Entity reserveEntity();
@@ -168,16 +211,73 @@ private:
     void sortPools();
     void warn(std::string message, EntityId id);
 
+    const TypeRegistry& types_;
     EntityTable entities_;
-    ComponentPool<NameComponent> names_;
-    ComponentPool<EntityInfoComponent> infos_;
-    ComponentPool<HierarchyComponent> hierarchies_;
-    std::array<IComponentPool*, 3> pools_{&names_, &infos_, &hierarchies_};
+    std::vector<std::unique_ptr<IComponentPool>> pools_; // by type index
+    ComponentPool<HierarchyComponent>* hierarchies_ = nullptr;
     std::vector<IWorldObserver*> observers_;
     ILogSink* logSink_ = nullptr;
     // Scratch buffers of destroyTree(), kept so that destroying allocates nothing once warm.
     std::vector<Entity> subtree_;
     std::vector<Entity> pending_;
 };
+
+// --- templates ---
+
+template <ComponentType T>
+T& World::add(Entity e, T value) {
+    checkAlive(e, "World::add");
+    const ComponentTypeInfo& info = infoOf<T>("World::add");
+    ComponentPool<T>& components = typedPool<T>("World::add");
+    if (components.contains(e)) {
+        throw RunError("World::add: " + text(e) + " already has a " + info.name + " component");
+    }
+    components.add(e, entities_.idOf(e), std::move(value));
+    components.sortIfDirty();
+    notifyAdded(e, info.id);
+    return *components.tryGet(e);
+}
+
+template <ComponentType T>
+void World::remove(Entity e) {
+    checkAlive(e, "World::remove");
+    const ComponentTypeInfo& info = infoOf<T>("World::remove");
+    if (info.builtIn) {
+        throw RunError("World::remove: " + info.name + " is a built-in component");
+    }
+    ComponentPool<T>& components = typedPool<T>("World::remove");
+    if (!components.removeIfPresent(e)) {
+        throw RunError("World::remove: " + text(e) + " has no " + info.name + " component");
+    }
+    components.sortIfDirty();
+    notifyRemoved(e, info.id);
+}
+
+template <ComponentType T>
+void World::setComponentEnabled(Entity e, bool enabled) {
+    checkAlive(e, "World::setComponentEnabled");
+    const ComponentTypeInfo& info = infoOf<T>("World::setComponentEnabled");
+    if (info.alwaysEnabled) {
+        throw RunError("World::setComponentEnabled: " + info.name +
+                       " has no enabled flag of its own");
+    }
+    ComponentPool<T>& components = typedPool<T>("World::setComponentEnabled");
+    if (!components.contains(e)) {
+        throw RunError("World::setComponentEnabled: " + text(e) + " has no " + info.name +
+                       " component");
+    }
+    components.setEnabled(e, enabled);
+}
+
+template <ComponentType T>
+bool World::isComponentEnabled(Entity e) const {
+    checkAlive(e, "World::isComponentEnabled");
+    const ComponentPool<T>& components = typedPool<T>("World::isComponentEnabled");
+    if (!components.contains(e)) {
+        throw RunError("World::isComponentEnabled: " + text(e) + " has no " +
+                       std::string(T::typeName) + " component");
+    }
+    return components.containsEnabled(e);
+}
 
 } // namespace engine

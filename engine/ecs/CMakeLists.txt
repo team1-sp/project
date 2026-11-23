@@ -4,6 +4,8 @@
 add_library(engine_ecs STATIC
     src/command_buffer.cpp
     src/entity_table.cpp
+    src/field.cpp
+    src/type_registry.cpp
     src/world.cpp
 )
 add_library(engine::ecs ALIAS engine_ecs)
