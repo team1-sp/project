@@ -30,7 +30,8 @@
 | How we fix | `troubleshooting/` |
 | What happened / why we chose | `history/` (append-only) |
 | Agent coordination | `agents/` |
-| Course deliverables | **not here** (`senior-project/docs/`); not authoritative, not edited by agents |
+| Requirements (epics, stories, FR/NFR) | `requirements/` (owned here, DEC-152.2) |
+| Course deliverables | **not here** (`team1-sp/docs`); built from this folder at submission, not edited by agents |
 
 ## 4. Entry IDs
 
@@ -67,4 +68,10 @@ See the ownership table in `docs/README.md`. When documents disagree: **`Accepte
 
 ## 8. Relationship to the course documents
 
-The Initial Plan, SRS, SDD, etc. are graded deliverables with their own rules (see `genai-usage-rules.md`). Content may be *derived* from this folder only by humans (or with GenAI disclosure). Do not paste text from here into a deliverable without following the disclosure rules.
+The Initial Plan, SRS, SDD, etc. are graded deliverables with their own rules (see `genai-usage-rules.md`). This folder owns their engineering content, and the deliverables extend from it (DEC-152.2):
+
+1. **Here (source):** engineering docs, decisions, archives, and the data the deliverables reuse in a fixed format: [`requirements/`](../requirements/README.md). Normal work keeps these true and never waits for the deliverables.
+2. **Converter (in `team1-sp/docs`):** `tools/sync_from_project.py` reads a checkout of this repository and rewrites only the marked regions of the deliverable Markdown. It is a plain script, so no AI is needed; `--check` lists the sections that are out of date.
+3. **Deliverables (in `team1-sp/docs`):** rebuilt only when they are submitted, from that repository's Markdown.
+
+Agents never edit `team1-sp/docs` from work in this repository (S-3). Prose that only the deliverables have (summaries, discussions, GenAI usage notes) is written there by people, following the disclosure rules.

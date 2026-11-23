@@ -1172,3 +1172,24 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Course documents affected (for humans):** none.
 - **Revisit when:** the boot set passes its budget again, or agents keep needing an archived file at boot.
 - **Supersedes / Related:** DEC-149.1 (its archive file is deleted), DEC-148.1, DEC-017, DEC-054, P-6.
+
+### DEC-152.2 — The project repository owns the requirements; the docs repository rebuilds the deliverables from it with a script
+- **Date:** 2026-11-24
+- **Status:** Accepted (decided in the conversation; details carried by PR #152, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (in the conversation "Bridge project docs and docs repo", 2026-11-24); the reviewer of PR #152   **Recorded by:** claude-code/opus-5.5/6r0a
+- **Human's words:** "project/docs definietly needs to be the owner and docs/ only extend from it. But main idea is that we need three layers of seperation … And we need to find a way to make these seperations as static as possible to not need genAI to cut usage." Then: "I think the converter should live in the docs/ if possible. Because since its the one that extends project/docs it should be the one calling instead of project/docs sending."
+- **Context:** the SRS (team1-sp/docs) and the code drifted apart, and course rules (S-3, the user's rule of 2026-11-16) kept agents from touching the deliverables, so requirement changes from code work were recorded only as decisions. Instructors receive the deliverables at the demo and the final presentation, so they must match the final work. Next semester has no new deliverables except keeping these current.
+- **Options considered:** (a) keep the SRS as the source and record drift as decisions; (b) a ledger of pending deliverable changes written by every PR; (c) the project owns the data, and the docs repository rebuilds its sections from it with a deterministic script only when submitting.
+- **Decision:**
+  1. **Three layers.** (1) `team1-sp/project` docs are the source: engineering docs, decisions, archives, and the data the deliverables reuse in a fixed format. (2) The converter lives in `team1-sp/docs` and pulls from a project checkout. (3) The deliverables are rebuilt in `team1-sp/docs` only when they are submitted.
+  2. **Requirements live in `docs/requirements/`**: `conventions.md`, one file per epic under `functional/` (front matter, epic, stories as `## US-x.y` headings with `**Story:**`, each requirement one line with a `Use cases: …; Initial Plan: …` line), and one file per non-functional section under `non-functional/`. Seeded from team1-sp/docs commit `2ddcc2e` (36 epics, 291 stories, 1203 FRs, 49 NFRs); rendering it back gives SRS 6.1, 6.3, 6.4 and 7.1–7.6 byte for byte.
+  3. **A requirement change is made here**, in the PR whose work needs it, with a decision a human approves (DEC-052). This replaces "record SRS changes from code work as decisions only": the decision still records it, and the text now changes here as well. Agents still never edit `team1-sp/docs` (S-3).
+  4. Ids stay numbered from 1 without gaps (the SRS convention); a PR that removes or inserts a requirement renumbers the group and updates the references.
+  5. `tools/check_requirements.py` (CI) keeps the layout the converter needs. Agents read only the epic file of their story (on demand).
+  6. The docs-repository side (marked regions, `tools/sync_from_project.py`, `--check`, `SYNCED_FROM`, Word build, a short agent guide) is the humans' change to `team1-sp/docs`; a draft is handed over with this PR, not committed there.
+- **Rationale:** normal work keeps one source true and pays nothing for the deliverables; the deliverables can be brought up to date at any time by a script, so AI is needed only for prose that exists only in the deliverables.
+- **Consequences:** about 520 KB of requirements move into this repository (never read at boot). The SRS Word file still needs its format rules applied when it is rebuilt. Renumbering keeps the SRS convention but changes ids that code and tests cite (about 300 references today); stable ids would avoid that and are a separate decision. The SDD gets its own fixed-format sources when its outline exists.
+- **Docs updated:** `requirements/` (new), `agents/{rules,AGENT-PROTOCOL,README}.md`, `agents/playbooks/record-decision.md`, `agents/state/current-status.md`, `guidelines/documentation-rules.md` §3 and §8, `docs/README.md`, `.github/workflows/ci.yml`, `tools/check_requirements.py` (new).
+- **Course documents affected (for humans):** SRS 6.1, 6.3, 6.4 and 7.1–7.6 get GENERATED markers and are rebuilt from this repository by the docs-repository script.
+- **Revisit when:** the SDD outline exists, or renumbering ids causes trouble in code.
+- **Supersedes / Related:** DEC-017, DEC-022, DEC-152.1, S-3; the user's rule of 2026-11-16 on SRS changes from code work (refined by part 3).

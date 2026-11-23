@@ -26,7 +26,7 @@ Every session pays for what it reads, so the docs are split into three tiers. Re
 | Tier | When an agent reads it | Files |
 | --- | --- | --- |
 | **Boot** | Every session, steps 1 to 6 above. Kept small: `tools/check_boot.py` holds these files (without the handoff log) under 50 KB, and `tools/check_ids.py` keeps the live handoff log at 15 entries or fewer. | this README, `AGENT-PROTOCOL.md`, `rules.md`, `state/current-status.md`, `state/handoff-log.md` (last ~5 entries), `state/open-questions.md`, `history/decision-index.md` |
-| **On demand** | When the task points to it | a decision's full entry in `history/decision-log.md` (to trace it back: reasons, scope, wording); `history/problems/` (when a problem occurs, before debugging); `architecture/`, `design/`, `testing/`, `guidelines/`, `troubleshooting/`; playbooks and templates for the kind of work |
+| **On demand** | When the task points to it | your story's epic file in `requirements/functional/` (never the whole folder); a decision's full entry in `history/decision-log.md` (to trace it back: reasons, scope, wording); `history/problems/` (when a problem occurs, before debugging); `architecture/`, `design/`, `testing/`, `guidelines/`, `troubleshooting/`; playbooks and templates for the kind of work |
 | **Human-only** | Never, unless a human asks or you trace something back that the other tiers do not explain | `history/handoff-archive/`, `history/questions-archive.md`, `history/genai-usage-log.md`, `history/adr-*.md`, `research/`, `process/roadmap.md`. Each Markdown file says so in a line under its title. |
 
 Keep the boot files small: closed questions, old handoffs and superseded decisions move to their archives, details stay in the full entries, and the index row of a decision is one line.

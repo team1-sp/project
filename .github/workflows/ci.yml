@@ -37,6 +37,7 @@ jobs:
               - 'tools/check_boot.py'
               - 'tools/check_md_links.py'
               - 'tools/rotate_handoffs.py'
+              - 'tools/check_requirements.py'
             cpp:
               - '**/*.{c,cc,cpp,cxx,h,hh,hpp,hxx,inl}'
               - '.clang-format'
@@ -111,6 +112,8 @@ jobs:
           fetch-depth: 2 # HEAD^1 of the PR merge commit is the base branch
       - name: Relative links point to existing files
         run: python3 tools/check_md_links.py .
+      - name: Requirements keep the format the docs repository reads (DEC-152.2)
+        run: python3 tools/check_requirements.py .
       - name: Agent boot files stay under their size budget (DEC-152.1)
         run: python3 tools/check_boot.py .
       - name: Record ids are unique and new ones use the PR's number (DEC-055, DEC-148.1)

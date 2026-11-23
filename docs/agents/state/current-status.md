@@ -19,7 +19,8 @@ Increment 1 (prototype): the Increment 1 stories (SRS B) are the issues in the I
 | AI service | `ai-services/` | Python 3.12 package (DEC-039). |
 | Sandbox | `sandbox/` | Developer and CI test host only; not a product. |
 | Tests | `tests/` | GoogleTest, headless. |
-| Course deliverables | separate `senior-project/docs/` repo | **Not authoritative; not edited by agents.** |
+| Requirements | `docs/requirements/` | Epics, stories, FR/NFR; owned here, read on demand (DEC-152.2). |
+| Course deliverables | separate `senior-project/docs/` repo (`team1-sp/docs`) | **Not authoritative; not edited by agents.** Built from this repo at submission (DEC-152.2). |
 
 Folder rules: [guidelines/repository-structure.md](../../guidelines/repository-structure.md).
 

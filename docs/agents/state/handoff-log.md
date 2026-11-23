@@ -172,3 +172,17 @@
 - **Records:** DEC-152.1, HND-152.1.
 
 ---
+
+### HND-152.2 — Requirements owned by the project; docs repository syncs from it
+- **Date:** 2026-11-24
+- **Agent:** claude-code/opus-5.5/6r0a
+- **Work:** PR #152 (no issue)
+- **Goal:** the bridge agreed with Işık Dönger (DEC-152.2): project owns the requirements, the docs repository rebuilds its sections with a script.
+- **Result:** Done, awaiting review. `docs/requirements/` seeded from team1-sp/docs `2ddcc2e`; `tools/check_requirements.py` in CI. The docs-repository side (markers, `tools/sync_from_project.py`, `AGENTS.md`) is a patch for the humans, not committed there.
+- **Verified:** rendering `docs/requirements/` with the draft sync script into an SRS copy with empty markers reproduced 6.1, 6.3, 6.4 and 7.1–7.6 byte for byte; `--check` reports nothing out of date against this branch and reports 6.1 after one requirement edit; `check_requirements.py` passes and fails on a wrong id and a missing `Use cases` line; `check_ids.py`, `check_md_links.py`, `check_boot.py` (48.0 KB) pass.
+- **Not verified:** the Word build from the synced Markdown (not part of this PR).
+- **Next:** the user applies the docs-repository patch and adds their docs agent workflow; SDD sources once its outline exists; decide whether requirement ids stay renumbered without gaps or become stable.
+- **Traps:** the requirement files are large; read only the epic of your story. Do not edit team1-sp/docs.
+- **Records:** DEC-152.2, HND-152.2.
+
+---

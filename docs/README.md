@@ -74,6 +74,7 @@ docs/
 │   ├── debugging-playbook.md
 │   ├── common-errors.md            anticipated pitfalls (not yet encountered)
 │   └── environment-setup.md
+├── requirements/                  WHAT the product must do: epics, stories, FR/NFR (owned here, DEC-152.2)
 ├── history/                       APPEND-ONLY memory of the project
 │   ├── problems/                   every problem actually hit + its solution, one file per area
 │   ├── decision-index.md           one line per decision; what agents read at boot

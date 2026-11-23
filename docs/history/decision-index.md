@@ -80,6 +80,7 @@ Statuses: `Proposed` (waiting for an answer; binds nobody) · `Accepted` (bindin
 | DEC-149.1 | Task board retired: tasks are GitHub issues, assignee is the claim; `current-status.md` is increment-level | Accepted | 2026-11-22 |
 | DEC-151.1 | Işık Dönger is the only code owner and approver; the advisor is no longer a code owner | Accepted | 2026-11-22 |
 | DEC-152.1 | Agents read a one-line decision index; handoffs rotate; problems split by area; closed records go to archives | Accepted | 2026-11-24 |
+| DEC-152.2 | The project owns the requirements (`docs/requirements/`); the docs repo rebuilds deliverables from it by script | Accepted | 2026-11-24 |
 
 ### Still open, no entry yet (do not decide silently)
 

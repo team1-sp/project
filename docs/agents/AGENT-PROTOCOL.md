@@ -10,7 +10,7 @@ Certainty tags used below: `[VERIFIED]` `[ASSUMPTION]` `[TBD]` `[PROPOSED]`.
 
 1. **Humans decide. Agents consult.** A decision is binding only when a **human** has made it, after the agent surfaced the uncertainty and options, and it is recorded in `history/decision-log.md` as `Accepted`.
 2. **The `Accepted` entries in the decision log are the single source of truth** for what the project does, uses and believes. Where any other document disagrees — architecture, design, guidelines, state files, tests, code comments, **and the course documents** — the decision log wins.
-3. **Course documents are not authoritative.** Everything under `senior-project/docs/` (Initial Plan etc.) exists for the course. It may be outdated or wrong relative to what the team decided later. Requirement IDs (`ip.fr.*`, `ip.nfr.*`) are a convenient *reference snapshot*, not truth: if a requirement conflicts with an `Accepted` decision, the decision wins.
+3. **Course documents are not authoritative.** The `team1-sp/docs` repository (Initial Plan, SRS, SDD) exists for the course and is rebuilt from this repository when a deliverable is submitted. The requirements (`srs.fr.*`, `srs.nfr.*`, epics and stories) are owned by [`docs/requirements/`](../requirements/README.md) here (DEC-152.2); the older `ip.fr.*` ids are a reference snapshot. If a requirement conflicts with an `Accepted` decision, the decision wins and the requirement is changed here, in the same PR, with a decision a human approves.
 4. **Uncertainty is never resolved silently.** If you are unsure about something that matters (scope, technology, behaviour, priority, a conflict between documents, an unclear instruction), you MUST tell the human clearly — see "Raising uncertainty" below — and wait for their decision before building on it.
 5. **A human decision must propagate everywhere.** Once a decision is accepted, every document, state file, task and test that depended on the old belief is updated to match — see [playbooks/record-decision.md](playbooks/record-decision.md). A decision that is only in the log, while other docs still say otherwise, is not finished.
 
@@ -64,7 +64,7 @@ If you are only *reasonably certain* (e.g. a small implementation detail inside 
    - `history/problems/` — only when you hit a problem: search the area file (and the index in its README) for the error text, the component, the symptom. If a solution exists, apply it first.
    - `troubleshooting/common-errors.md` — anticipated pitfalls.
 9. **Detect conflicts.** If a document contradicts an `Accepted` decision (including course documents), the decision wins. Do not "fix" course documents (S-3); list them for the human (see `record-decision.md`, "Course documents drift"). Fix project docs in the same task.
-10. Check the requirement IDs (`ip.fr.*`, `ip.nfr.*`) the task serves, as a reference. If a requirement looks outdated or conflicts with a decision, that is uncertainty → raise it.
+10. Read the requirements the task serves: your story's section in its epic file under [`docs/requirements/functional/`](../requirements/README.md) (only that file). If a requirement looks wrong or conflicts with a decision, that is uncertainty → raise it; once a human decides, change it there in your PR ([requirements README](../requirements/README.md#changing-a-requirement)).
 11. Anything uncertain or only a human can answer → **Raising uncertainty** (above). Do not guess.
 
 ## Phase 2 — Plan (write it down)
