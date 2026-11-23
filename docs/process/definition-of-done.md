@@ -21,7 +21,7 @@ A task is `Done` only if **all** applicable items hold.
 ## Docs
 
 - [ ] Every doc made inaccurate by the change is updated (architecture/design/testing/troubleshooting).
-- [ ] New pitfalls → `common-errors.md`; solved problems → `problem-log.md`.
+- [ ] New pitfalls → `common-errors.md`; solved problems → `history/problems/`.
 - [ ] Decisions → `decision-log.md`.
 
 ## Records

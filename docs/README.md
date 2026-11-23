@@ -25,7 +25,7 @@ The product is **2D only** (DEC-016); the architecture keeps a later 3D extensio
 | --- | --- |
 | **An AI agent / model** | [agents/AGENT-PROTOCOL.md](agents/AGENT-PROTOCOL.md) — mandatory, every session |
 | A new human developer | [architecture/system-overview.md](architecture/system-overview.md) → [guidelines/repository-structure.md](guidelines/repository-structure.md) → [process/development-process.md](process/development-process.md) |
-| Debugging something | [troubleshooting/debugging-playbook.md](troubleshooting/debugging-playbook.md), then search [history/problem-log.md](history/problem-log.md) |
+| Debugging something | [troubleshooting/debugging-playbook.md](troubleshooting/debugging-playbook.md), then search [history/problems/](history/problems/README.md) |
 | Wondering "why did we do it this way?" | [history/decision-log.md](history/decision-log.md) |
 | Looking for current progress | [agents/state/current-status.md](agents/state/current-status.md) |
 
@@ -75,8 +75,11 @@ docs/
 │   ├── common-errors.md            anticipated pitfalls (not yet encountered)
 │   └── environment-setup.md
 ├── history/                       APPEND-ONLY memory of the project
-│   ├── problem-log.md              every problem actually hit + its solution
+│   ├── problems/                   every problem actually hit + its solution, one file per area
+│   ├── decision-index.md           one line per decision; what agents read at boot
 │   ├── decision-log.md             every decision + rationale (ADR style)
+│   ├── handoff-archive/            older handoff entries, one file per month (human-only)
+│   ├── questions-archive.md        answered and obsolete questions (human-only)
 │   ├── adr-002-cpp-python-communication.md C++/Python bridge decision (DEC-038)
 │   └── genai-usage-log.md          AI usage disclosures required by the course
 └── agents/                        AGENT-ONLY: coordination between models
@@ -87,7 +90,6 @@ docs/
     ├── model-compatibility.md      how to write/read docs so any model can use them
     ├── state/                      LIVE shared state
     │   ├── current-status.md
-    │   ├── plan.md
     │   ├── handoff-log.md
     │   └── open-questions.md
     ├── playbooks/                  step-by-step approach per kind of work

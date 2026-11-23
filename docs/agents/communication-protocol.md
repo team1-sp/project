@@ -7,13 +7,13 @@ Agents never talk to each other directly. They communicate **only through files 
 | Need | Channel | Writing style |
 | --- | --- | --- |
 | "Where are we?" | `state/current-status.md` | Increment-level snapshot. Edit only what your change makes wrong; per-PR progress goes in the handoff (DEC-149.1). |
-| "What should be done, and by whom?" | the [GitHub project](https://github.com/orgs/team1-sp/projects/3) and the issue's assignee | Not a repo file (DEC-149.1). The old `task-board.md` is archived in `history/task-board-archive.md`. |
-| "What did the last agent do, what must I know?" | `state/handoff-log.md` | **Append-only**, newest at the bottom. |
-| "I need a human / another agent to answer" | `state/open-questions.md` | Add `Q-###` (and also say it to the human in your reply — never only in the file); answer by filling `Answer` + status `Answered`. |
+| "What should be done, and by whom?" | the [GitHub project](https://github.com/orgs/team1-sp/projects/3) and the issue's assignee | Not a repo file (DEC-149.1). The old task board was deleted (DEC-152.1); its history is in git. |
+| "What did the last agent do, what must I know?" | `state/handoff-log.md` | **Append-only**, newest at the bottom; older entries are moved to `history/handoff-archive/` (DEC-152.1). |
+| "I need a human / another agent to answer" | `state/open-questions.md` | Add `Q-<#>.<n>` (and also say it to the human in your reply — never only in the file); when answered, fill `Answer` + status and move the entry to `history/questions-archive.md`. |
 | "A human decided something" | `history/decision-log.md` | Log `Accepted` (approval in the conversation, or in the review of the PR that adds it; DEC-052), then propagate to every document: [playbooks/record-decision.md](playbooks/record-decision.md). |
-| "What is the plan?" | `state/plan.md` | Edit; log big changes in the change table. |
-| "What did we decide and why?" | `history/decision-log.md` | **Append-only. The single source of truth** (DEC-017). |
-| "Has this problem happened before?" | `history/problem-log.md` | **Append-only.** |
+| "What is the plan?" | the [GitHub project](https://github.com/orgs/team1-sp/projects/3) and `state/current-status.md` | `plan.md` was deleted (DEC-152.1). |
+| "What did we decide and why?" | `history/decision-index.md`, then the entry in `history/decision-log.md` | **Append-only. The single source of truth** (DEC-017). Read the index; open an entry only to trace it back (DEC-152.1). |
+| "Has this problem happened before?" | `history/problems/` (one file per area) | **Append-only.** Read only when a problem occurs. |
 | "Project knowledge" | `architecture/`, `design/`, `testing/`… | Edit per ownership table in docs README. |
 
 ## 2. Identity
@@ -22,7 +22,7 @@ Every entry is signed with an agent ID: `<tool>/<model>/<short-session-id>` (e.g
 
 | Role | Responsibility |
 | --- | --- |
-| Planner | Breaks goals into tasks, keeps `plan.md` and the board honest |
+| Planner | Breaks goals into GitHub issues and keeps the project board honest |
 | Implementer | Builds a claimed task |
 | Tester | Writes/runs tests, reproduces bugs |
 | Reviewer | Reads another agent's finished task against `definition-of-done.md` |
@@ -38,7 +38,7 @@ Work is tracked on GitHub, not in a repo file (DEC-149.1). A task is a GitHub is
 - **Blocked:** comment on the issue and add a `Q-…` entry; the `dependencies` CI job also blocks a PR whose issue still has open "blocked by" issues.
 - **Review / Done:** the draft PR becomes ready for review; merging it closes the issue and moves the card to Done.
 
-Tasks recorded before DEC-149.1 (`TASK-001` to `TASK-025`) stay readable in [../history/task-board-archive.md](../history/task-board-archive.md).
+Tasks recorded before DEC-149.1 (`TASK-001` to `TASK-025`) are in the git history of `docs/history/task-board-archive.md`, deleted by DEC-152.1.
 
 ## 4. Handoff entries
 
@@ -98,7 +98,7 @@ Update both whenever you change the file.
 
 ## 9. Escalation ladder
 
-1. Look in `problem-log` / `common-errors` / `decision-log`.
+1. Look in `problems/` / `common-errors` / `decision-log`.
 2. Try one alternative approach (two-attempt rule).
 3. Tell the human (`DECISION NEEDED`), write a `Q-###` addressed to the right party and mark the task `Blocked`.
 4. Move to a different `Ready` task.

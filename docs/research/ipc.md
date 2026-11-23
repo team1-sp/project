@@ -1,5 +1,7 @@
 # C++ to Python IPC Options (PB-065)
 
+> **Audience: humans.** Agents skip this file unless a human asks or they trace something back ([reading tiers](../agents/README.md#reading-tiers-dec-1521), DEC-152.1).
+
 **Status:** researched on 2026-11-04. This table distinguishes options that were benchmarked from
 options that were assessed architecturally. Detailed methodology and measurements are in
 [cpp-python-bridge.md](cpp-python-bridge.md).

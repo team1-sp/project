@@ -1,6 +1,8 @@
 # Roadmap — Phases and Exit Criteria
 
-Source: Senior Project Guide §7 (phases 1–9) and Initial Plan §4.1 (WBS narrative) — course documents, used as input; the decision log is the truth. **2D only (DEC-016): no phase contains 3D work.** Phases 10+ are the AI-native parts planned for the second semester. Dates live in ClickUp (Gantt) — not here. Live status: `agents/state/plan.md`.
+> **Audience: humans.** Agents skip this file unless a human asks or they trace something back ([reading tiers](../agents/README.md#reading-tiers-dec-1521), DEC-152.1).
+
+Source: Senior Project Guide §7 (phases 1–9) and Initial Plan §4.1 (WBS narrative) — course documents, used as input; the decision log is the truth. **2D only (DEC-016): no phase contains 3D work.** Phases 10+ are the AI-native parts planned for the second semester. Dates and live status live on the [GitHub project](https://github.com/orgs/team1-sp/projects/3) and in `agents/state/current-status.md` — not here.
 
 Principle: **working 2D engine prototype first**, then the AI-native layers; automated testing, telemetry and the semantic graph are core, not optional.
 

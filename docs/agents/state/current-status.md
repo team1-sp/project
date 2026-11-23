@@ -25,7 +25,7 @@ Folder rules: [guidelines/repository-structure.md](../../guidelines/repository-s
 
 ## Open questions and decisions
 
-Read the index of the decision log and [open-questions.md](open-questions.md). Do not copy their lists here.
+Read [the decision index](../../history/decision-index.md) and [open-questions.md](open-questions.md). Do not copy their lists here.
 
 ## Health
 
