@@ -1369,3 +1369,19 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Course documents affected (for humans):** none; the SRS keeps continuous ids. The docs repository's sync should warn while change files are pending (docs-repository follow-up).
 - **Revisit when:** pending files pile up long enough that agents work against stale requirement text.
 - **Supersedes / Related:** refines DEC-152.3 (when renumbering runs); DEC-152.2, DEC-152.4.
+
+### DEC-158.1 — A pull request with other PRs stacked on it is merged with a merge commit
+- **Date:** 2026-11-24
+- **Status:** Accepted (decided in the conversation; carried by PR #158, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (project chat, 2026-11-24, choosing option 1: "option 1 is fine"; then "settings are fine. you can start on the ci")   **Recorded by:** claude-code/opus-5.5/158-stacks
+- **Human's words:** "now can we circle back on making sure stack merge conflicts do not happen again. option 1 is fine"
+- **Context:** the ECS stack #154 → #155 → #156 hit merge conflicts on files that were already identical, because #154 and #155 were squash-merged: `main` got each lower branch as one new commit while the next branch up still held the original commits. The fix each time was merging `main` into the stacked branch and keeping its side.
+- **Decision:**
+  1. A PR that has other open PRs stacked on it (their base is its branch) is merged with **Create a merge commit**, titled with the PR title (a Conventional Commit). Every other PR is still squash-merged.
+  2. A stacked PR's body says `Stacked on #<n>`; the stack is merged from the bottom up. After the lower branch is deleted, GitHub moves the stacked PR's base to `main`.
+  3. The `Stack flag` workflow (`tools/flag_stacks.py`) labels each open PR with an open PR stacked on it `has-stacked-prs` and comments the rule once per stacked PR; the label is removed when nothing is stacked on it. It is a reminder: GitHub cannot choose a PR's merge method.
+- **Rationale:** a merge commit keeps the lower branch's commits on `main`, so the stacked branch shares history with `main` and has nothing to conflict on. Keeping squash for every other PR keeps `main` mostly one commit per PR.
+- **Consequences:** `main` gets a merge commit plus the branch's own commits for each stacked base PR. The `main` ruleset must allow the merge method "Merge" besides "Squash" (repository settings already allow merge commits). `Main guard` still passes, since those commits belong to the merged PR.
+- **Docs updated:** `guidelines/git-workflow.md` (§1, §2, §3, §4 "Stacked pull requests"), `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (23a), `.github/pull_request_template.md`, `.github/labels.yml`.
+- **Revisit when:** stacks become rare enough that the reminder is noise, or GitHub lets a ruleset pick the merge method per PR.
+- **Supersedes / Related:** refines DEC-032 (squash-only `main`) and DEC-055 (merge conflicts).

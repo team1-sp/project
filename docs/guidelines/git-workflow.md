@@ -1,6 +1,6 @@
 # Git Workflow
 
-Status: **Accepted** (DEC-024, DEC-027, 2026-10-15; DEC-053 to DEC-055, 2026-11-12; DEC-058, 2026-11-15). The repo keeps contribution history per member (course requirement), so **commit authorship matters**. Short version for contributors: [CONTRIBUTING.md](../../CONTRIBUTING.md).
+Status: **Accepted** (DEC-024, DEC-027, 2026-10-15; DEC-053 to DEC-055, 2026-11-12; DEC-058, 2026-11-15; DEC-158.1, 2026-11-24). The repo keeps contribution history per member (course requirement), so **commit authorship matters**. Short version for contributors: [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## 1. Branching
 
@@ -8,7 +8,7 @@ Trunk-based: `main` is the only long-lived branch. No `develop` branch.
 
 | Branch | Rule |
 | --- | --- |
-| `main` | Always builds and passes tests. No direct pushes, no force pushes, no deletion. Changes only by squash-merged PR |
+| `main` | Always builds and passes tests. No direct pushes, no force pushes, no deletion. Changes only by merged PR: squash-merged, or a merge commit when other PRs are stacked on it (§4) |
 | Work branches | From the latest `main`, one backlog item (or one bug) per branch, merged within the sprint, deleted after merge |
 | Tags `inc-1`, `inc-2`, `final` | Annotated tags on `main` at each increment review, created by a repo admin |
 
@@ -47,7 +47,7 @@ The `pr-hygiene` CI job rejects other names (`tools/check_pr.py`).
 
 ## 2. Commits and PR titles
 
-PRs are squash-merged, so **the PR title becomes the commit on `main`**. It must be a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/), with the story id as the scope, or the issue number for issues that are not SRS stories (DEC-050, replacing the PB id of DEC-035):
+PRs are squash-merged, so **the PR title becomes the commit on `main`** (a PR with others stacked on it is merged with a merge commit whose title is also the PR title, §4). It must be a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/), with the story id as the scope, or the issue number for issues that are not SRS stories (DEC-050, replacing the PB id of DEC-035):
 
 ```
 feat(US-1.1): Run every simulation tick in a fixed phase order
@@ -62,9 +62,9 @@ Types: `feat`, `fix`, `test`, `refactor`, `perf`, `docs`, `build`, `ci`, `chore`
 - Body: `Closes #<issue>` (or the `no-issue` label for a docs/ci/chore PR without an issue, titled with its own number: `ci(#131): …`), what and why, how it was verified, docs updated, and the Definition of Done checklist (template in `.github/pull_request_template.md`).
 - Open as a draft early; mark ready for review when CI is green. Keep PRs under about 400 changed lines.
 - Review: 1 approval from a code owner (`.github/CODEOWNERS`, DEC-032, DEC-151.1). The only code owner is Işık Dönger, so every other member's PR needs Işık's approval. Area teammates are listed in CODEOWNERS as people to ask for a review; their approval does not count toward merging. Işık's own PRs need no approval: repository admins merge them through the ruleset's PR bypass. Review practice: `process/code-review.md`.
-- All CI green (`ci-ok`) and conversations resolved before merging. The author squash-merges; the issue closes and moves to Done on the project.
+- All CI green (`ci-ok`) and conversations resolved before merging. The author squash-merges, or uses **Create a merge commit** when other PRs are stacked on it (§4); the issue closes and moves to Done on the project.
 
-**Enforcement:** the repo is public, so GitHub rulesets work on the free plan. The `main` ruleset (DEC-032) requires a PR, one code-owner approval, squash merge and a green `ci-ok`, and blocks force pushes and deletion. Bypass: repository admins and organization owners, only through a PR. The `Main guard` workflow still flags commits that reached `main` without a merged PR.
+**Enforcement:** the repo is public, so GitHub rulesets work on the free plan. The `main` ruleset (DEC-032) requires a PR, one code-owner approval, squash or merge-commit merges (no rebase merges) and a green `ci-ok`, and blocks force pushes and deletion. Bypass: repository admins and organization owners, only through a PR. The `Main guard` workflow still flags commits that reached `main` without a merged PR.
 
 ## 4. Merge conflicts
 
@@ -88,6 +88,8 @@ After the merge, build and run the tests again before pushing.
 
 **After ready for review:** the `Conflict flag` workflow (`tools/flag_conflicts.py`) runs after every merge to `main`. Each open PR that now conflicts gets the `needs-sync` label and one comment; the label goes away by itself once a push resolves it. The author (or the agent working on the PR) syncs as above and pushes; the reviewer then only needs to look at the merge commit, not the whole PR again. A PR with `needs-sync` is not merged.
 
+**Stacked pull requests** (DEC-158.1): a branch may start from another open PR's branch when it needs that unmerged work (for example US-2.2 on US-2.1); its PR then uses that branch as its base, and its body says `Stacked on #<n>`. Merge the stack from the bottom up, and merge every PR that has other PRs stacked on it with **Create a merge commit**, titled with the PR title. Squash only the PRs with nothing stacked on them. Why: a squash puts the lower branch on `main` as one new commit, while the stacked branch still holds the original commits, so git sees both sides changing the same lines and the stacked PR conflicts with `main` on files that are already identical (#154, #155 and #156 did this). A merge commit keeps the original commits on `main`; when the lower branch is deleted after the merge, GitHub moves the stacked PR's base to `main` and it merges cleanly. If a lower PR was squash-merged anyway, merge `origin/main` into the stacked branch and keep the stacked branch's side of the files the lower PR already carried, then test. The `Stack flag` workflow (`tools/flag_stacks.py`) labels every open PR that has another open PR stacked on it `has-stacked-prs` and comments this rule on it once per stacked PR; the label goes away when nothing is stacked on it any more. GitHub cannot pick the merge method for a PR, so the person merging chooses it in the merge dropdown.
+
 ## 5. Tags / releases
 
 Increment deliverables get an annotated tag `inc-1`, `inc-2`, `final` on `main`, aligned with the sprint review.
@@ -108,3 +110,4 @@ Increment deliverables get an annotated tag `inc-1`, `inc-2`, `final` on `main`,
 | 2026-11-12 | Agents ask before committing instead of before pushing (DEC-053); `tools/open_pr.py` opens the filled draft PR and the PR fill workflow is removed (DEC-054); merge-conflict rules, `check_ids.py` and the `needs-sync` flag (DEC-055) | claude (ci/131) |
 | 2026-11-15 | Agents ask before committing only on a member's computer; in a cloud copy they commit and push without asking (DEC-058) | claude (US-1.2 thread) |
 | 2026-11-16 | Where agents work: cloud copy by default, a member's computer only when needed, and the cloud fallback for `open_pr.py` (DEC-061); the `Epic close` workflow (DEC-062) | claude (ci/136) |
+| 2026-11-24 | Stacked PRs: a PR with others stacked on it is merged with a merge commit; the `Stack flag` workflow reminds (DEC-158.1) | claude (ci/158) |

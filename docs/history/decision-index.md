@@ -84,10 +84,6 @@ Statuses: `Proposed` (waiting for an answer; binds nobody) · `Accepted` (bindin
 | DEC-152.3 | Requirement ids stay continuous; `tools/renumber_requirements.py` renumbers them and every reference | Accepted | 2026-11-24 |
 | DEC-152.4 | Requirement edits made in the docs repo come back as a normal project PR made by `propose_to_project.py` | Accepted | 2026-11-24 |
 | DEC-153.1 | Feature PRs write requirement changes to `changes/<n>.md`; one apply PR applies and renumbers | Accepted | 2026-11-24 |
-
-### Still open, no entry yet (do not decide silently)
-
-what "LLM-instructive components" means concretely (Q-013, deferred by the human) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
 | DEC-46.1 | ADR-001: sparse-set component storage | Accepted | 2026-11-05 |
 | DEC-46.2 | PB-010 decisions D-2 to D-29 are the ECS design | Accepted | 2026-11-05 |
 | DEC-46.3 | US-2.1/2.2 also build the hierarchy and enabled flags | Accepted | 2026-11-23 |
@@ -96,6 +92,11 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 | DEC-47.2 | Field kinds UInt8, UInt32, Tag; managed fields later | Accepted | 2026-11-23 |
 | DEC-47.3 | Position and Velocity are core ECS components | Accepted | 2026-11-23 |
 | DEC-48.1 | US-2.3: system groups, ordering rules, enable/disable; disables seen next query | Accepted | 2026-11-24 |
+| DEC-158.1 | Merge a PR that has PRs stacked on it with a merge commit; squash the rest | Accepted | 2026-11-24 |
+
+### Still open, no entry yet (do not decide silently)
+
+what "LLM-instructive components" means concretely (Q-013, deferred by the human) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
 
 ## Archived
 

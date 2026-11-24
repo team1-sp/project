@@ -19,7 +19,7 @@ The backlog is the [GitHub project](https://github.com/orgs/team1-sp/projects/3)
 - Fill in the PR template, including how you verified the change.
 - Mark the PR **ready for review** when CI is green. Reviewers come from [.github/CODEOWNERS](.github/CODEOWNERS).
 - One approval from Işık Dönger (the only code owner, DEC-151.1) is needed; area teammates are welcome to review too, but their approval does not count. Işık's own PRs need no approval. Reviews happen within 1 working day; comments are labelled `blocker`, `should`, `nit` or `question`, and only `blocker` holds up approval.
-- The author squash-merges. The issue closes and its card moves to **Done** on the project by itself. When the last open sub-issue of an epic closes, the `Epic close` workflow closes the epic too, or labels it `increment-done` if its "Later stories" list still has stories (DEC-062).
+- The author squash-merges, or uses **Create a merge commit** when other PRs are stacked on the PR (the `has-stacked-prs` label; DEC-158.1, [git-workflow.md](docs/guidelines/git-workflow.md) §4). The issue closes and its card moves to **Done** on the project by itself. When the last open sub-issue of an epic closes, the `Epic close` workflow closes the epic too, or labels it `increment-done` if its "Later stories" list still has stories (DEC-062).
 
 ## Code style and Definition of Done
 
@@ -28,8 +28,8 @@ The backlog is the [GitHub project](https://github.com/orgs/team1-sp/projects/3)
 
 ## Rules for `main`
 
-- No direct pushes, no force pushes. Every change goes through a squash-merged PR with an approval and a green `ci-ok` check.
-- A ruleset on `main` enforces this (DEC-032): PR required, one code-owner approval, squash merge only, `ci-ok` must pass, no force pushes or deletion. Repository admins may bypass it only through a PR, which is how Işık merges his own PRs without review. The **Main guard** workflow still marks any commit that reached `main` without a merged PR.
+- No direct pushes, no force pushes. Every change goes through a merged PR (squash, or a merge commit for a PR with others stacked on it) with an approval and a green `ci-ok` check.
+- A ruleset on `main` enforces this (DEC-032): PR required, one code-owner approval, squash or merge-commit merges only, `ci-ok` must pass, no force pushes or deletion. Repository admins may bypass it only through a PR, which is how Işık merges his own PRs without review. The **Main guard** workflow still marks any commit that reached `main` without a merged PR.
 
 ## AI agents
 

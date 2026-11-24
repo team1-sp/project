@@ -3,6 +3,7 @@
 Closes #<!-- issue number; a docs/ci/chore PR without an issue deletes this line and gets the no-issue label (tools/open_pr.py does both) -->
 
 ## What and why
+<!-- If this branch started from another open PR's branch, first line: "Stacked on #<n>". That PR is then merged with a merge commit, not squash (DEC-158.1). -->
 
 ## How it was verified
 <!-- Commands you ran and their results. -->

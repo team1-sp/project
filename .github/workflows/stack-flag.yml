@@ -1,0 +1,33 @@
+# Reminds the author of a pull request that has other PRs stacked on it (their base is its
+# branch) to merge it with "Create a merge commit" instead of squashing (DEC-158.1). Such a PR
+# gets the `has-stacked-prs` label and one comment per stacked PR; the label goes away when
+# nothing is stacked on it. It never pushes, merges or changes a merge method. tools/flag_stacks.py
+name: Stack flag
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, closed, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: stack-flag
+
+jobs:
+  flag:
+    # `edited` also fires for title/body edits; only a base change can create or end a stack.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       (github.event.action != 'edited' || github.event.changes.base != null))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Label and remind PRs that have stacked PRs
+        run: python3 tools/flag_stacks.py
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
