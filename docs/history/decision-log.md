@@ -511,6 +511,7 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Docs updated:** `design/ecs-api-design.md` §17, `design/ecs-event-bus-design.md` §11, `design/ecs-design.md`.
 - **Course documents affected (for humans):** the semester plan or roadmap sections of course documents, if they promise more.
 - **Supersedes / Related:** D-26, PB-010.
+- **Amendments:** 2026-11-23 — widened by DEC-46.3: the hierarchy and the entity and component enabled flags are built in Phase 1 (US-2.1, US-2.2).
 
 ### DEC-044 — Coding standards amended for the ECS design
 - **Date:** 2026-11-05
@@ -1151,6 +1152,71 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Revisit when:** another approver is needed (for example while Işık is unavailable).
 - **Supersedes / Related:** supersedes the advisor part of DEC-032; DEC-024.
 
+### DEC-46.1 — ADR-001: the ECS stores components in sparse sets, one independent pool per component type
+- **Date:** 2026-11-05 (recorded 2026-11-23)
+- **Status:** Accepted (carried by the US-2.1 pull request, binding once a human merges it, DEC-052)
+- **Decided by:** Arda Karabulut (owner of PB-010, which proposed it) and Işık Dönger (approved and merged PR #28 on 2026-11-05); recorded at Arda Karabulut's request on 2026-11-23   **Recorded by:** claude-code/opus-5.5/us-2.1
+- **Human's words:** Arda Karabulut, 2026-11-23, asked how to record ADR-001 and the PB-010 D-decisions: "İki giriş" (two entries: ADR-001, then the D-table).
+- **Context:** PB-010.1 compared storage models for the custom ECS (DEC-018) at our scale: scenes up to 1,000 entities, 200 active, at least 600 headless ticks per second ([research/ecs-storage-research.md](../research/ecs-storage-research.md)). PR #28 merged the research and the API design built on it (D-1), but ADR-001 and the D-decisions were never written into this log: PB-010.3 has no issue. US-2.1 is the first code that depends on them.
+- **Options considered:**
+  1. Sparse sets: one `ComponentPool<T>` per type, O(1) add and remove that touch one pool, one packed array per type (EnTT).
+  2. Archetypes: one table per component combination, the fastest multi-component iteration, but every add or remove moves the entity with all its components (Unity Entities 6.5).
+  3. A "big matrix" of arrays indexed by entity, with holes.
+- **Decision:** Components are stored in sparse sets: one independent `ComponentPool<T>` per component type, with no groups and no chunks. Every pool is kept in ascending `EntityId` (D-3).
+- **Rationale:** the simplest correct storage for a student team; cheap adds and removes for gameplay roles and tags; every component type is one packed, enumerable array for the Semantic Graph export; at our scale iteration speed does not decide the choice (research §8, §9).
+- **Consequences:** a multi-component query walks the smallest pool and probes the others. Groups, pagination, pointer stability and multithreading are left out; they can be added later without changing the API. The ideas taken from Unity (command buffers, tags, singleton components, cleanup through observers) do not depend on the storage model (research §9).
+- **Docs updated:** none; the research and the design already describe it.
+- **Course documents affected (for humans):** none known.
+- **Revisit when:** profiling shows multi-component iteration dominating a tick, or the entity counts grow by orders of magnitude.
+- **Supersedes / Related:** DEC-018, DEC-043, DEC-46.2; D-1; PB-010 (PR #28).
+
+### DEC-46.2 — The PB-010 design decisions D-2 to D-29 are the ECS design
+- **Date:** 2026-11-05 (recorded 2026-11-23)
+- **Status:** Accepted (carried by the US-2.1 pull request, binding once a human merges it, DEC-052)
+- **Decided by:** Arda Karabulut (the PB-010 design choices) and Işık Dönger (review of PR #28, whose changes were applied; approved and merged on 2026-11-05); recorded at Arda Karabulut's request on 2026-11-23   **Recorded by:** claude-code/opus-5.5/us-2.1
+- **Human's words:** Arda Karabulut, 2026-11-23: "İki giriş" (see DEC-46.1).
+- **Context:** `design/ecs-api-design.md` §2 lists the decisions D-1 to D-29, made from Arda Karabulut's answers in PB-010.2. Işık Dönger's review of PR #28 changed five of them (sort at playback D-3, `{offset, FieldType, count}` fields D-6, structural-power declarations D-21, handler phases D-22, agent I/O D-25) and settled the related gaps in DEC-040 to DEC-044. They were to be logged in PB-010.3, which never got an issue.
+- **Options considered:** (a) one entry per decision; (b) one entry for the whole table, referring to §2; (c) each decision with the story that builds it. Arda Karabulut chose (b).
+- **Decision:** D-2 to D-29, as written in `design/ecs-api-design.md` §2, are the design every ECS story follows; D-1 is DEC-46.1. Each story builds the parts it needs. Changing one of them later needs its own entry that supersedes that item. The event bus choices E-1 to E-5 (`ecs-event-bus-design.md` §2) are recorded with US-2.8.
+- **Rationale:** one place in this log that binds the design the ECS stories follow, without copying 28 table rows.
+- **Consequences:** D-26 (build phases) is read together with DEC-043 and DEC-46.3. The design's SRS references follow the final SRS A of 2026-11-14 in §2, §4, §5, §7 to §9, §12 and §13; the event bus document is updated with US-2.8.
+- **Docs updated:** `design/ecs-api-design.md` (SRS numbers), `design/ecs-design.md` (SRS numbers in §1).
+- **Course documents affected (for humans):** none known.
+- **Revisit when:** an ECS story finds that one of the decisions does not work as designed.
+- **Supersedes / Related:** DEC-018, DEC-040 to DEC-044, DEC-46.1, DEC-46.3; PB-010 (PR #28).
+
+### DEC-46.3 — US-2.1 and US-2.2 build the hierarchy and the entity and component enabled flags
+- **Date:** 2026-11-23
+- **Status:** Accepted (carried by the US-2.1 pull request, binding once a human merges it, DEC-052)
+- **Decided by:** Arda Karabulut (owner of US-2.1 and US-2.2), 2026-11-23   **Recorded by:** claude-code/opus-5.5/us-2.1
+- **Human's words:** asked whether the two stories build only the Phase 1 slice or everything their acceptance criteria list, he chose "Hepsini yap" (build all of it).
+- **Context:** DEC-043 limits the ECS of this semester to the Phase 1 slice of `ecs-api-design.md` §17, which listed the hierarchy (`setParent`, recursive destroy) and the entity and component enabled flags under "Later". The Increment 1 stories US-2.1 (srs.fr.2.4, 2.5) and US-2.2 (srs.fr.2.11) require them, and other Increment 1 stories build on them: the Hierarchy panel, the Inspector's enabled checkboxes, rendering of enabled entities and the demo loop. Phase 1's own Collect rule disables entities (srs.fr.12.2), so §17 was inconsistent on its own.
+- **Options considered:** (a) build everything the two stories list; (b) build Phase 1 only and leave srs.fr.2.4, part of 2.5 and 2.11 unchecked; (c) the enabled flags now and the hierarchy later.
+- **Decision:** (a). US-2.1 builds the hierarchy and the entity enabled flag; US-2.2 builds the component enabled flags, as `ecs-api-design.md` §4 to §6 and §9 design them. DEC-043 still holds for everything else.
+- **Rationale:** both stories can close with all of their acceptance criteria met, and the stories that build on them are not held back by a follow-up. `[further rationale not given]`
+- **Consequences:** §17 lists these items under Phase 1. Skipping disabled entities and components in systems and queries comes with US-2.3 (srs.fr.2.15, 2.18). Whether US-2.3, US-2.4 and US-2.12 build more than Phase 1 is decided when each starts.
+- **Docs updated:** `design/ecs-api-design.md` §17, `design/ecs-design.md` §2, DEC-043 (Amendments line).
+- **Course documents affected (for humans):** none.
+- **Revisit when:** the semester's scope is cut again.
+- **Supersedes / Related:** amends DEC-043 and D-26; DEC-46.2; US-2.1 #46, US-2.2 #47.
+
+### DEC-46.4 — US-2.1: ID reuse rules, run start, command buffer errors and created-then-destroyed parents
+- **Date:** 2026-11-23
+- **Status:** Accepted (carried by the US-2.1 pull request, binding once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-2.1 pull request   **Recorded by:** claude-code/opus-5.5/us-2.1
+- **Context:** the design (§4, §9) leaves a few details of entity creation and the command buffer open; US-2.1 needs an answer for each to meet srs.fr.2.1 to 2.4.
+- **Decision:**
+  1. An Editor-range ID may be given to an entity whenever no loaded entity uses it, because Undo and Revert restore an entity with its own ID (srs.fr.2.105); keeping the Editor from giving a discarded ID to a different entity is the Editor's watermark (srs.fr.2.62, US-2.12). A runtime-range ID is used at most once per run and only after `allocateRuntimeId()` reserved it (srs.fr.2.2, 2.63).
+  2. `World::beginRun()` restarts the runtime IDs and is refused while an entity with a runtime ID is alive, because its ID would be given out again (srs.fr.2.2).
+  3. A `CommandBuffer` refuses a stale handle when the command is recorded (`RunError`, coding standard rule 9). At playback, a command that no longer applies is skipped with a warning to the World's `ILogSink`, or to the standard error output when the World has none.
+  4. An entity created and destroyed in the same buffer never appears and no observer hears of it (§9), unless the buffer also parents an entity to it; then it is created and destroyed for real, so that the child is destroyed with it (srs.fr.2.4).
+  5. When an entity is destroyed, every observer hears about the whole subtree, parents before children and children in order, before any of its components are removed.
+- **Rationale:** each closes a gap without changing the designed API, and none lets an ID reach a second entity.
+- **Consequences:** a host starts a run with `beginRun()` on a World with no runtime entities left, for example after restoring the Play mode snapshot.
+- **Docs updated:** `design/ecs-api-design.md` §9 (the created-then-destroyed row).
+- **Course documents affected (for humans):** none.
+- **Revisit when:** the snapshot design (D-24) or the scene loader needs other ID rules.
+- **Supersedes / Related:** D-2, D-4, D-5, D-29; DEC-46.2.
 ### DEC-152.1 — Agent docs are read in tiers: a one-line decision index, rotated handoffs, problems by area, archives for closed records
 - **Date:** 2026-11-24
 - **Status:** Accepted (decided in the conversation; details carried by PR #152, binding once a human merges it, DEC-052)

@@ -58,6 +58,24 @@
 - **Next:** if the advisor should also lose repository access, that is a repository setting (Settings → Collaborators), not part of this PR.
 - **Records:** DEC-151.1, HND-151.1.
 
+---
+
+### HND-46.1 — Entities, IDs, the hierarchy and the command buffer (US-2.1)
+- **Date:** 2026-11-23
+- **Agent:** claude-code/opus-5.5/us-2.1
+- **Work:** US-2.1 #46 on `feat/us-2.1-create-destroy-entities`; pull request not opened yet
+- **Goal:** srs.fr.2.1 to 2.5: create and destroy entities at runtime with IDs that are never given to another entity, destruction requests that take effect at the end of the phase, destroying with all descendants, and a name, enabled flag, tag, layer and optional parent for every entity.
+- **Result:** Done. New target `engine::ecs` (`engine/ecs/`, links only `engine::core`): `Entity`, `EntityTable`, the sorted sparse-set `ComponentPool<T>`, `FixedString`, `AssetId`, `TagId`, the built-in Name, EntityInfo and Hierarchy components, `World` (create, destroy, find, idOf, enabled flag, setParent, beginRun, observers, log sink) and `CommandBuffer` (createEntity, destroy, setParent, playback).
+- **Files changed:** `engine/ecs/**`, `engine/CMakeLists.txt`, `engine/core/include/engine/core/entity_id.hpp` (SRS number), `tests/unit/ecs/**`, `tests/CMakeLists.txt`, `docs/design/ecs-api-design.md`, `docs/design/ecs-design.md`, `docs/agents/state/current-status.md`, `docs/guidelines/repository-structure.md`, `docs/history/decision-log.md`.
+- **Verified:** `windows-debug` (MSVC 19.44) and `headless` presets with `-DENGINE_WARNINGS_AS_ERRORS=ON` build clean; CTest 332/332 and 319/319; clang-format 19.1.7 dry run clean; `tools/check_ids.py`, `tools/check_md_links.py` and `tools/check_includes.py` pass.
+- **Not verified:** GCC and Apple Clang (CI runs them); a slot's generation wrapping around (it takes 2^32 destructions of one slot; the code retires such a slot).
+- **Repo state:** builds and tests pass; committed only after the member approves (DEC-058).
+- **Next:**
+  1. US-2.2 on `feat/us-2.2-add-remove-components`, stacked on this branch: the type registry and reflection, general `add`/`remove`/`get`/`has`/`tryGet`, component enabled flags (DEC-46.3) and `CommandBuffer` add/remove; `World` then takes `const TypeRegistry&` (design §5).
+  2. US-2.3 backs `ISimulation::runPhase()` with the ECS and adds queries that skip disabled entities (srs.fr.2.15); decide there whether a disabled parent also hides its children, which the SRS does not say.
+  3. US-2.8 moves `ecs-event-bus-design.md` to the final SRS numbers and records E-1 to E-5.
+- **Traps:** the ECS design docs were written against the SRS draft of 2026-11-05; the final SRS (2026-11-14) is renumbered from about srs.fr.2.61 on (runtime IDs 2.63, destroy timing 2.116, ID range 2.104). A `CommandBuffer` must be played back: the entities it created stay alive without components until then. `World` can be neither copied nor moved, because its pool list points at its own members.
+- **Records:** DEC-46.1, DEC-46.2, DEC-46.3, DEC-46.4, HND-46.1.
 
 ### HND-152.1 — Agent docs read in tiers (decision index, handoff rotation, problems by area)
 - **Date:** 2026-11-24

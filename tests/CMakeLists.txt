@@ -11,6 +11,12 @@ add_executable(engine_tests
     unit/core/run_options_test.cpp
     unit/core/tick_phase_test.cpp
     unit/core/version_test.cpp
+    unit/ecs/command_buffer_test.cpp
+    unit/ecs/component_pool_test.cpp
+    unit/ecs/entity_table_test.cpp
+    unit/ecs/fixed_string_test.cpp
+    unit/ecs/world_entities_test.cpp
+    unit/ecs/world_hierarchy_test.cpp
     unit/editor/main_menu_test.cpp
     unit/editor/ai_privacy_settings_test.cpp
     unit/editor/assistant_chat_context_test.cpp
@@ -34,6 +40,7 @@ target_link_libraries(engine_tests PRIVATE
     editor::core
     aegis::assistant
     engine::core
+    engine::ecs
     engine::bridge
     engine::physics
     engine::physics_box2d

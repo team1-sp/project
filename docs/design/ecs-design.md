@@ -8,13 +8,13 @@ Words: a **tick** is one fixed simulation step of 1/60 s that runs the seven tic
 
 | Capability | Requirement | Where designed |
 | --- | --- | --- |
-| Create / destroy entities at runtime; a never-reused 64-bit `EntityId` plus a generation-checked runtime handle | ip.fr.2.1, srs.fr.2.1–2.2, 2.107 | API §4 |
+| Create / destroy entities at runtime; a never-reused 64-bit `EntityId` plus a generation-checked runtime handle | ip.fr.2.1, srs.fr.2.1–2.2, 2.104 | API §4 |
 | Add / remove / get / modify components; plain data only (R-8) | ip.fr.2.2 | API §5–6 |
 | Systems run once per tick in their tick phase, in a defined, repeatable order | ip.fr.2.3, srs.fr.2.14 | API §8 |
 | Queries by component combination, ascending `EntityId` | ip.fr.2.4, rule 6 | API §7 |
 | Declared reads, writes, publishes, subscribes, entity creation/destruction, enable changes and random use, checked in every build | ip.fr.10.*, DEC-018 | API §8, §10 |
 | Introspection and a `Schema` (types, fields, units, descriptions, systems, derived readBy/writtenBy) written to telemetry | ip.fr.10.*, Q-013 | API §11–12 |
-| Deferred structural changes through a `CommandBuffer`, applied at the end of each tick phase | srs.fr.2.119, E-003 | API §9 |
+| Deferred structural changes through a `CommandBuffer`, applied at the end of each tick phase | srs.fr.2.116, E-003 | API §9 |
 | Typed events pushed to subscribed systems at the end of the publishing phase | srs.fr.2.45–2.47 | Event bus |
 | Several independent Worlds per process | ADR-002 | API §5, §16 |
 
@@ -42,7 +42,7 @@ Units follow [../components.md](../components.md) (DEC-036): meters, seconds, ki
 - Required components (srs.fr.3.36): colliders and RigidBody need Position; RigidBody needs Velocity and a collider; PlayerInput needs Position, Velocity and Inventory; Collectible, Unlockable and Objective need Position. Phase 1 spawn code adds them explicitly; automatic adding (srs.fr.3.37) comes with the Editor.
 - The player is the enabled entity with a `PlayerInputComponent`, lowest `EntityId` first (srs.fr.9.22). There is no separate player tag.
 - `Obstacle` is a tag value (`EntityInfo.tag`) from the project's tag list (srs.fr.2.53), not a tag component.
-- Later: Polygon collider, hierarchy, state sprites, managed components, component enabled flags.
+- Later: Polygon collider, state sprites, managed components. The hierarchy and the entity and component enabled flags are built with US-2.1 and US-2.2 (DEC-46.3).
 
 ### Velocity and position authority (DEC-040)
 
@@ -113,3 +113,4 @@ Phase 1 items of [ecs-api-design.md](ecs-api-design.md) §15 and [ecs-event-bus-
 | Date | Change | By |
 | --- | --- | --- |
 | 2026-11-05 | Rewritten to the PB-010 design and DEC-040 … DEC-043: ticks, pushed events, SRS component set, Phase 1 systems, time/RNG/ids/errors, scenes as spawn code, Q-013 for Phase 1 | claude (PR #28 review) |
+| 2026-11-23 | Hierarchy and enabled flags join Phase 1 (DEC-46.3); entity SRS numbers follow the final SRS | claude-code (US-2.1) |

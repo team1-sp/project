@@ -88,6 +88,10 @@ Statuses: `Proposed` (waiting for an answer; binds nobody) · `Accepted` (bindin
 ### Still open, no entry yet (do not decide silently)
 
 what "LLM-instructive components" means concretely (Q-013, deferred by the human) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
+| DEC-46.1 | ADR-001: components are stored in sparse sets, one independent pool per type | Accepted | 2026-11-05 |
+| DEC-46.2 | The PB-010 design decisions D-2 to D-29 (`ecs-api-design.md` §2) are the ECS design | Accepted | 2026-11-05 |
+| DEC-46.3 | US-2.1 and US-2.2 also build the hierarchy and the entity and component enabled flags | Accepted | 2026-11-23 |
+| DEC-46.4 | US-2.1: ID reuse rules, run start, command buffer errors, created-then-destroyed parents | Accepted | 2026-11-23 |
 
 ## Archived
 
