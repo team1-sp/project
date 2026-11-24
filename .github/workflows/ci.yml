@@ -39,6 +39,7 @@ jobs:
               - 'tools/rotate_handoffs.py'
               - 'tools/check_requirements.py'
               - 'tools/renumber_requirements.py'
+              - 'tools/apply_requirement_changes.py'
               - '**/*.{c,cpp,h,hpp,py,proto}'
             cpp:
               - '**/*.{c,cc,cpp,cxx,h,hh,hpp,hxx,inl}'
@@ -118,6 +119,8 @@ jobs:
         run: python3 tools/check_requirements.py .
       - name: Requirement ids run without gaps and every reference resolves (DEC-152.3)
         run: python3 tools/renumber_requirements.py --check .
+      - name: Pending requirement changes apply cleanly and every RC- id is defined (DEC-153.1)
+        run: python3 tools/apply_requirement_changes.py --check .
       - name: Agent boot files stay under their size budget (DEC-152.1)
         run: python3 tools/check_boot.py .
       - name: Record ids are unique and new ones use the PR's number (DEC-055, DEC-148.1)
