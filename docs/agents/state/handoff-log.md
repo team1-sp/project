@@ -188,15 +188,15 @@
 
 ---
 
-### HND-157.1 — Merge commits for PRs with stacked PRs, and a reminder workflow
+### HND-158.1 — Merge commits for PRs with stacked PRs, and a reminder workflow
 - **Date:** 2026-11-24
-- **Agent:** claude-code/opus-5.5/157-stacks
-- **Work:** PR #157 (no issue)
-- **Goal:** stop stacked PRs from conflicting with `main` after the PR below them is squash-merged, as Işık Dönger chose (DEC-157.1).
+- **Agent:** claude-code/opus-5.5/158-stacks
+- **Work:** PR #158 (no issue)
+- **Goal:** stop stacked PRs from conflicting with `main` after the PR below them is squash-merged, as Işık Dönger chose (DEC-158.1).
 - **Result:** Done, awaiting review. New `tools/flag_stacks.py` and `.github/workflows/stack-flag.yml` (label `has-stacked-prs` plus one comment per stacked PR); the rule is in `git-workflow.md` §4, CONTRIBUTING, AGENT-PROTOCOL 23a and the PR template.
 - **Files changed:** `tools/flag_stacks.py`, `.github/workflows/stack-flag.yml`, `.github/labels.yml`, `.github/pull_request_template.md`, `CONTRIBUTING.md`, `docs/guidelines/git-workflow.md`, `docs/agents/AGENT-PROTOCOL.md`, `docs/history/{decision-log,decision-index}.md`.
 - **Verified:** `flag_stacks.py` dry run against the repository (no stacks open now); its stack detection on a fake list (two PRs on one base, a chain, a fork head ignored); `check_ids.py`, `check_boot.py`, `check_md_links.py`.
 - **Not verified:** the workflow on GitHub until a stacked PR is opened (it can also be run by hand from the Actions tab).
 - **Next:** the `Protect Main` ruleset must allow the "Merge" method (it allows only squash now); the repository's default merge commit title should be the PR title. Both are admin settings.
 - **Traps:** the agent boot files sit at the 50 KB budget; 23a and two index rows were shortened to fit. DEC-46.1 to DEC-48.1 rows had landed below the "Still open" paragraph of the index (outside the table) after the ECS stack merges; moved back into Active.
-- **Records:** DEC-157.1, HND-157.1.
+- **Records:** DEC-158.1, HND-158.1.

@@ -21,7 +21,7 @@
 - {name: "area:qa", color: "0e8a16", description: "Testing, benchmarks, evaluation"}
 - {name: "area:docs", color: "0e8a16", description: "Documentation"}
 - {name: "needs-sync", color: "b60205", description: "Conflicts with main; the author merges main into the branch (DEC-055)"}
-- {name: "has-stacked-prs", color: "fbca04", description: "Other PRs are stacked on this one; merge it with a merge commit, not squash (DEC-157.1)"}
+- {name: "has-stacked-prs", color: "fbca04", description: "Other PRs are stacked on this one; merge it with a merge commit, not squash (DEC-158.1)"}
 - {name: "increment-done", color: "c2e0c6", description: "Epic whose planned sub-issues are all closed; only later stories are left (DEC-062)"}
 - {name: "type:epic", color: "3e4b9e", description: "SRS epic (EP-xx); its stories are sub-issues"}
 - {name: "type:story", color: "0e8a16", description: "SRS user story (US-x.y); its FRs are the acceptance criteria"}

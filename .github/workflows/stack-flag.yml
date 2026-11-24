@@ -1,5 +1,5 @@
 # Reminds the author of a pull request that has other PRs stacked on it (their base is its
-# branch) to merge it with "Create a merge commit" instead of squashing (DEC-157.1). Such a PR
+# branch) to merge it with "Create a merge commit" instead of squashing (DEC-158.1). Such a PR
 # gets the `has-stacked-prs` label and one comment per stacked PR; the label goes away when
 # nothing is stacked on it. It never pushes, merges or changes a merge method. tools/flag_stacks.py
 name: Stack flag

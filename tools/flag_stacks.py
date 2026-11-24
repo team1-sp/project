@@ -1,4 +1,4 @@
-"""Remind the author of a pull request with other PRs stacked on it to merge it with a merge commit (DEC-157.1).
+"""Remind the author of a pull request with other PRs stacked on it to merge it with a merge commit (DEC-158.1).
 
 A PR is "stacked" on another when its base branch is the other PR's head branch. If the lower PR
 is squash-merged, `main` gets its changes as one new commit while the stacked branch still holds
@@ -25,7 +25,7 @@ MARKER = "<!-- stack-merge-reminder:#{child} -->"
 COMMENT = (
     "{marker}\n"
     "Pull request #{child} is stacked on this one: its base is this PR's branch `{branch}`.\n\n"
-    "**Merge this PR with \"Create a merge commit\", not \"Squash and merge\"** (DEC-157.1), and give "
+    "**Merge this PR with \"Create a merge commit\", not \"Squash and merge\"** (DEC-158.1), and give "
     "the merge commit this PR's title. A squash would put this branch on `main` as one new commit "
     "while #{child} still holds the original commits, so #{child} would then conflict with `main` "
     "on files that are already the same. With a merge commit, GitHub moves #{child} onto `main` "

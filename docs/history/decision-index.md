@@ -92,7 +92,7 @@ Statuses: `Proposed` (waiting for an answer; binds nobody) · `Accepted` (bindin
 | DEC-47.2 | Field kinds UInt8, UInt32, Tag; managed fields later | Accepted | 2026-11-23 |
 | DEC-47.3 | Position and Velocity are core ECS components | Accepted | 2026-11-23 |
 | DEC-48.1 | US-2.3: system groups, ordering rules, enable/disable; disables seen next query | Accepted | 2026-11-24 |
-| DEC-157.1 | Merge a PR that has PRs stacked on it with a merge commit; squash the rest | Accepted | 2026-11-24 |
+| DEC-158.1 | Merge a PR that has PRs stacked on it with a merge commit; squash the rest | Accepted | 2026-11-24 |
 
 ### Still open, no entry yet (do not decide silently)
 

@@ -1370,10 +1370,10 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Revisit when:** pending files pile up long enough that agents work against stale requirement text.
 - **Supersedes / Related:** refines DEC-152.3 (when renumbering runs); DEC-152.2, DEC-152.4.
 
-### DEC-157.1 — A pull request with other PRs stacked on it is merged with a merge commit
+### DEC-158.1 — A pull request with other PRs stacked on it is merged with a merge commit
 - **Date:** 2026-11-24
-- **Status:** Accepted (decided in the conversation; carried by PR #157, binding once a human merges it, DEC-052)
-- **Decided by:** Işık Dönger (project chat, 2026-11-24, choosing option 1: "option 1 is fine"; then "settings are fine. you can start on the ci")   **Recorded by:** claude-code/opus-5.5/157-stacks
+- **Status:** Accepted (decided in the conversation; carried by PR #158, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (project chat, 2026-11-24, choosing option 1: "option 1 is fine"; then "settings are fine. you can start on the ci")   **Recorded by:** claude-code/opus-5.5/158-stacks
 - **Human's words:** "now can we circle back on making sure stack merge conflicts do not happen again. option 1 is fine"
 - **Context:** the ECS stack #154 → #155 → #156 hit merge conflicts on files that were already identical, because #154 and #155 were squash-merged: `main` got each lower branch as one new commit while the next branch up still held the original commits. The fix each time was merging `main` into the stacked branch and keeping its side.
 - **Decision:**
