@@ -32,7 +32,7 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | P-11 | MUST tell the human about every material uncertainty or document conflict, in your reply — not only in a file. Course documents (Initial Plan etc.) are not authoritative; the decision log is. |
 | P-12 | SHOULD do code and repository docs work in your own cloud copy of the repository; MUST work on a member's computer only when the files, tools or signed-in accounts exist only there, or the member asks, and there MUST ask before every commit and push (DEC-058, DEC-061; `guidelines/git-workflow.md` §1). |
 | P-10 | MUST NOT leave the repo with failing build/tests without an issue describing it. |
-| P-13 | MUST change requirements only through [playbooks/change-requirements.md](playbooks/change-requirements.md): new ones get a placeholder id (`srs.fr.<n>.new`), removed ones are deleted, and `tools/renumber_requirements.py` renumbers and rewrites references. MUST NOT renumber ids by hand (DEC-152.3). |
+| P-13 | MUST change requirements only through [playbooks/change-requirements.md](playbooks/change-requirements.md): feature work writes a pending file in `docs/requirements/changes/` and cites new requirements as `RC-<n>.<k>`; `tools/apply_requirement_changes.py` applies, renumbers and rewrites references in one batch PR. MUST NOT edit epic files from feature work or renumber ids by hand (DEC-152.3, DEC-153.1). |
 
 ## C. Safety and scope rules
 

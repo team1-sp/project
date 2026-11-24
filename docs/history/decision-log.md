@@ -1333,3 +1333,21 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Course documents affected (for humans):** none directly; the docs-repository patch adds the scripts.
 - **Revisit when:** the SDD gets generated regions (it needs its own parser), or proposals often collide with project changes.
 - **Supersedes / Related:** DEC-152.2, DEC-152.3, DEC-058.
+
+### DEC-153.1 — Feature work writes requirement changes to pending files; one batch PR applies them and renumbers
+- **Date:** 2026-11-24
+- **Status:** Accepted (decided in the conversation; details carried by PR #153, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (in the conversation "Plan docs repo formatting rules and agent workflow", 2026-11-24); the reviewer of PR #153   **Recorded by:** claude-code/opus-5.5/6r0a
+- **Human's words:** "can we make it so requirement changes is also static, only the what will be changed is written and we can sync when we want. I do not think requirements needs to be up-to-date in a moment." Then: "Continious ids are non-negotiable. [...] it will now only be renumbered when the change is applied? If then yes thats fine [...] Renumbering can be required to run directly after applying changes. And my flag for you is this applying changes should also include changing every reference".
+- **Context:** under DEC-152.3 every feature PR that adds or removes a requirement edits a large epic file (ECS 53 KB, Physics 30 KB) and renumbers its group, which rewrites references in up to 56 code and test files and the project docs; parallel PRs that cite the same group conflict.
+- **Decision:**
+  1. Feature work writes the change in `docs/requirements/changes/<n>.md` (`<n>` = the issue or no-issue PR number): `Add after <id>` / `Add at end of US-x.y`, `Reword <id>`, `Remove <id>` with `References: <replacement>|none`, `Move <id> after <id>`. New requirements get a change id `RC-<n>.<k>`, which code, tests and docs cite until applied. Epic files are not edited and nothing is renumbered in feature PRs.
+  2. `tools/apply_requirement_changes.py` applies every pending file in number order in one PR, when the team wants (at the latest before a docs sync for a deliverable): it applies the edits, points references to removed requirements at their replacements, turns every `RC-` id into a placeholder and runs `tools/renumber_requirements.py` right after, which numbers each group 1..n and rewrites every reference; it logs the table in `renumbering.md`, deletes the applied files, and writes nothing when any check fails.
+  3. Ids stay continuous in the requirement files at all times (DEC-152.3 holds); they only change in apply PRs and docs-repository proposals. The renumber script also rewrites ids inside pending change files.
+  4. CI runs `apply_requirement_changes.py --check`: every pending file applies cleanly and every cited `RC-` id has a pending definition, so a branch open during an apply fails until it uses the final ids.
+- **Rationale:** feature PRs carry a few lines instead of a large-file edit and a repository-wide renumber; renumbering conflicts happen once per batch instead of once per change; the SRS still sees continuous ids, and every reference is rewritten by script.
+- **Consequences:** between applies the requirement files lag behind accepted changes; the docs repository should apply first before syncing for a deliverable. A test on a copy applied one file with two adds, an NFR add, a reword, a removal with a replacement and a cross-epic move: 12 ids renumbered in 8 files, references (including `RC-` ids and the removed id) rewritten, `check_requirements.py` and `renumber_requirements.py --check` passing.
+- **Docs updated:** `requirements/README.md`, `requirements/changes/README.md` (new), `agents/playbooks/change-requirements.md`, `agents/rules.md` (P-13), `agents/AGENT-PROTOCOL.md`, `.github/workflows/ci.yml`, `tools/apply_requirement_changes.py` (new), `tools/renumber_requirements.py`.
+- **Course documents affected (for humans):** none; the SRS keeps continuous ids. The docs repository's sync should warn while change files are pending (docs-repository follow-up).
+- **Revisit when:** pending files pile up long enough that agents work against stale requirement text.
+- **Supersedes / Related:** refines DEC-152.3 (when renumbering runs); DEC-152.2, DEC-152.4.

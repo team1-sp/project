@@ -11,6 +11,7 @@ Agents read this folder **on demand** ([reading tiers](../agents/README.md#readi
 | [conventions.md](conventions.md) | Id format, keywords, system names, screen codes, ticks and frames | 6.1 Conventions |
 | `functional/ep-<nn>-<slug>.md` | One epic: its statement, intro, stories and requirements | 6.1 group `srs.fr.<n>`, 6.3 epic table, 6.4 rows |
 | `non-functional/<name>.md` | One non-functional section (`srs.nfr.<n>.*`) | 7.1 to 7.6 |
+| [changes/](changes/README.md)`<n>.md` | Pending changes from feature PRs, applied in one batch (DEC-153.1) | nothing until applied |
 
 An epic file looks like this (the order and the line shapes are fixed):
 
@@ -44,12 +45,13 @@ A story's heading is the subsection title in SRS 6.1; its acceptance criteria in
 
 1. A requirement change is a decision: **humans decide** (DEC-017). Code work that finds a requirement wrong or missing proposes the change in its PR: edit the requirement here and log a `DEC` that quotes the old and the new wording, listed under "Decisions for review" (DEC-052). It binds only when a human merges the PR.
 2. Keep every line shape above. One requirement is one line.
-3. **Ids are numbered from 1 without gaps** in each group, the SRS convention, and a script keeps them that way (DEC-152.3). Agents follow [playbooks/change-requirements.md](../agents/playbooks/change-requirements.md). Never renumber by hand:
+3. **Feature work writes the change, not the edit** (DEC-153.1): a pending file in [changes/](changes/README.md) says what to add, reword, remove or move, and new requirements are cited as `RC-<n>.<k>` until applied. One pull request later runs `python tools/apply_requirement_changes.py`, which applies every pending file and then does the steps below. Agents follow [playbooks/change-requirements.md](../agents/playbooks/change-requirements.md).
+4. **Ids are numbered from 1 without gaps** in each group, the SRS convention, and a script keeps them that way (DEC-152.3). Never renumber by hand. The apply script (and a docs-repository proposal) edits the files this way:
    - **Add:** put the line where it belongs with a placeholder id in its group, `- **srs.fr.14.new** ...` (`srs.fr.14.new2` for a second one), plus its `Use cases` line.
    - **Remove:** delete its two lines, and point any reference to it at the requirement that replaces it.
    - **Move:** move the two lines to the other epic file.
    - Then run `python tools/renumber_requirements.py`. It numbers every group in file order, rewrites every reference across the repository in one pass (code, tests, docs; not `docs/history/`, the handoff log or `docs/research/`), and adds the old → new table to [renumbering.md](renumbering.md). It refuses to run while a removed id is still referenced, and lists where. CI runs it with `--check`.
-4. Do not edit `team1-sp/docs`. Its Markdown and Word files are rebuilt from here only when a deliverable is submitted (S-3).
+5. Do not edit `team1-sp/docs`. Its Markdown and Word files are rebuilt from here only when a deliverable is submitted (S-3).
 
 ## How the docs repository uses this folder
 
