@@ -16,6 +16,10 @@ chains into 14.17), and appends the old -> new table to docs/requirements/renumb
 History is never rewritten: docs/history/, the handoff log and docs/research/ keep the ids they
 were written with, and renumbering.md lets a reader trace them. `srs.fr.0.*` is an example id.
 
+Pending change files (docs/requirements/changes/, DEC-153.1) are rewritten too, so their target
+ids stay right; feature work writes those files and tools/apply_requirement_changes.py applies
+them and then calls this script.
+
 It stops without writing anything when a removed id is still referenced outside history, and
 lists where. `--check` only reports whether a renumbering is needed (CI runs it).
 
@@ -29,7 +33,8 @@ import sys
 
 REQ = "docs/requirements"
 LOG = f"{REQ}/renumbering.md"
-SKIP = ("docs/history/", "docs/agents/state/handoff-log.md", "docs/research/", "tools/renumber_requirements.py", f"{REQ}/README.md", LOG)  # history and human-only notes
+SKIP = ("docs/history/", "docs/agents/state/handoff-log.md", "docs/research/", "tools/renumber_requirements.py", f"{REQ}/README.md", LOG,
+        "tools/apply_requirement_changes.py")  # history and human-only notes; pending change files ARE rewritten
 TEXT = {".md", ".cpp", ".hpp", ".h", ".c", ".py", ".proto", ".txt", ".cmake", ".json", ".yml", ".yaml", ".toml",
         ".ini", ".cfg"}
 ID = re.compile(r"\bsrs\.(n?fr)\.(\d+)\.(\w+)\b")

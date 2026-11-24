@@ -138,3 +138,17 @@
 - **Records:** DEC-152.4, HND-152.5.
 
 ---
+
+---
+
+### HND-153.1 — Requirement changes batched through pending change files
+- **Date:** 2026-11-24
+- **Agent:** claude-code/opus-5.5/6r0a
+- **Work:** PR #153 (no issue)
+- **Goal:** take requirement editing and renumbering out of feature PRs while keeping continuous ids, as Işık Dönger asked (DEC-153.1).
+- **Result:** Done, awaiting review. `tools/apply_requirement_changes.py` (new) applies `docs/requirements/changes/<n>.md` files, rewrites `RC-` ids and removed ids, and runs the renumber script; CI runs its `--check`. Playbook, README, P-13 and the protocol updated.
+- **Verified:** on a copy, one change file (2 adds, NFR add, reword, remove with replacement, cross-epic move) applied: 12 ids renumbered in 8 files, every reference rewritten, the file deleted; `check_requirements.py`, `renumber_requirements.py --check`, `apply_requirement_changes.py --check`, `check_md_links.py`, `check_boot.py` pass on the branch.
+- **Not verified:** CI on the PR until its checks finish; the docs-repository warning for pending files (follow-up there).
+- **Next:** the docs repository's `sync_from_project.py --check` should warn while project change files are pending.
+- **Traps:** an apply PR renumbers; branches open during it fail CI until they use the final ids from `renumbering.md`.
+- **Records:** DEC-153.1, HND-153.1.

@@ -83,6 +83,7 @@ Statuses: `Proposed` (waiting for an answer; binds nobody) · `Accepted` (bindin
 | DEC-152.2 | The project owns the requirements (`docs/requirements/`); the docs repo rebuilds deliverables from it by script | Accepted | 2026-11-24 |
 | DEC-152.3 | Requirement ids stay continuous; `tools/renumber_requirements.py` renumbers them and every reference | Accepted | 2026-11-24 |
 | DEC-152.4 | Requirement edits made in the docs repo come back as a normal project PR made by `propose_to_project.py` | Accepted | 2026-11-24 |
+| DEC-153.1 | Feature PRs write requirement changes to `changes/<n>.md`; one apply PR applies and renumbers | Accepted | 2026-11-24 |
 
 ### Still open, no entry yet (do not decide silently)
 
