@@ -1385,3 +1385,17 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Docs updated:** `guidelines/git-workflow.md` (§1, §2, §3, §4 "Stacked pull requests"), `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (23a), `.github/pull_request_template.md`, `.github/labels.yml`.
 - **Revisit when:** stacks become rare enough that the reminder is noise, or GitHub lets a ruleset pick the merge method per PR.
 - **Supersedes / Related:** refines DEC-032 (squash-only `main`) and DEC-055 (merge conflicts).
+
+### DEC-159.1 — The run mode with a window is called "windowed mode" in the requirements
+- **Date:** 2026-11-24
+- **Status:** Accepted (decided in the conversation; carried by PR #159, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (saved point, 2026-11-17; asked for in the project chat, 2026-11-24)   **Recorded by:** claude-code/srs-v2 thread
+- **Human's words:** "I want you to add it to requirement change md." (project chat, 2026-11-24, about this rename and the srs.fr.14.15 rewording of DEC-065)
+- **Context:** the requirements call the run mode that opens a window and runs render frames "normal mode", against headless mode. The word says nothing about what the mode is. "Editor mode" was rejected, because exported games and the sandbox run in this mode too.
+- **Decision:** the requirements say "windowed mode" (and "windowed-mode") instead of "normal mode"; the Editor's mode switch offers Windowed and Headless. The change is queued in `requirements/changes/159.md` (srs.fr.1.1, 1.3, 1.7, 1.9, 1.10, 1.14, 4.1, 4.10, 4.20, 5.5, 5.7, 5.11, 5.13, 7.6, 17.9, 17.19) with the srs.fr.14.15 rewording of DEC-065, and the render frame convention in `requirements/conventions.md` is reworded now.
+- **Rationale:** names the mode by what it does, and fits every host that runs it.
+- **Consequences:** code, architecture docs and UI frames still say "normal mode" / "Normal" until a follow-up renames them (for example `Application` comments and the B-frames' mode switch).
+- **Docs updated:** `requirements/changes/159.md`, `requirements/conventions.md`, `requirements/README.md` (example), `history/decision-log.md`, `history/decision-index.md`.
+- **Course documents affected (for humans):** SRS A 6.1 (the listed ids and the Conventions), through the next docs sync.
+- **Revisit when:** a third run mode with a window is added.
+- **Supersedes / Related:** DEC-065, DEC-153.1.
