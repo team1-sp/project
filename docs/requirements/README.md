@@ -44,7 +44,7 @@ A story's heading is the subsection title in SRS 6.1; its acceptance criteria in
 
 1. A requirement change is a decision: **humans decide** (DEC-017). Code work that finds a requirement wrong or missing proposes the change in its PR: edit the requirement here and log a `DEC` that quotes the old and the new wording, listed under "Decisions for review" (DEC-052). It binds only when a human merges the PR.
 2. Keep every line shape above. One requirement is one line.
-3. **Ids are numbered from 1 without gaps** in each group, the SRS convention, and a script keeps them that way (DEC-152.3). Never renumber by hand:
+3. **Ids are numbered from 1 without gaps** in each group, the SRS convention, and a script keeps them that way (DEC-152.3). Agents follow [playbooks/change-requirements.md](../agents/playbooks/change-requirements.md). Never renumber by hand:
    - **Add:** put the line where it belongs with a placeholder id in its group, `- **srs.fr.14.new** ...` (`srs.fr.14.new2` for a second one), plus its `Use cases` line.
    - **Remove:** delete its two lines, and point any reference to it at the requirement that replaces it.
    - **Move:** move the two lines to the other epic file.

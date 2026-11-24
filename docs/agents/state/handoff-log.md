@@ -197,3 +197,13 @@
 - **Records:** DEC-152.3, HND-152.3.
 
 ---
+
+### HND-152.4 — Agent playbook for requirement changes
+- **Date:** 2026-11-24
+- **Agent:** claude-code/opus-5.5/6r0a
+- **Work:** PR #152 (no issue)
+- **Result:** Done, awaiting review. `playbooks/change-requirements.md` gives agents the add / edit / remove / move steps with placeholder ids and the renumber script; rule P-13, AGENT-PROTOCOL step 10, record-decision step 7 and the requirements README point to it, so requirement changes need no hand edits.
+- **Verified:** `check_md_links.py`, `check_ids.py`, `check_boot.py` (48.8 KB), `check_requirements.py`, `renumber_requirements.py --check` pass.
+- **Records:** HND-152.4 (part of DEC-152.3).
+
+---

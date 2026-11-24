@@ -42,7 +42,7 @@ Keep the boot files small: closed questions, old handoffs and superseded decisio
 | [state/current-status.md](state/current-status.md) | Increment-level snapshot: phase, what exists, health, traps | any agent, only when something on it changes |
 | [state/handoff-log.md](state/handoff-log.md) | Append-only session handoffs; only the newest entries (`tools/rotate_handoffs.py`) | any agent, every session |
 | [state/open-questions.md](state/open-questions.md) | Open questions for humans / other agents; answered ones move to `history/questions-archive.md` | any agent / human |
-| [playbooks/](playbooks/) | Approach per kind of work, incl. [record-decision](playbooks/record-decision.md) (human decision → log → update every doc) | maintainers |
+| [playbooks/](playbooks/) | Approach per kind of work, incl. [record-decision](playbooks/record-decision.md) (human decision → log → update every doc) and [change-requirements](playbooks/change-requirements.md) (add, edit, remove, move requirements) | maintainers |
 | [templates/](templates/) | Entry formats to copy | maintainers |
 
 ## Two meanings of "agent" — do not confuse them

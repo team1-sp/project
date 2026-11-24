@@ -97,6 +97,7 @@ docs/
     │   ├── implement-feature.md
     │   ├── fix-bug.md
     │   ├── record-decision.md      human decision → log → update every doc
+    │   ├── change-requirements.md  add, edit, remove, move requirements (script renumbers)
     │   ├── write-tests.md
     │   └── update-docs.md
     └── templates/                  copy-paste entry formats
