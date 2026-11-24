@@ -55,6 +55,17 @@ A story's heading is the subsection title in SRS 6.1; its acceptance criteria in
 
 `team1-sp/docs` holds the deliverable Markdown with marked regions (`<!-- GENERATED:srs-fr-list -->` … `<!-- /GENERATED -->`). Its `tools/sync_from_project.py --project <checkout of this repo>` rewrites only those regions from these files, with no AI, and records the project commit in `SYNCED_FROM`. `--check` lists the deliverable sections that are out of date. Text outside the markers (section intros, GenAI usage notes) stays as people wrote it. The seed of this folder was taken from `team1-sp/docs` at commit `2ddcc2e` and rebuilds those SRS sections byte for byte.
 
+## Changes that start in the docs repository
+
+A deliverable update made in `team1-sp/docs` (for example the SRS V2 from meeting notes) may change requirements. Ownership does not move: the change comes here as an ordinary pull request (DEC-152.4).
+
+1. In the docs repository, the SRS regions are edited with the same rules (placeholders for new requirements, deleted lines for removed ones).
+2. Its `tools/propose_to_project.py` rebuilds these files from the edited regions on a branch `docs/<n>-…` (`<n>` = the coming PR number), runs `tools/renumber_requirements.py` and `tools/check_requirements.py`, writes `DEC-<n>.1` (who decided, the source, every added, removed and reworded id), its index row and `HND-<n>.1`, and commits. It refuses when these files changed after the docs repository's last sync.
+3. The branch is pushed and opened as a draft `no-issue` PR with `tools/open_pr.py`, like any docs PR: same branch pattern, CI, review and squash merge by a human. On a member's computer the push waits for the member's approval (DEC-058).
+4. After the merge, the docs repository syncs again and gets the final ids.
+
+No special rule applies to these PRs; review them like any requirement change.
+
 ## Change table
 
 | Date | Change | Author |

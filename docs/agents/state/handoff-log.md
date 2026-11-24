@@ -207,3 +207,15 @@
 - **Records:** HND-152.4 (part of DEC-152.3).
 
 ---
+
+### HND-152.5 — Requirement changes from the docs repository
+- **Date:** 2026-11-24
+- **Agent:** claude-code/opus-5.5/6r0a
+- **Work:** PR #152 (no issue)
+- **Result:** Done, awaiting review (DEC-152.4). Project side: requirements README and change-requirements playbook. Docs side: `propose_to_project.py`, `srs_regions.py`, region fingerprints in `sync_from_project.py`, `AGENTS.md`, in `/mnt/project-files/docs-bridge/docs-repo-bridge.patch` (two commits, applies with `git am` on docs `2ddcc2e`).
+- **Verified:** on copies: docs edits (reword, add with placeholder + 6.4 row, remove, NFR reword) → project branch with DEC-999.1, renumber/format/id checks pass → sync rebuilds the regions with final ids, `--check` clean. Sync refuses while an edited region is unproposed.
+- **Not verified:** `--push` against GitHub (needs a real PR number).
+- **Next:** after #152 merges, the user applies the patch, runs `sync_from_project.py` once to create SYNCED_FROM, and pushes the docs repo.
+- **Records:** DEC-152.4, HND-152.5.
+
+---

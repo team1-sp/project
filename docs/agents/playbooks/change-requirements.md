@@ -33,6 +33,10 @@ If the renumber script stops with "is not a requirement", a removed id is still 
 - Log a `DEC` that quotes the old and the new wording (with the new ids after renumbering) and list it under "Decisions for review".
 - Do not touch `team1-sp/docs` (S-3). Its SRS sections are rebuilt from these files at submission.
 
+## Changes proposed from the docs repository
+
+A PR made by `tools/propose_to_project.py` in `team1-sp/docs` (branch `docs/<n>-…`, `DEC-<n>.1` "Decided by" a meeting or member) already ran the renumber and format checks. Review it like any requirement change; if CI fails, fix it on that branch with this playbook ([requirements README](../../requirements/README.md#changes-that-start-in-the-docs-repository), DEC-152.4).
+
 ## Not covered
 
 User stories (`## US-x.y`) are not renumbered: they name GitHub issues and branches. Adding, removing or splitting a story is a backlog change: ask the human first ([record-decision.md](record-decision.md)).

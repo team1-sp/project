@@ -1208,3 +1208,21 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Course documents affected (for humans):** none; the SRS keeps continuous ids.
 - **Revisit when:** renumbering PRs collide often.
 - **Supersedes / Related:** refines DEC-152.2 part 4.
+
+### DEC-152.4 — Requirement changes made in the docs repository come back as an ordinary project PR, made by a script
+- **Date:** 2026-11-24
+- **Status:** Accepted (decided in the conversation; details carried by PR #152, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (in the conversation "Bridge project docs and docs repo", 2026-11-24); the reviewer of PR #152   **Recorded by:** claude-code/opus-5.5/6r0a
+- **Human's words:** "we have worked on only the update from project/docs to docs/. But how about update from docs/ to project/docs. For example I was going to get to creating a workflow for updating the docs for V2 submission based on the meeting notes, but that also does touch requirement which lives and owned by project/docs." Then: "I want it to be added now".
+- **Context:** DEC-152.2 made the project the owner of the requirements and the docs repository a consumer. Deliverable work (instructor feedback, meeting notes, the SRS V2) starts in the docs repository and can change requirements.
+- **Decision:**
+  1. Ownership does not move. The docs repository may edit the generated SRS regions with the project's rules (placeholders for new requirements, deleted lines for removed ones, a 6.4 row for each new one; no new or removed stories), and must then propose the edit.
+  2. `tools/propose_to_project.py` (docs repository) parses the edited regions back into `docs/requirements/` on a branch `docs/<n>-…` from `main`, runs `tools/renumber_requirements.py` and `tools/check_requirements.py`, writes `DEC-<n>.1` (who decided, the source, every added, removed and reworded id), its index row and `HND-<n>.1`, and commits; `--push` opens the draft PR with `tools/open_pr.py`. No AI is involved.
+  3. These PRs follow the normal rules: `no-issue` docs PR named after its number, CI, human review and merge; on a member's computer the push waits for the member (DEC-058). No special rule is added.
+  4. Safety: the script refuses when the project's requirements changed after the docs repository's `SYNCED_FROM` commit. `SYNCED_FROM` stores a fingerprint of each generated region; `sync_from_project.py` refuses to overwrite a region edited since the last sync until it is proposed (or `--discard`ed), and a proposal marks its edits as sent so the sync after the merge replaces them with the final ids.
+- **Rationale:** one owner and one review path for requirements, whichever repository the change starts in, with no hand renumbering and no AI cost.
+- **Consequences:** verified end to end on copies: one rewording, one addition, one removal and one NFR rewording in the docs Markdown became a project branch (25 ids renumbered in 43 files, all checks passing, `DEC-999.1` written), and the sync afterwards rebuilt the docs regions with the final ids and nothing left out of date. The docs repository needs `gh` signed in (or `--number`) to know the coming PR number.
+- **Docs updated:** `requirements/README.md`, `agents/playbooks/change-requirements.md`; docs-repository side (patch): `tools/propose_to_project.py`, `tools/srs_regions.py`, `tools/sync_from_project.py`, `AGENTS.md`.
+- **Course documents affected (for humans):** none directly; the docs-repository patch adds the scripts.
+- **Revisit when:** the SDD gets generated regions (it needs its own parser), or proposals often collide with project changes.
+- **Supersedes / Related:** DEC-152.2, DEC-152.3, DEC-058.
