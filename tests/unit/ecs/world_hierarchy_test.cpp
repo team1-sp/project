@@ -38,7 +38,7 @@ std::vector<EntityId> childrenOf(const World& world, Entity parent) {
 
 // srs.fr.2.5: an entity's optional parent; children keep the order they were added in.
 TEST(WorldHierarchy, SetParent_AppendsTheChildAndLinksBothSides) {
-    World world;
+    World world{ecs_test::types()};
     const Entity parent = world.createEntity(editorId(1));
     const Entity a = world.createEntity(editorId(2));
     const Entity b = world.createEntity(editorId(3));
@@ -54,7 +54,7 @@ TEST(WorldHierarchy, SetParent_AppendsTheChildAndLinksBothSides) {
 }
 
 TEST(WorldHierarchy, SetParentToNull_MakesTheEntityARootAndRelinksItsSiblings) {
-    World world;
+    World world{ecs_test::types()};
     const Entity parent = world.createEntity(editorId(1));
     const Entity a = world.createEntity(editorId(2));
     const Entity b = world.createEntity(editorId(3));
@@ -74,7 +74,7 @@ TEST(WorldHierarchy, SetParentToNull_MakesTheEntityARootAndRelinksItsSiblings) {
 }
 
 TEST(WorldHierarchy, SetParentToAnotherParent_MovesTheChild) {
-    World world;
+    World world{ecs_test::types()};
     const Entity first = world.createEntity(editorId(1));
     const Entity second = world.createEntity(editorId(2));
     const Entity child = world.createEntity(editorId(3));
@@ -87,7 +87,7 @@ TEST(WorldHierarchy, SetParentToAnotherParent_MovesTheChild) {
 }
 
 TEST(WorldHierarchy, SetParentToItselfOrADescendant_IsRefused) {
-    World world;
+    World world{ecs_test::types()};
     const Entity root = world.createEntity(editorId(1));
     const Entity child = world.createEntity(editorId(2));
     const Entity grandchild = world.createEntity(editorId(3));
@@ -101,7 +101,7 @@ TEST(WorldHierarchy, SetParentToItselfOrADescendant_IsRefused) {
 
 // srs.fr.2.4: destroying an entity destroys all of its descendants, and nothing else.
 TEST(WorldHierarchy, DestroyEntity_DestroysAllDescendants) {
-    World world;
+    World world{ecs_test::types()};
     const Entity root = world.createEntity(editorId(1));
     const Entity child = world.createEntity(editorId(2));
     const Entity grandchild = world.createEntity(editorId(3));
@@ -120,7 +120,7 @@ TEST(WorldHierarchy, DestroyEntity_DestroysAllDescendants) {
 
 // Observers hear about every destroyed entity, parents before children, children in order.
 TEST(WorldHierarchy, DestroyEntity_TellsObserversDepthFirst) {
-    World world;
+    World world{ecs_test::types()};
     RecordingObserver observer;
     world.addObserver(observer);
     const Entity root = world.createEntity(editorId(1));
@@ -138,7 +138,7 @@ TEST(WorldHierarchy, DestroyEntity_TellsObserversDepthFirst) {
 }
 
 TEST(WorldHierarchy, DestroyAChild_KeepsTheParentAndTheOtherChildrenLinked) {
-    World world;
+    World world{ecs_test::types()};
     const Entity parent = world.createEntity(editorId(1));
     const Entity a = world.createEntity(editorId(2));
     const Entity b = world.createEntity(editorId(3));

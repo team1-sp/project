@@ -11,7 +11,7 @@ Increment 1 (prototype): the Increment 1 stories (SRS B) are the issues in the I
 | Area | Where | State |
 | --- | --- | --- |
 | Engine core | `engine/core` | Fixed game loop with the seven tick phases, windowed and headless runs, pause/resume/step, input sources, structured logging. `ISimulation` waits for the ECS. |
-| ECS | `engine/ecs` | Entities and their IDs, hierarchy and enabled flag; built-in components; `CommandBuffer` (US-2.1). Components, systems, queries and events follow (US-2.2, 2.3, 2.8). |
+| ECS | `engine/ecs` | Entities, components with descriptions, `CommandBuffer` (US-2.1, 2.2). Systems, queries, events follow (US-2.3, 2.8). |
 | Physics | `engine/physics`, `engine/physics-box2d` | `IPhysicsAdapter` interface; Box2D is built and linked in `physics-box2d`, the adapter implementation is still to come. |
 | Rendering | `engine/rendering-raylib` | Raylib window behind the rendering abstraction; never initialised headless. |
 | AgentBridge | `engine/bridge`, `proto/` | Engine side of the gRPC/protobuf contract to the Python AI service (localhost only for the prototype). |

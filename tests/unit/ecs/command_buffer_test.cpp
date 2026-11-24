@@ -27,7 +27,7 @@ using engine::World;
 
 // D-5: the handle and the ID exist at once; the components appear at playback.
 TEST(CommandBuffer, CreateEntity_GivesHandleAndIdNowAndComponentsAtPlayback) {
-    World world;
+    World world{ecs_test::types()};
     CommandBuffer commands{world};
 
     const Entity e = commands.createEntity();
@@ -48,7 +48,7 @@ TEST(CommandBuffer, CreateEntity_GivesHandleAndIdNowAndComponentsAtPlayback) {
 // srs.fr.2.3, 2.116: a destruction request takes effect at playback, not before; until then
 // the entity is still found (srs.fr.2.115).
 TEST(CommandBuffer, Destroy_TakesEffectAtPlayback) {
-    World world;
+    World world{ecs_test::types()};
     RecordingObserver observer;
     world.addObserver(observer);
     const Entity e = world.createEntity(editorId(7));
@@ -69,7 +69,7 @@ TEST(CommandBuffer, Destroy_TakesEffectAtPlayback) {
 
 // srs.fr.2.4 through a request.
 TEST(CommandBuffer, Destroy_DestroysTheDescendantsToo) {
-    World world;
+    World world{ecs_test::types()};
     const Entity parent = world.createEntity(editorId(1));
     const Entity child = world.createEntity(editorId(2));
     world.setParent(child, parent);
@@ -84,7 +84,7 @@ TEST(CommandBuffer, Destroy_DestroysTheDescendantsToo) {
 
 // §9: create and destroy in one buffer cancel out; the ID is still never used again.
 TEST(CommandBuffer, CreateAndDestroyInOneBuffer_NeverAppears) {
-    World world;
+    World world{ecs_test::types()};
     RecordingObserver observer;
     world.addObserver(observer);
     CommandBuffer commands{world};
@@ -102,7 +102,7 @@ TEST(CommandBuffer, CreateAndDestroyInOneBuffer_NeverAppears) {
 
 // srs.fr.2.4: a created parent that gets a child in the same buffer takes the child with it.
 TEST(CommandBuffer, CreatedParentWithAChildDestroyedInOneBuffer_TakesTheChild) {
-    World world;
+    World world{ecs_test::types()};
     const Entity child = world.createEntity(editorId(1));
     CommandBuffer commands{world};
 
@@ -116,7 +116,7 @@ TEST(CommandBuffer, CreatedParentWithAChildDestroyedInOneBuffer_TakesTheChild) {
 }
 
 TEST(CommandBuffer, SetParent_LinksAtPlaybackInRecordingOrder) {
-    World world;
+    World world{ecs_test::types()};
     const Entity parent = world.createEntity(editorId(1));
     CommandBuffer commands{world};
 
@@ -134,7 +134,7 @@ TEST(CommandBuffer, SetParent_LinksAtPlaybackInRecordingOrder) {
 
 // §9 rule 2: a command on an entity an earlier command destroyed is skipped with a warning.
 TEST(CommandBuffer, DestroyTwice_SkipsTheSecondWithAWarning) {
-    World world;
+    World world{ecs_test::types()};
     RecordingLogSink log;
     world.setLogSink(&log);
     const Entity e = world.createEntity(editorId(9));
@@ -151,7 +151,7 @@ TEST(CommandBuffer, DestroyTwice_SkipsTheSecondWithAWarning) {
 }
 
 TEST(CommandBuffer, SetParentThatWouldMakeACycle_IsSkippedWithAWarning) {
-    World world;
+    World world{ecs_test::types()};
     RecordingLogSink log;
     world.setLogSink(&log);
     const Entity parent = world.createEntity(editorId(1));
@@ -168,7 +168,7 @@ TEST(CommandBuffer, SetParentThatWouldMakeACycle_IsSkippedWithAWarning) {
 
 // A stale handle is a programming error at once, not at playback (coding standard rule 9).
 TEST(CommandBuffer, DestroyWithAStaleHandle_IsRefused) {
-    World world;
+    World world{ecs_test::types()};
     const Entity e = world.createEntity();
     world.destroyEntity(e);
     CommandBuffer commands{world};
@@ -179,7 +179,7 @@ TEST(CommandBuffer, DestroyWithAStaleHandle_IsRefused) {
 
 // Entities created through the buffer get increasing runtime IDs in recording order (D-5).
 TEST(CommandBuffer, CreatedEntities_GetRuntimeIdsInRecordingOrder) {
-    World world;
+    World world{ecs_test::types()};
     CommandBuffer commands{world};
 
     const Entity a = commands.createEntity();

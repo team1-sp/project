@@ -77,6 +77,23 @@
 - **Traps:** the ECS design docs were written against the SRS draft of 2026-11-05; the final SRS (2026-11-14) is renumbered from about srs.fr.2.61 on (runtime IDs 2.63, destroy timing 2.116, ID range 2.104). A `CommandBuffer` must be played back: the entities it created stay alive without components until then. `World` can be neither copied nor moved, because its pool list points at its own members.
 - **Records:** DEC-46.1, DEC-46.2, DEC-46.3, DEC-46.4, HND-46.1.
 
+---
+
+### HND-47.1 — Components, their descriptions and enabled flags (US-2.2)
+- **Date:** 2026-11-23
+- **Agent:** claude-code/opus-5.5/us-2.2
+- **Work:** US-2.2 #47 on `feat/us-2.2-add-remove-components`, stacked on the US-2.1 branch; pull request not opened yet
+- **Goal:** srs.fr.2.6 to 2.12: add, remove, read and change components at runtime, at most one per type, component enabled flags except for Position and Velocity, and a semantic description for each component type.
+- **Result:** Done, except the "systems that read and write it" part of srs.fr.2.12, which is derived from system declarations and comes with US-2.3 (D-8). New: `TypeId`, `TypeRegistry` with component and enum builders, the member-count check and `finalize()`; `FieldInfo`, `readField`, `writeField`; `PositionComponent`, `VelocityComponent` and `registerCoreComponents()`. `World` now takes `const TypeRegistry&`, makes one pool per type and has `add`, `remove`, `has`, `get`, `tryGet`, `setComponentEnabled`, `isComponentEnabled`, `pool(TypeId)` and `forEachComponent`; `CommandBuffer` has `add` and `remove`; observers hear about added and removed components.
+- **Files changed:** `engine/ecs/**`, `tests/unit/ecs/**`, `tests/CMakeLists.txt`, `docs/design/ecs-api-design.md`, `docs/agents/state/current-status.md`, `docs/history/decision-log.md`.
+- **Verified:** `windows-debug` (MSVC 19.44) and `headless` presets with `-DENGINE_WARNINGS_AS_ERRORS=ON` build clean; CTest 367/367 and 354/354; clang-format 19.1.7 dry run clean; `tools/check_ids.py`, `tools/check_md_links.py` and `tools/check_includes.py` pass.
+- **Not verified:** GCC and Apple Clang (CI runs them), in particular the member counter of `type_registry.hpp` under GCC.
+- **Repo state:** builds and tests pass; committed only after the member approves (DEC-058).
+- **Next:**
+  1. US-2.3 on a branch stacked on this one: systems, groups and ordering, queries that skip disabled entities and components, access checks, timings, the schema's readBy/writtenBy, and the ECS behind `ISimulation::runPhase()` (DEC-46.3 scope, decided for US-2.3 on 2026-11-23).
+  2. US-2.4 on a branch stacked on this one: `.scene` files as JSON through nlohmann/json, using `forEachComponent`, `readField` and `writeField`.
+- **Traps:** the registry and every World that uses it must agree: a World keeps a reference to its registry and one pool per registered type. `World::add` sorts the pool before it returns, so take the returned reference after the call, not a pointer from before it.
+- **Records:** DEC-47.1, DEC-47.2, DEC-47.3, HND-47.1.
 ### HND-152.1 — Agent docs read in tiers (decision index, handoff rotation, problems by area)
 - **Date:** 2026-11-24
 - **Agent:** claude-code/opus-5.5/6r0a

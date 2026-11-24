@@ -1217,6 +1217,47 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Course documents affected (for humans):** none.
 - **Revisit when:** the snapshot design (D-24) or the scene loader needs other ID rules.
 - **Supersedes / Related:** D-2, D-4, D-5, D-29; DEC-46.2.
+
+### DEC-47.1 — The built-in components have no enabled flag of their own
+- **Date:** 2026-11-23
+- **Status:** Accepted (carried by the US-2.2 pull request, binding once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-2.2 pull request   **Recorded by:** claude-code/opus-5.5/us-2.2
+- **Context:** srs.fr.2.11 gives every component except Position and Velocity an enabled flag. The design stores an entity's name, tag, layer and parent as the built-in components Name, EntityInfo and Hierarchy (D-12), which the SRS describes as properties of the entity (srs.fr.2.5) and which the Inspector shows in the entity's header, not as component foldouts with their own checkbox (srs.fr.22.1).
+- **Options considered:** (a) the built-ins have no flag, like Position and Velocity; the entity's enabled flag covers them; (b) they get a flag like any other component, which would let a system "disable" an entity's name or parent link.
+- **Decision:** (a). Name, EntityInfo and Hierarchy have no enabled flag; `World::setComponentEnabled` refuses them, as it refuses Position and Velocity.
+- **Rationale:** they are the entity's own data, read even for disabled entities (the Hierarchy panel, scene saving), and a disabled parent link would break srs.fr.2.4 and 2.5.
+- **Consequences:** queries treat them as always enabled; only the entity flag hides them (US-2.3).
+- **Docs updated:** `design/ecs-api-design.md` §6.
+- **Course documents affected (for humans):** none.
+- **Supersedes / Related:** D-12, D-13; DEC-46.3.
+
+### DEC-47.2 — The field kinds of US-2.2 and when the others come
+- **Date:** 2026-11-23
+- **Status:** Accepted (carried by the US-2.2 pull request, binding once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-2.2 pull request   **Recorded by:** claude-code/opus-5.5/us-2.2
+- **Context:** the field types of `ecs-api-design.md` §11 have no kind for the built-in fields `EntityInfo.layer` (`std::uint8_t`), `EntityInfo.tag` (`TagId`) and `Hierarchy.childCount` (`std::uint32_t`). §17 leaves managed components for later, and the first `FixedArray` field is the Inventory of the demo loop.
+- **Decision:**
+  1. `FieldType` gains `UInt8`, `UInt32` and `Tag`. A `FieldValue` holds both unsigned kinds as `std::uint32_t` and writing checks the range.
+  2. Enum fields need an `enum class` with an unsigned underlying type; a `FieldValue` holds the value as `std::int64_t`. `TypeRegistry::enumeration<E>(name, description)` takes a description, because every enum is registered with one (`ecs-design.md` §8).
+  3. US-2.2 registers unmanaged (trivially copyable) components only, and `CommandBuffer::add` copies their bytes when the command is recorded. `String`, `List` and `FixedArray` fields, and managed components, come with the first component that needs them.
+  4. Looking a type up by its C++ type also checks that the type registered under that name is the same C++ type, so two structs with one `typeName` cannot reach each other's pool.
+- **Rationale:** the built-ins are reflected like every other component (srs.fr.2.12, scene files in US-2.4) without changing their types; the rest keeps US-2.2 to what its acceptance criteria need.
+- **Consequences:** whoever adds the first managed or `FixedArray` field extends `FieldType`, `FieldValue`, `readField`/`writeField` and the command buffer's value storage.
+- **Docs updated:** `design/ecs-api-design.md` §11.
+- **Course documents affected (for humans):** none.
+- **Supersedes / Related:** D-6, D-14; DEC-043.
+
+### DEC-47.3 — Position and Velocity are engine components registered with `registerCoreComponents()`
+- **Date:** 2026-11-23
+- **Status:** Accepted (carried by the US-2.2 pull request, binding once a human merges it, DEC-052)
+- **Decided by:** the reviewer of the US-2.2 pull request   **Recorded by:** claude-code/opus-5.5/us-2.2
+- **Context:** srs.fr.2.11 names Position and Velocity as the components without an enabled flag, so US-2.2 needs them. Physics, gameplay and rendering all use them (`ecs-design.md` §2); no story owns their definition.
+- **Decision:** `PositionComponent` (x, y, rotation, scaleX, scaleY) and `VelocityComponent` (x, y), with the fields of `ecs-design.md` §2, live in `engine/ecs/core_components.hpp`, and `registerCoreComponents(TypeRegistry&)` registers them as always enabled. They are not built-in: an entity has them only when they are added. Write tracking for them (D-27) comes with the physics synchronization systems.
+- **Rationale:** every module that uses them already depends on `engine::ecs`, so no module depends on another for them (R-2).
+- **Consequences:** a host registers them before `finalize()`, like the other engine components.
+- **Docs updated:** none beyond `ecs-design.md` §2, which already lists them.
+- **Course documents affected (for humans):** none.
+- **Supersedes / Related:** D-13, D-27, DEC-040, DEC-041.
 ### DEC-152.1 — Agent docs are read in tiers: a one-line decision index, rotated handoffs, problems by area, archives for closed records
 - **Date:** 2026-11-24
 - **Status:** Accepted (decided in the conversation; details carried by PR #152, binding once a human merges it, DEC-052)

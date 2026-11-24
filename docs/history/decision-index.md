@@ -88,10 +88,13 @@ Statuses: `Proposed` (waiting for an answer; binds nobody) · `Accepted` (bindin
 ### Still open, no entry yet (do not decide silently)
 
 what "LLM-instructive components" means concretely (Q-013, deferred by the human) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
-| DEC-46.1 | ADR-001: components are stored in sparse sets, one independent pool per type | Accepted | 2026-11-05 |
-| DEC-46.2 | The PB-010 design decisions D-2 to D-29 (`ecs-api-design.md` §2) are the ECS design | Accepted | 2026-11-05 |
-| DEC-46.3 | US-2.1 and US-2.2 also build the hierarchy and the entity and component enabled flags | Accepted | 2026-11-23 |
-| DEC-46.4 | US-2.1: ID reuse rules, run start, command buffer errors, created-then-destroyed parents | Accepted | 2026-11-23 |
+| DEC-46.1 | ADR-001: sparse-set component storage, one pool per type | Accepted | 2026-11-05 |
+| DEC-46.2 | PB-010 decisions D-2 to D-29 are the ECS design | Accepted | 2026-11-05 |
+| DEC-46.3 | US-2.1/2.2 also build the hierarchy and enabled flags | Accepted | 2026-11-23 |
+| DEC-46.4 | US-2.1 rules: ID reuse, run start, command buffer errors | Accepted | 2026-11-23 |
+| DEC-47.1 | Built-in components have no enabled flag | Accepted | 2026-11-23 |
+| DEC-47.2 | Field kinds UInt8, UInt32, Tag; managed and FixedArray fields later | Accepted | 2026-11-23 |
+| DEC-47.3 | Position and Velocity are core components (`registerCoreComponents`) | Accepted | 2026-11-23 |
 
 ## Archived
 

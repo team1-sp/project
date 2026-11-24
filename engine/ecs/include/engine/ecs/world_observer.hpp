@@ -2,6 +2,7 @@
 
 #include "engine/core/entity_id.hpp"
 #include "engine/ecs/entity.hpp"
+#include "engine/ecs/type_id.hpp"
 
 namespace engine {
 
@@ -20,6 +21,12 @@ public:
 
     // Called when an entity's enabled flag changes (srs.fr.2.116: at once).
     virtual void onEntityEnabledChanged(Entity /*e*/, bool /*enabled*/) {}
+
+    // Called after a component is added to or removed from a live entity, directly or at command
+    // playback. Not called for the built-in components of a new entity, nor for the components a
+    // destroyed entity loses (onEntityDestroyed covers those).
+    virtual void onComponentAdded(Entity /*e*/, TypeId /*type*/) {}
+    virtual void onComponentRemoved(Entity /*e*/, TypeId /*type*/) {}
 };
 
 } // namespace engine

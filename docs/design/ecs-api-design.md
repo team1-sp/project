@@ -255,7 +255,8 @@ A sorted insert per command was rejected: scene entities have Editor IDs (below 
 - **Tags** (`std::is_empty_v<T>`) store no `components_`; only `has`, `add`, `remove` and query filters apply.
 - **Unmanaged** components (`std::is_trivially_copyable_v<T>`) may contain only fixed-size fields. Their pools can be copied with `memcpy` (snapshots, telemetry fast path) and exposed as one contiguous buffer with a field layout (§11, §16).
 - **Managed** components may own heap memory (`std::string`, `std::vector`). They are copied with their copy constructors. Keep them out of hot paths where possible (coding rule 7).
-- `IComponentPool` is the type-erased interface: `type()`, `size()`, `contains(e)`, `removeIfPresent(e)`, `idAt(pos)`, `enabledAt(pos)` and `rawAt(pos)` (used with the reflection accessors of §11).
+- `IComponentPool` is the type-erased interface: `typeName()`, `size()`, `contains(e)`, `idAt(pos)`, `enabledAt(pos)`, `rawOf(e)`, `addRaw(e, id, bytes)`, `addDefault(e, id)`, `removeIfPresent(e)` and `sortIfDirty()` (used with the reflection accessors of §11, the command buffer and scene files).
+- **No enabled flag** (D-13, DEC-47.1): Position, Velocity and the built-in components Name, EntityInfo and Hierarchy; the entity's own flag covers them.
 
 ## 7. Queries (D-15)
 
@@ -557,13 +558,14 @@ Files and exports always use the **name**; `TypeId` is the in-memory key. A hash
 | `FieldType` | C++ type | Kind |
 | --- | --- | --- |
 | `Bool`, `Int32`, `Int64`, `Float`, `Double` | `bool`, `std::int32_t`, `std::int64_t`, `float`, `double` | unmanaged |
+| `UInt8`, `UInt32` | `std::uint8_t`, `std::uint32_t` (DEC-47.2) | unmanaged |
 | `Vec2` | `engine::Vec2` | unmanaged |
-| `Enum` | a registered `enum class` | unmanaged |
-| `EntityRef`, `AssetRef` | `EntityId`, `AssetId` | unmanaged |
+| `Enum` | a registered `enum class` with an unsigned underlying type (DEC-47.2) | unmanaged |
+| `EntityRef`, `AssetRef`, `Tag` | `EntityId`, `AssetId`, `TagId` | unmanaged |
 | `FixedString`, `FixedArray` | `FixedString<N>`, `FixedArray<T, N>` | unmanaged |
 | `String`, `List` | `std::string`, `std::vector<T>` | **managed** |
 
-Nested structs are not supported in this version, so components stay flat.
+Nested structs are not supported in this version, so components stay flat. US-2.2 builds the unmanaged kinds except `FixedArray`; `FixedArray`, `String` and `List` come with the first component that needs them (DEC-47.2).
 
 ```cpp
 enum class Unit : std::uint8_t {          // components.md, DEC-036
@@ -635,7 +637,7 @@ void registerCoreComponents(TypeRegistry& types) {
 }
 ```
 
-`TypeRegistry` offers the same builder for `event<E>()` (companion document), `enumeration<E>(name)` with `.value(E::Static, "Static", "description")`, `dataAsset<T>()` (srs.fr.2.22, 2.23) and `system<S>()` (srs.fr.2.37). `types.finalize()` validates and freezes the registry: every type and field has a description (srs.fr.2.38), names are unique (srs.fr.2.39), and an empty type has no fields.
+`TypeRegistry` offers the same builder for `event<E>()` (companion document), `enumeration<E>(name, description)` with `.value(E::Static, "Static", "description")`, `dataAsset<T>()` (srs.fr.2.22, 2.23) and `system<S>()` (srs.fr.2.37). `types.finalize()` validates and freezes the registry: every type and field has a description (srs.fr.2.38), names are unique (srs.fr.2.39), and an empty type has no fields. The registry starts with the built-in components; `registerCoreComponents(types)` adds Position and Velocity (DEC-47.3).
 
 **Unregistered members are refused.** C++20 cannot list a struct's member names, but it can count the members of an aggregate: try brace-initialising `T` with 0, 1, 2, … values convertible to anything and keep the largest count that compiles (the technique Boost.PFR uses; we implement the counter in about 20 lines, no dependency). Every component, tag and event must be an aggregate (`static_assert(std::is_aggregate_v<T>)`), and `finalize()` refuses a type whose member count differs from the number of `.field()` calls. A round-trip test cannot do this: a forgotten member stays at its default on both sides and the test passes.
 
