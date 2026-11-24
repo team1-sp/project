@@ -158,6 +158,22 @@
 
 ---
 
+### HND-48.1 — Systems, ordering, queries and the ECS behind the game loop (US-2.3)
+- **Date:** 2026-11-24
+- **Agent:** claude-code/opus-5.5/us-2.3
+- **Work:** US-2.3 #48 on `feat/us-2.3-register-systems-query-entities`, stacked on the US-2.2 branch; pull request not opened yet
+- **Goal:** srs.fr.2.13 to 2.18 with the scope of DEC-48.1: register systems, run them once per tick in their phase and order, groups and before/after rules, enable/disable, declarations checked on every access, timings, queries that skip disabled entities and components, and the ECS behind `ISimulation`.
+- **Result:** Done. New: `ISystem`, `SystemDescription`, `SystemAccess`, `SystemContext`, `SystemScheduler` (groups, stable order, cycle refusal, manual order, enable/disable, timings, command playback per phase), `World::each`, `single`, `createSingleton`, the query-visible enabled flag, `GameplayRandom` (PCG32), `Schema` with derived readBy/writtenBy, `EcsSimulation`. `CommandBuffer` checks the recording system's declaration and names it in warnings.
+- **Files changed:** `engine/ecs/**`, `tests/unit/ecs/**`, `tests/CMakeLists.txt`, `docs/design/ecs-api-design.md`, `docs/architecture/engine-layer.md`, `docs/agents/state/current-status.md`, `docs/history/decision-log.md`, `docs/history/decision-index.md`.
+- **Verified:** `windows-debug` (MSVC 19.44) and `headless` presets with `-DENGINE_WARNINGS_AS_ERRORS=ON` build clean; CTest 407/407 and 394/394; a headless `Application` run with `EcsSimulation` calls a system once per tick and ends with the outcome Error on an undeclared access; PCG32 matches the reference outputs for seed 42; clang-format 19.1.7 dry run clean; `tools/check_ids.py`, `check_md_links.py`, `check_includes.py`, `check_boot.py`, `check_requirements.py` and `renumber_requirements.py --check` pass.
+- **Not verified:** GCC and Apple Clang (CI runs them).
+- **Repo state:** builds and tests pass; committed only after the member approves (DEC-058).
+- **Next:**
+  1. US-2.4 on a branch stacked on US-2.2: `.scene` files as JSON through nlohmann/json.
+  2. US-2.8: the event bus, `publish`/`subscribe` in `SystemContext`, handler `runsIn` in the schema, event type registration.
+  3. Hosts (editor, sandbox) switch to `EcsSimulation` in their own stories; the physics stories set its PhysicsStep function.
+- **Traps:** the agent boot files are at the 50 KB budget (`tools/check_boot.py`); this branch shortened the US-2.1/2.2 index rows to fit DEC-48.1. A system that breaks the order is not added: `add` throws.
+- **Records:** DEC-48.1, HND-48.1.
 ### HND-153.1 — Requirement changes batched through pending change files
 - **Date:** 2026-11-24
 - **Agent:** claude-code/opus-5.5/6r0a

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <utility>
 
+#include "engine/ecs/system_scheduler.hpp"
+
 namespace engine {
 
 namespace {
@@ -24,13 +26,17 @@ World::World(const TypeRegistry& types)
         pools_.push_back(types.makePool(info));
     }
     hierarchies_ = &typedPool<HierarchyComponent>("World");
+    systems_ = std::make_unique<SystemScheduler>(*this);
 }
+
+World::~World() = default;
 
 Entity World::createEntity() {
     return createEntity(allocateRuntimeId());
 }
 
 Entity World::createEntity(EntityId id) {
+    checkNotQuerying("World::createEntity");
     checkNewId(id, "World::createEntity");
     const Entity e = entities_.create(id);
     addBuiltIns(e, id);
@@ -39,6 +45,7 @@ Entity World::createEntity(EntityId id) {
 }
 
 void World::destroyEntity(Entity e) {
+    checkNotQuerying("World::destroyEntity");
     checkAlive(e, "World::destroyEntity");
     destroyTree(e);
     sortPools();
@@ -55,6 +62,7 @@ void World::setEnabled(Entity e, bool enabled) {
         return;
     }
     entities_.setEnabled(e, enabled);
+    pendingEnables_.push_back(e);
     for (IWorldObserver* observer : observers_) {
         observer->onEntityEnabledChanged(e, enabled);
     }
@@ -66,6 +74,7 @@ bool World::isEnabled(Entity e) const {
 }
 
 void World::setParent(Entity child, Entity parent) {
+    checkNotQuerying("World::setParent");
     if (const std::optional<std::string> problem = parentProblem(child, parent)) {
         throw RunError("World::setParent: " + *problem);
     }
@@ -87,12 +96,30 @@ void World::forEachComponent(
     }
 }
 
-void World::beginRun() {
+void World::beginRun(std::uint64_t seed) {
     if (entities_.hasAliveRuntimeEntity()) {
         throw RunError("World::beginRun: entities with runtime IDs from an earlier run are still "
                        "alive, and their IDs would be given out again");
     }
     entities_.resetRuntimeIds();
+    random_.reseed(seed);
+}
+
+void World::checkNotQuerying(std::string_view operation) const {
+    if (queryDepth_ > 0) {
+        throw RunError(std::string(operation) +
+                       ": structural changes are not allowed while a query runs; record them in a "
+                       "CommandBuffer");
+    }
+}
+
+void World::applyPendingEnables() {
+    for (const Entity e : pendingEnables_) {
+        if (entities_.isAlive(e)) {
+            entities_.setQueryEnabled(e, entities_.isEnabled(e));
+        }
+    }
+    pendingEnables_.clear();
 }
 
 void World::checkAlive(Entity e, std::string_view operation) const {

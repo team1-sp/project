@@ -7,6 +7,8 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -17,6 +19,7 @@
 #include "engine/ecs/component_pool.hpp"
 #include "engine/ecs/entity.hpp"
 #include "engine/ecs/entity_table.hpp"
+#include "engine/ecs/gameplay_random.hpp"
 #include "engine/ecs/type_id.hpp"
 #include "engine/ecs/type_registry.hpp"
 #include "engine/ecs/world_observer.hpp"
@@ -24,6 +27,8 @@
 namespace engine {
 
 class CommandBuffer;
+class SystemContext;
+class SystemScheduler;
 
 // Everything one simulation holds: its entities and their components (design/ecs-api-design.md
 // §3, §5). A process may hold several Worlds that share one finalized TypeRegistry; nothing in a
@@ -42,7 +47,7 @@ public:
     World& operator=(const World&) = delete;
     World(World&&) = delete;
     World& operator=(World&&) = delete;
-    ~World() = default;
+    ~World();
 
     [[nodiscard]] const TypeRegistry& types() const { return types_; }
 
@@ -67,8 +72,9 @@ public:
     [[nodiscard]] std::size_t entityCount() const { return entities_.aliveCount(); }
 
     // The entity enabled flag (srs.fr.2.5). Changing it is not a structural change: the flag
-    // changes at once (srs.fr.2.116) and observers are told. It affects only this entity, not its
-    // descendants. Systems skip disabled entities once systems and queries exist (US-2.3).
+    // changes at once and observers are told, and queries see the change from the next query
+    // on, never in the middle of one (srs.fr.2.116). It affects only this entity, not its
+    // descendants (DEC-48.1). Queries skip disabled entities (srs.fr.2.15).
     void setEnabled(Entity e, bool enabled);
     [[nodiscard]] bool isEnabled(Entity e) const;
 
@@ -125,8 +131,7 @@ public:
     }
 
     // The component enabled flag (srs.fr.2.11). Position, Velocity and the built-in components
-    // have none, and setting it on them is refused. Systems skip a disabled component once systems
-    // and queries exist (US-2.3).
+    // have none, and setting it on them is refused. Queries skip a disabled component at once.
     template <ComponentType T>
     void setComponentEnabled(Entity e, bool enabled);
     template <ComponentType T>
@@ -146,12 +151,42 @@ public:
     forEachComponent(Entity e,
                      const std::function<void(const ComponentTypeInfo&, const void*)>& fn) const;
 
+    // --- Queries (srs.fr.2.18, design/ecs-api-design.md §7) ---
+
+    // Calls `fn` for every enabled entity that has all of `Ts`, each of them enabled, in ascending
+    // EntityId (coding standard rule 6). `fn` takes the components in the order of `Ts`, optionally
+    // preceded by the Entity; a `const T` is passed as `const T&`. Disabled entities are skipped,
+    // their Position and Velocity too (srs.fr.2.15). No structural change can happen while the
+    // query runs: a direct structural World call from inside it is refused. This form checks no
+    // system declaration; systems query through SystemContext::each().
+    template <typename... Ts, typename Fn>
+    void each(Fn&& fn);
+
+    // Singletons (D-16): the component of the one entity that has a T. Refused unless exactly one
+    // entity has one.
+    template <ComponentType T>
+    [[nodiscard]] const T& single() const;
+    template <ComponentType T>
+        requires(!std::same_as<T, HierarchyComponent>)
+    [[nodiscard]] T& single() {
+        return const_cast<T&>(std::as_const(*this).single<T>());
+    }
+    // Creates a runtime entity that holds `value`, for world-level data such as the input state.
+    template <ComponentType T>
+    Entity createSingleton(T value = T{});
+
+    // --- Systems (srs.fr.2.13 to 2.17) ---
+
+    [[nodiscard]] SystemScheduler& systems() { return *systems_; }
+    [[nodiscard]] const SystemScheduler& systems() const { return *systems_; }
+
     // --- Runs ---
 
-    // Starts runtime IDs again at their first value, so runs of the same content give the same
-    // IDs (srs.fr.2.63). Refused while an entity with a runtime ID is alive, because its ID would
-    // be given out again (srs.fr.2.2).
-    void beginRun();
+    // Starts a run: runtime IDs start again at their first value, so runs of the same content
+    // give the same IDs (srs.fr.2.63), and the gameplay random number generator starts the
+    // sequence of the run's seed (srs.fr.7.5). Refused while an entity with a runtime ID is alive,
+    // because its ID would be given out again (srs.fr.2.2).
+    void beginRun(std::uint64_t seed = 0);
 
     // --- Observers and warnings ---
 
@@ -164,6 +199,8 @@ public:
 
 private:
     friend class CommandBuffer;
+    friend class SystemContext;
+    friend class SystemScheduler;
 
     template <ComponentType T>
     [[nodiscard]] const ComponentTypeInfo& infoOf(std::string_view operation) const {
@@ -187,6 +224,10 @@ private:
 
     void checkAlive(Entity e, std::string_view operation) const;
     void checkNewId(EntityId id, std::string_view operation) const;
+    // Structural changes are refused while a query runs (§7 rule 4).
+    void checkNotQuerying(std::string_view operation) const;
+    // Makes enabled-flag changes visible to queries; called when an outermost query starts.
+    void applyPendingEnables();
     // "entity <id>" for messages; `e` must be alive.
     [[nodiscard]] std::string text(Entity e) const;
     void notifyAdded(Entity e, TypeId type);
@@ -220,12 +261,77 @@ private:
     // Scratch buffers of destroyTree(), kept so that destroying allocates nothing once warm.
     std::vector<Entity> subtree_;
     std::vector<Entity> pending_;
+    // Entities whose enabled flag changed since the last query started (srs.fr.2.116).
+    std::vector<Entity> pendingEnables_;
+    std::size_t queryDepth_ = 0;
+    GameplayRandom random_;
+    std::unique_ptr<SystemScheduler> systems_;
 };
 
 // --- templates ---
 
+template <typename... Ts, typename Fn>
+void World::each(Fn&& fn) {
+    static_assert(sizeof...(Ts) > 0, "a query names at least one component type");
+    if (queryDepth_ == 0) {
+        applyPendingEnables();
+    }
+    const std::tuple<ComponentPool<std::remove_const_t<Ts>>*...> pools{
+        &typedPool<std::remove_const_t<Ts>>("World::each")...};
+    // The smallest pool drives the loop; every pool is in ascending EntityId (D-3).
+    const IComponentPool* driver = nullptr;
+    std::apply(
+        [&driver](const auto*... pool) {
+            ((driver = (driver == nullptr || pool->size() < driver->size()) ? pool : driver), ...);
+        },
+        pools);
+    struct DepthGuard {
+        std::size_t& depth;
+        ~DepthGuard() { --depth; }
+    } guard{++queryDepth_};
+    const std::size_t count = driver->size();
+    for (std::size_t pos = 0; pos < count; ++pos) {
+        const Entity e = driver->entityAt(pos);
+        if (!entities_.isQueryEnabled(e)) {
+            continue;
+        }
+        const bool matches = std::apply(
+            [e](const auto*... pool) { return (pool->containsEnabled(e) && ...); }, pools);
+        if (!matches) {
+            continue;
+        }
+        std::apply(
+            [&fn, e](auto*... pool) {
+                if constexpr (std::is_invocable_v<Fn&, Entity, Ts&...>) {
+                    fn(e, *pool->tryGet(e)...);
+                } else {
+                    fn(*pool->tryGet(e)...);
+                }
+            },
+            pools);
+    }
+}
+
+template <ComponentType T>
+const T& World::single() const {
+    const ComponentPool<T>& components = typedPool<T>("World::single");
+    if (components.size() != 1) {
+        throw RunError("World::single: " + std::to_string(components.size()) + " entities have a " +
+                       std::string(T::typeName) + " component, not exactly one");
+    }
+    return components.componentAt(0);
+}
+
+template <ComponentType T>
+Entity World::createSingleton(T value) {
+    const Entity e = createEntity();
+    add(e, std::move(value));
+    return e;
+}
+
 template <ComponentType T>
 T& World::add(Entity e, T value) {
+    checkNotQuerying("World::add");
     checkAlive(e, "World::add");
     const ComponentTypeInfo& info = infoOf<T>("World::add");
     ComponentPool<T>& components = typedPool<T>("World::add");
@@ -240,6 +346,7 @@ T& World::add(Entity e, T value) {
 
 template <ComponentType T>
 void World::remove(Entity e) {
+    checkNotQuerying("World::remove");
     checkAlive(e, "World::remove");
     const ComponentTypeInfo& info = infoOf<T>("World::remove");
     if (info.builtIn) {

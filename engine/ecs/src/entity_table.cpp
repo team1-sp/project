@@ -34,6 +34,7 @@ Entity EntityTable::create(EntityId id) {
     slot.id = id;
     slot.alive = true;
     slot.enabled = true;
+    slot.queryEnabled = true;
 
     if (isRuntimeId(id)) {
         runtimeSlots_[runtimeOffset(id)] = index;
