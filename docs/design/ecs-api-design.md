@@ -294,7 +294,7 @@ public:
 2. Iterates in **ascending `EntityId`** (rule 6). The smallest of the `Ts` pools drives the loop. Every pool is sorted the same way, so the output is ascending.
 3. Results are never cached; each call reads the pools as they are (ecs-design.md §5).
 4. No structural change can happen during the loop: systems only record commands. A direct `World` structural call during iteration is an error.
-5. Disabling an entity sets its flag at once (`isEnabled` and handlers see it), but **queries see it from the next system on** (srs.fr.2.116). The table keeps a separate `queryEnabled` flag. `setEnabled` changes `enabled` and appends the entity to a short pending list; the scheduler applies that list to `queryEnabled` at one fixed point, before each system's `update()` and before each event handler call. A query that is already running never sees a change, and no check of "is a query running" is needed.
+5. Disabling an entity sets its flag at once (`isEnabled` and handlers see it), but **queries see it from the next query on** (srs.fr.2.116, DEC-48.1). The table keeps a separate `queryEnabled` flag. `setEnabled` changes `enabled` and appends the entity to a short pending list; the World applies that list to `queryEnabled` when an outermost query starts, so a query that is already running never sees a change. Component enabled flags take effect at once. The flag affects only its entity, not its descendants (DEC-48.1).
 
 ```
 each<A, B, C>(fn):
@@ -384,14 +384,13 @@ public:
 class SystemScheduler {
 public:
     SystemId add(SystemFactory factory);                 // creates this World's instance, validates, recomputes the order
-    void remove(SystemId id);
     void defineGroup(std::string_view name, TickPhase phase, std::string_view purpose);
     void setEnabled(SystemId id, bool enabled);          // srs.fr.2.15
     void setGroupEnabled(std::string_view group, bool enabled);  // srs.fr.2.52
     void setManualOrder(std::span<const SystemId> order);  // Systems panel order
     OrderResult computeOrder();                          // see below
-    void runPhase(TickPhase phase, World& world);        // called by the game loop
-    std::span<const SystemTiming> lastTickTimings() const;  // srs.fr.2.17
+    void runPhase(TickPhase phase, const TickContext& context);  // through EcsSimulation
+    std::vector<SystemTiming> lastTickTimings() const;  // srs.fr.2.17
 };
 ```
 
@@ -768,7 +767,7 @@ The team builds about 20 % of the whole project this semester (human decision, 2
 | Entities | Entity table, runtime and Editor IDs, `find`/`idOf`, dense ID lookup; hierarchy (`setParent`, recursive destroy); entity and component enabled flags (DEC-46.3) | — |
 | Storage | `ComponentPool<T>` with sort-at-playback, tags, unmanaged components | Managed components (`String`, `List`); in Phase 1 a list is a `FixedArray<T, N>`, e.g. the inventory |
 | Queries | `each<Ts...>` in ascending `EntityId` | `query<Ts...>()` builder (`with`, `without`, tag, layer), `includeDisabled` |
-| Systems | `ISystem`, `describe()` with phase, reads, writes, create/destroy/enable/random flags; access check; registration order inside a phase; timings; factories | Groups, `runsBefore`/`runsAfter`, manual order, cycle reporting, enable/disable of systems and groups |
+| Systems | `ISystem`, `describe()` with phase, reads, writes, create/destroy/enable/random flags; access check; timings; factories; groups, `runsBefore`/`runsAfter`, manual order, cycle reporting, enable/disable of systems and groups (DEC-48.1) | Engine systems outside groups (srs.fr.2.127) |
 | Structural changes | `CommandBuffer` with create, destroy, add, remove; pending-entity rules | Eager reference clearing (D-18), `setParent` commands |
 | Events | Typed publish/subscribe, sequence numbers, dispatch at the end of the publishing phase, handler events wait for the next dispatch point | The 10,000-per-tick limit, drop statuses, run-end drops, subscribe/unsubscribe during dispatch |
 | Reflection and export | `TypeRegistry` with descriptions, units, field layout, member-count check; `Schema` written to telemetry | Data assets, enums beyond the ones the test scene needs, Q-013 extras |

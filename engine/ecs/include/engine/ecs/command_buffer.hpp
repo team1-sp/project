@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
@@ -13,6 +14,7 @@
 namespace engine {
 
 class World;
+struct SystemAccess;
 
 // Structural changes recorded while systems and event handlers run, and applied together when
 // the tick phase ends, after its event dispatch (design/ecs-api-design.md §9, D-4, srs.fr.2.116).
@@ -55,15 +57,18 @@ public:
     void playback();
 
 private:
+    friend class SystemScheduler;
+
     enum class Kind : std::uint8_t { Create, Destroy, SetParent, Add, Remove };
 
     struct Command {
         Kind kind = Kind::Create;
-        Entity entity;             // the entity the command is about
-        EntityId id = noEntity;    // its ID when the command was recorded
-        Entity parent;             // SetParent: nullEntity makes `entity` a root
-        TypeId type;               // Add, Remove
-        std::uint32_t bytesAt = 0; // Add: where the value starts in bytes_
+        Entity entity;                        // the entity the command is about
+        EntityId id = noEntity;               // its ID when the command was recorded
+        Entity parent;                        // SetParent: nullEntity makes `entity` a root
+        TypeId type;                          // Add, Remove
+        std::uint32_t bytesAt = 0;            // Add: where the value starts in bytes_
+        const SystemAccess* issuer = nullptr; // the system that recorded it, if any
     };
 
     void recordAdd(Entity e, TypeId type, std::string_view typeName, const void* value,
@@ -73,6 +78,13 @@ private:
     [[nodiscard]] bool isUnplayed(Entity e) const;
 
     World& world_;
+    // The system whose update() or handler runs now; its declaration is checked on every
+    // command (srs.fr.2.126). Null outside systems (loading, the Editor, tests).
+    void setIssuer(const SystemAccess* issuer) { issuer_ = issuer; }
+    void push(Command command);
+    [[nodiscard]] std::string source(const Command& command) const;
+
+    const SystemAccess* issuer_ = nullptr;
     std::vector<Command> commands_;
     std::vector<std::byte> bytes_; // values of Add commands, copied when recorded
     // Scratch of playback(), kept so that a playback allocates nothing once warm.

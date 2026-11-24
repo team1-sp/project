@@ -1,18 +1,29 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
+#include <memory>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
 #include "engine/core/entity_id.hpp"
+#include "engine/core/input_actions.hpp"
 #include "engine/core/logging.hpp"
+#include "engine/core/simulation.hpp"
+#include "engine/core/tick.hpp"
+#include "engine/core/tick_phase.hpp"
 #include "engine/ecs/core_components.hpp"
 #include "engine/ecs/entity.hpp"
 #include "engine/ecs/field.hpp"
 #include "engine/ecs/fixed_string.hpp"
+#include "engine/ecs/system.hpp"
+#include "engine/ecs/system_context.hpp"
+#include "engine/ecs/system_scheduler.hpp"
 #include "engine/ecs/type_id.hpp"
 #include "engine/ecs/type_registry.hpp"
+#include "engine/ecs/world.hpp"
 #include "engine/ecs/world_observer.hpp"
 
 namespace ecs_test {
@@ -63,6 +74,50 @@ inline const engine::TypeRegistry& types() {
         return r;
     }();
     return registry;
+}
+
+// A system whose description and update are given as functions, so each test can say what it
+// needs in a few lines.
+class TestSystem final : public engine::ISystem {
+public:
+    using Describe = std::function<void(engine::SystemDescription&)>;
+    using Update = std::function<void(engine::SystemContext&)>;
+
+    TestSystem(Describe describe, Update update)
+        : describe_(std::move(describe))
+        , update_(std::move(update)) {}
+
+    void describe(engine::SystemDescription& d) const override { describe_(d); }
+    void update(engine::SystemContext& ctx) override {
+        if (update_) {
+            update_(ctx);
+        }
+    }
+
+private:
+    Describe describe_;
+    Update update_;
+};
+
+inline engine::SystemFactory testSystem(TestSystem::Describe describe,
+                                        TestSystem::Update update = {}) {
+    return [describe, update] { return std::make_unique<TestSystem>(describe, update); };
+}
+
+// A system description with a name, a purpose and a phase.
+inline TestSystem::Describe named(std::string name, engine::TickPhase phase) {
+    return [name, phase](engine::SystemDescription& d) {
+        d.name(name).purpose("Test system " + name + ".").phase(phase);
+    };
+}
+
+// Runs every tick phase of tick `tick` in order, as the game loop does.
+inline void runTick(engine::World& world, engine::Tick tick) {
+    const engine::InputActionState input;
+    const engine::TickContext context{tick, input};
+    for (const engine::TickPhase phase : engine::tickPhases) {
+        world.systems().runPhase(phase, context);
+    }
 }
 
 // Remembers every observer call in order.

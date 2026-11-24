@@ -28,6 +28,8 @@ public:
     // The EntityId of the entry at `pos`. Entries are in ascending EntityId whenever the pool is
     // not dirty (see sortIfDirty()).
     [[nodiscard]] virtual EntityId idAt(std::size_t pos) const = 0;
+    // The handle of the entry at `pos`, in the same order.
+    [[nodiscard]] virtual Entity entityAt(std::size_t pos) const = 0;
     // Whether the component at `pos` is enabled; always true for a type without enabled flags.
     [[nodiscard]] virtual bool enabledAt(std::size_t pos) const = 0;
     // The component of entity `e` as raw memory, or nullptr when it has none.
@@ -149,7 +151,7 @@ public:
     [[nodiscard]] void* rawOf(Entity e) override { return tryGet(e); }
 
     // The packed arrays, in ascending EntityId when the pool is not dirty. For queries and export.
-    [[nodiscard]] const Entity& entityAt(std::size_t pos) const { return entities_[pos]; }
+    [[nodiscard]] Entity entityAt(std::size_t pos) const override { return entities_[pos]; }
     [[nodiscard]] T& componentAt(std::size_t pos) { return components_[pos]; }
     [[nodiscard]] const T& componentAt(std::size_t pos) const { return components_[pos]; }
 

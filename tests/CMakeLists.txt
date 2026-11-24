@@ -14,9 +14,17 @@ add_executable(engine_tests
     unit/ecs/command_buffer_components_test.cpp
     unit/ecs/command_buffer_test.cpp
     unit/ecs/component_pool_test.cpp
+    unit/ecs/ecs_simulation_test.cpp
     unit/ecs/entity_table_test.cpp
     unit/ecs/field_test.cpp
     unit/ecs/fixed_string_test.cpp
+    unit/ecs/gameplay_random_test.cpp
+    unit/ecs/query_test.cpp
+    unit/ecs/schema_test.cpp
+    unit/ecs/system_access_test.cpp
+    unit/ecs/system_order_test.cpp
+    unit/ecs/system_registration_test.cpp
+    unit/ecs/system_run_test.cpp
     unit/ecs/type_registry_test.cpp
     unit/ecs/world_components_test.cpp
     unit/ecs/world_entities_test.cpp

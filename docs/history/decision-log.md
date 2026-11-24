@@ -1333,3 +1333,22 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Course documents affected (for humans):** none directly; the docs-repository patch adds the scripts.
 - **Revisit when:** the SDD gets generated regions (it needs its own parser), or proposals often collide with project changes.
 - **Supersedes / Related:** DEC-152.2, DEC-152.3, DEC-058.
+
+### DEC-48.1 — US-2.3 builds system groups, ordering rules and system enable/disable; how queries see enabled flags
+- **Date:** 2026-11-24
+- **Status:** Accepted (carried by the US-2.3 pull request, binding once a human merges it, DEC-052)
+- **Decided by:** Arda Karabulut (owner of US-2.3) for items 1 and 2, 2026-11-23; the reviewer of the US-2.3 pull request for items 3 to 6   **Recorded by:** claude-code/opus-5.5/us-2.3
+- **Human's words:** asked whether US-2.3 builds only the Phase 1 scheduler or everything srs.fr.2.13 to 2.18 need, he chose "Hepsini yap" (build all of it); asked whether a disabled parent also hides its children, which the SRS does not say, he chose "Sadece kendisi" (only the entity itself).
+- **Context:** srs.fr.2.14 runs systems "in the tick phase of its group and in the order computed by srs.fr.2.50", and 2.15 skips disabled systems; `ecs-api-design.md` §17 had only registration order in Phase 1 (DEC-043). The design (§7 rule 5) made a disable visible to queries "from the next system", while the final srs.fr.2.116 says "from the next query".
+- **Decision:**
+  1. US-2.3 builds system groups (srs.fr.2.48), runsBefore/runsAfter rules with a stable order that keeps the manual order where the rules allow (2.49, 2.50), refusal of cycles and of rules against the phase order with the last valid order kept (2.51), and enabling and disabling systems and groups (2.15, 2.52), as `ecs-api-design.md` §8 designs them. This widens DEC-043 for these items.
+  2. An entity's enabled flag affects only that entity; its descendants keep their own flags.
+  3. A disable is visible to queries from the next query, never inside a running one (srs.fr.2.116): the World applies the pending changes when an outermost query starts. Component enabled flags take effect for queries at once.
+  4. A system whose rules would break the order is not added: `SystemScheduler::add` throws `RunError` with the cycle or the rule and its two phases, and the last valid order stays. `setManualOrder` returns the reason instead. A rule that names no known system or group is ignored.
+  5. Systems declare publications and subscriptions now; checking them, and registering event types, comes with the event bus (US-2.8). The query builder's filters (`with`, `without`, tag, layer; srs.fr.2.56) and write tracking for Position and Velocity (D-27) come with their stories.
+  6. `EcsSimulation` implements `ISimulation` (DEC-059): each phase runs its systems, then its command playback; the PhysicsStep phase calls a step function the physics stories set (DEC-041). The editor and the sandbox keep their own simulations until their stories switch to it. `buildSchema` gives the schema of srs.fr.8.29 in memory; the telemetry writer stores it.
+- **Rationale:** items 1 and 2 are the owner's choices; items 3 to 6 follow the final SRS and keep the designed API.
+- **Consequences:** §17 lists groups, ordering rules and enable/disable under Phase 1. US-2.8 adds `publish`/`subscribe` to `SystemContext` and the subscriptions' `runsIn` to the schema.
+- **Docs updated:** `design/ecs-api-design.md` §7, §8, §17; `architecture/engine-layer.md` §1; `agents/state/current-status.md`.
+- **Course documents affected (for humans):** none.
+- **Supersedes / Related:** amends DEC-043 and D-26; D-10, D-11, D-16, D-28; DEC-46.3, DEC-059.

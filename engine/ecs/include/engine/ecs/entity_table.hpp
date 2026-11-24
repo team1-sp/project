@@ -34,6 +34,10 @@ public:
     [[nodiscard]] EntityId idOf(Entity e) const { return slots_[e.index].id; }
     [[nodiscard]] bool isEnabled(Entity e) const { return slots_[e.index].enabled; }
     void setEnabled(Entity e, bool enabled) { slots_[e.index].enabled = enabled; }
+    // The enabled flag as queries see it: it follows the enabled flag when the next query
+    // starts, never during one (srs.fr.2.116).
+    [[nodiscard]] bool isQueryEnabled(Entity e) const { return slots_[e.index].queryEnabled; }
+    void setQueryEnabled(Entity e, bool enabled) { slots_[e.index].queryEnabled = enabled; }
     [[nodiscard]] std::size_t aliveCount() const { return aliveCount_; }
 
     // Gives out the next runtime ID. It stays reserved until an entity is created with it.
@@ -51,6 +55,7 @@ private:
         EntityId id = noEntity;
         bool alive = false;
         bool enabled = true;
+        bool queryEnabled = true;
     };
 
     // Values of runtimeSlots_ that are not slot indices.

@@ -5,6 +5,7 @@
 #include <optional>
 #include <string>
 
+#include "engine/ecs/system_access.hpp"
 #include "engine/ecs/world.hpp"
 
 namespace engine {
@@ -26,22 +27,32 @@ CommandBuffer::CommandBuffer(World& world)
 }
 
 Entity CommandBuffer::createEntity() {
+    if (issuer_ != nullptr) {
+        issuer_->checkFlag(issuer_->createsEntities, "createsEntities()",
+                           "commands().createEntity");
+    }
     const Entity e = world_.reserveEntity();
-    commands_.push_back({Kind::Create, e, world_.entities_.idOf(e), nullEntity, {}, 0});
+    push({Kind::Create, e, world_.entities_.idOf(e), nullEntity, {}, 0});
     return e;
 }
 
 void CommandBuffer::destroy(Entity e) {
     world_.checkAlive(e, "CommandBuffer::destroy");
-    commands_.push_back({Kind::Destroy, e, world_.entities_.idOf(e), nullEntity, {}, 0});
+    if (issuer_ != nullptr) {
+        issuer_->checkFlag(issuer_->destroysEntities, "destroysEntities()", "commands().destroy");
+    }
+    push({Kind::Destroy, e, world_.entities_.idOf(e), nullEntity, {}, 0});
 }
 
 void CommandBuffer::setParent(Entity child, Entity parent) {
     world_.checkAlive(child, "CommandBuffer::setParent");
+    if (issuer_ != nullptr) {
+        issuer_->checkWrite(*world_.types_.find<HierarchyComponent>(), "commands().setParent");
+    }
     if (parent != nullEntity) {
         world_.checkAlive(parent, "CommandBuffer::setParent");
     }
-    commands_.push_back({Kind::SetParent, child, world_.entities_.idOf(child), parent, {}, 0});
+    push({Kind::SetParent, child, world_.entities_.idOf(child), parent, {}, 0});
 }
 
 void CommandBuffer::recordAdd(Entity e, TypeId type, std::string_view typeName, const void* value,
@@ -55,10 +66,13 @@ void CommandBuffer::recordAdd(Entity e, TypeId type, std::string_view typeName, 
     if (info->builtIn) {
         throw RunError("CommandBuffer::add: " + info->name + " is a built-in component");
     }
+    if (issuer_ != nullptr) {
+        issuer_->checkWrite(*info, "commands().add");
+    }
     const auto at = static_cast<std::uint32_t>(bytes_.size());
     bytes_.resize(bytes_.size() + size);
     std::memcpy(bytes_.data() + at, value, size);
-    commands_.push_back({Kind::Add, e, world_.entities_.idOf(e), nullEntity, type, at});
+    push({Kind::Add, e, world_.entities_.idOf(e), nullEntity, type, at});
 }
 
 void CommandBuffer::recordRemove(Entity e, TypeId type, std::string_view typeName) {
@@ -71,7 +85,10 @@ void CommandBuffer::recordRemove(Entity e, TypeId type, std::string_view typeNam
     if (info->builtIn) {
         throw RunError("CommandBuffer::remove: " + info->name + " is a built-in component");
     }
-    commands_.push_back({Kind::Remove, e, world_.entities_.idOf(e), nullEntity, type, 0});
+    if (issuer_ != nullptr) {
+        issuer_->checkWrite(*info, "commands().remove");
+    }
+    push({Kind::Remove, e, world_.entities_.idOf(e), nullEntity, type, 0});
 }
 
 void CommandBuffer::playback() {
@@ -81,7 +98,7 @@ void CommandBuffer::playback() {
             continue; // the entity never appears
         }
         if (!world_.isAlive(command.entity)) {
-            world_.warn("CommandBuffer: skipped a command for " + text(command.id) +
+            world_.warn(source(command) + ": skipped a command for " + text(command.id) +
                             ": it was destroyed before this command",
                         command.id);
             continue;
@@ -100,7 +117,7 @@ void CommandBuffer::playback() {
         case Kind::SetParent:
             if (const std::optional<std::string> problem =
                     world_.parentProblem(command.entity, command.parent)) {
-                world_.warn("CommandBuffer: skipped setParent of " + text(command.id) + ": " +
+                world_.warn(source(command) + ": skipped setParent of " + text(command.id) + ": " +
                                 *problem,
                             command.id);
             } else {
@@ -111,7 +128,7 @@ void CommandBuffer::playback() {
             const ComponentTypeInfo& info = *world_.types_.find(command.type);
             IComponentPool& components = *world_.pools_[info.index];
             if (components.contains(command.entity)) {
-                world_.warn("CommandBuffer: skipped adding " + info.name + " to " +
+                world_.warn(source(command) + ": skipped adding " + info.name + " to " +
                                 text(command.id) + ": it already has one",
                             command.id);
                 break;
@@ -123,7 +140,7 @@ void CommandBuffer::playback() {
         case Kind::Remove: {
             const ComponentTypeInfo& info = *world_.types_.find(command.type);
             if (!world_.pools_[info.index]->removeIfPresent(command.entity)) {
-                world_.warn("CommandBuffer: skipped removing " + info.name + " from " +
+                world_.warn(source(command) + ": skipped removing " + info.name + " from " +
                                 text(command.id) + ": it has none",
                             command.id);
                 break;
@@ -137,6 +154,16 @@ void CommandBuffer::playback() {
     bytes_.clear();
     unplayed_.clear();
     world_.sortPools();
+}
+
+void CommandBuffer::push(Command command) {
+    command.issuer = issuer_;
+    commands_.push_back(command);
+}
+
+std::string CommandBuffer::source(const Command& command) const {
+    return command.issuer == nullptr ? std::string("CommandBuffer")
+                                     : "CommandBuffer (system " + command.issuer->name + ")";
 }
 
 void CommandBuffer::findUnplayed() {

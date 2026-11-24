@@ -3,8 +3,14 @@
 # rendering reach each other only through it (R-2).
 add_library(engine_ecs STATIC
     src/command_buffer.cpp
+    src/ecs_simulation.cpp
     src/entity_table.cpp
     src/field.cpp
+    src/gameplay_random.cpp
+    src/schema.cpp
+    src/system.cpp
+    src/system_access.cpp
+    src/system_scheduler.cpp
     src/type_registry.cpp
     src/world.cpp
 )
