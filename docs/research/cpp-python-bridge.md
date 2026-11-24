@@ -1,5 +1,7 @@
 # C++ to Python Communication Research (PB-065)
 
+> **Audience: humans.** Agents skip this file unless a human asks or they trace something back ([reading tiers](../agents/README.md#reading-tiers-dec-1521), DEC-152.1).
+
 **Status:** benchmarked on macOS and Windows on 2026-11-04; recommendation accepted the same day (DEC-038). Revisit with
 end-to-end RL workload evidence. Raw results: [pb-065-benchmark-results.json](pb-065-benchmark-results.json).
 Decision: [ADR-002](../history/adr-002-cpp-python-communication.md). The required IPC option

@@ -30,13 +30,24 @@
 | How we fix | `troubleshooting/` |
 | What happened / why we chose | `history/` (append-only) |
 | Agent coordination | `agents/` |
-| Course deliverables | **not here** (`senior-project/docs/`); not authoritative, not edited by agents |
+| Requirements (epics, stories, FR/NFR) | `requirements/` (owned here, DEC-152.2) |
+| Course deliverables | **not here** (`team1-sp/docs`); built from this folder at submission, not edited by agents |
 
 ## 4. Entry IDs
 
 New entries (DEC-148.1) are `<PREFIX>-<GitHub #>.<counter>`: `DEC-80.1`, `HND-80.2`, `PRB-142.1`, `Q-80.1`, `GEN-80.1`. The GitHub number is the issue the pull request closes (`Closes #80`), or the pull request's own number for `docs`/`ci`/`chore` work with the `no-issue` label (`DEC-148.1`). The counter starts at 1 for each prefix and number and counts up within that work. Tasks are GitHub issues and get no record id (DEC-149.1). Issues and pull requests share one number sequence, so two branches can never produce the same id.
 
-Entries written before DEC-148.1 keep their 3-digit ids (`DEC-071`, `HND-042`, `TASK-025`) and are never renumbered. `tools/check_ids.py` accepts both forms, and in pull request CI fails when a new id does not use the pull request's number.
+Entries written before DEC-148.1 keep their 3-digit ids (`DEC-071`, `HND-042`) and are never renumbered. `tools/check_ids.py` accepts both forms, and in pull request CI fails when a new id does not use the pull request's number.
+
+## 4a. Reading tiers, indexes and archives
+
+Agents pay for every file they read, so the agent docs have three tiers ([agents/README.md](../agents/README.md#reading-tiers-dec-1521), DEC-152.1): **boot** files read every session, **on-demand** files read when the task points to them, and **human-only** files that agents skip. Rules that keep the boot files small:
+
+- **Decisions:** the full entry goes in `history/decision-log.md`; its one-line row (at most 120 characters) goes in `history/decision-index.md`, which is what agents read. Superseded and rejected rows move to the index's Archived table.
+- **Handoffs:** the live `agents/state/handoff-log.md` keeps the newest entries; `tools/rotate_handoffs.py` moves older ones unchanged to `history/handoff-archive/<YYYY-MM>.md`.
+- **Questions:** `agents/state/open-questions.md` holds only open questions; answered or obsolete ones move to `history/questions-archive.md`.
+- **Problems:** one file per area under `history/problems/` with an index in its README, read only when a problem occurs.
+- Moving an entry unchanged to its archive is not an edit (P-6). `tools/check_ids.py` checks ids across live and archive files; `tools/check_boot.py` checks the boot budget.
 
 ## 5. Change tables
 
@@ -57,4 +68,10 @@ See the ownership table in `docs/README.md`. When documents disagree: **`Accepte
 
 ## 8. Relationship to the course documents
 
-The Initial Plan, SRS, SDD, etc. are graded deliverables with their own rules (see `genai-usage-rules.md`). Content may be *derived* from this folder only by humans (or with GenAI disclosure). Do not paste text from here into a deliverable without following the disclosure rules.
+The Initial Plan, SRS, SDD, etc. are graded deliverables with their own rules (see `genai-usage-rules.md`). This folder owns their engineering content, and the deliverables extend from it (DEC-152.2):
+
+1. **Here (source):** engineering docs, decisions, archives, and the data the deliverables reuse in a fixed format: [`requirements/`](../requirements/README.md). Normal work keeps these true and never waits for the deliverables.
+2. **Converter (in `team1-sp/docs`):** `tools/sync_from_project.py` reads a checkout of this repository and rewrites only the marked regions of the deliverable Markdown. It is a plain script, so no AI is needed; `--check` lists the sections that are out of date.
+3. **Deliverables (in `team1-sp/docs`):** rebuilt only when they are submitted, from that repository's Markdown.
+
+Agents never edit `team1-sp/docs` from work in this repository (S-3). Prose that only the deliverables have (summaries, discussions, GenAI usage notes) is written there by people, following the disclosure rules.

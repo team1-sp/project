@@ -1,5 +1,7 @@
 # GenAI Usage Log
 
+> **Audience: humans.** Agents do not read this file at boot; they only append an entry when S-4 requires one ([reading tiers](../agents/README.md#reading-tiers-dec-1521), DEC-152.1).
+
 **Append-only.** The course (CTIS411) allows GenAI in project reports **only if** AI-generated parts are clearly marked (colour coding per the Moodle GenAI usage document) and every section where it was used ends with a discussion of the prompts and how the text was edited. Unmarked AI text in a graded document is treated as plagiarism. This log is the working record that makes the end-of-section disclosures easy and accurate.
 
 Rules: see [../guidelines/genai-usage-rules.md](../guidelines/genai-usage-rules.md). This log covers **text for course deliverables** and, optionally, significant AI-generated code (for the team's own transparency). Routine agent work on the codebase is tracked in `handoff-log.md`.

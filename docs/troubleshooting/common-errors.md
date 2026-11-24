@@ -1,6 +1,6 @@
 # Common Errors — Anticipated Pitfalls
 
-These are **anticipated** (well-known in engine/ECS/physics work) and **not yet encountered** in this project, unless a `PRB-###` link says so. When one actually occurs, create a `PRB-###` in `history/problem-log.md` with the real error text and link it here. Search `problem-log.md` for *actual* history.
+These are **anticipated** (well-known in engine/ECS/physics work) and **not yet encountered** in this project, unless a `PRB-###` link says so. When one actually occurs, create a `PRB-###` in `history/problems/` with the real error text and link it here. Search `history/problems/` for *actual* history.
 
 | ID | Pitfall | Symptom | Prevention / fix | Seen? |
 | --- | --- | --- | --- | --- |

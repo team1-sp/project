@@ -17,7 +17,7 @@ Source: Initial Plan §3 (customised Agile Scrum). Re-read that section if the t
 | Risk | Mitigation in this repo |
 | --- | --- |
 | A blocker may sit for days without stand-ups | `Blocked` status + `open-questions.md`; check the board at least twice a week; raise blockers in chat immediately |
-| No retrospective | Keep `problem-log.md` and `decision-log.md` honest; review them in the Weekly Progress Meeting |
+| No retrospective | Keep `history/problems/` and `decision-log.md` honest; review them in the Weekly Progress Meeting |
 | Estimates inaccurate while learning | Keep tasks ≤ 1 day of work; re-slice rather than extend; record actual outcomes in tasks |
 
 ## 3. Sprint rhythm and artefacts
@@ -33,7 +33,7 @@ Source: Initial Plan §3 (customised Agile Scrum). Re-read that section if the t
 
 The card's status on the GitHub project: Backlog → Ready → In progress → In review → Done. Definition of Ready: has acceptance criteria, no open human decision it depends on, ≤ 1 day. Definition of Done: [definition-of-done.md](definition-of-done.md).
 
-The human-facing planning tool is the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050; it replaced ClickUp); it is also the agents' task list. The repo's old `task-board.md` mirror was retired (DEC-149.1) and is archived in `history/task-board-archive.md`.
+The human-facing planning tool is the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-050; it replaced ClickUp); it is also the agents' task list. The repo's old `task-board.md` mirror was retired (DEC-149.1) and its archive deleted (DEC-152.1).
 
 ## 5. Change control
 

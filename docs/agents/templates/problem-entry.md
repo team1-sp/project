@@ -1,6 +1,6 @@
 # Template — Problem entry
 
-Append to `history/problem-log.md` (and add a row to its index table). The id is `PRB-<n>.<k>`: `<n>` is the issue your PR closes (or the PR's number for no-issue work), `<k>` counts from 1 (DEC-148.1). Search the log **first** — if the problem is a repeat, add an `Occurrence` line to the existing entry instead of creating a new one.
+Append to the bottom of the area file in [`history/problems/`](../../history/problems/README.md) (`build-and-tooling.md`, `engine.md`, `ai.md`, `editor.md`, …) and add a row with a link to that file at the bottom of the index in `history/problems/README.md`. The id is `PRB-<n>.<k>`: `<n>` is the issue your PR closes (or the PR's number for no-issue work), `<k>` counts from 1 (DEC-148.1). Search the folder **first** — if the problem is a repeat, add an `Occurrence` line to the existing entry instead of creating a new one.
 
 ```markdown
 ### PRB-<n>.<k> — Short symptom-based title
