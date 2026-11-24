@@ -15,9 +15,21 @@ The documents here are the *shared memory and message bus*. If it is not written
 3. [state/current-status.md](state/current-status.md) — where the project is right now.
 4. [state/handoff-log.md](state/handoff-log.md) — the last ~5 entries, newest at the bottom.
 5. [state/open-questions.md](state/open-questions.md) — things waiting for a human.
-6. The index of [../history/decision-log.md](../history/decision-log.md) — the current truth.
+6. [../history/decision-index.md](../history/decision-index.md), the **Active** table — the current truth, one line per decision.
 7. Your GitHub issue; what is planned and who has it is on the [GitHub project](https://github.com/orgs/team1-sp/projects/3) (DEC-149.1).
 8. Then only the architecture/design/testing docs relevant to your task.
+
+## Reading tiers (DEC-152.1)
+
+Every session pays for what it reads, so the docs are split into three tiers. Read a file only in its tier's situation.
+
+| Tier | When an agent reads it | Files |
+| --- | --- | --- |
+| **Boot** | Every session, steps 1 to 6 above. Kept small: `tools/check_boot.py` holds these files (without the handoff log) under 50 KB, and `tools/check_ids.py` keeps the live handoff log at 15 entries or fewer. | this README, `AGENT-PROTOCOL.md`, `rules.md`, `state/current-status.md`, `state/handoff-log.md` (last ~5 entries), `state/open-questions.md`, `history/decision-index.md` |
+| **On demand** | When the task points to it | your story's epic file in `requirements/functional/` (never the whole folder); a decision's full entry in `history/decision-log.md` (to trace it back: reasons, scope, wording); `history/problems/` (when a problem occurs, before debugging); `architecture/`, `design/`, `testing/`, `guidelines/`, `troubleshooting/`; playbooks and templates for the kind of work |
+| **Human-only** | Never, unless a human asks or you trace something back that the other tiers do not explain | `history/handoff-archive/`, `history/questions-archive.md`, `history/genai-usage-log.md`, `history/adr-*.md`, `research/`, `process/roadmap.md`. Each Markdown file says so in a line under its title. |
+
+Keep the boot files small: closed questions, old handoffs and superseded decisions move to their archives, details stay in the full entries, and the index row of a decision is one line.
 
 ## Contents
 
@@ -28,10 +40,9 @@ The documents here are the *shared memory and message bus*. If it is not written
 | [communication-protocol.md](communication-protocol.md) | File-based messaging, claims, handoffs, conflicts, IDs | maintainers |
 | [model-compatibility.md](model-compatibility.md) | Writing/reading conventions that work for any model | maintainers |
 | [state/current-status.md](state/current-status.md) | Increment-level snapshot: phase, what exists, health, traps | any agent, only when something on it changes |
-| [state/plan.md](state/plan.md) | Live plan: current phase, next steps | any agent / human |
-| [state/handoff-log.md](state/handoff-log.md) | Append-only session handoffs | any agent, every session |
-| [state/open-questions.md](state/open-questions.md) | Questions for humans / other agents | any agent / human |
-| [playbooks/](playbooks/) | Approach per kind of work, incl. [record-decision](playbooks/record-decision.md) (human decision → log → update every doc) | maintainers |
+| [state/handoff-log.md](state/handoff-log.md) | Append-only session handoffs; only the newest entries (`tools/rotate_handoffs.py`) | any agent, every session |
+| [state/open-questions.md](state/open-questions.md) | Open questions for humans / other agents; answered ones move to `history/questions-archive.md` | any agent / human |
+| [playbooks/](playbooks/) | Approach per kind of work, incl. [record-decision](playbooks/record-decision.md) (human decision → log → update every doc) and [change-requirements](playbooks/change-requirements.md) (add, edit, remove, move requirements) | maintainers |
 | [templates/](templates/) | Entry formats to copy | maintainers |
 
 ## Two meanings of "agent" — do not confuse them

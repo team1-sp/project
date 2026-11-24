@@ -1,5 +1,7 @@
 # PB-010.1 — ECS Storage Research: Sparse Set vs Archetype
 
+> **Audience: humans.** Agents skip this file unless a human asks or they trace something back ([reading tiers](../agents/README.md#reading-tiers-dec-1521), DEC-152.1).
+
 ## 1. Question
 
 Which storage model should our custom C++20 ECS use: **sparse sets** (independent per-type pools, as in EnTT) or **archetypes** (tables per component combination, as in Unity Entities)?

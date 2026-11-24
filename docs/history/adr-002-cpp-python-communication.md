@@ -1,5 +1,7 @@
 # ADR-002 — C++ to Python Communication
 
+> **Audience: humans.** Agents skip this file unless a human asks or they trace something back ([reading tiers](../agents/README.md#reading-tiers-dec-1521), DEC-152.1).
+
 - **Date:** 2026-11-04
 - **Status:** Accepted on 2026-11-04 by Işık Dönger (DEC-038)
 - **Context:** PB-065 requires a C++ engine to Python agent bridge for headless RL playtesting and

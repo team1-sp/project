@@ -25,13 +25,14 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | P-3 | MUST NOT make or silently change a decision. **Humans decide; agents consult** (DEC-017). Surface uncertainty with a `DECISION NEEDED` block and log it `Proposed` while you wait for the answer. Write `Accepted` only for a decision a human approves: one they made in the conversation (who, when, words), or one your PR lists under "Decisions for review" (binding only once a human merges it; DEC-052). Then propagate it everywhere (`playbooks/record-decision.md`). |
 | P-4 | MUST NOT resolve any open choice yourself — anything marked `[TBD]` or not covered by an `Accepted` decision (currently e.g. ECS implementation, build system, Box2D version, test framework). Raise it with the human; write against the abstraction only if that is genuinely neutral. Decided stack: C++ (DEC-013), Box2D (DEC-014), Raylib (DEC-015), 2D only (DEC-016). |
 | P-5 | MUST NOT claim something works unless you ran it. State clearly what was and was not executed. |
-| P-6 | MUST NOT edit or delete past entries in `history/` or `handoff-log.md`. Append a correcting entry (decision entries also allow a dated `Amendments` line). |
-| P-7 | MUST record every solved problem in `history/problem-log.md` with the exact error text. |
+| P-6 | MUST NOT edit or delete past entries in `history/` or `handoff-log.md`. Append a correcting entry (decision entries also allow a dated `Amendments` line). Moving an entry unchanged to its archive file (`tools/rotate_handoffs.py`, answered questions, a split problem file) is allowed (DEC-152.1). |
+| P-7 | MUST record every solved problem in its area file under `history/problems/` with the exact error text. |
 | P-8 | SHOULD keep changes small: one task, one reviewable diff. No drive-by refactors. |
 | P-9 | MUST update documentation that your change invalidates, in the same task. After any human decision, update **every** affected document (`playbooks/record-decision.md`). |
 | P-11 | MUST tell the human about every material uncertainty or document conflict, in your reply — not only in a file. Course documents (Initial Plan etc.) are not authoritative; the decision log is. |
 | P-12 | SHOULD do code and repository docs work in your own cloud copy of the repository; MUST work on a member's computer only when the files, tools or signed-in accounts exist only there, or the member asks, and there MUST ask before every commit and push (DEC-058, DEC-061; `guidelines/git-workflow.md` §1). |
 | P-10 | MUST NOT leave the repo with failing build/tests without an issue describing it. |
+| P-13 | MUST change requirements only through [playbooks/change-requirements.md](playbooks/change-requirements.md): new ones get a placeholder id (`srs.fr.<n>.new`), removed ones are deleted, and `tools/renumber_requirements.py` renumbers and rewrites references. MUST NOT renumber ids by hand (DEC-152.3). |
 
 ## C. Safety and scope rules
 
@@ -39,7 +40,7 @@ Keywords: **MUST** / **MUST NOT** are absolute. **SHOULD** means "do unless you 
 | --- | --- |
 | S-1 | MUST NOT commit secrets (API keys, tokens, `.env`). The AI layer reads keys from environment/config that is git-ignored. |
 | S-2 | MUST NOT push to `main`/force-push/rewrite git history unless a human explicitly instructs it in the task (see `guidelines/git-workflow.md`). |
-| S-3 | MUST NOT modify files outside `project/` — in particular the sibling `senior-project/docs/` course-deliverable repo — unless the task explicitly says so. Those documents are for the course and are **not** the source of truth; when they disagree with the decision log, list them for the humans instead of editing. |
+| S-3 | MUST NOT modify files outside this repository — in particular the `team1-sp/docs` course-deliverable repository — unless a human explicitly asks for it. Those documents are built from this repository (requirements from [`docs/requirements/`](../requirements/README.md), DEC-152.2) when a deliverable is submitted; they are **not** the source of truth. Change the source here instead. |
 | S-4 | MUST NOT write text *for course deliverables* without logging it in `history/genai-usage-log.md` and marking it per `guidelines/genai-usage-rules.md`. Unmarked AI text in a graded document is treated as plagiarism by the course. |
 | S-5 | MUST NOT add heavy dependencies, download assets, or call external AI services without a decision entry. ip.nfr.2.1: no source/telemetry is sent to an external AI service unless the user enabled it. |
 | S-6 | MUST NOT expand scope: **2D only** (DEC-016) — no 3D work, not even experiments; also no networking etc. — unless a human decides otherwise. Keep seams so 3D stays possible later; do not build it. |

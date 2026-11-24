@@ -37,17 +37,17 @@ Rules for the review route:
 
 1. **Capture the decision exactly.** Who decided, when, in what words, what it replaces. Quote them (short).
 2. **Check for contradictions with other `Accepted` decisions.** If the new decision conflicts with one, supersede it explicitly (step 4) rather than leaving two truths.
-3. **Write the entry** in `history/decision-log.md` from [../templates/decision-entry.md](../templates/decision-entry.md) with status `Accepted`, `Decided by`, the quote, and a `Docs updated` list (filled at step 6). Add it to the index.
-4. **Supersede.** For each entry the new decision replaces, change its status line to `Superseded by DEC-###` (the only status edit allowed; you may also append a dated line to its `Amendments` field — e.g. a human later supplies the rationale or a pinned version — but never change what was decided). Resolved `Proposed` entries become `Accepted` or `Rejected` (with the human's reason).
+3. **Write the entry** in `history/decision-log.md` from [../templates/decision-entry.md](../templates/decision-entry.md) with status `Accepted`, `Decided by`, the quote, and a `Docs updated` list (filled at step 6). Add its one-line row (at most 120 characters) at the bottom of the **Active** table in `history/decision-index.md` (DEC-152.1).
+4. **Supersede.** For each entry the new decision replaces, change its status line to `Superseded by DEC-###` (the only status edit allowed; you may also append a dated line to its `Amendments` field — e.g. a human later supplies the rationale or a pinned version — but never change what was decided). Resolved `Proposed` entries become `Accepted` or `Rejected` (with the human's reason). Change the status in its index row too, and move superseded or rejected rows to the index's **Archived** table.
 5. **Find everything that depends on the old belief.** Search the repo docs for the old term and for the topic (e.g. old technology names, `[TBD]` markers, "Q-###" references, the old rule text). Check at least:
    - `architecture/` (tech-stack, overview, layer docs, glossary)
    - `design/` (adapter, ECS, telemetry, demo)
    - `guidelines/`, `process/`, `testing/`, `troubleshooting/`
-   - `agents/rules.md` (invariants, rule text), `agents/state/*` (status, plan, open questions), playbooks, templates
-   - `history/problem-log.md` / `common-errors.md` entries that become obsolete (mark `obsolete`, do not delete)
+   - `agents/rules.md` (invariants, rule text), `agents/state/*` (status, open questions), playbooks, templates
+   - `history/problems/` / `common-errors.md` entries that become obsolete (mark `obsolete`, do not delete)
    - code, tests and comments (if code exists)
-6. **Update them all** to the new decision. Replace `[TBD]` markers, remove obsolete conditional sections, unblock issues that waited on it, close the answered `Q-###` (`Answered`, link the `DEC-###`), update `current-status.md` and `plan.md`. Record the list in the entry's `Docs updated` field.
-7. **Course documents drift.** Anything in `senior-project/docs/` (Initial Plan etc.) that now disagrees: do **not** edit. Add the list to the entry's `Course documents affected (for humans)` field and mention it in your reply. They are for the course, not the truth.
+6. **Update them all** to the new decision. Replace `[TBD]` markers, remove obsolete conditional sections, unblock issues that waited on it, close the answered `Q-###` (`Answered`, link the `DEC-###`, move it to `history/questions-archive.md`), update `current-status.md` if something on it changed. Record the list in the entry's `Docs updated` field.
+7. **Requirements and course documents.** If the decision changes what a requirement says, change it in [`docs/requirements/`](../../requirements/README.md) in the same PR with [change-requirements.md](change-requirements.md). Do **not** edit `team1-sp/docs` (S-3): its requirement sections are rebuilt from this repository at submission (DEC-152.2). For anything else there that now disagrees (prose the deliverables hold on their own), add the list to the entry's `Course documents affected (for humans)` field and mention it in your reply.
 8. **Create follow-up work** the decision implies (ask the human for new issues, add a `Q-…` for questions it opens).
 9. **Verify propagation:** search again for the old term; the only remaining mentions must be in `history/` (past entries) or clearly marked as history.
 10. **Tell the human** in 2–4 lines: what was recorded, what was updated, which course documents they may want to update, and what new questions it raised.
@@ -57,7 +57,7 @@ Rules for the review route:
 
 Human: "Physics library is Box2D."
 - DEC-014 `Accepted`, decided by `<human>`, quote.
-- Old `[TBD]` in `tech-stack.md`, `physics-adapter-design.md`, `current-status.md`, `plan.md`, `task-board.md`, `open-questions.md` updated; BEPUphysics mentions kept only as "considered" history in the decision entry.
+- Old `[TBD]` in `tech-stack.md`, `physics-adapter-design.md`, `current-status.md`, `open-questions.md` updated; BEPUphysics mentions kept only as "considered" history in the decision entry.
 - Course documents affected: Initial Plan §… mentions "Box2D or BEPUphysics" → human to update.
 - New question: Box2D version (v2.4 C++ vs v3 C)?
 

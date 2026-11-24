@@ -11,7 +11,7 @@ Increment 1 (prototype): the Increment 1 stories (SRS B) are the issues in the I
 | Area | Where | State |
 | --- | --- | --- |
 | Engine core | `engine/core` | Fixed game loop with the seven tick phases, windowed and headless runs, pause/resume/step, input sources, structured logging. `ISimulation` waits for the ECS. |
-| ECS | `engine/ecs` | Entities with Editor- and runtime-range IDs, the hierarchy, the enabled flag and the built-in Name, EntityInfo and Hierarchy components in sorted sparse-set pools; `CommandBuffer` for deferred creation, destruction and parenting (US-2.1). `TypeRegistry` with each component type's semantic description and field layout, Position and Velocity, adding, removing, reading and changing components with their enabled flags, also through the `CommandBuffer` (US-2.2). Systems and queries, and events come with US-2.3 and US-2.8; `ISimulation` is not backed by the ECS yet. |
+| ECS | `engine/ecs` | Entities, IDs, hierarchy, enabled flags; `TypeRegistry` with component descriptions; components and `CommandBuffer` (US-2.1, 2.2). Systems, queries and events follow (US-2.3, 2.8). |
 | Physics | `engine/physics`, `engine/physics-box2d` | `IPhysicsAdapter` interface; Box2D is built and linked in `physics-box2d`, the adapter implementation is still to come. |
 | Rendering | `engine/rendering-raylib` | Raylib window behind the rendering abstraction; never initialised headless. |
 | AgentBridge | `engine/bridge`, `proto/` | Engine side of the gRPC/protobuf contract to the Python AI service (localhost only for the prototype). |
@@ -20,13 +20,14 @@ Increment 1 (prototype): the Increment 1 stories (SRS B) are the issues in the I
 | AI service | `ai-services/` | Python 3.12 package (DEC-039). |
 | Sandbox | `sandbox/` | Developer and CI test host only; not a product. |
 | Tests | `tests/` | GoogleTest, headless. |
-| Course deliverables | separate `senior-project/docs/` repo | **Not authoritative; not edited by agents.** |
+| Requirements | `docs/requirements/` | Epics, stories, FR/NFR; owned here, read on demand (DEC-152.2). |
+| Course deliverables | separate `senior-project/docs/` repo (`team1-sp/docs`) | **Not authoritative; not edited by agents.** Built from this repo at submission (DEC-152.2). |
 
 Folder rules: [guidelines/repository-structure.md](../../guidelines/repository-structure.md).
 
 ## Open questions and decisions
 
-Read the index of the decision log and [open-questions.md](open-questions.md). Do not copy their lists here.
+Read [the decision index](../../history/decision-index.md) and [open-questions.md](open-questions.md). Do not copy their lists here.
 
 ## Health
 

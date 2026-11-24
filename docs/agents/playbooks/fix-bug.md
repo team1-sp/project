@@ -1,10 +1,10 @@
 # Playbook — Fix a Bug
 
-Companion docs: [troubleshooting/debugging-playbook.md](../../troubleshooting/debugging-playbook.md) (technical method) and [history/problem-log.md](../../history/problem-log.md) (memory).
+Companion docs: [troubleshooting/debugging-playbook.md](../../troubleshooting/debugging-playbook.md) (technical method) and [history/problems/](../../history/problems/README.md) (memory).
 
 ## Steps
 
-1. **Search memory.** Grep `problem-log.md` and `common-errors.md` for the exact error text, the component name and the symptom. If a solution exists, try it and add an `Occurrences` line. Done if it works.
+1. **Search memory.** Grep `history/problems/` and `common-errors.md` for the exact error text, the component name and the symptom. If a solution exists, try it and add an `Occurrences` line. Done if it works.
 2. **Reproduce.** Make a failing test or a deterministic reproduction (fixed inputs, fixed seed, headless if possible). A bug you cannot reproduce is not fixed, only hidden. Record the reproduction command in the task.
 3. **Localise along the chain.** Input → ECS → Physics sync → Physics step → ECS write-back → Collision events → Gameplay → Telemetry → Rendering. Inspect data at each link (telemetry, logs, debugger, assertions). Find the *first* link where the data is wrong.
 4. **Classify the layer owner.** Wrong decision → gameplay system. Wrong position/collision → adapter or physics config. Wrong picture with right data → rendering. Wrong data in the right place → whoever wrote the component.
