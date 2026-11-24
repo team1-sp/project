@@ -1,6 +1,6 @@
 # Debugging Playbook
 
-Method first, then symptom → likely cause tables. Search [../history/problem-log.md](../history/problem-log.md) before starting; record afterwards.
+Method first, then symptom → likely cause tables. Search [../history/problems/](../history/problems/README.md) before starting; record afterwards.
 
 ## 1. Method (applies to every bug)
 

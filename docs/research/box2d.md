@@ -1,5 +1,7 @@
 # Box2D v3.1.1 Research Notes (PB-008)
 
+> **Audience: humans.** Agents skip this file unless a human asks or they trace something back ([reading tiers](../agents/README.md#reading-tiers-dec-1521), DEC-152.1).
+
 Status: **spike findings** for ClickUp PB-008 (Box2D v3 + raylib falling-box prototype). The units convention in section 3 is `Accepted` (DEC-036); everything else is a summary of how the pinned library behaves, checked against the v3.1.1 headers and the spike `[VERIFIED 2026-11-01]`. Code: `sandbox/src/falling_box_scene.cpp` (Box2D) and `sandbox/src/box2d_raylib.cpp` (raylib); tests: `tests/unit/sandbox/`.
 
 Box2D is pinned at **v3.1.1** (DEC-020). box2d.org tracks the newest release, so check anything you read there against the pinned headers in `build/<preset>/_deps/box2d-src/include/box2d/` or the pinned docs in `_deps/box2d-src/docs/` (E-018).

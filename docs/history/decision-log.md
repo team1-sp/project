@@ -7,85 +7,8 @@ Statuses: `Proposed` (a question is open in the conversation and nobody has answ
 
 ## Index
 
-| ID | Decision | Status | Date |
-| --- | --- | --- | --- |
-| DEC-001 | Three-layer architecture with one-way dependencies | Accepted | 2026-10-12 (extracted) |
-| DEC-002 | ECS is the central data hub; gameplay decisions live in gameplay systems | Accepted | 2026-10-12 (extracted) |
-| DEC-003 | Physics is accessed only through a Physics Adapter | Accepted | 2026-10-12 (extracted) |
-| DEC-004 | Fixed physics timestep 1/60 s and fixed frame order | Accepted | 2026-10-12 (extracted) |
-| DEC-005 | Headless mode is a core requirement | Accepted | 2026-10-12 (extracted) |
-| DEC-006 | MVP is 2D; architecture must not block 3D | Superseded by DEC-016 | 2026-10-12 (extracted) |
-| DEC-007 | Graphics framework is accessed through an abstraction | Accepted | 2026-10-12 (extracted) |
-| DEC-008 | Telemetry is recorded every frame inside the loop | Accepted | 2026-10-12 (extracted) |
-| DEC-009 | Adopt this docs structure and agent protocol | Accepted | 2026-10-12 |
-| DEC-010 | MCP is an optional later interoperability layer, not the first integration | Proposed | 2026-10-12 |
-| DEC-011 | AI orchestration in Python, engine-facing contract via gRPC/protobuf | Superseded by DEC-038 (protocol) and DEC-039 (Python) | 2026-10-12 |
-| DEC-012 | Graphics framework selection is decided by the shader benchmark | Superseded by DEC-015 | 2026-10-12 (extracted) |
-| DEC-013 | Programming language is C++ | Accepted | 2026-10-13 |
-| DEC-014 | Physics library is Box2D (behind the Physics Adapter) | Accepted | 2026-10-13 |
-| DEC-015 | Graphics framework is Raylib (behind the rendering abstraction) | Accepted | 2026-10-13 |
-| DEC-016 | Product scope is 2D only; 3D is future work, architecture keeps it possible | Accepted | 2026-10-13 |
-| DEC-017 | Decision authority: humans decide, agents consult; decision log is the single truth; course docs are not authoritative | Accepted | 2026-10-13 |
-| DEC-018 | ECS is custom-built (so components can be LLM-instructive via the semantic layer) | Accepted | 2026-10-13 |
-| DEC-019 | C++20 (its platform part was decided in DEC-029) | Accepted | 2026-10-13 |
-| DEC-020 | Box2D version is v3.1.1 (C API) | Accepted | 2026-10-13 |
-| DEC-021 | Raylib version is v6.0 | Superseded by DEC-033 | 2026-10-13 |
-| DEC-022 | One repository for code and engineering docs; `team1-sp/docs` holds course deliverables only | Accepted | 2026-10-15 |
-| DEC-023 | Build system CMake, test framework GoogleTest | Accepted | 2026-10-15 |
-| DEC-024 | Işık Dönger reviews every PR; area owners are second code owners | Accepted | 2026-10-15 |
-| DEC-025 | AI agents push only after a human approves; humans approve and merge every PR | Superseded by DEC-053 | 2026-10-15 |
-| DEC-026 | The semantic layer lives in its own top-level folder, separate from engine and ai-services | Accepted | 2026-10-15 |
-| DEC-027 | Trunk-based git workflow; branch protection deferred, rules kept as a team agreement | Accepted | 2026-10-15 |
-| DEC-028 | GitHub issues are created from ClickUp tasks with ClickUp's GitHub integration | Superseded by DEC-050 | 2026-10-15 |
-| DEC-029 | Platforms: develop on Windows and macOS (Windows priority); the engine application and the development tool must run on both; games are built for Windows only for now | Accepted | 2026-10-15 |
-| DEC-030 | Compilers: whatever each platform needs; none pinned now | Accepted | 2026-10-15 |
-| DEC-031 | Coding standards, Definition of Done and clang-format 19 accepted | Accepted | 2026-10-23 |
-| DEC-032 | Only Işık Dönger and the advisor approve PRs; Işık's own PRs need no approval; `main` ruleset on | Accepted (advisor part superseded by DEC-151.1) | 2026-10-23 |
-| DEC-033 | Raylib version is 6.2 | Accepted | 2026-10-24 |
-| DEC-034 | The product name is Aegis | Accepted | 2026-10-24 |
-| DEC-035 | PR titles put the PB id in the Conventional Commit scope: `<type>(PB-<nnn>): <description>` | Superseded by DEC-050 | 2026-10-24 |
-| DEC-036 | World units are meters with y up; 32 pixels per meter; conversion only in the renderer | Accepted | 2026-11-01 |
-| DEC-037 | The PB-008 spike in `sandbox/` may link Box2D and raylib directly (exception to R-3/R-4 for that spike only) | Proposed | 2026-11-01 |
-| DEC-038 | ADR-002: the C++ to Python bridge is gRPC/protobuf behind AgentBridge | Accepted | 2026-11-04 |
-| DEC-039 | `ai-services` uses Python 3.12 with pinned Python project tooling | Accepted | 2026-11-04 |
-| DEC-040 | The physics body owns velocity; the ECS Velocity component mirrors it and carries pending writes | Accepted | 2026-11-05 |
-| DEC-041 | The ECS and the Physics Adapter meet only in two declared systems, PhysicsSyncIn and PhysicsSyncOut | Accepted | 2026-11-05 |
-| DEC-042 | Pre-implementation ECS gaps settled: push events, tick vocabulary, Phase 1 components, input, time, RNG, scene, ids, errors, telemetry records | Accepted | 2026-11-05 |
-| DEC-043 | About 20 % of the whole project is built this semester; the ECS builds its Phase 1 slice | Accepted | 2026-11-05 |
-| DEC-044 | Coding standards amended for the ECS design: naming, tags, declarations, errors, RNG | Accepted | 2026-11-05 |
-| DEC-045 | No own LLM is built; users supply their own model provider and key; only free-tier or local use is guaranteed | Accepted | 2026-11-06 |
-| DEC-046 | PB-011: the window lives in `rendering-raylib` behind `IWindow`; the loop reaches the game through `ISimulation` and `IFrameRenderer`; the leak check is one guarded MSVC call | Accepted | 2026-11-10 |
-| DEC-047 | PB-012: the game loop follows srs.fr.1.2 to 1.6 (at most 5 ticks per render frame) with an exact integer accumulator and the tick counter in `engine/core` | Accepted | 2026-11-10 |
-| DEC-048 | The editor is the application that hosts `engine::Application` and owns the main window; `sandbox` is a developer and CI test host; games never host the engine | Accepted | 2026-11-11 |
-| DEC-049 | PB-025: the physics interface is named `IPhysicsAdapter`; bodies are addressed by `BodyId` with `findBody(EntityId)`; `Vec2` and `EntityId` live in `engine/core` | Accepted | 2026-11-11 |
-| DEC-050 | The backlog moves from ClickUp to one GitHub project built from the SRS; branches use the issue number, PR scopes the story id; creating a branch moves its card to In progress, new PRs are filled from the issue, and no workflow creates branches or PRs | Accepted | 2026-11-11 |
-| DEC-051 | US-1.1: a render frame collects input first, through `IWindow::collectInput()`; raylib is built with `SUPPORT_CUSTOM_FRAME_CONTROL` so that `RaylibWindow` polls, presents and caps the frame rate itself | Accepted | 2026-11-12 |
-| DEC-052 | A decision is `Proposed` only while its question waits for an answer in the conversation; a decision a PR carries is written `Accepted`, listed for review, and binds only when a human merges the PR | Accepted | 2026-11-12 |
-| DEC-053 | AI agents commit only after a human approves the change; after that they push and open or update the draft PR without asking again; humans approve and merge every PR | Accepted | 2026-11-12 |
-| DEC-054 | Agents (and developers) open the draft PR with `tools/open_pr.py` after the first push; the PR fill workflow is removed; no workflow creates commits or PRs | Accepted | 2026-11-12 |
-| DEC-055 | Branches keep in step with `main` by merging it (never rebasing) before each push and before review; collided record ids are renumbered by the later branch and caught by `check_ids.py`; the `Conflict flag` workflow labels open PRs that conflict with `main` | Accepted | 2026-11-12 |
-| DEC-057 | US-1.2: the run mode and run settings come from `parseRunOptions()` in `engine/core`; the game loop catches `engine::RunError`, logs the tick, ends the run with the outcome `Error` and a non-zero exit code; the Editor parts wait for their stories | Accepted | 2026-11-15 |
-| DEC-058 | Agents ask before committing only when they work on a member's computer; in their own cloud copy of the repository they commit and push without asking | Accepted | 2026-11-15 |
-| DEC-059 | US-1.3: the game loop runs every tick as the seven tick phases through `ISimulation::runPhase()`; `TickPhase` lives in `engine/core`; the loop builds each tick's input action state from the run's `IInputSource` (keyboard queue, None, later recording and agent) | Accepted | 2026-11-16 |
-| DEC-060 | US-1.4: `Application::requestPause()`, `resume()`, `requestStep()` and `isPaused()` pause a normal-mode run at the next tick boundary, drop the frame's unstarted ticks, keep the part of a tick, add no paused time and run one tick per step without the accumulator | Accepted | 2026-11-16 |
-| DEC-061 | Agents do code work in their own cloud copy of the repository by default; they work on a member's computer (folder access or Remote Control) only when the work needs that computer or the member asks | Accepted | 2026-11-16 |
-| DEC-062 | The `Epic close` workflow closes an epic once all of its sub-issues are closed and its "Later stories" list is empty; with later stories left it stays open with the `increment-done` label | Accepted | 2026-11-16 |
-| DEC-063 | US-14.1: the Editor's interface is drawn with Dear ImGui v1.93.0 (docking branch) through rlImGui inside `engine/rendering-raylib`; the window-free menu model and session live in `editor_core`; unbuilt menu items are disabled; `Application` gets `confirmClose`, `requestClose()` and `setWindowTitle()` | Accepted | 2026-11-16 |
-| DEC-064 | US-14.1: the Editor takes the look of the Figma design: Inter and JetBrains Mono embedded in the executable from `editor/assets/fonts`, the design's palette and sizes as the Dear ImGui style, Font Awesome icons on the toolbar | Accepted | 2026-11-16 |
-| DEC-065 | srs.fr.14.15 is reworded: a panel tab dragged out of its dock becomes a floating panel inside the main window, not a separate operating-system window | Accepted | 2026-11-17 |
-| DEC-066 | US-14.2: the status bar is built from a window-free `EditorStatus` model in `editor_core` (message, debug flags in orange, REC, mode, FPS, entities, AI service dot); clicking the message opens the Console; the AI and REC clicks wait for their panels | Accepted | 2026-11-17 |
-| DEC-067 | US-11.2: a window-free read-only assistant core uses AgentBridge streaming, cancellable answer operations and versioned user-local chat storage | Accepted | 2026-11-22 |
-| DEC-068 | US-24.1: structured logs are owned by a window-free Console model; projection is non-mutating; search ignores case; collapse identity includes every structured field; Play lifecycle, pause, editor launch and entity navigation use injected seams | Accepted | 2026-11-22 |
-| DEC-069 | US-33.5: AI/privacy settings use a window-free controller, address-bound AgentBridge health/model operations and versioned user-local project persistence | Accepted | 2026-11-22 |
-| DEC-070 | US-11.1: grounded answers use read-only evidence query seams, a deterministic diagnosis, typed citations serialised as `state`/`entity`/`source` key=value payloads, and an AgentBridge decorator that carries the grounded context in `semanticGraphStructure` and validates citations before they reach the chat | Accepted | 2026-11-22 |
-| DEC-071 | US-33.2: the AI Assistant chat state is a window-free `editor_core` model that sends only through an injectable sender over `GroundedAssistant`, runs `AnswerOperation` on a worker thread, shows a running answer only after it ends, keeps chips across questions, and sizes chips by their evidence bytes | Accepted | 2026-11-22 |
-| DEC-148.1 | New record ids are `<PREFIX>-<GitHub #>.<counter>` (the issue the PR closes, or the PR's own number for no-issue work), tasks are `TASK-<issue #>`, old ids stay; the append-only logs merge with `merge=union`; `check_ids.py` accepts both forms and fails a PR whose new ids use another number | Accepted | 2026-11-22 |
-| DEC-149.1 | The task board is retired: tasks are GitHub issues and the issue's assignee is the claim, no new TASK ids, `task-board.md` is archived; `current-status.md` becomes an increment-level page that a PR edits only when something on it changes | Accepted | 2026-11-22 |
-| DEC-151.1 | The advisor, Leyla Sezer, is no longer a code owner; Işık Dönger is the only code owner and approver; the `main` ruleset is unchanged | Accepted | 2026-11-22 |
+The one-line index of every entry is [decision-index.md](decision-index.md). Agents read the index at boot and open an entry here only by its id, when they need to trace a decision back. A new entry adds its index row there in the same PR (`tools/check_ids.py`).
 
-### Decisions still open (no entry yet — do not decide silently)
-
-what "LLM-instructive components" means concretely (Q-013, deferred by the human) · license · GitHub access, visibility and branch protection (see Q-014) · reference hardware for the performance targets · telemetry file format (Proposed in design doc, not yet decided). See `agents/state/open-questions.md`.
 
 ---
 
@@ -1212,6 +1135,7 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Course documents affected (for humans):** none known; SRS/Initial Plan text about a repo task board, if any, is for the humans to check.
 - **Revisit when:** agents need an offline task list again, or `current-status.md` starts changing in most PRs.
 - **Supersedes / Related:** DEC-148.1 (part 2), DEC-050, DEC-055, Q-015.
+- **Amendments:** 2026-11-24 — the archive file of part 2, `history/task-board-archive.md`, is deleted by DEC-152.1; the `TASK-0nn` entries stay in git history.
 
 ### DEC-151.1 — Işık Dönger is the only code owner
 - **Date:** 2026-11-22
@@ -1227,3 +1151,78 @@ what "LLM-instructive components" means concretely (Q-013, deferred by the human
 - **Revisit when:** another approver is needed (for example while Işık is unavailable).
 - **Supersedes / Related:** supersedes the advisor part of DEC-032; DEC-024.
 
+### DEC-152.1 — Agent docs are read in tiers: a one-line decision index, rotated handoffs, problems by area, archives for closed records
+- **Date:** 2026-11-24
+- **Status:** Accepted (decided in the conversation; details carried by PR #152, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (in the conversation "Bridge project docs and docs repo", 2026-11-24); the reviewer of PR #152   **Recorded by:** claude-code/opus-5.5/6r0a
+- **Human's words:** "If the whole document is read make the rule so one line explanations are mandetory and long explanation is when tracking-back is required." Then: "I agree on all points for decision-log … for problem-log I think the whole document is important, but maybe it can be re-worked to only be looked at when a problem occurs and not always or problems regarding different parts can be made a seperate files under one problems/ folder … plan.md and task-board.md should be deleted. Others can be made human-only. open-questions your suggestions works."
+- **Context:** an agent's boot read was about 65 KB and grew with every PR: the decision-log index alone was 22 KB with rows of up to 330 characters, the handoff log was 67 KB (the protocol said "read the last 5", but tools often load the whole file), and open-questions held answered questions. `plan.md` still described Phase 1. The team will keep working with agents next semester, so the cost compounds.
+- **Options considered:** (a) keep the files and rely on "read only part of it"; (b) split each growing record into a small live file agents read and an archive they skip; (c) delete old records.
+- **Decision:**
+  1. **Decision index.** The index moves out of `decision-log.md` into `history/decision-index.md`, which agents read at boot instead of the log. Each row is one line, the decision in at most 120 characters. Superseded and rejected rows sit in an Archived table that agents skip. Agents open a full entry in `decision-log.md` by its id only to trace a decision back. `check_ids.py` fails on a missing or extra row, a row over 120 characters, or a closed row in Active (or an open one in Archived).
+  2. **Handoff rotation.** The live `handoff-log.md` keeps the newest entries. `tools/rotate_handoffs.py` moves older entries unchanged to `history/handoff-archive/<YYYY-MM>.md`, keeping 10; `check_ids.py` fails when the live log holds more than 15, which is when a PR runs the script. No workflow commits the rotation (DEC-054).
+  3. **Problems by area.** `history/problem-log.md` becomes `history/problems/` with one append-only file per area (`build-and-tooling`, `engine`, `ai`, `editor`; split further when a file passes about 30 KB) and an index in its README. Agents read it only when a problem occurs, never at boot.
+  4. **Open questions.** `open-questions.md` keeps only open questions; answered and obsolete ones move unchanged to `history/questions-archive.md`.
+  5. **Deleted:** `agents/state/plan.md` (stale; the GitHub project and `current-status.md` cover it) and `history/task-board-archive.md` (its entries stay in git history).
+  6. **Reading tiers.** `agents/README.md` lists three tiers: boot, on demand and human-only. Human-only files (`history/handoff-archive/`, `history/questions-archive.md`, `history/genai-usage-log.md`, ADRs, `research/`, `process/roadmap.md`) carry an audience line under their title. `tools/check_boot.py` keeps the boot files other than the handoff log under 50 KB, in CI.
+  7. Moving an entry unchanged to its archive file is not an edit of a past entry (P-6). `check_ids.py` checks each id across its live and archive files.
+- **Rationale:** agents read what they need for the session and nothing that only explains the past, so the boot cost stays flat while the records keep growing. Nothing is lost: full decisions, old handoffs and answered questions stay in the repository.
+- **Consequences:** the boot set is about 45 KB plus the last handoffs (it was about 65 KB). Reaching the 30 KB first suggested would need `AGENT-PROTOCOL.md` (15 KB) and `rules.md` (7 KB) trimmed, which is a separate decision. An agent that needs a reason must now open the entry, one extra read. Parallel PRs that both rotate make the same change and merge cleanly.
+- **Docs updated:** `history/decision-index.md` (new), `history/decision-log.md` (index moved), `history/problems/` (new, from `problem-log.md`), `history/handoff-archive/` (new), `history/questions-archive.md` (new), `agents/state/{handoff-log,open-questions}.md`, `agents/{README,AGENT-PROTOCOL,rules,communication-protocol}.md`, `agents/playbooks/{record-decision,fix-bug}.md`, `agents/templates/{decision-entry,problem-entry}.md`, `agents/state/current-status.md`, `guidelines/{documentation-rules,git-workflow}.md`, `process/{development-process,definition-of-done,roadmap}.md`, `troubleshooting/*`, `research/*.md`, `history/{genai-usage-log,adr-002-cpp-python-communication}.md`, `docs/README.md`, `.gitattributes`, `.github/workflows/ci.yml`, `tools/{check_ids,check_boot,rotate_handoffs}.py`.
+- **Course documents affected (for humans):** none.
+- **Revisit when:** the boot set passes its budget again, or agents keep needing an archived file at boot.
+- **Supersedes / Related:** DEC-149.1 (its archive file is deleted), DEC-148.1, DEC-017, DEC-054, P-6.
+
+### DEC-152.2 — The project repository owns the requirements; the docs repository rebuilds the deliverables from it with a script
+- **Date:** 2026-11-24
+- **Status:** Accepted (decided in the conversation; details carried by PR #152, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (in the conversation "Bridge project docs and docs repo", 2026-11-24); the reviewer of PR #152   **Recorded by:** claude-code/opus-5.5/6r0a
+- **Human's words:** "project/docs definietly needs to be the owner and docs/ only extend from it. But main idea is that we need three layers of seperation … And we need to find a way to make these seperations as static as possible to not need genAI to cut usage." Then: "I think the converter should live in the docs/ if possible. Because since its the one that extends project/docs it should be the one calling instead of project/docs sending."
+- **Context:** the SRS (team1-sp/docs) and the code drifted apart, and course rules (S-3, the user's rule of 2026-11-16) kept agents from touching the deliverables, so requirement changes from code work were recorded only as decisions. Instructors receive the deliverables at the demo and the final presentation, so they must match the final work. Next semester has no new deliverables except keeping these current.
+- **Options considered:** (a) keep the SRS as the source and record drift as decisions; (b) a ledger of pending deliverable changes written by every PR; (c) the project owns the data, and the docs repository rebuilds its sections from it with a deterministic script only when submitting.
+- **Decision:**
+  1. **Three layers.** (1) `team1-sp/project` docs are the source: engineering docs, decisions, archives, and the data the deliverables reuse in a fixed format. (2) The converter lives in `team1-sp/docs` and pulls from a project checkout. (3) The deliverables are rebuilt in `team1-sp/docs` only when they are submitted.
+  2. **Requirements live in `docs/requirements/`**: `conventions.md`, one file per epic under `functional/` (front matter, epic, stories as `## US-x.y` headings with `**Story:**`, each requirement one line with a `Use cases: …; Initial Plan: …` line), and one file per non-functional section under `non-functional/`. Seeded from team1-sp/docs commit `2ddcc2e` (36 epics, 291 stories, 1203 FRs, 49 NFRs); rendering it back gives SRS 6.1, 6.3, 6.4 and 7.1–7.6 byte for byte.
+  3. **A requirement change is made here**, in the PR whose work needs it, with a decision a human approves (DEC-052). This replaces "record SRS changes from code work as decisions only": the decision still records it, and the text now changes here as well. Agents still never edit `team1-sp/docs` (S-3).
+  4. Ids stay numbered from 1 without gaps (the SRS convention); a PR that removes or inserts a requirement renumbers the group and updates the references.
+  5. `tools/check_requirements.py` (CI) keeps the layout the converter needs. Agents read only the epic file of their story (on demand).
+  6. The docs-repository side (marked regions, `tools/sync_from_project.py`, `--check`, `SYNCED_FROM`, Word build, a short agent guide) is the humans' change to `team1-sp/docs`; a draft is handed over with this PR, not committed there.
+- **Rationale:** normal work keeps one source true and pays nothing for the deliverables; the deliverables can be brought up to date at any time by a script, so AI is needed only for prose that exists only in the deliverables.
+- **Consequences:** about 520 KB of requirements move into this repository (never read at boot). The SRS Word file still needs its format rules applied when it is rebuilt. Renumbering keeps the SRS convention but changes ids that code and tests cite (about 300 references today); stable ids would avoid that and are a separate decision. The SDD gets its own fixed-format sources when its outline exists.
+- **Docs updated:** `requirements/` (new), `agents/{rules,AGENT-PROTOCOL,README}.md`, `agents/playbooks/record-decision.md`, `agents/state/current-status.md`, `guidelines/documentation-rules.md` §3 and §8, `docs/README.md`, `.github/workflows/ci.yml`, `tools/check_requirements.py` (new).
+- **Course documents affected (for humans):** SRS 6.1, 6.3, 6.4 and 7.1–7.6 get GENERATED markers and are rebuilt from this repository by the docs-repository script.
+- **Revisit when:** the SDD outline exists, or renumbering ids causes trouble in code.
+- **Supersedes / Related:** DEC-017, DEC-022, DEC-152.1, S-3; the user's rule of 2026-11-16 on SRS changes from code work (refined by part 3).
+
+### DEC-152.3 — Requirement ids stay continuous, and a script renumbers them and their references
+- **Date:** 2026-11-24
+- **Status:** Accepted (decided in the conversation; details carried by PR #152, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (in the conversation "Bridge project docs and docs repo", 2026-11-24); the reviewer of PR #152   **Recorded by:** claude-code/opus-5.5/6r0a
+- **Human's words:** "I think all ids do need to be continous, but I also do not like rebuilding ids each time." Then: "can you make a script to run for renumbering automatically instead of an agent rebuilding it, that would work for me if it will keep the usage down enough."
+- **Context:** DEC-152.2 part 4 kept the SRS rule that ids run 1..n without gaps, which renumbers later ids on every insertion or removal; about 300 references in code, tests and docs cite these ids. Stable ids with "Removed" lines and a batch renumber at submission were offered and declined.
+- **Options considered:** (a) stable ids with gaps; (b) renumber in a batch at submission; (c) continuous ids at all times, renumbered by a script in the PR that changes a requirement.
+- **Decision:** (c). A requirement is added with a placeholder id (`srs.fr.<n>.new`), removed by deleting its lines, or moved between epic files; `tools/renumber_requirements.py` then numbers every `srs.fr` and `srs.nfr` group in file order, rewrites every changed id in one pass across tracked text files except `docs/history/`, the handoff log and `docs/research/`, and appends the old → new table to `docs/requirements/renumbering.md`. It writes nothing while a removed id is still referenced. CI runs it with `--check`, which also fails on any reference to a requirement that does not exist. User stories (`US-x.y`) are not renumbered: they name GitHub issues and branches.
+- **Rationale:** the SRS keeps its continuous numbering, and nobody (human or agent) spends effort on renumbering: one command, no AI.
+- **Consequences:** a PR that inserts a requirement early in a group touches every file that cites the later ids (a test run showed 42 files for one insertion in group 1); two PRs that change the same group at once conflict in those lines, and the later one runs the script again after merging `main`. History keeps old ids; `renumbering.md` traces them. The first `--check` found three stale references (two `srs.fr.6.10` in design docs, fixed to srs.fr.12.8; the research notes are excluded as history).
+- **Docs updated:** `requirements/README.md`, `agents/AGENT-PROTOCOL.md`, `design/{ecs-design,physics-adapter-design}.md`, `.github/workflows/ci.yml`, `tools/renumber_requirements.py` (new), `tools/check_requirements.py`.
+- **Course documents affected (for humans):** none; the SRS keeps continuous ids.
+- **Revisit when:** renumbering PRs collide often.
+- **Supersedes / Related:** refines DEC-152.2 part 4.
+
+### DEC-152.4 — Requirement changes made in the docs repository come back as an ordinary project PR, made by a script
+- **Date:** 2026-11-24
+- **Status:** Accepted (decided in the conversation; details carried by PR #152, binding once a human merges it, DEC-052)
+- **Decided by:** Işık Dönger (in the conversation "Bridge project docs and docs repo", 2026-11-24); the reviewer of PR #152   **Recorded by:** claude-code/opus-5.5/6r0a
+- **Human's words:** "we have worked on only the update from project/docs to docs/. But how about update from docs/ to project/docs. For example I was going to get to creating a workflow for updating the docs for V2 submission based on the meeting notes, but that also does touch requirement which lives and owned by project/docs." Then: "I want it to be added now".
+- **Context:** DEC-152.2 made the project the owner of the requirements and the docs repository a consumer. Deliverable work (instructor feedback, meeting notes, the SRS V2) starts in the docs repository and can change requirements.
+- **Decision:**
+  1. Ownership does not move. The docs repository may edit the generated SRS regions with the project's rules (placeholders for new requirements, deleted lines for removed ones, a 6.4 row for each new one; no new or removed stories), and must then propose the edit.
+  2. `tools/propose_to_project.py` (docs repository) parses the edited regions back into `docs/requirements/` on a branch `docs/<n>-…` from `main`, runs `tools/renumber_requirements.py` and `tools/check_requirements.py`, writes `DEC-<n>.1` (who decided, the source, every added, removed and reworded id), its index row and `HND-<n>.1`, and commits; `--push` opens the draft PR with `tools/open_pr.py`. No AI is involved.
+  3. These PRs follow the normal rules: `no-issue` docs PR named after its number, CI, human review and merge; on a member's computer the push waits for the member (DEC-058). No special rule is added.
+  4. Safety: the script refuses when the project's requirements changed after the docs repository's `SYNCED_FROM` commit. `SYNCED_FROM` stores a fingerprint of each generated region; `sync_from_project.py` refuses to overwrite a region edited since the last sync until it is proposed (or `--discard`ed), and a proposal marks its edits as sent so the sync after the merge replaces them with the final ids.
+- **Rationale:** one owner and one review path for requirements, whichever repository the change starts in, with no hand renumbering and no AI cost.
+- **Consequences:** verified end to end on copies: one rewording, one addition, one removal and one NFR rewording in the docs Markdown became a project branch (25 ids renumbered in 43 files, all checks passing, `DEC-999.1` written), and the sync afterwards rebuilt the docs regions with the final ids and nothing left out of date. The docs repository needs `gh` signed in (or `--number`) to know the coming PR number.
+- **Docs updated:** `requirements/README.md`, `agents/playbooks/change-requirements.md`; docs-repository side (patch): `tools/propose_to_project.py`, `tools/srs_regions.py`, `tools/sync_from_project.py`, `AGENTS.md`.
+- **Course documents affected (for humans):** none directly; the docs-repository patch adds the scripts.
+- **Revisit when:** the SDD gets generated regions (it needs its own parser), or proposals often collide with project changes.
+- **Supersedes / Related:** DEC-152.2, DEC-152.3, DEC-058.

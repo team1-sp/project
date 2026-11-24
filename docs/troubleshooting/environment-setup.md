@@ -80,13 +80,13 @@ The sandbox runs on the engine's `Application` (PB-011, PB-012). Its window show
 | First configure fails while cloning | It needs github.com. Retry; behind a proxy set `HTTPS_PROXY` |
 | Linux (not a supported platform) | Needs the X11 and OpenGL dev packages for raylib; on a machine without Wayland libraries add `-DGLFW_BUILD_WAYLAND=OFF` |
 
-Solved setup problems also go into `history/problem-log.md` (area `Build`) and get a line here.
+Solved setup problems also go into `history/problems/` (area `Build`) and get a line here.
 
 ## 7. Rules
 
 - Commands must be copy-pasteable and tool-neutral (no "click the Run button").
 - Pin versions; record the date verified.
-- When a setup problem is solved, add it to `history/problem-log.md` (area `Build`) **and** link it here.
+- When a setup problem is solved, add it to `history/problems/` (area `Build`) **and** link it here.
 - Never commit machine-specific paths into build files; use relative paths or configuration.
 
 ## 8. Change table
