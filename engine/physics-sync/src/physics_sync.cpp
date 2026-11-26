@@ -1,11 +1,20 @@
 #include "engine/physics_sync/physics_sync.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <memory>
 #include <set>
+#include <vector>
 
+#include "engine/core/tick.hpp"
+#include "engine/ecs/built_in_components.hpp"
 #include "engine/ecs/core_components.hpp"
+#include "engine/ecs/ecs_simulation.hpp"
 #include "engine/ecs/physics_components.hpp"
 #include "engine/ecs/system_context.hpp"
+#include "engine/ecs/system_scheduler.hpp"
+#include "engine/ecs/transform.hpp"
+#include "engine/ecs/world.hpp"
 
 namespace engine::physics_sync {
 
@@ -28,13 +37,12 @@ BodyType toBodyType(RigidBodyType type) {
     return BodyType::Static;
 }
 
-// srs.fr.3.2: the RigidBody sets the body; without one the body is static.
-BodyDesc bodyDescOf(const PositionComponent* position, const RigidBodyComponent* rigidBody) {
+// srs.fr.3.2: the RigidBody sets the body; without one the body is static. Box2D gets world
+// transforms (srs.fr.3.39).
+BodyDesc bodyDescOf(const WorldTransform& world, const RigidBodyComponent* rigidBody) {
     BodyDesc desc;
-    if (position != nullptr) {
-        desc.positionMeters = Vec2{position->xMeters, position->yMeters};
-        desc.angleRadians = position->rotationRadians;
-    }
+    desc.positionMeters = world.position;
+    desc.angleRadians = world.rotationRadians;
     if (rigidBody != nullptr) {
         desc.type = toBodyType(rigidBody->bodyType);
         desc.massKilograms = rigidBody->massKilograms;
@@ -43,6 +51,28 @@ BodyDesc bodyDescOf(const PositionComponent* position, const RigidBodyComponent*
         desc.fixedRotation = rigidBody->fixedRotation;
     }
     return desc;
+}
+
+// The entity's parent, if it has one.
+std::optional<Entity> parentOf(SystemContext& ctx, Entity e) {
+    const EntityId parent = ctx.get<const HierarchyComponent>(e).parent;
+    return parent == noEntity ? std::nullopt : ctx.find(parent);
+}
+
+// srs.fr.3.37, 3.49: the parent's world transform combined with the local one, from the root
+// down. An entity without a Position counts as one at the parent's origin.
+WorldTransform worldTransformOf(SystemContext& ctx, std::optional<Entity> e) {
+    std::vector<Entity> chain;
+    for (; e; e = parentOf(ctx, *e)) {
+        chain.push_back(*e);
+    }
+    WorldTransform world = worldOrigin;
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+        if (const auto* position = ctx.tryGet<const PositionComponent>(*it)) {
+            world = compose(world, *position);
+        }
+    }
+    return world;
 }
 
 template <typename C>
@@ -121,8 +151,8 @@ void PhysicsSyncInSystem::describe(SystemDescription& d) const {
         .purpose("Creates, changes and destroys physics bodies and shapes to match the "
                  "entities' RigidBody and collider components.")
         .phase(TickPhase::PhysicsSyncIn)
-        .reads<PositionComponent, RigidBodyComponent, BoxColliderComponent, CircleColliderComponent,
-               PolygonColliderComponent>();
+        .reads<HierarchyComponent, PositionComponent, VelocityComponent, RigidBodyComponent,
+               BoxColliderComponent, CircleColliderComponent, PolygonColliderComponent>();
 }
 
 void PhysicsSyncInSystem::update(SystemContext& ctx) {
@@ -151,13 +181,18 @@ void PhysicsSyncInSystem::update(SystemContext& ctx) {
     ctx.each<const PolygonColliderComponent>(collect);
     for (const EntityId id : candidates) {
         const Entity e = *ctx.find(id);
-        const physics::BodyId body =
-            adapter.createBody(id, bodyDescOf(ctx.tryGet<const PositionComponent>(e),
-                                              ctx.tryGet<const RigidBodyComponent>(e)));
+        const BodyDesc desc =
+            bodyDescOf(worldTransformOf(ctx, e), ctx.tryGet<const RigidBodyComponent>(e));
+        const physics::BodyId body = adapter.createBody(id, desc);
         if (body == physics::noBody) {
             continue; // the adapter logged why
         }
-        PhysicsSync::Tracked tracked{body, {}, ctx.has<const RigidBodyComponent>(e)};
+        if (const auto* velocity = ctx.tryGet<const VelocityComponent>(e);
+            velocity != nullptr && desc.type != BodyType::Static) {
+            adapter.setLinearVelocity(body,
+                                      Vec2{velocity->xMetersPerSecond, velocity->yMetersPerSecond});
+        }
+        PhysicsSync::Tracked tracked{body, desc.type, {}, ctx.has<const RigidBodyComponent>(e)};
         for (const ColliderKind kind : colliderKinds) {
             if (const std::optional<ShapeDesc> shape = colliderShape(ctx, e, kind)) {
                 tracked.shapes[static_cast<std::size_t>(kind)] = adapter.addShape(body, *shape);
@@ -195,12 +230,82 @@ void PhysicsSyncInSystem::update(SystemContext& ctx) {
         }
         const RigidBodyComponent* rigidBody = ctx.tryGet<const RigidBodyComponent>(*e);
         if (tracked.hasRigidBody != (rigidBody != nullptr)) {
-            adapter.setBodyType(tracked.body, rigidBody != nullptr ? toBodyType(rigidBody->bodyType)
-                                                                   : BodyType::Static);
+            tracked.type =
+                rigidBody != nullptr ? toBodyType(rigidBody->bodyType) : BodyType::Static;
+            adapter.setBodyType(tracked.body, tracked.type);
             tracked.hasRigidBody = rigidBody != nullptr;
         }
         ++it;
     }
+
+    // Pending writes (srs.fr.3.11, 3.22, 3.55), then marks cleared; children's static and
+    // kinematic bodies follow their parent (srs.fr.3.39). Only entities with a body.
+    for (const auto& [id, tracked] : bodies) {
+        const Entity e = *ctx.find(id);
+        const bool positionWritten = ctx.hasPendingWrite<PositionComponent>(e);
+        const bool followsParent =
+            tracked.type != BodyType::Dynamic && parentOf(ctx, e).has_value();
+        if (positionWritten || followsParent) {
+            const WorldTransform world = worldTransformOf(ctx, e);
+            const physics::BodyState body = adapter.bodyState(tracked.body);
+            if (positionWritten || body.positionMeters != world.position ||
+                std::abs(body.angleRadians - world.rotationRadians) > 1e-4f) {
+                adapter.setTransform(tracked.body, world.position, world.rotationRadians);
+            }
+            ctx.clearPendingWrite<PositionComponent>(e);
+        }
+        if (ctx.hasPendingWrite<VelocityComponent>(e)) {
+            if (tracked.type != BodyType::Static) { // srs.fr.3.18: ignored for a static body
+                const VelocityComponent& velocity = ctx.get<const VelocityComponent>(e);
+                adapter.setLinearVelocity(
+                    tracked.body, Vec2{velocity.xMetersPerSecond, velocity.yMetersPerSecond});
+            }
+            ctx.clearPendingWrite<VelocityComponent>(e);
+        }
+    }
+}
+
+void PhysicsSyncOutSystem::describe(SystemDescription& d) const {
+    d.name("PhysicsSyncOut")
+        .purpose("Writes the positions and velocities physics computed back to the entities.")
+        .phase(TickPhase::PhysicsSyncOut)
+        .reads<HierarchyComponent>()
+        .writesUntracked<PositionComponent, VelocityComponent>();
+}
+
+void PhysicsSyncOutSystem::update(SystemContext& ctx) {
+    physics::IPhysicsAdapter& adapter = sync_.adapter_;
+    for (const auto& [id, tracked] : sync_.bodies_) {
+        if (tracked.type == BodyType::Static) {
+            continue; // physics never moves a static body (srs.fr.3.18)
+        }
+        const std::optional<Entity> e = ctx.find(id);
+        if (!e) {
+            continue; // destroyed this tick; its body goes in the next synchronization-in
+        }
+        const physics::BodyState body = adapter.bodyState(tracked.body);
+        const auto* position = ctx.tryGet<const PositionComponent>(*e);
+        if (position != nullptr && !ctx.hasPendingWrite<PositionComponent>(*e)) {
+            ctx.writeUntracked(*e, localFromWorld(worldTransformOf(ctx, parentOf(ctx, *e)),
+                                                  body.positionMeters, body.angleRadians,
+                                                  Vec2{position->scaleX, position->scaleY}));
+        }
+        // srs.fr.3.13: a kinematic body's Velocity is the ECS's own (srs.fr.3.19).
+        if (tracked.type == BodyType::Dynamic && ctx.has<const VelocityComponent>(*e) &&
+            !ctx.hasPendingWrite<VelocityComponent>(*e)) {
+            ctx.writeUntracked(*e, VelocityComponent{body.linearVelocityMetersPerSecond.x,
+                                                     body.linearVelocityMetersPerSecond.y});
+        }
+    }
+}
+
+void connectPhysics(World& world, EcsSimulation& simulation, PhysicsSync& sync,
+                    physics::IPhysicsAdapter& adapter) {
+    world.addObserver(sync);
+    world.systems().add([&sync] { return std::make_unique<PhysicsSyncInSystem>(sync); });
+    world.systems().add([&sync] { return std::make_unique<PhysicsSyncOutSystem>(sync); });
+    simulation.setPhysicsStep(
+        [&adapter](const TickContext&) { adapter.step(static_cast<float>(fixedDeltaSeconds)); });
 }
 
 } // namespace engine::physics_sync

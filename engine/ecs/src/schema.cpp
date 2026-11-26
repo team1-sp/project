@@ -33,6 +33,9 @@ Schema buildSchema(const World& world) {
             for (const DeclaredType& type : entry.declaration.writes) {
                 schema.writtenBy[type.name].push_back(entry.declaration.name);
             }
+            for (const DeclaredType& type : entry.declaration.writesUntracked) {
+                schema.writtenBy[type.name].push_back(entry.declaration.name);
+            }
             schema.systems.push_back(std::move(entry));
         }
     }

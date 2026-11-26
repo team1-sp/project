@@ -168,6 +168,6 @@ TEST(PhysicsSyncIn, Declaration_ReadsTheComponentsItUsesInItsPhase) {
     ASSERT_TRUE(id.has_value());
 
     EXPECT_EQ(scene.world.systems().phaseOf(*id), engine::TickPhase::PhysicsSyncIn);
-    EXPECT_EQ(scene.world.systems().declaration(*id).reads.size(), 5u);
+    EXPECT_EQ(scene.world.systems().declaration(*id).reads.size(), 7u);
     EXPECT_TRUE(scene.world.systems().declaration(*id).writes.empty());
 }

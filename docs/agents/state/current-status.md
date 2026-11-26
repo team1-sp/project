@@ -12,7 +12,7 @@ Increment 1 (prototype): the Increment 1 stories (SRS B) are the issues in the I
 | --- | --- | --- |
 | Engine core | `engine/core` | Fixed game loop with the seven tick phases, windowed and headless runs, pause/resume/step, input sources, structured logging. |
 | ECS | `engine/ecs` | Entities, components, systems, queries; `EcsSimulation` implements `ISimulation` (US-2.1 to 2.3). |
-| Physics | `engine/physics`, `-box2d`, `-sync` | Box2D adapter; PhysicsSyncIn makes bodies (US-3.1). |
+| Physics | `engine/physics`, `-box2d`, `-sync` | Box2D adapter; PhysicsSyncIn/Out (US-3.1, 3.2). |
 | Rendering | `engine/rendering-raylib` | Raylib window behind the rendering abstraction; never initialised headless. |
 | AgentBridge | `engine/bridge`, `proto/` | Engine side of the gRPC/protobuf contract to the Python AI service (localhost only for the prototype). |
 | Editor | `editor/` | Hosts `Application` and owns the main window (DEC-048). Dear ImGui + rlImGui (DEC-063): menus, toolbar, panels, status bar, Console, AI Assistant panel and AI and Privacy settings. |

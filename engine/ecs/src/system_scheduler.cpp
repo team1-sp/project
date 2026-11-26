@@ -79,7 +79,8 @@ SystemId SystemScheduler::add(const SystemFactory& factory) {
     access->name = declared.name;
     access->reads.assign(types.components().size(), 0);
     access->writes.assign(types.components().size(), 0);
-    const auto mark = [&](const std::vector<DeclaredType>& list, bool write) {
+    access->writesUntracked.assign(types.components().size(), 0);
+    const auto mark = [&](const std::vector<DeclaredType>& list, std::vector<std::uint8_t>* flags) {
         for (const DeclaredType& type : list) {
             const ComponentTypeInfo* info = types.find(type.id);
             if (info == nullptr || info->name != type.name) {
@@ -87,13 +88,14 @@ SystemId SystemScheduler::add(const SystemFactory& factory) {
                                ", which is not registered");
             }
             access->reads[info->index] = 1;
-            if (write) {
-                access->writes[info->index] = 1;
+            if (flags != nullptr) {
+                (*flags)[info->index] = 1;
             }
         }
     };
-    mark(declared.reads, false);
-    mark(declared.writes, true);
+    mark(declared.reads, nullptr);
+    mark(declared.writes, &access->writes);
+    mark(declared.writesUntracked, &access->writesUntracked);
     access->createsEntities = declared.createsEntities;
     access->destroysEntities = declared.destroysEntities;
     access->togglesEnabled = declared.togglesEnabled;

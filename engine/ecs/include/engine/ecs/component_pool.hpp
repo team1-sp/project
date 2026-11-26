@@ -58,8 +58,11 @@ template <typename T>
 class ComponentPool final : public IComponentPool {
 public:
     // Types with enabled flags keep one per component (srs.fr.2.11); a new component is enabled.
-    explicit ComponentPool(bool hasEnabledFlags = false)
-        : hasEnabledFlags_(hasEnabledFlags) {}
+    // Types that track writes keep a pending-write mark per component (D-27, DEC-040); a new
+    // component has none.
+    explicit ComponentPool(bool hasEnabledFlags = false, bool tracksWrites = false)
+        : hasEnabledFlags_(hasEnabledFlags)
+        , tracksWrites_(tracksWrites) {}
 
     [[nodiscard]] std::string_view typeName() const override { return T::typeName; }
     [[nodiscard]] std::size_t size() const override { return ids_.size(); }
@@ -82,6 +85,16 @@ public:
         enabled_[positionOf(e)] = static_cast<std::uint8_t>(enabled ? 1 : 0);
     }
 
+    // Pending-write marks (D-27): set by a system's non-const access, read and cleared by
+    // PhysicsSyncIn. No-ops and false for a type that does not track writes.
+    [[nodiscard]] bool tracksWrites() const { return tracksWrites_; }
+    void markWritten(Entity e) { setPending(e, 1); }
+    void clearPendingWrite(Entity e) { setPending(e, 0); }
+    [[nodiscard]] bool hasPendingWrite(Entity e) const {
+        const std::uint32_t pos = positionOf(e);
+        return tracksWrites_ && pos != npos && pending_[pos] != 0;
+    }
+
     // Adds the component of the live entity `e`, whose EntityId is `id`. The caller checks that
     // `e` has no component of this type yet (srs.fr.2.10).
     T& add(Entity e, EntityId id, T value) {
@@ -95,6 +108,9 @@ public:
         components_.push_back(std::move(value));
         if (hasEnabledFlags_) {
             enabled_.push_back(1);
+        }
+        if (tracksWrites_) {
+            pending_.push_back(0);
         }
         if (pos > 0 && ids_[pos - 1] > id) {
             dirty_ = true;
@@ -124,6 +140,9 @@ public:
             if (hasEnabledFlags_) {
                 enabled_[pos] = enabled_[last];
             }
+            if (tracksWrites_) {
+                pending_[pos] = pending_[last];
+            }
             sparse_[entities_[pos].index] = pos;
             dirty_ = true;
         }
@@ -132,6 +151,9 @@ public:
         components_.pop_back();
         if (hasEnabledFlags_) {
             enabled_.pop_back();
+        }
+        if (tracksWrites_) {
+            pending_.pop_back();
         }
         sparse_[e.index] = npos;
         return true;
@@ -178,6 +200,7 @@ public:
             const EntityId id = ids_[start];
             T component = std::move(components_[start]);
             const std::uint8_t enabled = hasEnabledFlags_ ? enabled_[start] : std::uint8_t{1};
+            const std::uint8_t pending = tracksWrites_ ? pending_[start] : std::uint8_t{0};
             std::size_t at = start;
             while (true) {
                 const std::size_t from = order_[at];
@@ -189,6 +212,9 @@ public:
                     if (hasEnabledFlags_) {
                         enabled_[at] = enabled;
                     }
+                    if (tracksWrites_) {
+                        pending_[at] = pending;
+                    }
                     break;
                 }
                 entities_[at] = entities_[from];
@@ -196,6 +222,9 @@ public:
                 components_[at] = std::move(components_[from]);
                 if (hasEnabledFlags_) {
                     enabled_[at] = enabled_[from];
+                }
+                if (tracksWrites_) {
+                    pending_[at] = pending_[from];
                 }
                 at = from;
             }
@@ -207,6 +236,13 @@ public:
 
 private:
     static constexpr std::uint32_t npos = 0xFFFF'FFFF;
+
+    void setPending(Entity e, std::uint8_t value) {
+        const std::uint32_t pos = positionOf(e);
+        if (tracksWrites_ && pos != npos) {
+            pending_[pos] = value;
+        }
+    }
 
     [[nodiscard]] std::uint32_t positionOf(Entity e) const {
         if (e.index >= sparse_.size()) {
@@ -224,8 +260,10 @@ private:
     std::vector<EntityId> ids_;
     std::vector<T> components_;
     std::vector<std::uint8_t> enabled_; // empty for a type without enabled flags
+    std::vector<std::uint8_t> pending_; // empty for a type that does not track writes
     std::vector<std::uint32_t> order_;  // scratch for sortIfDirty()
     bool hasEnabledFlags_ = false;
+    bool tracksWrites_ = false;
     bool dirty_ = false;
 };
 
