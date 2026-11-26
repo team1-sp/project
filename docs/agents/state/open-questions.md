@@ -35,7 +35,6 @@ Statuses: `Open` · `Answered` · `Obsolete`.
   2. **License.** No `LICENSE` file exists. A public repository without a license is "all rights reserved" by default. Which license (or none on purpose)? Raylib is zlib and Box2D is MIT, so any choice works.
   3. **Access.** GitHub usernames/roles of the 5 members and read access for the advisor (Leyla Sezer), if the repo goes private again.
   4. **Git LFS** for assets: yes or no? [no until needed]
-  5. *(Answered: the `build` job runs on Windows, macOS and headless Linux since PB-002.)* **Windows and macOS in CI.** `.github/workflows/ci.yml` runs every job on `ubuntu-latest` only, and the layout lists Windows presets only. Once code exists, builds must run on Windows and macOS (DEC-029). Add them with PB-002, or earlier? [with PB-002]
 - **Answered by:** project name → Q-005 (answered 2026-10-24: Aegis, DEC-034); branch rules → DEC-027; agent permissions → DEC-025; task tracking → DEC-028; layout/hygiene/CI/naming → DEC-022, `git-workflow.md`, PB-001.
 - **Answer:** —
 

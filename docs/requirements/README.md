@@ -35,7 +35,7 @@ Optional intro paragraphs of the group.
 
 *Screens: C-01*            (optional, Editor groups)
 
-- **srs.fr.1.1** In normal mode, the Engine shall ...
+- **srs.fr.1.1** In windowed mode, the Engine shall ...
   - Use cases: UC-06, UC-07; Initial Plan: ip.fr.1.1
 ```
 
