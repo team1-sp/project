@@ -24,6 +24,7 @@ project/
 │   ├── ecs/                  world, entities, storage, queries, scheduler, component metadata
 │   ├── physics/              IPhysicsAdapter interface (no Box2D types)
 │   ├── physics-box2d/        the ONLY target that links Box2D (PRIVATE)
+│   ├── physics-sync/         PhysicsSyncIn/Out systems: ECS ↔ IPhysicsAdapter, no Box2D (US-3.1)
 │   ├── rendering/            renderer interface + null renderer
 │   ├── rendering-raylib/     the ONLY target that links raylib (PRIVATE)
 │   ├── input/                action layer, scripted replay, agent action source
@@ -79,3 +80,4 @@ Dependency checks: only `physics-box2d` includes Box2D and only `rendering-rayli
 | 2026-11-22 | AI/privacy settings state and user-local persistence live in `editor_core`; health/model discovery stays behind AgentBridge (US-33.5, DEC-069) | codex/gpt-5/121-ai-privacy |
 | 2026-11-22 | The AI Assistant chat state lives in `editor_core`, which links `aegis::assistant` (US-33.2, DEC-071) | claude-code/opus-5.5/119-chat |
 | 2026-11-23 | `engine/ecs/` exists: target `engine::ecs`, linking only `engine::core` (US-2.1) | claude-code (US-2.1) |
+| 2026-11-26 | `engine/physics-sync/` for the PhysicsSyncIn/Out systems (US-3.1, DEC-53.1) | claude (US-3.1 session) |

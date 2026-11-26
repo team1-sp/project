@@ -97,6 +97,7 @@ for (int i = 0; i < events.beginCount; ++i) {
 | --- | --- | --- |
 | Contact events off by default (v3.1.1) | No begin events at all. Turning the flag off in the spike makes `BoxLands_ContactEventNamesGroundAndBox` fail. | Set `enableContactEvents` on the dynamic shapes (E-026) |
 | Defs not started from `b2Default*Def()` | A zero-initialised def fails Box2D's validity assert in debug builds; in release the assert is compiled out and the body silently gets zero friction, zero density and no gravity | Always `b2DefaultWorldDef()` / `BodyDef()` / `ShapeDef()`, then change fields (E-028) |
+| `b2Rot_GetAngle` is approximate | It uses `b2Atan2`, a fast approximation: an angle read back can be about 0.002 rad off the one set (0.3 came back as 0.3015) | Compare angles with a tolerance; keep the angle the ECS wrote instead of reading it back when nothing moved the body |
 | Rotation sign | Box2D angles are counter-clockwise in y up; raylib's `rotation` turns clockwise on a y-down screen. Passing the angle unchanged mirrors every rotation | Negate when converting to degrees (E-027) |
 | `DrawRectanglePro` origin | `rec.x, rec.y` is where `origin` is placed, and the rotation is around `origin`. With `origin = {0, 0}`, a body drawn at its centre position appears shifted and rotates around a corner | Use `origin = {w/2, h/2}` so `rec.x, rec.y` is the body centre (E-027) |
 | Half extents | `b2MakeBox(halfWidth, halfHeight)`; passing full sizes doubles the body | Name variables `half...` or divide by 2 at the call |

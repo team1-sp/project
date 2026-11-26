@@ -1385,3 +1385,15 @@ The one-line index of every entry is [decision-index.md](decision-index.md). Age
 - **Docs updated:** `guidelines/git-workflow.md` (§1, §2, §3, §4 "Stacked pull requests"), `CONTRIBUTING.md`, `agents/AGENT-PROTOCOL.md` (23a), `.github/pull_request_template.md`, `.github/labels.yml`.
 - **Revisit when:** stacks become rare enough that the reminder is noise, or GitHub lets a ruleset pick the merge method per PR.
 - **Supersedes / Related:** refines DEC-032 (squash-only `main`) and DEC-055 (merge conflicts).
+
+### DEC-53.1 — Physics bodies are created without shapes; the ECS link lives in `engine/physics-sync`
+- **Date:** 2026-11-26
+- **Status:** Accepted (decided in the conversation; carried by the US-3.1 PR, binding once a human merges it, DEC-052)
+- **Decided by:** Zeynep Ertürk (owner of US-3.1, #53)   **Recorded by:** claude (US-3.1 session)
+- **Human's words:** chose "A) Change the menu: 'make a body', then 'add a shape to it' (or remove or change one) as separate steps" over "B) Keep one shape per body for now"; then "New folder engine/physics-sync" over "Inside engine/physics" for the PhysicsSyncIn/Out systems.
+- **Context:** DEC-049's `createBody(EntityId, BodyDesc)` made a body with exactly one shape. The requirements give an entity several collider components on one body (srs.fr.3.2, srs.fr.3.8, srs.fr.3.30, srs.fr.3.33) and polygon colliders (srs.fr.3.5).
+- **Decision:** `BodyDesc` holds only the body (type, transform, mass, gravity scale, damping, fixed rotation). A new `ShapeDesc` describes one collider (box, circle or convex polygon of up to 8 vertices; offset, friction, restitution, sensor). `createBody` makes a body without shapes; `addShape(BodyId, ShapeDesc) → ShapeId` and `removeShape(ShapeId)` add and remove shapes, and the adapter sets the mass data again after each (srs.fr.3.33, srs.fr.3.46). `ShapeId` is opaque and 64-bit, like `BodyId`. `setBodyType` changes a body's type. The PhysicsSyncIn and PhysicsSyncOut systems live in a new target `engine/physics-sync` (`engine::physics_sync`), which links the ECS and `engine::physics` but not Box2D, so the interface target stays free of the ECS.
+- **Rationale:** matches Box2D (shapes are attached to bodies) and the later stories (shape changes and disabled colliders, srs.fr.3.25, srs.fr.3.30) without another interface change.
+- **Consequences:** PhysicsSyncIn creates the body, then one shape per enabled collider component, and keeps the collider → `ShapeId` mapping. Shape updates in place (srs.fr.3.25) are not in the interface yet.
+- **Docs updated:** `design/physics-adapter-design.md`, `design/ecs-design.md`, `guidelines/repository-structure.md`, `agents/state/current-status.md`.
+- **Supersedes / Related:** refines DEC-049 (the interface); DEC-003, DEC-041.

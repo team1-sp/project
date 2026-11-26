@@ -15,20 +15,27 @@ namespace engine::physics {
 // implementation keeps the entity <-> body mapping in both directions (ip.fr.3.4).
 //
 // Units: meters, kilograms, seconds, radians, y up (DEC-036).
-// Errors: no exceptions cross this interface. Using a destroyed BodyId, or creating a second
-// body for the same entity, is a programming error the implementation reports
-// loudly (coding standards rule 9).
+// Errors: no exceptions cross this interface. Misuse (a destroyed BodyId or ShapeId, a second
+// body for the same entity, an invalid polygon) is a programming or data error: the
+// implementation logs it as an error and ignores the call, or returns noBody / noShape.
 // Threading: single-threaded; only PhysicsSyncIn, the game loop's PhysicsStep and
 // PhysicsSyncOut call it (DEC-041).
 class IPhysicsAdapter {
 public:
     virtual ~IPhysicsAdapter() = default;
 
-    // Bodies
+    // Bodies. A new body has no shapes; add one per collider component (srs.fr.3.2).
     virtual BodyId createBody(EntityId entity, const BodyDesc& desc) = 0;
-    virtual void
-    destroyBody(BodyId body) = 0; // must be called when the entity is destroyed (E-001)
+    // Destroys the body and its shapes. Must be called when the entity is destroyed (E-001).
+    virtual void destroyBody(BodyId body) = 0;
     virtual std::optional<BodyId> findBody(EntityId entity) const = 0;
+    // Changes how the body moves; a dynamic body gets its mass set again (srs.fr.3.8, 3.46).
+    virtual void setBodyType(BodyId body, BodyType type) = 0;
+
+    // Shapes. After a shape of a dynamic body is added or removed, the body keeps the mass of
+    // its BodyDesc (srs.fr.3.33, srs.fr.3.46).
+    virtual ShapeId addShape(BodyId body, const ShapeDesc& desc) = 0;
+    virtual void removeShape(ShapeId shape) = 0;
 
     // Changes from the ECS, applied before the next step
     virtual void setTransform(BodyId body, Vec2 positionMeters, float angleRadians) = 0;

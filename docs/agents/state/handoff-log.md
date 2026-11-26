@@ -200,3 +200,16 @@
 - **Next:** the `Protect Main` ruleset must allow the "Merge" method (it allows only squash now); the repository's default merge commit title should be the PR title. Both are admin settings.
 - **Traps:** the agent boot files sit at the 50 KB budget; 23a and two index rows were shortened to fit. DEC-46.1 to DEC-48.1 rows had landed below the "Still open" paragraph of the index (outside the table) after the ECS stack merges; moved back into Active.
 - **Records:** DEC-158.1, HND-158.1.
+
+---
+
+### HND-53.1 — US-3.1: Box2D Physics Adapter, physics components and PhysicsSyncIn
+- **Date:** 2026-11-26
+- **Agent:** claude (US-3.1 session), working with Zeynep Ertürk
+- **Work:** #53 (US-3.1), one PR in three parts: (1) adapter, (2) components, (3) PhysicsSyncIn.
+- **Result:** Ready for review. (1) Interface split into bodies and shapes plus `setBodyType` (DEC-53.1); `Box2DPhysicsAdapter` implements every operation: mass per srs.fr.3.46, friction, restitution, sensors, gravity scale, damping, fixed rotation, offset boxes and circles, convex polygons (3 to 8 vertices; concave refused), basic begin/end contacts and closest-hit raycast; errors go to an optional `ILogSink`. (2) `RigidBody`, `BoxCollider`, `CircleCollider`, `PolygonCollider` in `engine/ecs/physics_components.hpp`, registered by `registerPhysicsComponents`. (3) `engine/physics-sync`: `PhysicsSync` (observer and body map) and `PhysicsSyncInSystem` create, reshape, retype and destroy bodies from the components (srs.fr.3.2, 3.8).
+- **Verified (Linux, GCC, `headless` preset, `ENGINE_WARNINGS_AS_ERRORS=ON`):** builds with no warnings; `ctest` 422/422 (15 adapter, 3 component, 8 PhysicsSyncIn tests new); clang-format 19.1.7 clean; `check_includes.py`, `check_ids.py`, `check_boot.py`, `check_md_links.py` and the requirement checks pass.
+- **Not verified:** Windows and macOS builds and the windowed (raylib) preset (CI).
+- **Next:** US-3.2 (#54): PhysicsStep in the game loop, PhysicsSyncOut write-back, gravity from the Physics settings. US-3.3 refines events and raycast; US-3.6 handles disabled entities and components (each() skips them, so PhysicsSyncIn creates no body for them yet).
+- **Traps:** `b2Rot_GetAngle` is approximate (research/box2d.md). The adapter always uses density 1 and overrides the mass. Changes to RigidBody or collider fields after the body exists are not applied yet (srs.fr.3.25, 3.57). The boot files were at the 50 KB budget: two current-status bullets were reworded shorter to fit the new index row.
+- **Records:** DEC-53.1, HND-53.1.
