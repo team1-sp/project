@@ -95,12 +95,18 @@ Both systems declare their reads, writes and publishes (`ecs-api-design.md` §8,
 
 ```cpp
 Box2DPhysicsAdapter physics;            // engine::physics_box2d
-PhysicsSync sync{physics};              // outlives the World's systems
-world.addObserver(sync);
-world.systems().add([&] { return std::make_unique<PhysicsSyncInSystem>(sync); });
+PhysicsSync sync{physics};              // outlives the World and the simulation
+EcsSimulation simulation{world};
+connectPhysics(world, simulation, sync, physics);  // observer, both systems, PhysicsStep
 ```
 
-So far PhysicsSyncIn does steps 1 to 4 of srs.fr.3.58 for bodies and shapes: it destroys the bodies of destroyed entities, creates a body (typed by the RigidBody, static without one, at the entity's Position) with one shape per collider for each new entity with a collider, in ascending `EntityId`, adds and removes shapes as colliders come and go, destroys the body with the last collider and makes it static when the RigidBody is removed (srs.fr.3.2, 3.8). Pending writes, forces, runtime property changes (srs.fr.3.57) and disabled entities and components (srs.fr.3.29 to 3.31) come with US-3.2, US-3.4 and US-3.6; PhysicsStep and PhysicsSyncOut with US-3.2.
+`connectPhysics` registers the observer, adds `PhysicsSyncInSystem` and `PhysicsSyncOutSystem`, and makes the PhysicsStep phase call `adapter.step(1/60)` through `EcsSimulation::setPhysicsStep` (srs.fr.3.23). Gravity is `Box2DPhysicsConfig::gravityMetersPerSecondSquared` until the project's Physics settings exist (srs.fr.3.9, EP-27).
+
+**PhysicsSyncIn** (US-3.1, US-3.2) does steps 1 to 4 of srs.fr.3.58 for bodies and shapes: it destroys the bodies of destroyed entities, creates a body (typed by the RigidBody, static without one, at the entity's world transform, with its Velocity) with one shape per collider for each new entity with a collider, in ascending `EntityId`, adds and removes shapes as colliders come and go, destroys the body with the last collider and makes it static when the RigidBody is removed (srs.fr.3.2, 3.8). Then it applies pending writes: a Position write moves the body to the entity's new world transform, a Velocity write sets the velocity of a kinematic or dynamic body (ignored for a static one, srs.fr.3.18), and both marks are cleared (srs.fr.3.11, 3.22). Static and kinematic bodies of child entities follow their parent's world transform (srs.fr.3.39).
+
+**PhysicsSyncOut** (US-3.2) writes each kinematic and dynamic body's world position and rotation to its Position, converted to the local transform under its parent (srs.fr.3.12, 3.37; `localFromWorld` in `engine/ecs/transform.hpp`, the inverse of srs.fr.3.49), and each dynamic body's velocity to its Velocity (srs.fr.3.13), with `writeUntracked`; a component with a pending write keeps its value (srs.fr.3.48). Collision events come with US-3.3.
+
+Not yet: forces and impulses as commands, runtime property changes (srs.fr.3.57), disabled entities and components (srs.fr.3.29 to 3.31), ancestor-change marks and dynamic children keeping their world pose when an ancestor moves (srs.fr.3.50, 3.51), world scale applied to shapes (srs.fr.3.40, 3.60).
 
 ## 8. Visualising physics (optional aid)
 
@@ -112,3 +118,4 @@ So far PhysicsSyncIn does steps 1 to 4 of srs.fr.3.58 for bodies and shapes: it 
 | --- | --- | --- |
 | 2026-11-10 | Interface written in C++: files, final function list with `BodyId` and `findBody`, include check (PB-025) | Zeynep Ertürk + claude (PB-025 session) |
 | 2026-11-26 | Bodies and shapes are created separately (DEC-53.1): `ShapeDesc`, `addShape`, `removeShape`, polygon shapes, `setBodyType`; `Box2DPhysicsAdapter`; PhysicsSyncIn in `engine/physics-sync` (US-3.1) | Zeynep Ertürk + claude (US-3.1 session) |
+| 2026-11-26 | PhysicsSyncIn applies pending writes and follows parents; PhysicsSyncOut; `connectPhysics` wires the PhysicsStep (US-3.2) | Zeynep Ertürk + claude (US-3.2 session) |

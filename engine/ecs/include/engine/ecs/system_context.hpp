@@ -28,10 +28,23 @@ public:
         , commands_(commands) {}
 
     // Queries (srs.fr.2.18): as World::each(), after the access check of every type.
+    // A non-const T of a type that tracks writes marks a pending write for each entity visited
+    // (D-27), so a system declares `const T` unless it writes.
     template <typename... Ts, typename Fn>
     void each(Fn&& fn) {
         (check<Ts>("each"), ...);
-        world_.each<Ts...>(std::forward<Fn>(fn));
+        if constexpr ((... || !std::is_const_v<Ts>)) {
+            world_.each<Ts...>([this, &fn](Entity e, Ts&... components) {
+                (markIfWrite<Ts>(e), ...);
+                if constexpr (std::is_invocable_v<Fn&, Entity, Ts&...>) {
+                    fn(e, components...);
+                } else {
+                    fn(components...);
+                }
+            });
+        } else {
+            world_.each<Ts...>(std::forward<Fn>(fn));
+        }
     }
 
     template <typename T>
@@ -50,7 +63,9 @@ public:
         if constexpr (std::is_const_v<T>) {
             return std::as_const(world_).get<std::remove_const_t<T>>(e);
         } else {
-            return world_.get<T>(e);
+            T& component = world_.get<T>(e);
+            markIfWrite<T>(e);
+            return component;
         }
     }
 
@@ -60,8 +75,32 @@ public:
         if constexpr (std::is_const_v<T>) {
             return std::as_const(world_).tryGet<std::remove_const_t<T>>(e);
         } else {
-            return world_.tryGet<T>(e);
+            T* component = world_.tryGet<T>(e);
+            if (component != nullptr) {
+                markIfWrite<T>(e);
+            }
+            return component;
         }
+    }
+
+    // D-27, engine systems only: sets the component without a pending-write mark (PhysicsSyncOut
+    // writing a body back, srs.fr.3.12, 3.13). Needs T in writesUntracked().
+    template <typename T>
+    void writeUntracked(Entity e, const T& value) {
+        access_.checkWriteUntracked(world_.infoOf<T>("writeUntracked"), "writeUntracked");
+        world_.get<T>(e) = value;
+    }
+    // Pending-write marks (D-27). Reading a mark needs T declared in any form; clearing it is
+    // for PhysicsSyncIn, after it applied the write (srs.fr.3.11).
+    template <typename T>
+    [[nodiscard]] bool hasPendingWrite(Entity e) const {
+        check<const T>("hasPendingWrite");
+        return world_.hasPendingWrite<T>(e);
+    }
+    template <typename T>
+    void clearPendingWrite(Entity e) {
+        check<const T>("clearPendingWrite");
+        world_.clearPendingWrite<T>(e);
     }
 
     template <typename T>
@@ -111,6 +150,13 @@ public:
 
 private:
     friend class SystemScheduler;
+
+    template <typename T>
+    void markIfWrite(Entity e) {
+        if constexpr (!std::is_const_v<T>) {
+            world_.markWritten<T>(e);
+        }
+    }
 
     template <typename T>
     void check(std::string_view operation) const {

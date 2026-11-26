@@ -26,10 +26,12 @@ add_executable(engine_tests
     unit/ecs/system_order_test.cpp
     unit/ecs/system_registration_test.cpp
     unit/ecs/system_run_test.cpp
+    unit/ecs/transform_test.cpp
     unit/ecs/type_registry_test.cpp
     unit/ecs/world_components_test.cpp
     unit/ecs/world_entities_test.cpp
     unit/ecs/world_hierarchy_test.cpp
+    unit/ecs/write_tracking_test.cpp
     unit/editor/main_menu_test.cpp
     unit/editor/ai_privacy_settings_test.cpp
     unit/editor/assistant_chat_context_test.cpp
@@ -50,6 +52,7 @@ add_executable(engine_tests
     unit/physics-box2d/box2d_info_test.cpp
     unit/physics-box2d/box2d_physics_adapter_test.cpp
     unit/physics-sync/physics_sync_in_test.cpp
+    unit/physics-sync/physics_sync_out_test.cpp
 )
 target_link_libraries(engine_tests PRIVATE
     editor::core

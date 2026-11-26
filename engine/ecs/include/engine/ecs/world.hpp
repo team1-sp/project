@@ -137,6 +137,27 @@ public:
     template <ComponentType T>
     [[nodiscard]] bool isComponentEnabled(Entity e) const;
 
+    // Pending-write marks of Position and Velocity (D-27, srs.fr.3.21): a system's non-const
+    // access sets one (SystemContext does it); PhysicsSyncIn applies the write and clears it;
+    // PhysicsSyncOut skips a marked component (srs.fr.3.48). Direct World::get() calls (spawn
+    // code, tests) do not mark; call markWritten() when such a change must reach the body.
+    // For a type that does not track writes these do nothing and hasPendingWrite() is false.
+    template <ComponentType T>
+    void markWritten(Entity e) {
+        checkAlive(e, "World::markWritten");
+        typedPool<T>("World::markWritten").markWritten(e);
+    }
+    template <ComponentType T>
+    [[nodiscard]] bool hasPendingWrite(Entity e) const {
+        checkAlive(e, "World::hasPendingWrite");
+        return typedPool<T>("World::hasPendingWrite").hasPendingWrite(e);
+    }
+    template <ComponentType T>
+    void clearPendingWrite(Entity e) {
+        checkAlive(e, "World::clearPendingWrite");
+        typedPool<T>("World::clearPendingWrite").clearPendingWrite(e);
+    }
+
     // Read-only view of a type's storage, in ascending EntityId, for code that reads every
     // component of a type, such as telemetry and scene saving (§12).
     template <ComponentType T>

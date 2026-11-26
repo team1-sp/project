@@ -35,6 +35,7 @@ struct ComponentTypeInfo {
     bool isTag = false;         // an empty type
     bool alwaysEnabled = false; // no enabled flag of its own (srs.fr.2.11; DEC-47.1)
     bool builtIn = false;       // every entity has it from creation to destruction (D-12)
+    bool tracksWrites = false;  // keeps pending-write marks (D-27): Position, Velocity
     std::uint32_t size = 0;     // sizeof the component
     std::uint32_t index = 0;    // dense type index in registration order; never saved
     std::vector<FieldInfo> fields;
@@ -75,11 +76,11 @@ consteval std::size_t memberCount() {
     }
 }
 
-using PoolFactory = std::unique_ptr<IComponentPool> (*)(bool hasEnabledFlags);
+using PoolFactory = std::unique_ptr<IComponentPool> (*)(bool hasEnabledFlags, bool tracksWrites);
 
 template <typename T>
-std::unique_ptr<IComponentPool> makePool(bool hasEnabledFlags) {
-    return std::make_unique<ComponentPool<T>>(hasEnabledFlags);
+std::unique_ptr<IComponentPool> makePool(bool hasEnabledFlags, bool tracksWrites) {
+    return std::make_unique<ComponentPool<T>>(hasEnabledFlags, tracksWrites);
 }
 
 } // namespace detail
@@ -93,6 +94,9 @@ public:
     ComponentBuilder& describe(std::string_view text);
     // The component has no enabled flag of its own (srs.fr.2.11: Position and Velocity).
     ComponentBuilder& alwaysEnabled();
+    // A system's non-const access marks a pending write that PhysicsSyncIn applies and clears
+    // (D-27, DEC-040). For Position and Velocity.
+    ComponentBuilder& tracksWrites();
     // Registers a data member as a field, with its unit and description. Every non-static data
     // member must be registered; TypeRegistry::finalize() refuses the type otherwise.
     template <typename M>
@@ -236,6 +240,13 @@ template <ComponentType T>
 ComponentBuilder<T>& ComponentBuilder<T>::describe(std::string_view text) {
     registry_.checkOpen("ComponentBuilder::describe");
     info().description = std::string(text);
+    return *this;
+}
+
+template <ComponentType T>
+ComponentBuilder<T>& ComponentBuilder<T>::tracksWrites() {
+    registry_.checkOpen("ComponentBuilder::tracksWrites");
+    info().tracksWrites = true;
     return *this;
 }
 

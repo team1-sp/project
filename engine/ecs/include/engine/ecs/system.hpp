@@ -34,9 +34,10 @@ struct SystemDeclaration {
     std::optional<TickPhase> phase;      // may be left out when the group gives it
     std::vector<std::string> runsBefore; // systems or groups (srs.fr.2.49)
     std::vector<std::string> runsAfter;
-    std::vector<DeclaredType> reads;     // component types
-    std::vector<DeclaredType> writes;    // a write allows reading too
-    std::vector<DeclaredType> publishes; // event types (the event bus, US-2.8)
+    std::vector<DeclaredType> reads;           // component types
+    std::vector<DeclaredType> writes;          // a write allows reading too
+    std::vector<DeclaredType> writesUntracked; // engine systems only: writes without a mark (D-27)
+    std::vector<DeclaredType> publishes;       // event types (the event bus, US-2.8)
     std::vector<DeclaredType> subscribes;
     bool createsEntities = false;
     bool destroysEntities = false;
@@ -63,6 +64,13 @@ public:
     template <EcsType... Ts>
     SystemDescription& writes() {
         (add<Ts>(declaration_.writes), ...);
+        return *this;
+    }
+    // Writes that set no pending-write mark: PhysicsSyncOut writing bodies back (D-27).
+    // Allows reading too. Engine systems only.
+    template <EcsType... Ts>
+    SystemDescription& writesUntracked() {
+        (add<Ts>(declaration_.writesUntracked), ...);
         return *this;
     }
     template <EcsType... Es>

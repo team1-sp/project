@@ -4,96 +4,6 @@
 
 ---
 
-### HND-042 — Merge `main` (US-33.1 #145, #147) into the US-33.2 branch
-- **Date:** 2026-11-22
-- **Agent:** claude-code/opus-5.5/119-merge-main
-- **Task:** TASK-025, GitHub #119, PR #146
-- **Result:** `main` holds #145 squash-merged, so its commits look new to git. Merged `main` with
-  only the changes `main` has beyond `a6af34c` (the US-33.1 version already in this branch): #145's
-  fix `462ca5a` (AI Settings opens the shell without a project) and #147's git hooks. Code applied
-  without conflicts. Renumbered this branch's handoff entries to HND-040/HND-041 because `main`
-  uses HND-037 (#145) and HND-039 (#147).
-- **Verified:** see the merge commit's CI run.
-- **Next:** CI and human review of PR #146.
-
----
-
-### HND-148.1 — Collision-free record ids and union merges for the append-only logs
-- **Date:** 2026-11-22
-- **Agent:** claude-code/opus-5.5/148-ids
-- **Task:** PR #148 (no issue)
-- **Goal:** stop parallel PRs from taking the same record id, and stop append-only logs from conflicting on local merges (DEC-148.1).
-- **Result:** Done, awaiting review of PR #148.
-- **Files changed:** `tools/check_ids.py`, `.github/workflows/ci.yml`, `.gitattributes`, `.githooks/pre-commit`, `.github/pull_request_template.md`, `CONTRIBUTING.md`, `docs/guidelines/{documentation-rules,git-workflow}.md`, `docs/agents/{AGENT-PROTOCOL,communication-protocol}.md`, `docs/agents/templates/*`, `docs/history/{decision-log,genai-usage-log}.md`.
-- **Verified:** `check_ids.py` on the repo; with fake pull_request events (matching and wrong numbers, old-form, malformed and duplicate ids); a local merge of two branches that both append to `handoff-log.md` completes without a conflict.
-- **Not verified:** the CI step on GitHub until this PR's run.
-- **Next:** review of PR #148. TASK ids stay as `TASK-<issue #>` (Işık Dönger, 2026-11-22). `current-status.md`/`task-board.md` conflicts are a separate later decision.
-- **Traps:** this is the first entry in the new form, so the index now mixes old and new ids.
-- **Records:** DEC-148.1, HND-148.1.
-
----
-
-### HND-149.1 — Retire the task board and make current-status.md increment-level
-- **Date:** 2026-11-22
-- **Agent:** claude-code/opus-5.5/148-ids
-- **Work:** PR #149 (no issue), stacked on PR #148
-- **Goal:** stop `task-board.md` and `current-status.md` from conflicting between parallel PRs (DEC-149.1).
-- **Result:** Done, awaiting review of PR #149.
-- **Files changed:** see the `Docs updated` list of DEC-149.1.
-- **Verified:** `tools/check_ids.py .` and `tools/check_md_links.py .` pass; grep for `task-board`/`TASK-` leaves only history and the archive.
-- **Not verified:** the new current-status.md "What exists" table was written from the folder layout and the decision log, not from a build.
-- **Next:** merge #148 first, then #149. `plan.md` is stale and needs its own update.
-- **Traps:** claims are now the issue's assignee; don't recreate a task file.
-- **Records:** DEC-149.1, HND-149.1, Q-015 answered.
-
----
-
-### HND-151.1 — Remove the advisor as a code owner
-- **Date:** 2026-11-22
-- **Agent:** claude-code/opus-5.5/148-ids
-- **Work:** PR #151 (no issue)
-- **Result:** Done, awaiting review. `.github/CODEOWNERS` lists only `@isikdonger` (DEC-151.1); CONTRIBUTING and git-workflow updated.
-- **Verified:** `tools/check_ids.py` and `tools/check_md_links.py` pass.
-- **Not verified:** that GitHub stops requesting the advisor's review; check on the next PR after merge.
-- **Next:** if the advisor should also lose repository access, that is a repository setting (Settings → Collaborators), not part of this PR.
-- **Records:** DEC-151.1, HND-151.1.
-
----
-
-### HND-46.1 — Entities, IDs, the hierarchy and the command buffer (US-2.1)
-- **Date:** 2026-11-23
-- **Agent:** claude-code/opus-5.5/us-2.1
-- **Work:** US-2.1 #46 on `feat/us-2.1-create-destroy-entities`; pull request not opened yet
-- **Goal:** srs.fr.2.1 to 2.5: create and destroy entities at runtime with IDs that are never given to another entity, destruction requests that take effect at the end of the phase, destroying with all descendants, and a name, enabled flag, tag, layer and optional parent for every entity.
-- **Result:** Done. New target `engine::ecs` (`engine/ecs/`, links only `engine::core`): `Entity`, `EntityTable`, the sorted sparse-set `ComponentPool<T>`, `FixedString`, `AssetId`, `TagId`, the built-in Name, EntityInfo and Hierarchy components, `World` (create, destroy, find, idOf, enabled flag, setParent, beginRun, observers, log sink) and `CommandBuffer` (createEntity, destroy, setParent, playback).
-- **Files changed:** `engine/ecs/**`, `engine/CMakeLists.txt`, `engine/core/include/engine/core/entity_id.hpp` (SRS number), `tests/unit/ecs/**`, `tests/CMakeLists.txt`, `docs/design/ecs-api-design.md`, `docs/design/ecs-design.md`, `docs/agents/state/current-status.md`, `docs/guidelines/repository-structure.md`, `docs/history/decision-log.md`.
-- **Verified:** `windows-debug` (MSVC 19.44) and `headless` presets with `-DENGINE_WARNINGS_AS_ERRORS=ON` build clean; CTest 332/332 and 319/319; clang-format 19.1.7 dry run clean; `tools/check_ids.py`, `tools/check_md_links.py` and `tools/check_includes.py` pass.
-- **Not verified:** GCC and Apple Clang (CI runs them); a slot's generation wrapping around (it takes 2^32 destructions of one slot; the code retires such a slot).
-- **Repo state:** builds and tests pass; committed only after the member approves (DEC-058).
-- **Next:**
-  1. US-2.2 on `feat/us-2.2-add-remove-components`, stacked on this branch: the type registry and reflection, general `add`/`remove`/`get`/`has`/`tryGet`, component enabled flags (DEC-46.3) and `CommandBuffer` add/remove; `World` then takes `const TypeRegistry&` (design §5).
-  2. US-2.3 backs `ISimulation::runPhase()` with the ECS and adds queries that skip disabled entities (srs.fr.2.15); decide there whether a disabled parent also hides its children, which the SRS does not say.
-  3. US-2.8 moves `ecs-event-bus-design.md` to the final SRS numbers and records E-1 to E-5.
-- **Traps:** the ECS design docs were written against the SRS draft of 2026-11-05; the final SRS (2026-11-14) is renumbered from about srs.fr.2.61 on (runtime IDs 2.63, destroy timing 2.116, ID range 2.104). A `CommandBuffer` must be played back: the entities it created stay alive without components until then. `World` can be neither copied nor moved, because its pool list points at its own members.
-- **Records:** DEC-46.1, DEC-46.2, DEC-46.3, DEC-46.4, HND-46.1.
-
----
-
-### HND-47.1 — Components, their descriptions and enabled flags (US-2.2)
-- **Date:** 2026-11-23
-- **Agent:** claude-code/opus-5.5/us-2.2
-- **Work:** US-2.2 #47 on `feat/us-2.2-add-remove-components`, stacked on the US-2.1 branch; pull request not opened yet
-- **Goal:** srs.fr.2.6 to 2.12: add, remove, read and change components at runtime, at most one per type, component enabled flags except for Position and Velocity, and a semantic description for each component type.
-- **Result:** Done, except the "systems that read and write it" part of srs.fr.2.12, which is derived from system declarations and comes with US-2.3 (D-8). New: `TypeId`, `TypeRegistry` with component and enum builders, the member-count check and `finalize()`; `FieldInfo`, `readField`, `writeField`; `PositionComponent`, `VelocityComponent` and `registerCoreComponents()`. `World` now takes `const TypeRegistry&`, makes one pool per type and has `add`, `remove`, `has`, `get`, `tryGet`, `setComponentEnabled`, `isComponentEnabled`, `pool(TypeId)` and `forEachComponent`; `CommandBuffer` has `add` and `remove`; observers hear about added and removed components.
-- **Files changed:** `engine/ecs/**`, `tests/unit/ecs/**`, `tests/CMakeLists.txt`, `docs/design/ecs-api-design.md`, `docs/agents/state/current-status.md`, `docs/history/decision-log.md`.
-- **Verified:** `windows-debug` (MSVC 19.44) and `headless` presets with `-DENGINE_WARNINGS_AS_ERRORS=ON` build clean; CTest 367/367 and 354/354; clang-format 19.1.7 dry run clean; `tools/check_ids.py`, `tools/check_md_links.py` and `tools/check_includes.py` pass.
-- **Not verified:** GCC and Apple Clang (CI runs them), in particular the member counter of `type_registry.hpp` under GCC.
-- **Repo state:** builds and tests pass; committed only after the member approves (DEC-058).
-- **Next:**
-  1. US-2.3 on a branch stacked on this one: systems, groups and ordering, queries that skip disabled entities and components, access checks, timings, the schema's readBy/writtenBy, and the ECS behind `ISimulation::runPhase()` (DEC-46.3 scope, decided for US-2.3 on 2026-11-23).
-  2. US-2.4 on a branch stacked on this one: `.scene` files as JSON through nlohmann/json, using `forEachComponent`, `readField` and `writeField`.
-- **Traps:** the registry and every World that uses it must agree: a World keeps a reference to its registry and one pool per registered type. `World::add` sorts the pool before it returns, so take the returned reference after the call, not a pointer from before it.
-- **Records:** DEC-47.1, DEC-47.2, DEC-47.3, HND-47.1.
 ### HND-152.1 — Agent docs read in tiers (decision index, handoff rotation, problems by area)
 - **Date:** 2026-11-24
 - **Agent:** claude-code/opus-5.5/6r0a
@@ -213,3 +123,17 @@
 - **Next:** US-3.2 (#54): PhysicsStep in the game loop, PhysicsSyncOut write-back, gravity from the Physics settings. US-3.3 refines events and raycast; US-3.6 handles disabled entities and components (each() skips them, so PhysicsSyncIn creates no body for them yet).
 - **Traps:** `b2Rot_GetAngle` is approximate (research/box2d.md). The adapter always uses density 1 and overrides the mass. Changes to RigidBody or collider fields after the body exists are not applied yet (srs.fr.3.25, 3.57). The boot files were at the 50 KB budget: two current-status bullets were reworded shorter to fit the new index row.
 - **Records:** DEC-53.1, HND-53.1.
+
+---
+
+### HND-54.1 — US-3.2: the ECS and the physics world in step
+- **Date:** 2026-11-26
+- **Agent:** claude (US-3.2 session), working with Zeynep Ertürk
+- **Work:** #54 (US-3.2), stacked on the US-3.1 PR (#161).
+- **Result:** Ready for review once #161 is merged. ECS write tracking as designed in D-27: `tracksWrites()` on Position and Velocity, a `pending_` array in `ComponentPool`, marks from a system's non-const `get`/`tryGet`/`each`, `writesUntracked<…>()` and `ctx.writeUntracked`, `hasPendingWrite`/`clearPendingWrite`. `engine/ecs/transform.hpp`: `compose` (srs.fr.3.49) and `localFromWorld`. PhysicsSyncIn creates bodies at world transforms with their Velocity, applies pending Position and Velocity writes and clears the marks, and moves static and kinematic children with their parent. New PhysicsSyncOutSystem writes position (local to the parent) and velocity back untracked, skipping marked components. `connectPhysics()` wires the observer, both systems and the 1/60 s PhysicsStep.
+- **Decided by Zeynep:** parents are handled in this story (local conversion of srs.fr.3.12 and children following their parent), not left to US-3.7.
+- **Verified (Linux, GCC, `headless` preset, `ENGINE_WARNINGS_AS_ERRORS=ON`):** builds with no warnings; `ctest` 441/441 (6 write-tracking, 4 transform, 9 sync tests new); clang-format 19.1.7 clean; doc and id checks pass.
+- **Not verified:** Windows, macOS and windowed builds (CI). Gravity from the project's Physics settings (srs.fr.3.9): the settings do not exist yet (EP-27); gravity comes from `Box2DPhysicsConfig`.
+- **Next:** US-3.4 (#56) and US-3.3 (#55), both unblocked once this merges.
+- **Traps:** the CI blocker check fails for this PR until #53 closes. Merge #161 with a merge commit (it has a PR stacked on it, DEC-158.1). Spawn code that changes Position or Velocity after a body exists must call `World::markWritten` for the change to reach the body.
+- **Records:** HND-54.1.

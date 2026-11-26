@@ -18,6 +18,14 @@ void SystemAccess::checkWrite(const ComponentTypeInfo& type, std::string_view op
     }
 }
 
+void SystemAccess::checkWriteUntracked(const ComponentTypeInfo& type,
+                                       std::string_view operation) const {
+    if (writesUntracked[type.index] == 0) {
+        throw RunError("system " + name + ": undeclared untracked write of " + type.name + " in " +
+                       std::string(operation));
+    }
+}
+
 void SystemAccess::checkFlag(bool declared, std::string_view flagName,
                              std::string_view operation) const {
     if (!declared) {

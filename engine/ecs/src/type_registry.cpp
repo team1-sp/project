@@ -140,7 +140,7 @@ const EnumInfo* TypeRegistry::findEnum(std::string_view name) const {
 }
 
 std::unique_ptr<IComponentPool> TypeRegistry::makePool(const ComponentTypeInfo& info) const {
-    return cppTypes_[info.index].makePool(!info.alwaysEnabled);
+    return cppTypes_[info.index].makePool(!info.alwaysEnabled, info.tracksWrites);
 }
 
 void TypeRegistry::checkOpen(std::string_view operation) const {
@@ -162,6 +162,7 @@ void registerCoreComponents(TypeRegistry& types) {
     types.component<PositionComponent>()
         .describe("Where the entity is in the world: position, rotation and scale (meters, y up).")
         .alwaysEnabled()
+        .tracksWrites()
         .field("x", &PositionComponent::xMeters, Unit::Meters, "Horizontal position")
         .field("y", &PositionComponent::yMeters, Unit::Meters, "Vertical position, up is positive")
         .field("rotation", &PositionComponent::rotationRadians, Unit::Radians,
@@ -171,6 +172,7 @@ void registerCoreComponents(TypeRegistry& types) {
     types.component<VelocityComponent>()
         .describe("How fast the entity moves; the physics body owns it for dynamic bodies.")
         .alwaysEnabled()
+        .tracksWrites()
         .field("x", &VelocityComponent::xMetersPerSecond, Unit::MetersPerSecond,
                "Horizontal velocity")
         .field("y", &VelocityComponent::yMetersPerSecond, Unit::MetersPerSecond,
