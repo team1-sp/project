@@ -197,6 +197,15 @@ std::optional<BodyId> Box2DPhysicsAdapter::findBody(EntityId entity) const {
     return it->second;
 }
 
+void Box2DPhysicsAdapter::setBodyType(BodyId body, BodyType type) {
+    if (world_->find(body, "setBodyType") == nullptr) {
+        return;
+    }
+    world_->bodies.at(body).type = type;
+    b2Body_SetType(toB2(body), toB2(type));
+    world_->applyMass(body);
+}
+
 ShapeId Box2DPhysicsAdapter::addShape(BodyId body, const ShapeDesc& desc) {
     if (world_->find(body, "addShape") == nullptr) {
         return physics::noShape;

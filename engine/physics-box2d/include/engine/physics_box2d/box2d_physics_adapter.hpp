@@ -32,6 +32,7 @@ public:
     physics::BodyId createBody(EntityId entity, const physics::BodyDesc& desc) override;
     void destroyBody(physics::BodyId body) override;
     std::optional<physics::BodyId> findBody(EntityId entity) const override;
+    void setBodyType(physics::BodyId body, physics::BodyType type) override;
 
     physics::ShapeId addShape(physics::BodyId body, const physics::ShapeDesc& desc) override;
     void removeShape(physics::ShapeId shape) override;

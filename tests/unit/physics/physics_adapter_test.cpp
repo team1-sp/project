@@ -32,6 +32,7 @@ public:
         }
         return std::nullopt;
     }
+    void setBodyType(BodyId body, BodyType) override { bodies_.at(body); }
     ShapeId addShape(BodyId body, const ShapeDesc&) override {
         bodies_.at(body); // a destroyed body has no shapes
         return ShapeId{nextShape_++};

@@ -203,13 +203,13 @@
 
 ---
 
-### HND-53.1 — Box2D Physics Adapter: bodies and shapes (US-3.1, part 1 of 3)
+### HND-53.1 — US-3.1: Box2D Physics Adapter, physics components and PhysicsSyncIn
 - **Date:** 2026-11-26
 - **Agent:** claude (US-3.1 session), working with Zeynep Ertürk
-- **Work:** #53 (US-3.1), first PR of three: (1) adapter, (2) RigidBody and collider components, (3) PhysicsSyncIn creates and destroys bodies from them.
-- **Result:** Ready for review. Interface split into bodies and shapes (DEC-53.1); `Box2DPhysicsAdapter` in `engine/physics-box2d` implements every operation, with mass per srs.fr.3.46, friction, restitution, sensors, gravity scale, damping, fixed rotation, offset boxes and circles, convex polygons (3 to 8 vertices; concave refused), basic begin/end contact events and closest-hit raycast. Errors are logged through an optional `ILogSink`.
-- **Verified (Linux, GCC, `headless` preset, `ENGINE_WARNINGS_AS_ERRORS=ON`):** builds with no warnings; `ctest` 411/411 (15 new Box2D adapter tests); clang-format 19.1.7 clean; `check_includes.py` 0.
-- **Not verified:** Windows and macOS builds (CI).
-- **Next:** PR 2 (components), PR 3 (PhysicsSyncIn body lifecycle, srs.fr.3.2, srs.fr.3.8). US-3.3 refines events (sensor events, tick, collider pairs) and raycast (layers, sensors, ties).
-- **Traps:** `b2Rot_GetAngle` is approximate (research/box2d.md). The adapter always uses density 1 and then overrides the mass, so a shape never gives zero mass.
+- **Work:** #53 (US-3.1), one PR in three parts: (1) adapter, (2) components, (3) PhysicsSyncIn.
+- **Result:** Ready for review. (1) Interface split into bodies and shapes plus `setBodyType` (DEC-53.1); `Box2DPhysicsAdapter` implements every operation: mass per srs.fr.3.46, friction, restitution, sensors, gravity scale, damping, fixed rotation, offset boxes and circles, convex polygons (3 to 8 vertices; concave refused), basic begin/end contacts and closest-hit raycast; errors go to an optional `ILogSink`. (2) `RigidBody`, `BoxCollider`, `CircleCollider`, `PolygonCollider` in `engine/ecs/physics_components.hpp`, registered by `registerPhysicsComponents`. (3) `engine/physics-sync`: `PhysicsSync` (observer and body map) and `PhysicsSyncInSystem` create, reshape, retype and destroy bodies from the components (srs.fr.3.2, 3.8).
+- **Verified (Linux, GCC, `headless` preset, `ENGINE_WARNINGS_AS_ERRORS=ON`):** builds with no warnings; `ctest` 422/422 (15 adapter, 3 component, 8 PhysicsSyncIn tests new); clang-format 19.1.7 clean; `check_includes.py`, `check_ids.py`, `check_boot.py`, `check_md_links.py` and the requirement checks pass.
+- **Not verified:** Windows and macOS builds and the windowed (raylib) preset (CI).
+- **Next:** US-3.2 (#54): PhysicsStep in the game loop, PhysicsSyncOut write-back, gravity from the Physics settings. US-3.3 refines events and raycast; US-3.6 handles disabled entities and components (each() skips them, so PhysicsSyncIn creates no body for them yet).
+- **Traps:** `b2Rot_GetAngle` is approximate (research/box2d.md). The adapter always uses density 1 and overrides the mass. Changes to RigidBody or collider fields after the body exists are not applied yet (srs.fr.3.25, 3.57). The boot files were at the 50 KB budget: two current-status bullets were reworded shorter to fit the new index row.
 - **Records:** DEC-53.1, HND-53.1.

@@ -29,6 +29,8 @@ public:
     // Destroys the body and its shapes. Must be called when the entity is destroyed (E-001).
     virtual void destroyBody(BodyId body) = 0;
     virtual std::optional<BodyId> findBody(EntityId entity) const = 0;
+    // Changes how the body moves; a dynamic body gets its mass set again (srs.fr.3.8, 3.46).
+    virtual void setBodyType(BodyId body, BodyType type) = 0;
 
     // Shapes. After a shape of a dynamic body is added or removed, the body keeps the mass of
     // its BodyDesc (srs.fr.3.33, srs.fr.3.46).
