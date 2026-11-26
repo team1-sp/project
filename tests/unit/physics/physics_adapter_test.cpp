@@ -32,9 +32,10 @@ public:
         }
         return std::nullopt;
     }
-    void setBodyType(BodyId body, BodyType) override { bodies_.at(body); }
+    // at() throws for a destroyed body; the result itself is not needed.
+    void setBodyType(BodyId body, BodyType) override { static_cast<void>(bodies_.at(body)); }
     ShapeId addShape(BodyId body, const ShapeDesc&) override {
-        bodies_.at(body); // a destroyed body has no shapes
+        static_cast<void>(bodies_.at(body)); // throws for a destroyed body
         return ShapeId{nextShape_++};
     }
     void removeShape(ShapeId) override {}
