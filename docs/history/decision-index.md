@@ -94,6 +94,7 @@ Statuses: `Proposed` (waiting for an answer; binds nobody) · `Accepted` (bindin
 | DEC-48.1 | US-2.3: system groups, ordering rules, enable/disable; disables seen next query | Accepted | 2026-11-24 |
 | DEC-158.1 | Merge a PR that has PRs stacked on it with a merge commit; squash the rest | Accepted | 2026-11-24 |
 | DEC-160.1 | Requirements say windowed mode, not normal mode | Accepted | 2026-11-24 |
+| DEC-53.1 | Physics bodies start empty, one `addShape` per collider; ECS link in `physics-sync` | Accepted | 2026-11-26 |
 
 ### Still open, no entry yet (do not decide silently)
 

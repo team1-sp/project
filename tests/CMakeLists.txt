@@ -19,6 +19,7 @@ add_executable(engine_tests
     unit/ecs/field_test.cpp
     unit/ecs/fixed_string_test.cpp
     unit/ecs/gameplay_random_test.cpp
+    unit/ecs/physics_components_test.cpp
     unit/ecs/query_test.cpp
     unit/ecs/schema_test.cpp
     unit/ecs/system_access_test.cpp
@@ -47,6 +48,8 @@ add_executable(engine_tests
     unit/assistant/grounded/grounded_assistant_test.cpp
     unit/physics/physics_adapter_test.cpp
     unit/physics-box2d/box2d_info_test.cpp
+    unit/physics-box2d/box2d_physics_adapter_test.cpp
+    unit/physics-sync/physics_sync_in_test.cpp
 )
 target_link_libraries(engine_tests PRIVATE
     editor::core
@@ -56,6 +59,7 @@ target_link_libraries(engine_tests PRIVATE
     engine::bridge
     engine::physics
     engine::physics_box2d
+    engine::physics_sync
     GTest::gtest_main
 )
 engine_set_warnings(engine_tests)

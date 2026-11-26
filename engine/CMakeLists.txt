@@ -5,6 +5,7 @@ add_subdirectory(ecs)
 add_subdirectory(bridge)
 add_subdirectory(physics)
 add_subdirectory(physics-box2d)
+add_subdirectory(physics-sync)
 
 if(ENGINE_WITH_RAYLIB)
     add_subdirectory(rendering-raylib)

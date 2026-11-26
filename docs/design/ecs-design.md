@@ -31,6 +31,7 @@ Units follow [../components.md](../components.md) (DEC-036): meters, seconds, ki
 | `RigidBodyComponent` (`RigidBody`) | `bodyType` (Static, Kinematic, Dynamic), `massKilograms`, `gravityScale`, `linearDamping`, `fixedRotation` | unmanaged | spawn code | PhysicsSyncIn |
 | `BoxColliderComponent` (`BoxCollider`) | `widthMeters`, `heightMeters`, `offsetXMeters`, `offsetYMeters`, `friction`, `restitution`, `isSensor` | unmanaged | spawn code | PhysicsSyncIn |
 | `CircleColliderComponent` (`CircleCollider`) | `radiusMeters`, `offsetXMeters`, `offsetYMeters`, `friction`, `restitution`, `isSensor` | unmanaged | spawn code | PhysicsSyncIn |
+| `PolygonColliderComponent` (`PolygonCollider`) | `vertexCount` (3 to 8), `vertex0` … `vertex7`, `offsetXMeters`, `offsetYMeters`, `friction`, `restitution`, `isSensor` | unmanaged | spawn code | PhysicsSyncIn |
 | `SpriteComponent` (`Sprite`) | `sprite` (`AssetId`), `tint` (RGBA `uint32`), `orderInLayer`, `flipX`, `flipY` | unmanaged | spawn code | renderer |
 | `PlayerInputComponent` (`PlayerInput`) | `inputMap` (`AssetId`, empty = project map), `speedMetersPerSecond` | unmanaged | spawn code | PlayerMovement, Collect, Unlock, Objective |
 | `InventoryComponent` (`Inventory`) | `items` (`FixedArray<AssetId, 8>`) | unmanaged in Phase 1 | Collect | Unlock, telemetry |
@@ -42,7 +43,8 @@ Units follow [../components.md](../components.md) (DEC-036): meters, seconds, ki
 - Required components (srs.fr.3.36): colliders and RigidBody need Position; RigidBody needs Velocity and a collider; PlayerInput needs Position, Velocity and Inventory; Collectible, Unlockable and Objective need Position. Phase 1 spawn code adds them explicitly; automatic adding (srs.fr.3.37) comes with the Editor.
 - The player is the enabled entity with a `PlayerInputComponent`, lowest `EntityId` first (srs.fr.9.22). There is no separate player tag.
 - `Obstacle` is a tag value (`EntityInfo.tag`) from the project's tag list (srs.fr.2.53), not a tag component.
-- Later: Polygon collider, state sprites, managed components. The hierarchy and the entity and component enabled flags are built with US-2.1 and US-2.2 (DEC-46.3).
+- The physics components are in `engine/ecs/physics_components.hpp`, registered by `registerPhysicsComponents` (US-3.1). `RigidBody` defaults to Dynamic, 1 kg; the polygon defaults to a 1 m square, and its vertices are separate `Vec2` fields until the ECS has an array field type.
+- Later: state sprites, managed components. The hierarchy and the entity and component enabled flags are built with US-2.1 and US-2.2 (DEC-46.3).
 
 ### Velocity and position authority (DEC-040)
 
@@ -114,3 +116,4 @@ Phase 1 items of [ecs-api-design.md](ecs-api-design.md) §15 and [ecs-event-bus-
 | --- | --- | --- |
 | 2026-11-05 | Rewritten to the PB-010 design and DEC-040 … DEC-043: ticks, pushed events, SRS component set, Phase 1 systems, time/RNG/ids/errors, scenes as spawn code, Q-013 for Phase 1 | claude (PR #28 review) |
 | 2026-11-23 | Hierarchy and enabled flags join Phase 1 (DEC-46.3); entity SRS numbers follow the final SRS | claude-code (US-2.1) |
+| 2026-11-26 | Polygon collider added; physics components live in `physics_components.hpp` (US-3.1) | Zeynep Ertürk + claude (US-3.1 session) |

@@ -7,6 +7,7 @@ add_library(engine_ecs STATIC
     src/entity_table.cpp
     src/field.cpp
     src/gameplay_random.cpp
+    src/physics_components.cpp
     src/schema.cpp
     src/system.cpp
     src/system_access.cpp
