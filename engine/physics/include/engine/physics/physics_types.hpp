@@ -12,6 +12,10 @@ namespace engine::physics {
 enum class BodyId : std::uint64_t {};
 inline constexpr BodyId noBody{0};
 
+// Our handle for one collider shape on a body. Opaque, like BodyId.
+enum class ShapeId : std::uint64_t {};
+inline constexpr ShapeId noShape{0};
+
 // Where a body is and how it moves, read back after a step (written to the ECS by
 // PhysicsSyncOut). Meters, radians, y up (DEC-036).
 struct BodyState {

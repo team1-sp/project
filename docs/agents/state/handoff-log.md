@@ -200,3 +200,16 @@
 - **Next:** the `Protect Main` ruleset must allow the "Merge" method (it allows only squash now); the repository's default merge commit title should be the PR title. Both are admin settings.
 - **Traps:** the agent boot files sit at the 50 KB budget; 23a and two index rows were shortened to fit. DEC-46.1 to DEC-48.1 rows had landed below the "Still open" paragraph of the index (outside the table) after the ECS stack merges; moved back into Active.
 - **Records:** DEC-158.1, HND-158.1.
+
+---
+
+### HND-53.1 — Box2D Physics Adapter: bodies and shapes (US-3.1, part 1 of 3)
+- **Date:** 2026-11-26
+- **Agent:** claude (US-3.1 session), working with Zeynep Ertürk
+- **Work:** #53 (US-3.1), first PR of three: (1) adapter, (2) RigidBody and collider components, (3) PhysicsSyncIn creates and destroys bodies from them.
+- **Result:** Ready for review. Interface split into bodies and shapes (DEC-53.1); `Box2DPhysicsAdapter` in `engine/physics-box2d` implements every operation, with mass per srs.fr.3.46, friction, restitution, sensors, gravity scale, damping, fixed rotation, offset boxes and circles, convex polygons (3 to 8 vertices; concave refused), basic begin/end contact events and closest-hit raycast. Errors are logged through an optional `ILogSink`.
+- **Verified (Linux, GCC, `headless` preset, `ENGINE_WARNINGS_AS_ERRORS=ON`):** builds with no warnings; `ctest` 411/411 (15 new Box2D adapter tests); clang-format 19.1.7 clean; `check_includes.py` 0.
+- **Not verified:** Windows and macOS builds (CI).
+- **Next:** PR 2 (components), PR 3 (PhysicsSyncIn body lifecycle, srs.fr.3.2, srs.fr.3.8). US-3.3 refines events (sensor events, tick, collider pairs) and raycast (layers, sensors, ties).
+- **Traps:** `b2Rot_GetAngle` is approximate (research/box2d.md). The adapter always uses density 1 and then overrides the mass, so a shape never gives zero mass.
+- **Records:** DEC-53.1, HND-53.1.

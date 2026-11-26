@@ -19,15 +19,18 @@ Written in PB-025. The interface is `engine::physics::IPhysicsAdapter` in the `e
 | --- | --- |
 | `engine/core/include/engine/core/vec2.hpp` | `engine::Vec2` (x, y) |
 | `engine/core/include/engine/core/entity_id.hpp` | `engine::EntityId`, `noEntity`, as in `ecs-api-design.md` §4; in `core` so the ECS reuses it |
-| `engine/physics/include/engine/physics/body_desc.hpp` | `BodyType` (Static, Kinematic, Dynamic), `ShapeType` (Box, Circle), `BodyDesc` (fields mirror `RigidBodyComponent` and the collider components of `ecs-design.md`) |
-| `engine/physics/include/engine/physics/physics_types.hpp` | `BodyId`, `noBody`, `BodyState`, `ContactPhase`, `CollisionEvent`, `RaycastHit` |
+| `engine/physics/include/engine/physics/body_desc.hpp` | `BodyType` (Static, Kinematic, Dynamic), `BodyDesc` (the body only; fields mirror `RigidBodyComponent`), `ShapeType` (Box, Circle, Polygon), `ShapeDesc` (one collider shape; mirrors the collider components), `maxPolygonVertices` (8) |
+| `engine/physics/include/engine/physics/physics_types.hpp` | `BodyId`, `noBody`, `ShapeId`, `noShape`, `BodyState`, `ContactPhase`, `CollisionEvent`, `RaycastHit` |
 | `engine/physics/include/engine/physics/physics_adapter.hpp` | `IPhysicsAdapter` |
+| `engine/physics-box2d/include/engine/physics_box2d/box2d_physics_adapter.hpp` | `Box2DPhysicsAdapter`, `Box2DPhysicsConfig` (gravity, sub-steps): the implementation with Box2D v3.1.1 (US-3.1); Box2D stays in its `.cpp` |
 
 | Function | Purpose | Notes |
 | --- | --- | --- |
-| `createBody(EntityId, const BodyDesc&) → BodyId` | Create body + collider from ECS data | Registers the entity↔body mapping; a second body for the same entity is a programming error |
+| `createBody(EntityId, const BodyDesc&) → BodyId` | Create a body, without shapes (DEC-53.1) | Registers the entity↔body mapping; a second body for the same entity is an error |
 | `destroyBody(BodyId)` | Remove body | Must be called when the entity is destroyed (E-001) |
 | `findBody(EntityId) → optional<BodyId>` | Entity → body lookup | For PhysicsSyncIn |
+| `addShape(BodyId, const ShapeDesc&) → ShapeId` | Add one collider shape (box, circle or convex polygon of 3 to 8 vertices) | One per collider component; a dynamic body keeps its RigidBody mass (srs.fr.3.33, 3.46) |
+| `removeShape(ShapeId)` | Remove one shape | Mass is set again, as for `addShape` |
 | `setTransform(BodyId, Vec2, angle)` | Teleport | Sync direction ECS→physics |
 | `setLinearVelocity(BodyId, Vec2)` | Set velocity | |
 | `applyForce(BodyId, Vec2)` | Continuous push for this step | Newtons |
@@ -37,7 +40,9 @@ Written in PB-025. The interface is `engine::physics::IPhysicsAdapter` in the `e
 | `collisionEvents() → span<const CollisionEvent>` | Begin/end contacts of the last step, as **entity** IDs | Sorted by (`entityA`, `entityB`), `entityA` the smaller; valid until the next step (ip.fr.3.6) |
 | `raycast(origin, direction, maxDistance) → optional<RaycastHit>` | First entity hit (ip.fr.3.7) | Returns `EntityId`, point, normal |
 
-All values are meters, kilograms, seconds and radians, y up (DEC-036). No exceptions cross the interface; misuse is reported loudly by the implementation (coding standards rule 9). Contract tests with a fake adapter: `tests/unit/physics/physics_adapter_test.cpp`.
+All values are meters, kilograms, seconds and radians, y up (DEC-036). No exceptions cross the interface; misuse (an unknown id, a second body for an entity, an invalid shape) is logged as an error and the call ignored, or `noBody` / `noShape` returned. Contract tests with a fake adapter: `tests/unit/physics/physics_adapter_test.cpp`; Box2D tests: `tests/unit/physics-box2d/box2d_physics_adapter_test.cpp`.
+
+**Mass (srs.fr.3.46).** Box2D computes the mass data from the shapes; the adapter then sets the RigidBody mass, keeps the computed centre and scales the rotational inertia by the mass ratio. A dynamic body without shapes gets its centre at the body origin and inertia 0.
 
 **Boundary (R-3).** `engine::physics` never links Box2D. `tools/check_includes.py` (CI `format` job) fails a PR that includes Box2D outside `engine/physics-box2d/` or raylib outside `engine/rendering-raylib/`, anywhere in `engine/` or `editor/`. `sandbox/` is not checked because of the PB-008 spike (DEC-037).
 
@@ -94,3 +99,4 @@ Both systems declare their reads, writes and publishes (`ecs-api-design.md` §8,
 | Date | Change | By |
 | --- | --- | --- |
 | 2026-11-10 | Interface written in C++: files, final function list with `BodyId` and `findBody`, include check (PB-025) | Zeynep Ertürk + claude (PB-025 session) |
+| 2026-11-26 | Bodies and shapes are created separately (DEC-53.1): `ShapeDesc`, `addShape`, `removeShape`, polygon shapes; `Box2DPhysicsAdapter` (US-3.1) | Zeynep Ertürk + claude (US-3.1 session) |

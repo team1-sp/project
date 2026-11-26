@@ -47,6 +47,7 @@ add_executable(engine_tests
     unit/assistant/grounded/grounded_assistant_test.cpp
     unit/physics/physics_adapter_test.cpp
     unit/physics-box2d/box2d_info_test.cpp
+    unit/physics-box2d/box2d_physics_adapter_test.cpp
 )
 target_link_libraries(engine_tests PRIVATE
     editor::core

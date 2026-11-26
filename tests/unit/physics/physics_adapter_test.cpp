@@ -32,6 +32,11 @@ public:
         }
         return std::nullopt;
     }
+    ShapeId addShape(BodyId body, const ShapeDesc&) override {
+        bodies_.at(body); // a destroyed body has no shapes
+        return ShapeId{nextShape_++};
+    }
+    void removeShape(ShapeId) override {}
     void setTransform(BodyId body, Vec2 positionMeters, float angleRadians) override {
         bodies_.at(body).state.positionMeters = positionMeters;
         bodies_.at(body).state.angleRadians = angleRadians;
@@ -51,7 +56,8 @@ private:
         EntityId entity;
         BodyState state;
     };
-    std::uint64_t nextBody_ = 1; // 0 is noBody
+    std::uint64_t nextBody_ = 1;  // 0 is noBody
+    std::uint64_t nextShape_ = 1; // 0 is noShape
     std::map<BodyId, Body> bodies_;
     std::vector<CollisionEvent> events_;
 };
@@ -60,12 +66,22 @@ constexpr EntityId player{42};
 
 } // namespace
 
-TEST(BodyDesc, Default_IsStaticOneMeterBox) {
-    const BodyDesc desc;
-    EXPECT_EQ(desc.type, BodyType::Static);
-    EXPECT_EQ(desc.shape, ShapeType::Box);
+TEST(BodyDesc, Default_IsStatic) {
+    EXPECT_EQ(BodyDesc{}.type, BodyType::Static);
+}
+
+TEST(ShapeDesc, Default_IsOneMeterSolidBox) {
+    const ShapeDesc desc;
+    EXPECT_EQ(desc.type, ShapeType::Box);
     EXPECT_EQ(desc.boxSizeMeters, (Vec2{1.0f, 1.0f}));
     EXPECT_FALSE(desc.isSensor);
+}
+
+TEST(IPhysicsAdapter, AddShape_ReturnsAShape) {
+    FakePhysicsAdapter physics;
+    const BodyId body = physics.createBody(player, BodyDesc{});
+
+    EXPECT_NE(physics.addShape(body, ShapeDesc{}), noShape);
 }
 
 TEST(IPhysicsAdapter, CreateBody_FindBodyReturnsIt) {
